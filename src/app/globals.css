@@ -1,26 +1,254 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-environment: #f4f7fb;
+    --surface-glass-base: rgba(255, 255, 255, 0.76);
+    --surface-glass-subtle: rgba(255, 255, 255, 0.58);
+    --surface-glass-floating: rgba(255, 255, 255, 0.86);
+    --surface-glass-control: rgba(255, 255, 255, 0.65);
+    --surface-glass-active: rgba(239, 246, 255, 0.92);
+
+    --border-glass-light: rgba(255, 255, 255, 0.85);
+    --border-glass-subtle: rgba(226, 232, 240, 0.8);
+    --border-glass-focus: #2563eb;
+
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-tertiary: #94a3b8;
+
+    --specular-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    --specular-subtle: inset 0 1px 0 rgba(255, 255, 255, 0.6);
   }
 }
 
+/* ==========================================================================
+   Ambient Environment Layer (Level 0)
+   ========================================================================== */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background-color: #f4f7fb;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(219, 234, 254, 0.55) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 20%, rgba(224, 242, 254, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 0% 80%, rgba(238, 242, 255, 0.5) 0%, transparent 60%);
+  background-attachment: fixed;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   Liquid Glass Material Hierarchy Tokens
+   ========================================================================== */
+
+/* Level 1: Base Application Content Surface */
+.glass-base {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.68) 100%);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 10px 30px -6px rgba(15, 23, 42, 0.04),
+    0 2px 6px 0 rgba(15, 23, 42, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+/* Level 2: Sub-panel & Grouped Surface */
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  box-shadow: 
+    0 4px 14px -2px rgba(15, 23, 42, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Level 3: Floating Navigation Capsule & High-Tier Controls */
+.glass-floating {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.75) 100%);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 16px 36px -6px rgba(15, 23, 42, 0.07),
+    0 4px 12px -2px rgba(15, 23, 42, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* Level 4: Interactive Glass Controls & Segmented Buttons */
+.glass-control {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(203, 213, 225, 0.6);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-control:hover {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(148, 163, 184, 0.8);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+}
+
+.glass-control-active {
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.95) 0%, rgba(219, 234, 254, 0.85) 100%) !important;
+  border-color: #93c5fd !important;
+  color: #1d4ed8 !important;
+  box-shadow: 
+    0 4px 14px -2px rgba(37, 99, 235, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Level 5: Modal & Popover Floating Surface */
+.glass-modal {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.86) 100%);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 25px 60px -12px rgba(15, 23, 42, 0.22),
+    0 0 1px 1px rgba(255, 255, 255, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* ==========================================================================
+   Form Input Elements (Calm, High-Contrast Translucent)
+   ========================================================================== */
+.input-glass {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #0f172a !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  border-radius: 0.7rem;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.input-glass:hover {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(148, 163, 184, 1) !important;
+}
+
+.input-glass:focus {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+  outline: none !important;
+  box-shadow: 
+    0 0 0 3px rgba(37, 99, 235, 0.16),
+    0 2px 8px -1px rgba(37, 99, 235, 0.1) !important;
+}
+
+.input-glass::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Fallback for legacy class */
+.input-clean {
+  background-color: rgba(255, 255, 255, 0.78) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  border-radius: 0.7rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.input-clean:focus {
+  background-color: #ffffff !important;
+  border-color: #2563eb !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16) !important;
+}
+
+/* Tactile Button Interactions */
+.btn-tactile {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-tactile:active {
+  transform: scale(0.97);
+}
+
+/* ==========================================================================
+   Formal Print Documents (EXEMPT FROM LIQUID GLASS)
+   ========================================================================== */
+.doc-tahoma,
+.print-page,
+.print-page-kwitansi,
+.print-page-memo,
+.print-page-landscape,
+.print-page-rincian,
+.print-page-riil,
+.kwitansi-sheet,
+.rincian-sheet,
+.riil-sheet {
+  font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 0.8);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 1);
+}
+
+/* ==========================================================================
+   Print Specific Styling (@media print)
+   ========================================================================== */
+@media print {
+  body {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    line-height: 1.35 !important;
+    font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif !important;
+  }
+
+  .no-print, nav, button, .app-header, .tabs-header {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-page,
+  .print-page-kwitansi,
+  .print-page-memo,
+  .print-page-landscape,
+  .print-page-rincian,
+  .print-page-riil,
+  .kwitansi-sheet,
+  .rincian-sheet,
+  .riil-sheet {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif !important;
+  }
+
+  table, th, td {
+    border-color: #000000 !important;
+  }
 }
