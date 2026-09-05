@@ -31,15 +31,17 @@ export function calculateRowTotal(
   const updated = { ...row };
 
   // 1. Lama Hari
+  const previousLamaHari = row.lamaHari;
   updated.lamaHari = calculateLamaHari(row.tanggalMulai, row.tanggalSelesai);
+  const isDateChanged = previousLamaHari !== updated.lamaHari;
 
-  // 2. Uang Harian
+  // 2. Uang Harian (Sync with lamaHari when dates change or when not set)
   const uhRateBiasa = sbm?.uhBiasa || 0;
   const uhRateHalfday = sbm?.uhHalfday || 0;
   const uhRateFullboard = sbm?.uhFullboard || 0;
 
   if (activeUh.uhBiasa) {
-    const hari = updated.hariUhBiasa > 0 ? updated.hariUhBiasa : updated.lamaHari;
+    const hari = (isDateChanged || !updated.hariUhBiasa) ? updated.lamaHari : updated.hariUhBiasa;
     updated.hariUhBiasa = hari;
     updated.biayaUhBiasa = hari * uhRateBiasa;
   } else {
@@ -47,7 +49,7 @@ export function calculateRowTotal(
   }
 
   if (activeUh.uhBiasa60) {
-    const hari = updated.hariUhBiasa60 > 0 ? updated.hariUhBiasa60 : updated.lamaHari;
+    const hari = (isDateChanged || !updated.hariUhBiasa60) ? updated.lamaHari : updated.hariUhBiasa60;
     updated.hariUhBiasa60 = hari;
     updated.biayaUhBiasa60 = Math.round(hari * uhRateBiasa * 0.6);
   } else {
@@ -55,7 +57,7 @@ export function calculateRowTotal(
   }
 
   if (activeUh.uhHalfday) {
-    const hari = updated.hariUhHalfday > 0 ? updated.hariUhHalfday : updated.lamaHari;
+    const hari = (isDateChanged || !updated.hariUhHalfday) ? updated.lamaHari : updated.hariUhHalfday;
     updated.hariUhHalfday = hari;
     updated.biayaUhHalfday = hari * uhRateHalfday;
   } else {
@@ -63,7 +65,7 @@ export function calculateRowTotal(
   }
 
   if (activeUh.uhFullboard) {
-    const hari = updated.hariUhFullboard > 0 ? updated.hariUhFullboard : updated.lamaHari;
+    const hari = (isDateChanged || !updated.hariUhFullboard) ? updated.lamaHari : updated.hariUhFullboard;
     updated.hariUhFullboard = hari;
     updated.biayaUhFullboard = hari * uhRateFullboard;
   } else {
@@ -99,6 +101,8 @@ export function calculateRowTotal(
   const dukunganVal = activeCols.dukunganTransportasi ? (updated.dukunganTransportasi || 0) : 0;
   const transDaratVal = activeCols.transportasiDarat ? (updated.transportasiDarat || 0) : 0;
   const transLokalVal = activeCols.transportasiLokal ? (updated.transportasiLokal || 0) : 0;
+  const transJakartaPpVal = activeCols.transportJakartaPp ? (updated.transportJakartaPp || 0) : 0;
+  const transDaerahPpVal = activeCols.transportDaerahPp ? (updated.transportDaerahPp || 0) : 0;
   const hotelVal = activeCols.hotel ? (updated.hotel || 0) : 0;
   const penginapan30Val = activeCols.penginapan30 ? (updated.penginapan30 || 0) : 0;
   const pengRillVal = activeCols.pengRill ? (updated.pengRill || 0) : 0;
@@ -118,6 +122,8 @@ export function calculateRowTotal(
   total += dukunganVal;
   total += transDaratVal;
   total += transLokalVal;
+  total += transJakartaPpVal;
+  total += transDaerahPpVal;
   total += hotelVal;
   total += penginapan30Val;
   total += pengRillVal;

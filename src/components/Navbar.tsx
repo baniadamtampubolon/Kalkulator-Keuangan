@@ -9,15 +9,15 @@ import {
   ListOrdered,
   FileCheck,
   Printer,
-  Sparkles,
 } from "lucide-react";
 
-export type ActiveTab = "input" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil";
+export type ActiveTab = "input" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "rekap";
 
 interface NavbarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   onPrint: () => void;
+  onOpenDatabaseSync?: () => void;
   participantCount: number;
   totalExpenditure: number;
 }
@@ -26,6 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   onPrint,
+  onOpenDatabaseSync,
   participantCount,
   totalExpenditure,
 }) => {
@@ -36,6 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: "nominatif", label: "3. Nominatif", icon: FileSpreadsheet },
     { id: "rincian", label: "4. Rincian Biaya", icon: ListOrdered },
     { id: "riil", label: "5. Biaya Riil", icon: FileCheck },
+    { id: "rekap", label: "6. Rekap Perdin", icon: FileSpreadsheet },
   ];
 
   return (
@@ -87,8 +89,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Stats & Tactile Primary Action */}
-        <div className="flex items-center gap-3">
-          <div className="hidden xl:flex flex-col items-end pl-2">
+        <div className="flex items-center gap-2.5">
+          <div className="hidden xl:flex flex-col items-end pr-1">
             <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">
               {participantCount} Peserta Terdaftar
             </span>
@@ -97,12 +99,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </div>
 
+          {onOpenDatabaseSync && (
+            <button
+              onClick={onOpenDatabaseSync}
+              className="btn-tactile flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-slate-900 text-xs font-bold border border-slate-300/60 shadow-xs transition-all cursor-pointer"
+              title="Integrasi Database Google Spreadsheet"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden sm:inline">Database</span>
+            </button>
+          )}
+
           <button
             onClick={onPrint}
             className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 border border-white/20 transition-all cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>Cetak / Simpan PDF</span>
+            <span>Cetak PDF</span>
           </button>
         </div>
       </div>

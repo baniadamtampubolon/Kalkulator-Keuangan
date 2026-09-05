@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import { HeaderData, ParticipantRow, ActiveCostKey, ActiveUhKey } from "@/lib/types";
-import { formatRupiah, terbilang } from "@/lib/terbilang";
-import { Printer } from "lucide-react";
+import { terbilang } from "@/lib/terbilang";
+import { Printer, Edit3, RotateCcw } from "lucide-react";
 
 interface RincianBiayaDocProps {
   header: HeaderData;
+  setHeader?: React.Dispatch<React.SetStateAction<HeaderData>>;
   rows: ParticipantRow[];
+  setRows?: React.Dispatch<React.SetStateAction<ParticipantRow[]>>;
   activeCols: Record<ActiveCostKey, boolean>;
   activeUh: Record<ActiveUhKey, boolean>;
 }
@@ -20,6 +22,8 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
 }) => {
   // Mode: "all" for bulk view/print, or a specific index
   const [viewMode, setViewMode] = useState<"all" | number>("all");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [renderKey, setRenderKey] = useState(0);
 
   if (!rows || rows.length === 0) {
     return <div className="p-8 text-center text-slate-400">Belum ada data peserta.</div>;
@@ -40,8 +44,12 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
   // Filter rows to render
   const displayedRows = viewMode === "all" ? rows : [rows[viewMode as number]];
 
+  const handleResetCanvas = () => {
+    setRenderKey((prev) => prev + 1);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" key={renderKey}>
       {/* Scoped Print Portrait Style with Page Breaks */}
       <style
         dangerouslySetInnerHTML={{
@@ -71,6 +79,19 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
             .no-print {
               display: none !important;
             }
+            [contenteditable="true"] {
+              outline: none !important;
+              background: transparent !important;
+            }
+          }
+          [contenteditable="true"]:hover {
+            outline: 1px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 2px;
+          }
+          [contenteditable="true"]:focus {
+            outline: 2px solid rgba(59, 130, 246, 0.8);
+            background-color: rgba(239, 246, 255, 0.4);
+            border-radius: 2px;
           }
         `,
         }}
@@ -100,16 +121,55 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
           </span>
         </div>
 
-        <button
-          onClick={() => window.print()}
-          className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm cursor-pointer"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          <span>
-            {viewMode === "all" ? `Cetak Semua Rincian (${rows.length} Lembar)` : `Cetak Rincian Biaya Ini`}
-          </span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          {/* Universal Edit on Canvas Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              isEditMode
+                ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                : "bg-white/80 hover:bg-white text-slate-700 border-slate-300"
+            }`}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>{isEditMode ? "Mode Edit di Canvas: AKTIF" : "Edit di Canvas"}</span>
+          </button>
+
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleResetCanvas}
+              className="btn-tactile flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-300 cursor-pointer"
+              title="Reset kembali ke teks awal dari data input"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Teks</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => window.print()}
+            className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>
+              {viewMode === "all" ? `Cetak Semua Rincian (${rows.length} Lembar)` : `Cetak Rincian Biaya Ini`}
+            </span>
+          </button>
+        </div>
       </div>
+
+      {isEditMode && (
+        <div className="no-print p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Edit3 className="w-4 h-4 shrink-0 text-amber-600" />
+            <span>
+              <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada Rincian Biaya SPD (No SPD, tanggal, tabel perincian pos biaya, nominal, terbilang, perhitungan rampung, dan tanda tangan) dapat langsung Anda klik dan edit secara bebas.
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Rincian Sheets Container */}
       <div className="space-y-8">
@@ -186,6 +246,24 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
             });
           }
 
+          if (activeCols.transportJakartaPp && (activeRow.transportJakartaPp || 0) > 0) {
+            lineItems.push({
+              no: itemNum++,
+              title: "Transportasi Jakarta PP",
+              detail: "",
+              amount: activeRow.transportJakartaPp,
+            });
+          }
+
+          if (activeCols.transportDaerahPp && (activeRow.transportDaerahPp || 0) > 0) {
+            lineItems.push({
+              no: itemNum++,
+              title: "Transportasi Daerah PP",
+              detail: "",
+              amount: activeRow.transportDaerahPp,
+            });
+          }
+
           if (activeCols.tiket && activeRow.tiket > 0) {
             lineItems.push({
               no: itemNum++,
@@ -246,7 +324,11 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
             <div
               key={activeRow.id || index}
               style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-              className="rincian-sheet bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs font-sans leading-normal space-y-6"
+              contentEditable={isEditMode}
+              suppressContentEditableWarning={true}
+              className={`rincian-sheet bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs font-sans leading-normal space-y-6 transition-all ${
+                isEditMode ? "ring-2 ring-blue-400/40 ring-offset-2" : ""
+              }`}
             >
               {/* Kop Header */}
               <div className="text-center space-y-1">
@@ -266,17 +348,19 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
 
               {/* SPD Metadata */}
               <div className="space-y-1 text-xs">
-                <div className="grid grid-cols-12">
+                <div className="grid grid-cols-12 items-center">
                   <span className="col-span-3 text-black">Lampiran SPD Nomor</span>
                   <span className="col-span-1 text-center">:</span>
-                  <span className="col-span-8 font-mono">
-                    {activeRow.nomorSpd || "454"} &nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {header.nomorMak || "524111"}
-                  </span>
+                  <div className="col-span-8 font-mono">
+                    {activeRow.nomorSpd || "01"} &nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {header.nomorMak || "524111"}
+                  </div>
                 </div>
-                <div className="grid grid-cols-12">
+                <div className="grid grid-cols-12 items-center">
                   <span className="col-span-3 text-black">tanggal</span>
                   <span className="col-span-1 text-center">:</span>
-                  <span className="col-span-8">{tanggalCetak}</span>
+                  <div className="col-span-8">
+                    {tanggalCetak}
+                  </div>
                 </div>
               </div>
 
@@ -367,8 +451,8 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
                       <p className="pt-1">Yang Menerima,</p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="font-normal">{activeRow.nama || "Reni Sutaryo, S.Si., M.Adm.Pemb"}</p>
-                      <p className="font-mono text-[11px]">NIP. &nbsp;&nbsp;{activeRow.nip || "19791126200604 2 014"}</p>
+                      <p className="font-normal">{activeRow.nama || "—"}</p>
+                      <p className="font-mono text-[11px]">NIP. &nbsp;&nbsp;{activeRow.nip || "—"}</p>
                     </div>
                   </div>
                 </div>
@@ -417,8 +501,8 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
                       <p>Pejabat Pembuat Komitmen</p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="font-normal">{header.ppkNama || "Kunto Nugroho"}</p>
-                      <p className="font-mono text-[11px]">NIP. &nbsp;&nbsp;&nbsp;{header.ppkNip || "198912142018011001"}</p>
+                      <p className="font-normal">{header.ppkNama || "Arif Wibowo, S.H., M.H."}</p>
+                      <p className="font-mono text-[11px]">NIP. &nbsp;&nbsp;&nbsp;{header.ppkNip || "19830124200801 1 006"}</p>
                     </div>
                   </div>
                 </div>

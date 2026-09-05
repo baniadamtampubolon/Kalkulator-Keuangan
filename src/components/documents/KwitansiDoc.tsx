@@ -3,13 +3,15 @@
 import React, { useState } from "react";
 import { HeaderData, ParticipantRow, ActiveCostKey, ActiveUhKey } from "@/lib/types";
 import { terbilang, formatRupiah } from "@/lib/terbilang";
-import { Printer, Users, Eye } from "lucide-react";
+import { Printer, Edit3, RotateCcw } from "lucide-react";
 
 interface KwitansiDocProps {
   header: HeaderData;
+  setHeader?: React.Dispatch<React.SetStateAction<HeaderData>>;
   rows: ParticipantRow[];
-  activeCols: Record<ActiveCostKey, boolean>;
-  activeUh: Record<ActiveUhKey, boolean>;
+  setRows?: React.Dispatch<React.SetStateAction<ParticipantRow[]>>;
+  activeCols?: Record<ActiveCostKey, boolean>;
+  activeUh?: Record<ActiveUhKey, boolean>;
 }
 
 export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
@@ -18,6 +20,8 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
 }) => {
   // Mode: "all" for bulk view/print, or a specific index
   const [viewMode, setViewMode] = useState<"all" | number>("all");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [renderKey, setRenderKey] = useState(0);
 
   if (!rows || rows.length === 0) {
     return <div className="p-8 text-center text-slate-400">Belum ada data peserta.</div>;
@@ -41,8 +45,12 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
   // Filter rows to render
   const displayedRows = viewMode === "all" ? rows : [rows[viewMode as number]];
 
+  const handleResetCanvas = () => {
+    setRenderKey((prev) => prev + 1);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" key={renderKey}>
       {/* Scoped Print Portrait Style with Page Breaks */}
       <style
         dangerouslySetInnerHTML={{
@@ -72,12 +80,25 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
             .no-print {
               display: none !important;
             }
+            [contenteditable="true"] {
+              outline: none !important;
+              background: transparent !important;
+            }
+          }
+          [contenteditable="true"]:hover {
+            outline: 1px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 2px;
+          }
+          [contenteditable="true"]:focus {
+            outline: 2px solid rgba(59, 130, 246, 0.8);
+            background-color: rgba(239, 246, 255, 0.4);
+            border-radius: 2px;
           }
         `,
         }}
       />
 
-      {/* Navigation Toolbar */}
+      {/* Navigation Toolbar with Universal Edit on Canvas Toggle */}
       <div className="no-print glass-floating rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
@@ -101,30 +122,75 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
           </span>
         </div>
 
-        <button
-          onClick={() => window.print()}
-          className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm cursor-pointer"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          <span>
-            {viewMode === "all" ? `Cetak Semua Kuitansi (${rows.length} Lembar)` : `Cetak Kuitansi Ini`}
-          </span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          {/* Universal Edit on Canvas Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              isEditMode
+                ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                : "bg-white/80 hover:bg-white text-slate-700 border-slate-300"
+            }`}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>{isEditMode ? "Mode Edit di Canvas: AKTIF" : "Edit di Canvas"}</span>
+          </button>
+
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleResetCanvas}
+              className="btn-tactile flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-300 cursor-pointer"
+              title="Reset kembali ke teks awal dari data input"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Teks</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => window.print()}
+            className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>
+              {viewMode === "all" ? `Cetak Semua Kuitansi (${rows.length} Lembar)` : `Cetak Kuitansi Ini`}
+            </span>
+          </button>
+        </div>
       </div>
+
+      {isEditMode && (
+        <div className="no-print p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Edit3 className="w-4 h-4 shrink-0 text-amber-600" />
+            <span>
+              <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada kuitansi (nama, uraian, tanggal, angka, instansi, jabatan tanda tangan) dapat langsung Anda klik dan ubah secara bebas layaknya di Microsoft Word.
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Kwitansi Sheets Container (Render all sequentially) */}
       <div className="space-y-8">
         {displayedRows.map((activeRow, index) => {
           const tanggalCetak = formatDateIndo(activeRow.tanggalMulai || header.tanggalSpd || new Date().toISOString());
-          const uraianPembayaran = header.keteranganKegiatan.toLowerCase().includes("tanggal")
-            ? header.keteranganKegiatan
-            : `${header.keteranganKegiatan}, pada Tanggal ${formatDateIndo(activeRow.tanggalMulai)} di ${activeRow.tujuanKota || kotaTujuanText}, ${header.provinsiTujuan}`;
+          const uraianPembayaran = header.keteranganKegiatan
+            ? header.keteranganKegiatan.toLowerCase().includes("tanggal")
+              ? header.keteranganKegiatan
+              : `${header.keteranganKegiatan}, pada Tanggal ${formatDateIndo(activeRow.tanggalMulai)} di ${activeRow.tujuanKota || kotaTujuanText}, ${header.provinsiTujuan}`
+            : `Perjalanan Dinas dalam rangka penugasan di ${activeRow.tujuanKota || kotaTujuanText}, ${header.provinsiTujuan}`;
 
           return (
             <div
               key={activeRow.id || index}
               style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-              className="kwitansi-sheet bg-white text-black p-10 md:p-14 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-12"
+              contentEditable={isEditMode}
+              suppressContentEditableWarning={true}
+              className={`kwitansi-sheet bg-white text-black p-10 md:p-14 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-12 transition-all ${
+                isEditMode ? "ring-2 ring-blue-400/40 ring-offset-2" : ""
+              }`}
             >
               {/* Top Header: Instansi Name on Left + Box Table on Right */}
               <div className="flex justify-between items-start pt-2">
@@ -137,22 +203,22 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
 
                 {/* Right: Box Metadata Table */}
                 <div className="w-56 border border-black p-2 text-[11px] leading-tight space-y-1">
-                  <div className="grid grid-cols-12">
+                  <div className="grid grid-cols-12 items-center">
                     <span className="col-span-5">Sub Keg</span>
                     <span className="col-span-1">:</span>
-                    <span className="col-span-6 font-mono font-medium">{header.nomorKomp || ""}</span>
+                    <span className="col-span-6 font-mono font-medium">{header.nomorKomp || "051"}</span>
                   </div>
-                  <div className="grid grid-cols-12">
+                  <div className="grid grid-cols-12 items-center">
                     <span className="col-span-5">Akun</span>
                     <span className="col-span-1">:</span>
                     <span className="col-span-6 font-mono font-medium">{header.nomorMak || "524111"}</span>
                   </div>
-                  <div className="grid grid-cols-12">
+                  <div className="grid grid-cols-12 items-center">
                     <span className="col-span-5">Tanggal</span>
                     <span className="col-span-1">:</span>
                     <span className="col-span-6 text-right whitespace-nowrap">{tanggalCetak}</span>
                   </div>
-                  <div className="grid grid-cols-12">
+                  <div className="grid grid-cols-12 items-center">
                     <span className="col-span-5">APBN T.A</span>
                     <span className="col-span-1">:</span>
                     <span className="col-span-6 text-right font-mono">{tahunAnggaran}</span>
@@ -180,12 +246,12 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
                 </div>
 
                 {/* Uang Sebesar */}
-                <div className="grid grid-cols-12 gap-1 pt-1">
+                <div className="grid grid-cols-12 gap-1 pt-1 items-center">
                   <span className="col-span-3 text-black">Uang sebesar</span>
                   <span className="col-span-1 text-center">:</span>
-                  <span className="col-span-8 font-mono">
+                  <div className="col-span-8 font-mono font-semibold">
                     Rp{activeRow.totalJumlah.toLocaleString("id-ID")}
-                  </span>
+                  </div>
                 </div>
 
                 {/* Terbilang */}
@@ -201,9 +267,9 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
                 <div className="grid grid-cols-12 gap-1 pt-1">
                   <span className="col-span-3 text-black">Untuk Pembayaran</span>
                   <span className="col-span-1 text-center">:</span>
-                  <span className="col-span-8 text-justify leading-relaxed text-black">
+                  <div className="col-span-8 text-justify leading-relaxed text-black">
                     {uraianPembayaran}
-                  </span>
+                  </div>
                 </div>
               </div>
 
@@ -218,8 +284,8 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
                       <p>Pejabat Pembuat Komitmen</p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="font-normal">{header.ppkNama || "Kunto Nugroho"}</p>
-                      <p className="font-mono text-[11px]">NIP. {header.ppkNip || "198912142018011001"}</p>
+                      <p className="font-normal">{header.ppkNama || "Arif Wibowo, S.H., M.H."}</p>
+                      <p className="font-mono text-[11px]">NIP. {header.ppkNip || "19830124200801 1 006"}</p>
                     </div>
                   </div>
 
@@ -246,8 +312,8 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
                       <p>Yang menerima,</p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="font-normal">{activeRow.nama || "Reni Sutaryo, S.Si., M.Adm.Pemb"}</p>
-                      <p className="font-mono text-[11px]">NIP. {activeRow.nip || "19791126200604 2 014"}</p>
+                      <p className="font-normal">{activeRow.nama || "—"}</p>
+                      <p className="font-mono text-[11px]">NIP. {activeRow.nip || "—"}</p>
                     </div>
                   </div>
                 </div>

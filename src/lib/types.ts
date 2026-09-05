@@ -42,6 +42,17 @@ export interface RiilItem {
   keterangan?: string;
 }
 
+export interface TicketDetail {
+  noTiket?: string;
+  kodeBooking?: string;
+  maskapai?: string;
+  noPenerbangan?: string;
+  asal?: string;
+  tujuan?: string;
+  tanggal?: string;
+  harga?: number;
+}
+
 export interface ParticipantRow {
   id: string;
   kodeNama: string;
@@ -55,6 +66,7 @@ export interface ParticipantRow {
   tanggalSelesai: string;
   lamaHari: number;
   nomorSt: string;
+  isPejabat?: boolean;
   nomorSpd: string;
 
   // Uang Harian Fields
@@ -75,10 +87,20 @@ export interface ParticipantRow {
   transportJakartaPp: number;
   transportDaerahPp: number;
   
-  // Hotel
+  // Tiket Rincian SPJ Pergi & Pulang
+  tiketDetailPergi?: TicketDetail;
+  tiketDetailPulang?: TicketDetail;
+  boardingPass?: "ADA" | "TIDAK";
+
+  // Hotel & Penginapan Rincian SPJ
   hotel: number;
   penginapan30: number;
   namaHotel?: string;
+  kotaHotel?: string;
+  checkInHotel?: string;
+  checkOutHotel?: string;
+  noBillFolio?: string;
+  noKamar?: string;
   malamHotel?: number;
   rateHotel?: number;
 
@@ -88,9 +110,15 @@ export interface ParticipantRow {
   paxMeeting?: number;
   rateMeeting?: number;
 
-  // Lainnya
+  // Lainnya & SPJ Eksternal
   representatif: number;
   belanjaBahan: number;
+  namaExternal?: string;
+  sewaKendaraan?: number;
+  taksiBandara?: number;
+  biayaReschedule?: number;
+  kurs?: number;
+  pengembalian?: number;
   
   // Pengeluaran Riil
   pengRill: number;
@@ -123,9 +151,19 @@ export interface HeaderData {
   tanggalMemo: string;
   nomorMemo: string;
   nomorStMaster: string;
+  nomorStStaff?: string;
+  useDifferentStPejabat?: boolean;
+  nomorStPejabat?: string;
   ppkNama: string;
   ppkNip: string;
   ppkJabatan: string;
+
+  // SPJ & Rekap Perdin Metadata
+  noSpby?: string;
+  jenisPengajuan?: "RENCANA" | "RAMPUNG" | "MERAMPUNGKAN";
+  noSpm?: string;
+  jenisPerdin?: "Perdin Jabodetabekdung" | "Perdin Luar Kota" | "Perdin Luar Negeri";
+  berangkatDari?: string;
 }
 
 export type ActiveCostKey =
@@ -133,6 +171,8 @@ export type ActiveCostKey =
   | "dukunganTransportasi"
   | "transportasiDarat"
   | "transportasiLokal"
+  | "transportJakartaPp"
+  | "transportDaerahPp"
   | "pengRill"
   | "hotel"
   | "penginapan30"

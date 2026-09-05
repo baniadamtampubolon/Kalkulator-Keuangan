@@ -1,13 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { HeaderData, ParticipantRow, ActiveCostKey, ActiveUhKey } from "@/lib/types";
-import { formatRupiah, terbilang } from "@/lib/terbilang";
-import { Printer } from "lucide-react";
+import { terbilang } from "@/lib/terbilang";
+import { Printer, Edit3, RotateCcw } from "lucide-react";
 
 interface NominatifDocProps {
   header: HeaderData;
+  setHeader?: React.Dispatch<React.SetStateAction<HeaderData>>;
   rows: ParticipantRow[];
+  setRows?: React.Dispatch<React.SetStateAction<ParticipantRow[]>>;
   activeCols: Record<ActiveCostKey, boolean>;
   activeUh: Record<ActiveUhKey, boolean>;
 }
@@ -18,6 +20,9 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
   activeCols,
   activeUh,
 }) => {
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [renderKey, setRenderKey] = useState(0);
+
   // Format dates helper
   const formatDateIndo = (dStr: string) => {
     if (!dStr) return "";
@@ -55,6 +60,14 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
     ? rows.reduce((acc, r) => acc + (r.transportasiLokal || 0), 0)
     : 0;
 
+  const totalTransJakartaPp = activeCols.transportJakartaPp
+    ? rows.reduce((acc, r) => acc + (r.transportJakartaPp || 0), 0)
+    : 0;
+
+  const totalTransDaerahPp = activeCols.transportDaerahPp
+    ? rows.reduce((acc, r) => acc + (r.transportDaerahPp || 0), 0)
+    : 0;
+
   const totalHotel =
     (activeCols.hotel ? rows.reduce((acc, r) => acc + (r.hotel || 0), 0) : 0) +
     (activeCols.penginapan30 ? rows.reduce((acc, r) => acc + (r.penginapan30 || 0), 0) : 0);
@@ -73,20 +86,23 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
 
   const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
 
-  // Dynamic Column Visibility Rules matching user criteria
-  const showUh = totalUh > 0;
-  const showTiket = activeCols.tiket && totalTiket > 0;
+  // Determine which cost columns should be displayed
   const showTransDarat = activeCols.transportasiDarat && totalTransDarat > 0;
   const showTransLokal = activeCols.transportasiLokal && totalTransLokal > 0;
+  const showTransJakartaPp = activeCols.transportJakartaPp && totalTransJakartaPp > 0;
+  const showTransDaerahPp = activeCols.transportDaerahPp && totalTransDaerahPp > 0;
+  const showTiket = activeCols.tiket && totalTiket > 0;
+  const showUh = totalUh > 0;
   const showHotel = (activeCols.hotel || activeCols.penginapan30) && totalHotel > 0;
   const showRiil = activeCols.pengRill && totalRiil > 0;
-  const showRepresentatif = activeCols.representatif; // Always show if checked
+  const showRepresentatif = activeCols.representatif;
   const showBelanjaBahan = activeCols.belanjaBahan && totalBelanjaBahan > 0;
 
-  // Number of active sub-columns under "Rincian Biaya"
-  let rincianColCount = 1; // +1 for Jumlah
+  let rincianColCount = 1; // Always has Jumlah
   if (showTransDarat) rincianColCount++;
   if (showTransLokal) rincianColCount++;
+  if (showTransJakartaPp) rincianColCount++;
+  if (showTransDaerahPp) rincianColCount++;
   if (showTiket) rincianColCount++;
   if (showUh) rincianColCount++;
   if (showHotel) rincianColCount++;
@@ -94,53 +110,47 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
   if (showRepresentatif) rincianColCount++;
   if (showBelanjaBahan) rincianColCount++;
 
-  // Total columns count
-  const totalColumns = 8 + rincianColCount + 1; // 8 left cols + rincian cols + 1 keterangan
+  const baseFixedCols = 8;
+  const totalColumns = baseFixedCols + rincianColCount;
 
-  // Dynamic font and sizing calculation based on total columns
-  const isVeryDense = totalColumns >= 14;
-  const isDense = totalColumns >= 11;
+  const isDense = totalColumns > 12;
+  const isVeryDense = totalColumns > 14;
 
-  const leftColSpan = 8;
+  const subtitleText = header.keteranganKegiatan
+    ? header.keteranganKegiatan.toLowerCase().includes("tanggal")
+      ? header.keteranganKegiatan
+      : `${header.keteranganKegiatan} PADA TANGGAL ${formatDateIndo(rows[0]?.tanggalMulai || header.tanggalSpd)} DI ${kotaTujuanText}, ${header.provinsiTujuan}`
+    : `DAFTAR NOMINATIF PERJALANAN DINAS DI ${kotaTujuanText}, ${header.provinsiTujuan}`;
 
-  // First row participant for PJ Kegiatan signature
-  const pjKegiatan = rows[0] || {
-    nama: "Reni Sutaryo, S.Si., M.Adm.Pemb",
-    nip: "19791126 200604 2 014",
+  const handleResetCanvas = () => {
+    setRenderKey((prev) => prev + 1);
   };
 
-  // Build clean subtitle
-  const subtitleText = header.keteranganKegiatan.toLowerCase().includes("tanggal")
-    ? header.keteranganKegiatan
-    : `${header.keteranganKegiatan}, pada Tanggal ${formatDateIndo(rows[0]?.tanggalMulai || header.tanggalSpd)} di ${kotaTujuanText}, ${header.provinsiTujuan}`;
-
   return (
-    <div className="space-y-6">
-      {/* Inject Scoped Print Landscape CSS with Dynamic Auto-Fit */}
+    <div className="space-y-6" key={renderKey}>
+      {/* Scoped Landscape Print Styles */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
             @page {
               size: A4 landscape !important;
-              margin: 6mm 8mm 6mm 8mm !important;
+              margin: 8mm 10mm 8mm 10mm !important;
             }
             body {
               background: #ffffff !important;
             }
             .print-page-landscape {
               width: 100% !important;
-              max-width: 100% !important;
+              max-width: none !important;
               padding: 0 !important;
               margin: 0 !important;
               box-shadow: none !important;
               border: none !important;
-              font-size: ${isVeryDense ? "7pt" : isDense ? "7.5pt" : "8.5pt"} !important;
             }
             .print-page-landscape table {
-              width: 100% !important;
-              table-layout: auto !important;
-              font-size: ${isVeryDense ? "6.5pt" : isDense ? "7pt" : "8pt"} !important;
+              font-size: ${isVeryDense ? "7.5pt" : isDense ? "8pt" : "9pt"} !important;
+              line-height: 1.15 !important;
             }
             .print-page-landscape th,
             .print-page-landscape td {
@@ -150,13 +160,26 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
             .no-print {
               display: none !important;
             }
+            [contenteditable="true"] {
+              outline: none !important;
+              background: transparent !important;
+            }
+          }
+          [contenteditable="true"]:hover {
+            outline: 1px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 2px;
+          }
+          [contenteditable="true"]:focus {
+            outline: 2px solid rgba(59, 130, 246, 0.8);
+            background-color: rgba(239, 246, 255, 0.4);
+            border-radius: 2px;
           }
         `,
         }}
       />
 
       {/* Action Toolbar */}
-      <div className="no-print glass-floating rounded-2xl p-4 flex items-center justify-between">
+      <div className="no-print glass-floating rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold text-slate-900">
@@ -170,19 +193,63 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
             Tabel otomatis menyesuaikan ukuran font dan padding secara dinamis agar 100% muat pas di 1 lembar kertas A4 Landscape
           </p>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm cursor-pointer"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          <span>Cetak Nominatif</span>
-        </button>
+
+        <div className="flex items-center gap-2.5">
+          {/* Edit on Canvas Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              isEditMode
+                ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                : "bg-white/80 hover:bg-white text-slate-700 border-slate-300"
+            }`}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>{isEditMode ? "Mode Edit di Canvas: AKTIF" : "Edit di Canvas"}</span>
+          </button>
+
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleResetCanvas}
+              className="btn-tactile flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-300 cursor-pointer"
+              title="Reset kembali ke teks awal dari data input"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Teks</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => window.print()}
+            className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Cetak Nominatif</span>
+          </button>
+        </div>
       </div>
+
+      {isEditMode && (
+        <div className="no-print p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Edit3 className="w-4 h-4 shrink-0 text-amber-600" />
+            <span>
+              <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada Nominatif (judul, narasi kegiatan, seluruh kolom & baris tabel, angka rupiah, keterangan ST, hingga tanda tangan) dapat langsung Anda klik dan edit secara bebas.
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Nominatif Document Sheet (Landscape Print-ready with Tahoma Font) */}
       <div
         style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-        className="print-page print-page-landscape bg-white text-black p-4 md:p-6 rounded-2xl shadow-md border border-slate-200 mx-auto w-full max-w-[1240px] text-xs leading-normal space-y-3"
+        contentEditable={isEditMode}
+        suppressContentEditableWarning={true}
+        className={`print-page print-page-landscape bg-white text-black p-4 md:p-6 rounded-2xl shadow-md border border-slate-200 mx-auto w-full max-w-[1240px] text-xs leading-normal space-y-3 transition-all ${
+          isEditMode ? "ring-2 ring-blue-400/40 ring-offset-2" : ""
+        }`}
       >
         {/* Document Title Header */}
         <div className="text-center space-y-1 px-2">
@@ -235,6 +302,8 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                 {/* Under Rincian Biaya */}
                 {showTransDarat && <th className="border border-black p-0.5">Transport Darat PP</th>}
                 {showTransLokal && <th className="border border-black p-0.5">Transport Lokal</th>}
+                {showTransJakartaPp && <th className="border border-black p-0.5">Transport Jakarta PP</th>}
+                {showTransDaerahPp && <th className="border border-black p-0.5">Transport Daerah PP</th>}
                 {showTiket && <th className="border border-black p-0.5">Tiket PP</th>}
                 {showUh && <th className="border border-black p-0.5">Uang Harian</th>}
                 {showHotel && <th className="border border-black p-0.5">Hotel</th>}
@@ -267,13 +336,13 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                       {idx + 1}
                     </td>
                     <td className="border border-black p-1 font-semibold">
-                      {row.nama}
+                      {row.nama || "—"}
                     </td>
                     <td className="border border-black p-1 text-left">
-                      {row.jabatan}
+                      {row.jabatan || "Pelaksana"}
                     </td>
                     <td className="border border-black p-1 text-center font-medium">
-                      {row.golongan}
+                      {row.golongan || "—"}
                     </td>
                     <td className="border border-black p-1 text-center">
                       {tujuanDisplay}
@@ -297,6 +366,16 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                     {showTransLokal && (
                       <td className="border border-black p-1 text-right font-mono">
                         {(row.transportasiLokal || 0).toLocaleString("id-ID")}
+                      </td>
+                    )}
+                    {showTransJakartaPp && (
+                      <td className="border border-black p-1 text-right font-mono">
+                        {(row.transportJakartaPp || 0).toLocaleString("id-ID")}
+                      </td>
+                    )}
+                    {showTransDaerahPp && (
+                      <td className="border border-black p-1 text-right font-mono">
+                        {(row.transportDaerahPp || 0).toLocaleString("id-ID")}
                       </td>
                     )}
                     {showTiket && (
@@ -330,31 +409,28 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                       </td>
                     )}
 
-                    {/* Jumlah Row */}
+                    {/* Jumlah Row Total */}
                     <td className="border border-black p-1 text-right font-mono font-bold">
                       {row.totalJumlah.toLocaleString("id-ID")}
                     </td>
 
-                    {/* Keterangan Column (Merged across all participant rows) */}
-                    {idx === 0 ? (
-                      <td
-                        rowSpan={rows.length}
-                        className="border border-black p-1.5 text-justify align-top text-[8.5px] leading-snug break-words max-w-[150px]"
-                      >
-                        {subtitleText}
-                      </td>
-                    ) : null}
+                    {/* Keterangan */}
+                    <td className="border border-black p-1 text-center text-[9px]">
+                      {row.nomorSt || header.nomorStStaff || header.nomorStMaster ? (
+                        <span>ST: {row.nomorSt || header.nomorStStaff || header.nomorStMaster}</span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
                   </tr>
                 );
               })}
-            </tbody>
-            <tfoot>
-              {/* Grand Total Row */}
-              <tr className="border-t-2 border-black font-bold text-black bg-white">
-                <td colSpan={leftColSpan} className="border border-black p-1 text-center uppercase tracking-wider text-[10px]">
-                  JUMLAH
-                </td>
 
+              {/* Total Footer Row */}
+              <tr className="font-bold border-t-2 border-black bg-white text-black text-[9.5px]">
+                <td colSpan={8} className="border border-black p-1 text-center font-bold uppercase tracking-wider">
+                  Total
+                </td>
                 {showTransDarat && (
                   <td className="border border-black p-1 text-right font-mono">
                     {totalTransDarat.toLocaleString("id-ID")}
@@ -363,6 +439,16 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                 {showTransLokal && (
                   <td className="border border-black p-1 text-right font-mono">
                     {totalTransLokal.toLocaleString("id-ID")}
+                  </td>
+                )}
+                {showTransJakartaPp && (
+                  <td className="border border-black p-1 text-right font-mono">
+                    {totalTransJakartaPp.toLocaleString("id-ID")}
+                  </td>
+                )}
+                {showTransDaerahPp && (
+                  <td className="border border-black p-1 text-right font-mono">
+                    {totalTransDaerahPp.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showTiket && (
@@ -395,44 +481,37 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                     {totalBelanjaBahan.toLocaleString("id-ID")}
                   </td>
                 )}
-
-                <td className="border border-black p-1 text-right font-mono font-bold text-[10px]">
+                <td className="border border-black p-1 text-right font-mono font-bold">
                   {grandTotal.toLocaleString("id-ID")}
                 </td>
-
-                {/* Terbilang inside Keterangan footer cell */}
-                <td className="border border-black p-1 text-center italic font-bold text-[8.5px] leading-tight break-words max-w-[150px]">
-                  {terbilang(grandTotal)}
-                </td>
+                <td className="border border-black p-1"></td>
               </tr>
-            </tfoot>
+            </tbody>
           </table>
         </div>
 
-        {/* Signatures Section (3 Kolom: PPK, Bendahara, Penanggung Jawab Kegiatan) */}
-        <div className="pt-4 pb-1">
-          <div className="grid grid-cols-3 text-left gap-4 text-[10px] font-sans">
-            {/* 1. PPK (Kiri) */}
-            <div className="space-y-12">
-              <div>
-                <p>Mengetahui/ Menyetujui</p>
-                <p className="font-semibold">Pejabat Pembuat Komitmen</p>
-              </div>
-              <div className="space-y-0.5">
-                <p className="font-bold">{header.ppkNama || "Kunto Nugroho"}</p>
-                <p className="font-mono text-[9.5px]">NIP. {header.ppkNip || "198912142018011001"}</p>
-              </div>
-            </div>
+        {/* Terbilang Grand Total */}
+        <div className="pt-2 text-xs font-sans">
+          <p className="font-semibold text-black">
+            Terbilang : &nbsp;
+            <span className="italic font-normal">
+              {terbilang(grandTotal).toLowerCase()}
+            </span>
+          </p>
+        </div>
 
-            {/* 2. Bendahara Pengeluaran (Tengah) */}
-            <div className="space-y-12">
-              <div>
-                <p>Bendahara Pengeluaran</p>
-                <p className="font-semibold">Kemenko Pangan</p>
+        {/* Signatures Section: Bendahara (Kiri) & PPK (Kanan) */}
+        <div className="pt-8 pb-4">
+          <div className="flex justify-between items-start text-xs font-sans px-8">
+            {/* Left: Bendahara Pengeluaran */}
+            <div className="space-y-16 text-left">
+              <div className="space-y-0.5">
+                <p>Lunas dibayar</p>
+                <p className="font-semibold">Bendahara Pengeluaran</p>
               </div>
               <div className="space-y-0.5">
-                <p className="font-bold">{header.bendahara.split(",")[0] || "Raka Panji Wibowo, S.Kom"}</p>
-                <p className="font-mono text-[9.5px]">
+                <p className="font-semibold">{header.bendahara.split(",")[0] || "Raka Panji Wibowo, S.Kom"}</p>
+                <p className="font-mono text-[11px]">
                   {header.bendahara.includes("NIP")
                     ? header.bendahara.substring(header.bendahara.indexOf("NIP"))
                     : "NIP. 19950408202012 1 001"}
@@ -440,14 +519,15 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
               </div>
             </div>
 
-            {/* 3. Penanggung Jawab Kegiatan (Kanan) */}
-            <div className="space-y-12">
-              <div>
-                <p>Penanggung Jawab Kegiatan,</p>
+            {/* Right: Pejabat Pembuat Komitmen */}
+            <div className="space-y-16 text-left">
+              <div className="space-y-0.5">
+                <p>Jakarta, {formatDateIndo(header.tanggalSpd || new Date().toISOString())}</p>
+                <p className="font-semibold">Pejabat Pembuat Komitmen</p>
               </div>
               <div className="space-y-0.5">
-                <p className="font-bold">{pjKegiatan.nama || "Reni Sutaryo, S.Si., M.Adm.Pemb"}</p>
-                <p className="font-mono text-[9.5px]">NIP. {pjKegiatan.nip || "19791126 200604 2 014"}</p>
+                <p className="font-semibold">{header.ppkNama || "Arif Wibowo, S.H., M.H."}</p>
+                <p className="font-mono text-[11px]">NIP. {header.ppkNip || "19830124200801 1 006"}</p>
               </div>
             </div>
           </div>

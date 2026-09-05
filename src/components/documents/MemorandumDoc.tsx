@@ -1,17 +1,24 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { HeaderData, ParticipantRow } from "@/lib/types";
-import { formatRupiah, terbilang } from "@/lib/terbilang";
-import { Printer } from "lucide-react";
+import { Printer, Edit3, RotateCcw } from "lucide-react";
 
 interface MemorandumDocProps {
   header: HeaderData;
+  setHeader?: React.Dispatch<React.SetStateAction<HeaderData>>;
   rows: ParticipantRow[];
+  setRows?: React.Dispatch<React.SetStateAction<ParticipantRow[]>>;
 }
 
-export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) => {
-  // Format dates helper
+export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
+  header,
+  rows,
+}) => {
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [renderKey, setRenderKey] = useState(0);
+
+  // Format dates
   const formatDateIndo = (dStr: string) => {
     if (!dStr) return "";
     const d = new Date(dStr);
@@ -24,22 +31,19 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
   };
 
   const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
-  const tanggalMemo = formatDateIndo(header.tanggalMemo || header.tanggalSpd || new Date().toISOString());
+  const tanggalMemo = formatDateIndo(header.tanggalMemo || new Date().toISOString());
+  const kotaTujuanText = (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
   const tahunAnggaran = header.tanggalSpd ? new Date(header.tanggalSpd).getFullYear() : new Date().getFullYear();
 
-  const kotaTujuanText = (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
+  const perihalText = header.keteranganMemo || header.keteranganKegiatan || "Permohonan Dana Perjalanan Dinas";
 
-  // First row participant as PJ Kegiatan
-  const pjKegiatan = rows[0] || {
-    nama: "Reni Sutaryo, S.Si., M.Adm.Pemb",
-    nip: "19791126 200604 2 014",
+  const handleResetCanvas = () => {
+    setRenderKey((prev) => prev + 1);
   };
 
-  const perihalText = header.keteranganMemo || "Permintaan Pembayaran Langsung (LS) Biaya Perjalanan Dinas";
-
   return (
-    <div className="space-y-6">
-      {/* Scoped Print Style for Multi-Page Document */}
+    <div className="space-y-6" key={renderKey}>
+      {/* Scoped Print Portrait Style for 2-Page Memo */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -51,10 +55,6 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
             body {
               background: #ffffff !important;
             }
-            .memo-page-1 {
-              page-break-after: always !important;
-              break-after: page !important;
-            }
             .print-page-memo {
               width: 100% !important;
               max-width: none !important;
@@ -63,37 +63,89 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
               box-shadow: none !important;
               border: none !important;
             }
+            .memo-page-1 {
+              page-break-after: always !important;
+              break-after: page !important;
+            }
             .no-print {
               display: none !important;
             }
+            [contenteditable="true"] {
+              outline: none !important;
+              background: transparent !important;
+            }
+          }
+          [contenteditable="true"]:hover {
+            outline: 1px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 2px;
+          }
+          [contenteditable="true"]:focus {
+            outline: 2px solid rgba(59, 130, 246, 0.8);
+            background-color: rgba(239, 246, 255, 0.4);
+            border-radius: 2px;
           }
         `,
         }}
       />
 
-      {/* Action Toolbar */}
-      <div className="no-print glass-floating rounded-2xl p-4 flex items-center justify-between">
+      {/* Action Toolbar with Edit on Canvas */}
+      <div className="no-print glass-floating rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-slate-900">
-              Dokumen 2: Memorandum Dinas (2 Halaman)
-            </h3>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
-              Format Resmi 2 Halaman
-            </span>
-          </div>
+          <h3 className="text-sm font-bold text-slate-900">
+            Dokumen 2: Memorandum Dinas & Lampiran Anggaran (2 Halaman)
+          </h3>
           <p className="text-xs text-slate-500">
-            Halaman 1: Nota dinas pengajuan biaya &middot; Halaman 2: Lampiran pembebanan anggaran POK / MAK
+            Halaman 1 Nota Pengajuan Dana, Halaman 2 Rincian POK / MAK dengan 4 Kolom Tanda Tangan
           </p>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm cursor-pointer"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          <span>Cetak Memorandum (2 Hal)</span>
-        </button>
+
+        <div className="flex items-center gap-2.5">
+          {/* Edit on Canvas Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              isEditMode
+                ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                : "bg-white/80 hover:bg-white text-slate-700 border-slate-300"
+            }`}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>{isEditMode ? "Mode Edit di Canvas: AKTIF" : "Edit di Canvas"}</span>
+          </button>
+
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleResetCanvas}
+              className="btn-tactile flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-300 cursor-pointer"
+              title="Reset kembali ke teks awal dari data input"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Teks</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => window.print()}
+            className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Cetak Memorandum (2 Hal)</span>
+          </button>
+        </div>
       </div>
+
+      {isEditMode && (
+        <div className="no-print p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Edit3 className="w-4 h-4 shrink-0 text-amber-600" />
+            <span>
+              <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada Memorandum (kop instansi, nomor surat, perihal, narasi alinea, rincian MAK, hingga 4 kolom tanda tangan) dapat langsung Anda klik dan edit secara bebas.
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Outer Wrapper for Multi-Page Sheet */}
       <div className="space-y-8">
@@ -102,7 +154,11 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
         {/* ========================================================================= */}
         <div
           style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-          className="print-page print-page-memo memo-page-1 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-5"
+          contentEditable={isEditMode}
+          suppressContentEditableWarning={true}
+          className={`print-page print-page-memo memo-page-1 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-5 transition-all ${
+            isEditMode ? "ring-2 ring-blue-400/40 ring-offset-2" : ""
+          }`}
         >
           {/* Header Kop Garuda & Instansi */}
           <div className="flex items-center gap-4 border-b-2 border-black pb-3">
@@ -139,7 +195,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
               MEMORANDUM
             </h2>
             <p className="text-xs font-semibold font-sans">
-              Nomor : &nbsp;&nbsp;{header.nomorMemo || "M.269/INS/PPK/VIII/2026"}
+              Nomor : &nbsp;&nbsp;{header.nomorMemo || "M.xxx/INS/PPK/VIII/2026"}
             </p>
           </div>
 
@@ -155,7 +211,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
               <span className="col-span-1 text-center">:</span>
               <span className="col-span-9">Pejabat Pembuat Komitmen Inspektorat</span>
             </div>
-            <div className="grid grid-cols-12 gap-1">
+            <div className="grid grid-cols-12 gap-1 items-start">
               <span className="col-span-2">Hal</span>
               <span className="col-span-1 text-center">:</span>
               <span className="col-span-9 text-justify">{perihalText}</span>
@@ -168,7 +224,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
                 <p>2. Daftar Nominatif</p>
               </div>
             </div>
-            <div className="grid grid-cols-12 gap-1 pt-0.5">
+            <div className="grid grid-cols-12 gap-1 pt-0.5 items-center">
               <span className="col-span-2">Tanggal</span>
               <span className="col-span-1 text-center">:</span>
               <span className="col-span-9">{tanggalMemo}</span>
@@ -178,7 +234,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
           {/* Body Narrative */}
           <div className="space-y-4 text-justify text-xs md:text-[12px] leading-relaxed pt-2">
             <p>
-              Sehubungan dengan {header.keteranganKegiatan} pada Tanggal {formatDateIndo(rows[0]?.tanggalMulai || header.tanggalSpd)} di {kotaTujuanText}, {header.provinsiTujuan} dengan ini kami mengajukan permohonan dana sebesar{" "}
+              Sehubungan dengan {header.keteranganKegiatan || "kegiatan perjalanan dinas"} pada Tanggal {formatDateIndo(rows[0]?.tanggalMulai || header.tanggalSpd)} di {kotaTujuanText}, {header.provinsiTujuan} dengan ini kami mengajukan permohonan dana sebesar{" "}
               <strong>Rp{grandTotal.toLocaleString("id-ID")}</strong> yang dibebankan pada APBN satuan kerja Kementerian Koordinator Bidang Pangan tahun anggaran {tahunAnggaran} dengan MAK.CL.7459.ABR.006.071.CC.{header.nomorMak || "524111"}
             </p>
 
@@ -195,8 +251,8 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
                 <p>Inspektorat</p>
               </div>
               <div className="space-y-0.5">
-                <p className="font-bold">{header.ppkNama || "Kunto Nugroho"}</p>
-                <p className="font-mono text-[11px]">NIP. {header.ppkNip || "198912142018011001"}</p>
+                <p className="font-bold">{header.ppkNama || "Arif Wibowo, S.H., M.H."}</p>
+                <p className="font-mono text-[11px]">NIP. {header.ppkNip || "19830124200801 1 006"}</p>
               </div>
             </div>
           </div>
@@ -207,7 +263,11 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
         {/* ========================================================================= */}
         <div
           style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-          className="print-page print-page-memo bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-6"
+          contentEditable={isEditMode}
+          suppressContentEditableWarning={true}
+          className={`print-page print-page-memo bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-6 transition-all ${
+            isEditMode ? "ring-2 ring-blue-400/40 ring-offset-2" : ""
+          }`}
         >
           {/* Header Lampiran Surat */}
           <div className="space-y-1 pt-2">
@@ -218,7 +278,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
               <div className="grid grid-cols-12 max-w-md">
                 <span className="col-span-3">Nomor</span>
                 <span className="col-span-1 text-center">:</span>
-                <span className="col-span-8">{header.nomorMemo || "M.269/INS/PPK/VIII/2026"}</span>
+                <span className="col-span-8">{header.nomorMemo || "M.xxx/INS/PPK/VIII/2026"}</span>
               </div>
               <div className="grid grid-cols-12 max-w-md">
                 <span className="col-span-3">Tanggal</span>
@@ -228,72 +288,100 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
             </div>
           </div>
 
-          {/* Table Pembebanan Anggaran POK / MAK */}
+          {/* Judul Bagian Pembebanan Anggaran */}
           <div className="pt-2">
+            <p className="font-bold text-black uppercase">
+              PEMBEBANAN ANGGARAN
+            </p>
+          </div>
+
+          {/* Tabel POK / MAK Pembebanan Anggaran */}
+          <div className="pt-1">
             <table className="w-full border border-black text-xs font-sans border-collapse">
               <thead>
-                <tr className="border-b border-black font-bold text-left bg-gray-50">
-                  <th className="border-r border-black p-2 w-40">Kegiatan, Output, Komponen, Sub Komponen, Akun</th>
-                  <th className="border-r border-black p-2">Uraian</th>
-                  <th className="border-r border-black p-2 w-12 text-center">Vol</th>
-                  <th className="p-2 w-36 text-center">Jumlah (Rp.)</th>
+                <tr className="border-b border-black font-bold text-center bg-gray-50 text-black">
+                  <th className="border border-black p-2 w-10">No</th>
+                  <th className="border border-black p-2 text-left">Kode MAK / POK</th>
+                  <th className="border border-black p-2 text-left">Uraian Akun Kegiatan</th>
+                  <th className="border border-black p-2 text-right w-44">Jumlah (Rp)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-b border-black">
-                  <td className="border-r border-black p-2 font-mono">7459.ABR.006</td>
-                  <td className="border-r border-black p-2">Rekomendasi Kebijakan Program Prioritas Nasional Bidang Tata Niaga dan Distribusi Pangan</td>
-                  <td className="border-r border-black p-2 text-center"></td>
-                  <td className="p-2 text-right"></td>
-                </tr>
-                <tr className="border-b border-black">
-                  <td className="border-r border-black p-2 font-mono">071.</td>
-                  <td className="border-r border-black p-2">Koordinasi Implementasi NEK Pengendalian Emisi GRK</td>
-                  <td className="border-r border-black p-2 text-center"></td>
-                  <td className="p-2 text-right"></td>
-                </tr>
-                <tr className="border-b border-black">
-                  <td className="border-r border-black p-2 font-mono">CC</td>
-                  <td className="border-r border-black p-2">Koordinasi Implementasi NEK Pengendalian Emisi GRK</td>
-                  <td className="border-r border-black p-2 text-center"></td>
-                  <td className="p-2 text-right"></td>
-                </tr>
-                <tr className="border-b border-black">
-                  <td className="border-r border-black p-2 font-mono">{header.nomorMak || "524111"}</td>
-                  <td className="border-r border-black p-2">
-                    {header.nomorMak === "524114"
-                      ? "Belanja Perjalanan Dinas Paket Meeting Luar Kota"
-                      : "Belanja Perjalanan Dinas Biasa"}
+                  <td className="border border-black p-2 text-center align-top">1</td>
+                  <td className="border border-black p-2 font-mono align-top">
+                    7459.ABR.006.071.CC.{header.nomorMak || "524111"}
                   </td>
-                  <td className="border-r border-black p-2 text-center"></td>
-                  <td className="p-2 text-right font-mono font-bold">
-                    Rp{grandTotal.toLocaleString("id-ID")}
+                  <td className="border border-black p-2 align-top">
+                    <p className="font-semibold">{header.keteranganKegiatan || "Perjalanan Dinas Jabatan"}</p>
+                    <p className="text-[11px] text-gray-700 pt-0.5">
+                      Tujuan: {kotaTujuanText}, {header.provinsiTujuan} ({rows.length} Orang)
+                    </p>
+                  </td>
+                  <td className="border border-black p-2 text-right font-mono font-bold align-top">
+                    <div className="flex justify-between px-2">
+                      <span>Rp</span>
+                      <span>{grandTotal.toLocaleString("id-ID")}</span>
+                    </div>
                   </td>
                 </tr>
               </tbody>
+              <tfoot>
+                <tr className="font-bold border-t border-black bg-gray-50 text-black">
+                  <td colSpan={3} className="border border-black p-2 text-center uppercase tracking-wider">
+                    Total Anggaran
+                  </td>
+                  <td className="border border-black p-2 text-right font-mono font-bold">
+                    <div className="flex justify-between px-2">
+                      <span>Rp</span>
+                      <span>{grandTotal.toLocaleString("id-ID")}</span>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
             </table>
-
-            {/* Terbilang Row */}
-            <div className="grid grid-cols-12 border-b border-x border-black p-2 text-xs">
-              <span className="col-span-2 font-bold">Terbilang</span>
-              <span className="col-span-1 text-center font-bold">:</span>
-              <span className="col-span-9 font-bold italic">
-                {terbilang(grandTotal).toLowerCase()}
-              </span>
-            </div>
           </div>
 
-          {/* Signatures Section Page 2 (4 Pihak: 2 Baris x 2 Kolom) */}
-          <div className="pt-8 pb-4 space-y-10 text-xs font-sans">
-            {/* Row 1: Bendahara (Kiri) & Penanggungjawab Kegiatan (Kanan) */}
-            <div className="grid grid-cols-2 text-left gap-8">
-              {/* Bendahara */}
+          {/* Grid 4 Kolom Tanda Tangan */}
+          <div className="pt-12 pb-4">
+            <div className="grid grid-cols-2 gap-x-12 gap-y-16 text-left text-xs font-sans">
+              {/* 1. Kiri Atas: PIC / Inisiator Kegiatan */}
+              <div className="space-y-16">
+                <div>
+                  <p>Inisiator Kegiatan,</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="font-semibold underline">{header.picInisiator || "Arif Wibowo, S.H., M.H."}</p>
+                  <p className="font-mono text-[11px]">NIP. 19830124200801 1 006</p>
+                </div>
+              </div>
+
+              {/* 2. Kanan Atas: Petugas Verifikasi */}
+              <div className="space-y-16 pl-6">
+                <div>
+                  <p>Petugas Verifikasi,</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="font-semibold underline">
+                    {header.petugasVerifikasi.split(",")[0] || "Nidya Hediyanti"}
+                  </p>
+                  <p className="font-mono text-[11px]">
+                    {header.petugasVerifikasi.includes("NIP")
+                      ? header.petugasVerifikasi.substring(header.petugasVerifikasi.indexOf("NIP"))
+                      : "NIP. 19920603 202521 2 034"}
+                  </p>
+                </div>
+              </div>
+
+              {/* 3. Kiri Bawah: Bendahara Pengeluaran */}
               <div className="space-y-16">
                 <div>
                   <p>Bendahara Pengeluaran,</p>
                 </div>
                 <div className="space-y-0.5">
-                  <p className="font-bold underline">{header.bendahara.split(",")[0] || "Raka Panji Wibowo"}</p>
+                  <p className="font-semibold underline">
+                    {header.bendahara.split(",")[0] || "Raka Panji Wibowo, S.Kom"}
+                  </p>
                   <p className="font-mono text-[11px]">
                     {header.bendahara.includes("NIP")
                       ? header.bendahara.substring(header.bendahara.indexOf("NIP"))
@@ -302,45 +390,14 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({ header, rows }) =>
                 </div>
               </div>
 
-              {/* Penanggungjawab Kegiatan */}
+              {/* 4. Kanan Bawah: Pejabat Pembuat Komitmen (PPK) */}
               <div className="space-y-16 pl-6">
                 <div>
-                  <p>Penanggungjawab Kegiatan,</p>
+                  <p>Pejabat Pembuat Komitmen,</p>
                 </div>
                 <div className="space-y-0.5">
-                  <p className="font-bold underline">{pjKegiatan.nama || "Reni Sutaryo"}</p>
-                  <p className="font-mono text-[11px]">NIP. {pjKegiatan.nip || "19791126 200604 2 014"}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Row 2: PPK (Kiri) & Petugas Verifikasi (Kanan) */}
-            <div className="grid grid-cols-2 text-left gap-8 pt-2">
-              {/* PPK */}
-              <div className="space-y-16">
-                <div className="space-y-0.5">
-                  <p>Mengetahui/menyetujui,</p>
-                  <p>Pejabat pembuat Komitmen</p>
-                  <p>Inspektorat</p>
-                </div>
-                <div className="space-y-0.5">
-                  <p className="font-bold underline">{header.ppkNama || "Kunto Nugroho"}</p>
-                  <p className="font-mono text-[11px]">NIP. {header.ppkNip || "198912142018011001"}</p>
-                </div>
-              </div>
-
-              {/* Petugas Verifikasi */}
-              <div className="space-y-16 pl-6">
-                <div className="space-y-0.5">
-                  <p>Petugas Verifikasi,</p>
-                </div>
-                <div className="space-y-0.5">
-                  <p className="font-bold underline">{header.petugasVerifikasi?.split(",")[0] || "Taufik Prasetyo"}</p>
-                  <p className="font-mono text-[11px]">
-                    {header.petugasVerifikasi?.includes("NIP")
-                      ? header.petugasVerifikasi.substring(header.petugasVerifikasi.indexOf("NIP"))
-                      : "NIP. 19900826202521 1 026"}
-                  </p>
+                  <p className="font-semibold underline">{header.ppkNama || "Arif Wibowo, S.H., M.H."}</p>
+                  <p className="font-mono text-[11px]">NIP. {header.ppkNip || "19830124200801 1 006"}</p>
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Navbar, ActiveTab } from "@/components/Navbar";
 import { HeaderForm } from "@/components/HeaderForm";
 import { ChecklistFilter } from "@/components/ChecklistFilter";
@@ -10,6 +10,9 @@ import { MemorandumDoc } from "@/components/documents/MemorandumDoc";
 import { NominatifDoc } from "@/components/documents/NominatifDoc";
 import { RincianBiayaDoc } from "@/components/documents/RincianBiayaDoc";
 import { BiayaRiilDoc } from "@/components/documents/BiayaRiilDoc";
+import { RekapPerdinTab } from "@/components/RekapPerdinTab";
+import { ModalDatabaseSync } from "@/components/ModalDatabaseSync";
+import { MasterSyncData } from "@/lib/googleSheetsService";
 
 import {
   HeaderData,
@@ -27,21 +30,24 @@ import sbmRaw from "@/data/sbm.json";
 import memoRaw from "@/data/nomor_memo.json";
 
 export default function Home() {
-  // Master data with runtime state (pegawai can be added)
+  // Master data with runtime state (pegawai, sbm, memo can be updated via Google Sheets sync)
   const [pegawaiList, setPegawaiList] = useState<Pegawai[]>(pegawaiRaw as Pegawai[]);
-  const sbmList: SbmRate[] = sbmRaw as SbmRate[];
-  const memoList: NomorMemo[] = memoRaw as NomorMemo[];
+  const [sbmList, setSbmList] = useState<SbmRate[]>(sbmRaw as SbmRate[]);
+  const [memoList, setMemoList] = useState<NomorMemo[]>(memoRaw as NomorMemo[]);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("input");
+  const [isDbModalOpen, setIsDbModalOpen] = useState<boolean>(false);
 
-  // Active Cost Columns State
+  // Active Cost Columns State (Default: Transportasi Darat PP only)
   const [activeCols, setActiveCols] = useState<Record<ActiveCostKey, boolean>>({
-    tiket: true,
+    tiket: false,
     dukunganTransportasi: false,
     transportasiDarat: true,
-    transportasiLokal: true,
-    pengRill: true,
-    hotel: true,
+    transportasiLokal: false,
+    transportJakartaPp: false,
+    transportDaerahPp: false,
+    pengRill: false,
+    hotel: false,
     penginapan30: false,
     fulldayMeeting: false,
     fullboardMeeting: false,
@@ -49,7 +55,7 @@ export default function Home() {
     belanjaBahan: false,
   });
 
-  // Active Uang Harian State
+  // Active Uang Harian State (Default: UH Biasa 100% only)
   const [activeUh, setActiveUh] = useState<Record<ActiveUhKey, boolean>>({
     uhBiasa: true,
     uhBiasa60: false,
@@ -60,52 +66,52 @@ export default function Home() {
   // Find default PPK (Arif Wibowo)
   const defaultPpk = pegawaiList.find((p) => p.nama.toLowerCase().includes("arif wibowo"));
 
-  // Header Data State
+  // Header Data State (Clean defaults as requested)
   const [header, setHeader] = useState<HeaderData>({
-    keteranganKegiatan:
-      "Perjalanan Dinas dalam rangka Pembahasan Laporan Kinerja 2025 dan PKPT 2026 di Lingkungan Kemenko Bidang Pangan",
-    keteranganMemo:
-      "Perjalanan Dinas dalam rangka Pembahasan Laporan Kinerja 2025 dan PKPT 2026 di Lingkungan Kemenko Bidang Pangan",
+    keteranganKegiatan: "",
+    keteranganMemo: "",
     provinsiTujuan: "JAWA BARAT",
-    kotaTujuanList: ["Kota Depok"],
+    kotaTujuanList: [""],
     unitKerja: "Inspektorat",
     picInisiator: defaultPpk?.nama || "Arif Wibowo, S.H., M.H.",
     bendahara: "Raka Panji Wibowo, S.Kom, NIP. 19950408202012 1 001",
-    petugasVerifikasi: "Nidya Hediyanti, NIP. 19920603 202521 2 034",
-    nomorKomp: "051",
-    nomorMak: "524111",
+    petugasVerifikasi: "",
+    nomorKomp: "",
+    nomorMak: "",
     itemDetail: "001",
     alatAngkut: "Angkutan Darat",
     tanggalSpd: new Date().toISOString().split("T")[0],
     tanggalMemo: new Date().toISOString().split("T")[0],
-    nomorMemo: "M. 26 /INS/PPK/ III /2026",
-    nomorStMaster: "ST-04/INS/KP.01/01/2026",
+    nomorMemo: "M.xxx/INS/PPK/VIII/2026",
+    nomorStMaster: "",
     ppkNama: defaultPpk?.nama || "Arif Wibowo, S.H., M.H.",
     ppkNip: defaultPpk?.nip || "19830124200801 1 006",
     ppkJabatan: defaultPpk?.jabatan || "Kepala Bagian Tata Usaha Inspektorat",
+    noSpby: "",
+    jenisPengajuan: "RAMPUNG",
+    noSpm: "00073T",
+    jenisPerdin: "Perdin Luar Kota",
+    berangkatDari: "Jakarta",
   });
 
-  // Participant Rows State
+  // Participant Rows State (Clean initial empty row)
   const [rows, setRows] = useState<ParticipantRow[]>(() => {
-    const defaultProvSbm = findSbmByProvince(sbmList, "JAWA BARAT");
-    const uh = defaultProvSbm?.uhBiasa || 430000;
-
-    const sample1: ParticipantRow = {
+    const initialRow: ParticipantRow = {
       id: "1",
-      kodeNama: "reni",
-      nama: "Reni Sutaryo, S.Si., M.Adm.Pemb",
-      nip: "19791126200604 2 014",
-      golongan: "IV/c",
-      jabatan: "Inspektur",
-      tujuanKota: "Kota Depok",
+      kodeNama: "",
+      nama: "",
+      nip: "",
+      golongan: "",
+      jabatan: "",
+      tujuanKota: "",
       tujuanProvinsi: "JAWA BARAT",
       tanggalMulai: new Date().toISOString().split("T")[0],
       tanggalSelesai: new Date().toISOString().split("T")[0],
       lamaHari: 1,
-      nomorSt: "ST-04/INS/KP.01/01/2026",
+      nomorSt: "",
       nomorSpd: "01",
       hariUhBiasa: 1,
-      biayaUhBiasa: uh,
+      biayaUhBiasa: 0,
       hariUhBiasa60: 0,
       biayaUhBiasa60: 0,
       hariUhHalfday: 0,
@@ -114,8 +120,8 @@ export default function Home() {
       biayaUhFullboard: 0,
       tiket: 0,
       dukunganTransportasi: 0,
-      transportasiDarat: 350000,
-      transportasiLokal: 150000,
+      transportasiDarat: 0,
+      transportasiLokal: 0,
       transportJakartaPp: 0,
       transportDaerahPp: 0,
       hotel: 0,
@@ -124,70 +130,66 @@ export default function Home() {
       fullboardMeeting: 0,
       representatif: 0,
       belanjaBahan: 0,
-      pengRill: 300000,
-      riilItems: [
-        { id: "1", uraian: "Transportasi Darat PP (Taksi / Grab)", amount: 150000 },
-        { id: "2", uraian: "Transportasi Lokal Daerah Tujuan", amount: 150000 },
-      ],
-      totalJumlah: uh + 350000 + 150000 + 300000,
+      pengRill: 0,
+      riilItems: [],
+      totalJumlah: 0,
     };
 
-    const sample2: ParticipantRow = {
-      id: "2",
-      kodeNama: "arif",
-      nama: "Arif Wibowo, S.H., M.H.",
-      nip: "19830124200801 1 006",
-      golongan: "IV/a",
-      jabatan: "Kepala Bagian Tata Usaha Inspektorat",
-      tujuanKota: "Kota Depok",
-      tujuanProvinsi: "JAWA BARAT",
-      tanggalMulai: new Date().toISOString().split("T")[0],
-      tanggalSelesai: new Date().toISOString().split("T")[0],
-      lamaHari: 1,
-      nomorSt: "ST-04/INS/KP.01/01/2026",
-      nomorSpd: "02",
-      hariUhBiasa: 1,
-      biayaUhBiasa: uh,
-      hariUhBiasa60: 0,
-      biayaUhBiasa60: 0,
-      hariUhHalfday: 0,
-      biayaUhHalfday: 0,
-      hariUhFullboard: 0,
-      biayaUhFullboard: 0,
-      tiket: 0,
-      dukunganTransportasi: 0,
-      transportasiDarat: 350000,
-      transportasiLokal: 150000,
-      transportJakartaPp: 0,
-      transportDaerahPp: 0,
-      hotel: 0,
-      penginapan30: 0,
-      fulldayMeeting: 0,
-      fullboardMeeting: 0,
-      representatif: 0,
-      belanjaBahan: 0,
-      pengRill: 300000,
-      riilItems: [
-        { id: "1", uraian: "Transportasi Darat PP (Taksi / Grab)", amount: 150000 },
-        { id: "2", uraian: "Transportasi Lokal Daerah Tujuan", amount: 150000 },
-      ],
-      totalJumlah: uh + 350000 + 150000 + 300000,
-    };
-
-    return [sample1, sample2];
+    return [initialRow];
   });
 
-  // Re-calculate all rows when active cost, active uh, or province changes
-  useEffect(() => {
-    const sbm = findSbmByProvince(sbmList, header.provinsiTujuan);
-    setRows((prev) =>
-      prev.map((r) => calculateRowTotal(r, sbm, activeUh, activeCols))
-    );
-  }, [header.provinsiTujuan, activeCols, activeUh]);
+  // Handlers for state updates with synchronized row recalculation
+  const handleSetActiveCols: React.Dispatch<React.SetStateAction<Record<ActiveCostKey, boolean>>> = (action) => {
+    setActiveCols((prevCols) => {
+      const nextCols = typeof action === "function" ? action(prevCols) : action;
+      const sbm = findSbmByProvince(sbmList, header.provinsiTujuan);
+      setRows((prevRows) => prevRows.map((r) => calculateRowTotal(r, sbm, activeUh, nextCols)));
+      return nextCols;
+    });
+  };
 
-  // Handle Apply ST Massal
+  const handleSetActiveUh: React.Dispatch<React.SetStateAction<Record<ActiveUhKey, boolean>>> = (action) => {
+    setActiveUh((prevUh) => {
+      const nextUh = typeof action === "function" ? action(prevUh) : action;
+      const sbm = findSbmByProvince(sbmList, header.provinsiTujuan);
+      setRows((prevRows) => prevRows.map((r) => calculateRowTotal(r, sbm, nextUh, activeCols)));
+      return nextUh;
+    });
+  };
+
+  const handleSetHeader: React.Dispatch<React.SetStateAction<HeaderData>> = (action) => {
+    setHeader((prevHeader) => {
+      const nextHeader = typeof action === "function" ? action(prevHeader) : action;
+      if (nextHeader.provinsiTujuan !== prevHeader.provinsiTujuan) {
+        const sbm = findSbmByProvince(sbmList, nextHeader.provinsiTujuan);
+        setRows((prevRows) => prevRows.map((r) => calculateRowTotal(r, sbm, activeUh, activeCols)));
+      }
+      return nextHeader;
+    });
+  };
+
+  // Handle Apply ST Massal (Staf & Pejabat)
   const handleApplyStToAll = (stNumber: string) => {
-    setRows((prev) => prev.map((r) => ({ ...r, nomorSt: stNumber })));
+    setRows((prev) =>
+      prev.map((r) => {
+        const isOfficial =
+          r.isPejabat ??
+          (r.jabatan?.toLowerCase().includes("inspektur") ||
+            r.jabatan?.toLowerCase().includes("kepala") ||
+            r.golongan?.startsWith("IV"));
+
+        let assignedSt = header.nomorStStaff || header.nomorStMaster || stNumber;
+        if (header.useDifferentStPejabat && header.nomorStPejabat && isOfficial) {
+          assignedSt = header.nomorStPejabat;
+        }
+
+        return {
+          ...r,
+          nomorSt: assignedSt,
+          isPejabat: isOfficial,
+        };
+      })
+    );
   };
 
   // Handle Next Memo Number Generation
@@ -199,14 +201,26 @@ export default function Home() {
     const now = new Date();
     const currentMonthRom = romanMonths[now.getMonth()];
     const currentYear = now.getFullYear();
-    const nextSeq = memoList.length > 0 ? memoList.length + 1 : 26;
-    const generated = `M. ${nextSeq} /INS/PPK/ ${currentMonthRom} /${currentYear}`;
+    const nextSeq = memoList.length > 0 ? memoList.length + 1 : 269;
+    const generated = `M.${nextSeq}/INS/PPK/${currentMonthRom}/${currentYear}`;
     setHeader((prev) => ({ ...prev, nomorMemo: generated }));
   };
 
   // Handle Add New Pegawai to master list
   const handleAddPegawai = (newPeg: Pegawai) => {
     setPegawaiList((prev) => [...prev, newPeg]);
+  };
+
+  const handleMasterSyncSuccess = (data: MasterSyncData) => {
+    if (data.pegawai && data.pegawai.length > 0) {
+      setPegawaiList(data.pegawai);
+    }
+    if (data.sbm && data.sbm.length > 0) {
+      setSbmList(data.sbm);
+    }
+    if (data.memo && data.memo.length > 0) {
+      setMemoList(data.memo);
+    }
   };
 
   const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
@@ -218,6 +232,7 @@ export default function Home() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onPrint={() => window.print()}
+        onOpenDatabaseSync={() => setIsDbModalOpen(true)}
         participantCount={rows.length}
         totalExpenditure={grandTotal}
       />
@@ -229,7 +244,7 @@ export default function Home() {
           <div className="space-y-6">
             <HeaderForm
               header={header}
-              setHeader={setHeader}
+              setHeader={handleSetHeader}
               sbmList={sbmList}
               memoList={memoList}
               pegawaiList={pegawaiList}
@@ -240,9 +255,9 @@ export default function Home() {
 
             <ChecklistFilter
               activeCols={activeCols}
-              setActiveCols={setActiveCols}
+              setActiveCols={handleSetActiveCols}
               activeUh={activeUh}
-              setActiveUh={setActiveUh}
+              setActiveUh={handleSetActiveUh}
             />
 
             <ParticipantGrid
@@ -253,35 +268,89 @@ export default function Home() {
               activeCols={activeCols}
               activeUh={activeUh}
               provinsiTujuan={header.provinsiTujuan}
+              header={header}
             />
           </div>
         )}
 
         {/* Tab 1: Kwitansi */}
         {activeTab === "kwitansi" && (
-          <KwitansiDoc header={header} rows={rows} activeCols={activeCols} activeUh={activeUh} />
+          <KwitansiDoc
+            header={header}
+            setHeader={setHeader}
+            rows={rows}
+            setRows={setRows}
+            activeCols={activeCols}
+            activeUh={activeUh}
+          />
         )}
 
         {/* Tab 2: Memorandum */}
         {activeTab === "memorandum" && (
-          <MemorandumDoc header={header} rows={rows} />
+          <MemorandumDoc
+            header={header}
+            setHeader={setHeader}
+            rows={rows}
+            setRows={setRows}
+          />
         )}
 
         {/* Tab 3: Nominatif */}
         {activeTab === "nominatif" && (
-          <NominatifDoc header={header} rows={rows} activeCols={activeCols} activeUh={activeUh} />
+          <NominatifDoc
+            header={header}
+            setHeader={setHeader}
+            rows={rows}
+            setRows={setRows}
+            activeCols={activeCols}
+            activeUh={activeUh}
+          />
         )}
 
         {/* Tab 4: Rincian Biaya */}
         {activeTab === "rincian" && (
-          <RincianBiayaDoc header={header} rows={rows} activeCols={activeCols} activeUh={activeUh} />
+          <RincianBiayaDoc
+            header={header}
+            setHeader={setHeader}
+            rows={rows}
+            setRows={setRows}
+            activeCols={activeCols}
+            activeUh={activeUh}
+          />
         )}
 
         {/* Tab 5: Biaya Riil */}
         {activeTab === "riil" && (
-          <BiayaRiilDoc header={header} rows={rows} activeCols={activeCols} />
+          <BiayaRiilDoc
+            header={header}
+            setHeader={setHeader}
+            rows={rows}
+            setRows={setRows}
+            activeCols={activeCols}
+          />
+        )}
+
+        {/* Tab 6: Rekap Perdin (48-Column SPJ Database & Excel Export) */}
+        {activeTab === "rekap" && (
+          <RekapPerdinTab
+            header={header}
+            rows={rows}
+            onOpenDatabaseSync={() => setIsDbModalOpen(true)}
+          />
         )}
       </main>
+
+      {/* Modal Integrasi Database Google Spreadsheet */}
+      <ModalDatabaseSync
+        isOpen={isDbModalOpen}
+        onClose={() => setIsDbModalOpen(false)}
+        header={header}
+        rows={rows}
+        onMasterSyncSuccess={handleMasterSyncSuccess}
+        currentPegawaiList={pegawaiList}
+        currentSbmList={sbmList}
+        currentMemoList={memoList}
+      />
     </div>
   );
 }
