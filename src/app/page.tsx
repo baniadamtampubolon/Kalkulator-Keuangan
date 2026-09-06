@@ -12,6 +12,7 @@ import { RincianBiayaDoc } from "@/components/documents/RincianBiayaDoc";
 import { BiayaRiilDoc } from "@/components/documents/BiayaRiilDoc";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
 import { ModalDatabaseSync } from "@/components/ModalDatabaseSync";
+import { Footer } from "@/components/Footer";
 import {
   MasterSyncData,
   getCachedMasterData,
@@ -257,7 +258,7 @@ export default function Home() {
   const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
 
   return (
-    <div className="min-h-screen pb-16 flex flex-col">
+    <div className="min-h-screen flex flex-col">
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -369,6 +370,9 @@ export default function Home() {
           />
         )}
       </main>
+
+      {/* Minimalist Web Footer */}
+      <Footer />
 
       {/* Modal Integrasi Database Google Spreadsheet */}
       <ModalDatabaseSync

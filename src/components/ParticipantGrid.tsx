@@ -11,6 +11,7 @@ import {
 } from "@/lib/types";
 import { calculateRowTotal, findSbmByProvince } from "@/lib/calc";
 import { ModalTiket, ModalHotel, ModalRiil, ModalSpjExtra } from "./Modals";
+import { CurrencyInput } from "./CurrencyInput";
 import {
   Users,
   Plus,
@@ -476,16 +477,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                       </div>
                       <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
                         <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
-                        <input
-                          type="number"
-                          min={0}
-                          step={1000}
-                          value={row.biayaUhBiasa !== undefined ? row.biayaUhBiasa : 0}
-                          onChange={(e) => {
-                            const val = Math.max(0, parseInt(e.target.value) || 0);
-                            handleUpdateRow(row.id, { biayaUhBiasa: val });
-                          }}
+                        <CurrencyInput
+                          value={row.biayaUhBiasa}
+                          onChange={(val) => handleUpdateRow(row.id, { biayaUhBiasa: val })}
                           className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
+                          placeholder="0"
                           title="Nominal Uang Harian (Editable: dapat disesuaikan bila dipotong uang makan/lainnya)"
                         />
                       </div>
@@ -516,16 +512,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                       </div>
                       <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
                         <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
-                        <input
-                          type="number"
-                          min={0}
-                          step={1000}
-                          value={row.biayaUhBiasa60 !== undefined ? row.biayaUhBiasa60 : 0}
-                          onChange={(e) => {
-                            const val = Math.max(0, parseInt(e.target.value) || 0);
-                            handleUpdateRow(row.id, { biayaUhBiasa60: val });
-                          }}
+                        <CurrencyInput
+                          value={row.biayaUhBiasa60}
+                          onChange={(val) => handleUpdateRow(row.id, { biayaUhBiasa60: val })}
                           className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
+                          placeholder="0"
                           title="Nominal UH 60% (Editable: dapat disesuaikan)"
                         />
                       </div>
@@ -556,16 +547,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                       </div>
                       <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
                         <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
-                        <input
-                          type="number"
-                          min={0}
-                          step={1000}
-                          value={row.biayaUhHalfday !== undefined ? row.biayaUhHalfday : 0}
-                          onChange={(e) => {
-                            const val = Math.max(0, parseInt(e.target.value) || 0);
-                            handleUpdateRow(row.id, { biayaUhHalfday: val });
-                          }}
+                        <CurrencyInput
+                          value={row.biayaUhHalfday}
+                          onChange={(val) => handleUpdateRow(row.id, { biayaUhHalfday: val })}
                           className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
+                          placeholder="0"
                           title="Nominal UH Halfday (Editable: dapat disesuaikan)"
                         />
                       </div>
@@ -596,16 +582,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                       </div>
                       <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
                         <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
-                        <input
-                          type="number"
-                          min={0}
-                          step={1000}
-                          value={row.biayaUhFullboard !== undefined ? row.biayaUhFullboard : 0}
-                          onChange={(e) => {
-                            const val = Math.max(0, parseInt(e.target.value) || 0);
-                            handleUpdateRow(row.id, { biayaUhFullboard: val });
-                          }}
+                        <CurrencyInput
+                          value={row.biayaUhFullboard}
+                          onChange={(val) => handleUpdateRow(row.id, { biayaUhFullboard: val })}
                           className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
+                          placeholder="0"
                           title="Nominal UH Fullboard (Editable: dapat disesuaikan)"
                         />
                       </div>
@@ -639,10 +620,9 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {/* Dukungan Transport */}
                 {activeCols.dukunganTransportasi && (
                   <td className="p-2 w-32 min-w-[125px]">
-                    <input
-                      type="number"
-                      value={row.dukunganTransportasi || ""}
-                      onChange={(e) => handleUpdateRow(row.id, { dukunganTransportasi: parseFloat(e.target.value) || 0 })}
+                    <CurrencyInput
+                      value={row.dukunganTransportasi}
+                      onChange={(val) => handleUpdateRow(row.id, { dukunganTransportasi: val })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />
@@ -652,10 +632,9 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {/* Trans. Darat */}
                 {activeCols.transportasiDarat && (
                   <td className="p-2 w-36 min-w-[140px]">
-                    <input
-                      type="number"
-                      value={row.transportasiDarat || ""}
-                      onChange={(e) => handleUpdateRow(row.id, { transportasiDarat: parseFloat(e.target.value) || 0 })}
+                    <CurrencyInput
+                      value={row.transportasiDarat}
+                      onChange={(val) => handleUpdateRow(row.id, { transportasiDarat: val })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />
@@ -665,10 +644,9 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {/* Trans. Lokal */}
                 {activeCols.transportasiLokal && (
                   <td className="p-2 w-36 min-w-[140px]">
-                    <input
-                      type="number"
-                      value={row.transportasiLokal || ""}
-                      onChange={(e) => handleUpdateRow(row.id, { transportasiLokal: parseFloat(e.target.value) || 0 })}
+                    <CurrencyInput
+                      value={row.transportasiLokal}
+                      onChange={(val) => handleUpdateRow(row.id, { transportasiLokal: val })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />
@@ -678,10 +656,9 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {/* Trans. Jakarta PP */}
                 {activeCols.transportJakartaPp && (
                   <td className="p-2 w-36 min-w-[140px]">
-                    <input
-                      type="number"
-                      value={row.transportJakartaPp || ""}
-                      onChange={(e) => handleUpdateRow(row.id, { transportJakartaPp: parseFloat(e.target.value) || 0 })}
+                    <CurrencyInput
+                      value={row.transportJakartaPp}
+                      onChange={(val) => handleUpdateRow(row.id, { transportJakartaPp: val })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />
@@ -691,10 +668,9 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {/* Trans. Daerah PP */}
                 {activeCols.transportDaerahPp && (
                   <td className="p-2 w-36 min-w-[140px]">
-                    <input
-                      type="number"
-                      value={row.transportDaerahPp || ""}
-                      onChange={(e) => handleUpdateRow(row.id, { transportDaerahPp: parseFloat(e.target.value) || 0 })}
+                    <CurrencyInput
+                      value={row.transportDaerahPp}
+                      onChange={(val) => handleUpdateRow(row.id, { transportDaerahPp: val })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />
@@ -757,10 +733,9 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {/* Fullday */}
                 {activeCols.fulldayMeeting && (
                   <td className="p-2 w-32 min-w-[125px]">
-                    <input
-                      type="number"
-                      value={row.fulldayMeeting || ""}
-                      onChange={(e) => handleUpdateRow(row.id, { fulldayMeeting: parseFloat(e.target.value) || 0 })}
+                    <CurrencyInput
+                      value={row.fulldayMeeting}
+                      onChange={(val) => handleUpdateRow(row.id, { fulldayMeeting: val })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />
@@ -770,10 +745,9 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {/* Fullboard */}
                 {activeCols.fullboardMeeting && (
                   <td className="p-2 w-32 min-w-[125px]">
-                    <input
-                      type="number"
-                      value={row.fullboardMeeting || ""}
-                      onChange={(e) => handleUpdateRow(row.id, { fullboardMeeting: parseFloat(e.target.value) || 0 })}
+                    <CurrencyInput
+                      value={row.fullboardMeeting}
+                      onChange={(val) => handleUpdateRow(row.id, { fullboardMeeting: val })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />
@@ -783,10 +757,9 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {/* Representatif */}
                 {activeCols.representatif && (
                   <td className="p-2 w-32 min-w-[125px]">
-                    <input
-                      type="number"
-                      value={row.representatif || ""}
-                      onChange={(e) => handleUpdateRow(row.id, { representatif: parseFloat(e.target.value) || 0 })}
+                    <CurrencyInput
+                      value={row.representatif}
+                      onChange={(val) => handleUpdateRow(row.id, { representatif: val })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />
@@ -796,10 +769,9 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {/* Belanja Bahan */}
                 {activeCols.belanjaBahan && (
                   <td className="p-2 w-32 min-w-[125px]">
-                    <input
-                      type="number"
-                      value={row.belanjaBahan || ""}
-                      onChange={(e) => handleUpdateRow(row.id, { belanjaBahan: parseFloat(e.target.value) || 0 })}
+                    <CurrencyInput
+                      value={row.belanjaBahan}
+                      onChange={(val) => handleUpdateRow(row.id, { belanjaBahan: val })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />

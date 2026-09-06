@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { X, Save, FileSpreadsheet, Calculator } from "lucide-react";
+import { CurrencyInput } from "./CurrencyInput";
 
 interface ModalRekapRowEditorProps {
   isOpen: boolean;
@@ -495,19 +496,17 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
                     <label className="text-[10.5px] font-medium text-slate-600">Harga Fare Pergi (Rp)</label>
-                    <input
-                      type="number"
+                    <CurrencyInput
                       value={Number(formData["Harga Fare Tiket Pergi ()"]) || 0}
-                      onChange={(e) => handleChange("Harga Fare Tiket Pergi ()", parseFloat(e.target.value) || 0)}
+                      onChange={(val) => handleChange("Harga Fare Tiket Pergi ()", val)}
                       className="input-glass w-full h-7 px-2 text-[11px] font-mono text-right"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10.5px] font-medium text-slate-600">Harga Fare Pulang (Rp)</label>
-                    <input
-                      type="number"
+                    <CurrencyInput
                       value={Number(formData["Harga FareTiket Pulang ()"]) || 0}
-                      onChange={(e) => handleChange("Harga FareTiket Pulang ()", parseFloat(e.target.value) || 0)}
+                      onChange={(val) => handleChange("Harga FareTiket Pulang ()", val)}
                       className="input-glass w-full h-7 px-2 text-[11px] font-mono text-right"
                     />
                   </div>
@@ -546,10 +545,9 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                       </div>
                       <div>
                         <label className="text-[10px] text-slate-500">Total Biaya (Rp)</label>
-                        <input
-                          type="number"
+                        <CurrencyInput
                           value={Number(formData["UH 100% ()"]) || 0}
-                          onChange={(e) => handleChange("UH 100% ()", parseFloat(e.target.value) || 0)}
+                          onChange={(val) => handleChange("UH 100% ()", val)}
                           className="input-glass w-full h-7 px-2 text-[11px] font-mono text-right"
                         />
                       </div>
@@ -571,10 +569,9 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                       </div>
                       <div>
                         <label className="text-[10px] text-slate-500">Total Biaya (Rp)</label>
-                        <input
-                          type="number"
+                        <CurrencyInput
                           value={Number(formData["UH 40% ()"]) || 0}
-                          onChange={(e) => handleChange("UH 40% ()", parseFloat(e.target.value) || 0)}
+                          onChange={(val) => handleChange("UH 40% ()", val)}
                           className="input-glass w-full h-7 px-2 text-[11px] font-mono text-right"
                         />
                       </div>
@@ -586,11 +583,10 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   <label className="text-[10.5px] font-medium text-slate-600">
                     UH Fullboard / Fullday / Halfday (Rp)
                   </label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["UH Fullboard/Fullday/Halfday/Diklat"]) || 0}
-                    onChange={(e) =>
-                      handleChange("UH Fullboard/Fullday/Halfday/Diklat", parseFloat(e.target.value) || 0)
+                    onChange={(val) =>
+                      handleChange("UH Fullboard/Fullday/Halfday/Diklat", val)
                     }
                     className="input-glass w-full h-7 px-2 text-[11px] font-mono text-right"
                   />
@@ -647,21 +643,19 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
                     <label className="text-[10.5px] font-medium text-slate-600">Biaya Hotel Riil (Rp)</label>
-                    <input
-                      type="number"
+                    <CurrencyInput
                       value={Number(formData["Biaya Penginapan Biasa (Hotel)"]) || 0}
-                      onChange={(e) =>
-                        handleChange("Biaya Penginapan Biasa (Hotel)", parseFloat(e.target.value) || 0)
+                      onChange={(val) =>
+                        handleChange("Biaya Penginapan Biasa (Hotel)", val)
                       }
                       className="input-glass w-full h-7 px-2 text-[11px] font-mono text-right"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10.5px] font-medium text-slate-600">Penginapan 30% SBM (Rp)</label>
-                    <input
-                      type="number"
+                    <CurrencyInput
                       value={Number(formData["Penginapan 30%"]) || 0}
-                      onChange={(e) => handleChange("Penginapan 30%", parseFloat(e.target.value) || 0)}
+                      onChange={(val) => handleChange("Penginapan 30%", val)}
                       className="input-glass w-full h-7 px-2 text-[11px] font-mono text-right"
                     />
                   </div>
@@ -676,28 +670,25 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Transport Jakarta PP</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["Transport Jakarta PP"]) || 0}
-                    onChange={(e) => handleChange("Transport Jakarta PP", parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleChange("Transport Jakarta PP", val)}
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Transport Daerah PP</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["Transport Daerah PP"]) || 0}
-                    onChange={(e) => handleChange("Transport Daerah PP", parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleChange("Transport Daerah PP", val)}
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Biaya Transport Darat/Lokal</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["Biaya Transport ()"]) || 0}
-                    onChange={(e) => handleChange("Biaya Transport ()", parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleChange("Biaya Transport ()", val)}
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right"
                   />
                 </div>
@@ -706,28 +697,25 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Sewa Kendaraan (Rp)</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["Sewa kendaraan ()"]) || 0}
-                    onChange={(e) => handleChange("Sewa kendaraan ()", parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleChange("Sewa kendaraan ()", val)}
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Taksi Bandara (Rp)</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["Taksi Bandara"]) || 0}
-                    onChange={(e) => handleChange("Taksi Bandara", parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleChange("Taksi Bandara", val)}
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Biaya Reschedule (Rp)</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["Biaya Reschedule ()"]) || 0}
-                    onChange={(e) => handleChange("Biaya Reschedule ()", parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleChange("Biaya Reschedule ()", val)}
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right"
                   />
                 </div>
@@ -736,30 +724,27 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Pengeluaran Riil (Rp)</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["Riil ()"]) || 0}
-                    onChange={(e) => handleChange("Riil ()", parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleChange("Riil ()", val)}
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Paket Meeting / Fullboard</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["Biaya Fullboard/Fullday/Halfday ()"]) || 0}
-                    onChange={(e) =>
-                      handleChange("Biaya Fullboard/Fullday/Halfday ()", parseFloat(e.target.value) || 0)
+                    onChange={(val) =>
+                      handleChange("Biaya Fullboard/Fullday/Halfday ()", val)
                     }
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Uang Representatif (Rp)</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["Representatif ()"]) || 0}
-                    onChange={(e) => handleChange("Representatif ()", parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleChange("Representatif ()", val)}
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right"
                   />
                 </div>
@@ -768,19 +753,17 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Kurs Valuta (Jika LN)</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["Kurs ()"]) || 0}
-                    onChange={(e) => handleChange("Kurs ()", parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleChange("Kurs ()", val)}
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="font-semibold text-rose-700">Pengembalian Kas (Rp)</label>
-                  <input
-                    type="number"
+                  <CurrencyInput
                     value={Number(formData["PENGEMBALIAN"]) || 0}
-                    onChange={(e) => handleChange("PENGEMBALIAN", parseFloat(e.target.value) || 0)}
+                    onChange={(val) => handleChange("PENGEMBALIAN", val)}
                     className="input-glass w-full h-8 px-2 text-xs font-mono text-right text-rose-700 bg-rose-50/40"
                   />
                 </div>

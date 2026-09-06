@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { ParticipantRow, RiilItem, TicketDetail } from "@/lib/types";
 import { X, Plus, Trash2, Plane, Hotel, DollarSign, FileSpreadsheet } from "lucide-react";
+import { CurrencyInput } from "./CurrencyInput";
 
 // ============================================================================
 // 1. Modal Tiket (2-Column Layout Sesuai Gambar Referensi 1)
@@ -158,10 +159,9 @@ export const ModalTiket: React.FC<ModalTiketProps> = ({ row, isOpen, onClose, on
 
               <div className="space-y-1 pt-1">
                 <label className="text-[11px] font-bold text-slate-800">Harga Fare Pergi (Rp)</label>
-                <input
-                  type="number"
-                  value={pergi.harga !== undefined && pergi.harga !== 0 ? pergi.harga : ""}
-                  onChange={(e) => setPergi({ ...pergi, harga: parseFloat(e.target.value) || 0 })}
+                <CurrencyInput
+                  value={pergi.harga}
+                  onChange={(val) => setPergi({ ...pergi, harga: val })}
                   placeholder="0"
                   className="input-glass w-full h-9 px-3 text-xs font-mono font-bold text-right text-slate-900 bg-white"
                 />
@@ -254,10 +254,9 @@ export const ModalTiket: React.FC<ModalTiketProps> = ({ row, isOpen, onClose, on
 
               <div className="space-y-1 pt-1">
                 <label className="text-[11px] font-bold text-slate-800">Harga Fare Pulang (Rp)</label>
-                <input
-                  type="number"
-                  value={pulang.harga !== undefined && pulang.harga !== 0 ? pulang.harga : ""}
-                  onChange={(e) => setPulang({ ...pulang, harga: parseFloat(e.target.value) || 0 })}
+                <CurrencyInput
+                  value={pulang.harga}
+                  onChange={(val) => setPulang({ ...pulang, harga: val })}
                   placeholder="0"
                   className="input-glass w-full h-9 px-3 text-xs font-mono font-bold text-right text-slate-900 bg-white"
                 />
@@ -467,10 +466,9 @@ export const ModalHotel: React.FC<ModalHotelProps> = ({ row, isOpen, onClose, on
             </div>
             <div className="space-y-1">
               <label className="font-semibold text-slate-700 block">Rate Per Malam (Rp)</label>
-              <input
-                type="number"
-                value={rateHotel || ""}
-                onChange={(e) => setRateHotel(parseFloat(e.target.value) || 0)}
+              <CurrencyInput
+                value={rateHotel}
+                onChange={(val) => setRateHotel(val)}
                 placeholder="0"
                 className="input-glass w-full h-10 px-3 text-xs font-mono font-bold text-right"
               />
@@ -586,20 +584,18 @@ export const ModalSpjExtra: React.FC<ModalSpjExtraProps> = ({ row, isOpen, onClo
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-slate-700 block">Sewa Kendaraan (Rp)</label>
-              <input
-                type="number"
-                value={sewaKendaraan || ""}
-                onChange={(e) => setSewaKendaraan(parseFloat(e.target.value) || 0)}
+              <CurrencyInput
+                value={sewaKendaraan}
+                onChange={(val) => setSewaKendaraan(val)}
                 placeholder="0"
                 className="input-glass w-full h-9 px-3 text-xs font-mono font-bold text-right"
               />
             </div>
             <div className="space-y-1">
               <label className="font-semibold text-slate-700 block">Taksi Bandara (Rp)</label>
-              <input
-                type="number"
-                value={taksiBandara || ""}
-                onChange={(e) => setTaksiBandara(parseFloat(e.target.value) || 0)}
+              <CurrencyInput
+                value={taksiBandara}
+                onChange={(val) => setTaksiBandara(val)}
                 placeholder="0"
                 className="input-glass w-full h-9 px-3 text-xs font-mono font-bold text-right"
               />
@@ -609,20 +605,18 @@ export const ModalSpjExtra: React.FC<ModalSpjExtraProps> = ({ row, isOpen, onClo
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-slate-700 block">Biaya Reschedule (Rp)</label>
-              <input
-                type="number"
-                value={biayaReschedule || ""}
-                onChange={(e) => setBiayaReschedule(parseFloat(e.target.value) || 0)}
+              <CurrencyInput
+                value={biayaReschedule}
+                onChange={(val) => setBiayaReschedule(val)}
                 placeholder="0"
                 className="input-glass w-full h-9 px-3 text-xs font-mono font-bold text-right"
               />
             </div>
             <div className="space-y-1">
               <label className="font-semibold text-slate-700 block">Kurs Valuta (Jika LN)</label>
-              <input
-                type="number"
-                value={kurs || ""}
-                onChange={(e) => setKurs(parseFloat(e.target.value) || 0)}
+              <CurrencyInput
+                value={kurs}
+                onChange={(val) => setKurs(val)}
                 placeholder="0"
                 className="input-glass w-full h-9 px-3 text-xs font-mono font-bold text-right"
               />
@@ -631,10 +625,9 @@ export const ModalSpjExtra: React.FC<ModalSpjExtraProps> = ({ row, isOpen, onClo
 
           <div className="space-y-1">
             <label className="font-semibold text-slate-700 block">Pengembalian Kas (Rp)</label>
-            <input
-              type="number"
-              value={pengembalian || ""}
-              onChange={(e) => setPengembalian(parseFloat(e.target.value) || 0)}
+            <CurrencyInput
+              value={pengembalian}
+              onChange={(val) => setPengembalian(val)}
               placeholder="0"
               className="input-glass w-full h-9 px-3 text-xs font-mono font-bold text-right"
             />
@@ -757,10 +750,9 @@ export const ModalRiil: React.FC<ModalRiilProps> = ({ row, isOpen, onClose, onSa
                   placeholder="Uraian pengeluaran..."
                   className="input-glass flex-1 h-9 px-2.5 text-xs font-medium"
                 />
-                <input
-                  type="number"
+                <CurrencyInput
                   value={it.amount}
-                  onChange={(e) => handleUpdateItem(it.id, "amount", parseFloat(e.target.value) || 0)}
+                  onChange={(val) => handleUpdateItem(it.id, "amount", val)}
                   placeholder="Jumlah..."
                   className="input-glass w-28 h-9 px-2.5 text-xs font-mono font-bold text-right"
                 />

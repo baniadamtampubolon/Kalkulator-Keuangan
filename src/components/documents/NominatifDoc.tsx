@@ -270,7 +270,7 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
 
         {/* Dynamic Auto-Fitting Table */}
         <div className="w-full overflow-x-auto pt-1">
-          <table className="w-full border-2 border-black border-collapse text-[8.5px] md:text-[9px] leading-tight" style={{ fontFamily: "Tahoma, Geneva, sans-serif" }}>
+          <table className="w-full border border-black border-collapse text-[8.5px] md:text-[9px] leading-tight" style={{ fontFamily: "Tahoma, Geneva, sans-serif" }}>
             <thead>
               <tr className="font-bold border-b border-black text-center bg-white text-black">
                 <th rowSpan={2} className="border border-black p-0.5 w-5 align-middle">
@@ -301,7 +301,7 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                   Keterangan
                 </th>
               </tr>
-              <tr className="font-bold border-b-2 border-black text-center bg-white text-black text-[9px]">
+              <tr className="font-bold border-b border-black text-center bg-white text-black text-[9px]">
                 {/* Under Tanggal */}
                 <th className="border border-black p-0.5 w-16">Berangkat</th>
                 <th className="border border-black p-0.5 w-16">Pulang</th>
@@ -434,7 +434,7 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
               })}
 
               {/* Total Footer Row */}
-              <tr className="font-bold border-t-2 border-black bg-white text-black text-[9px]">
+              <tr className="font-bold border-t border-black bg-white text-black text-[9px]">
                 <td colSpan={8} className="border border-black p-0.5 text-center font-bold uppercase tracking-wider">
                   Total
                 </td>
