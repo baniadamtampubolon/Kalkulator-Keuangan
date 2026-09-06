@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Navbar, ActiveTab } from "@/components/Navbar";
 import { HeaderForm } from "@/components/HeaderForm";
 import { ChecklistFilter } from "@/components/ChecklistFilter";
@@ -12,7 +12,11 @@ import { RincianBiayaDoc } from "@/components/documents/RincianBiayaDoc";
 import { BiayaRiilDoc } from "@/components/documents/BiayaRiilDoc";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
 import { ModalDatabaseSync } from "@/components/ModalDatabaseSync";
-import { MasterSyncData } from "@/lib/googleSheetsService";
+import {
+  MasterSyncData,
+  getCachedMasterData,
+  fetchMasterDataFromSheet,
+} from "@/lib/googleSheetsService";
 
 import {
   HeaderData,
@@ -23,20 +27,51 @@ import {
   SbmRate,
   NomorMemo,
 } from "@/lib/types";
-import { calculateRowTotal, findSbmByProvince } from "@/lib/calc";
+import { calculateRowTotal, findSbmByProvince, generateNextMemoNumber } from "@/lib/calc";
 
 import pegawaiRaw from "@/data/pegawai.json";
 import sbmRaw from "@/data/sbm.json";
 import memoRaw from "@/data/nomor_memo.json";
 
 export default function Home() {
-  // Master data with runtime state (pegawai, sbm, memo can be updated via Google Sheets sync)
+  // Master data with runtime state (SSR-safe initial seed)
   const [pegawaiList, setPegawaiList] = useState<Pegawai[]>(pegawaiRaw as Pegawai[]);
   const [sbmList, setSbmList] = useState<SbmRate[]>(sbmRaw as SbmRate[]);
   const [memoList, setMemoList] = useState<NomorMemo[]>(memoRaw as NomorMemo[]);
 
+  // Asynchronous client-side cache hydration & Google Sheets background sync
+  useEffect(() => {
+    let isMounted = true;
+
+    // 1. Hydrate from localStorage cache asynchronously after initial render
+    Promise.resolve().then(() => {
+      const cached = getCachedMasterData();
+      if (isMounted && cached) {
+        if (cached.pegawai && cached.pegawai.length > 0) setPegawaiList(cached.pegawai);
+        if (cached.sbm && cached.sbm.length > 0) setSbmList(cached.sbm);
+        if (cached.memo && cached.memo.length > 0) setMemoList(cached.memo);
+      }
+    });
+
+    // 2. Fetch latest data from Google Sheets Cloud
+    fetchMasterDataFromSheet().then((res) => {
+      if (isMounted && res.success && res.data) {
+        if (res.data.pegawai && res.data.pegawai.length > 0) setPegawaiList(res.data.pegawai);
+        if (res.data.sbm && res.data.sbm.length > 0) setSbmList(res.data.sbm);
+        if (res.data.memo && res.data.memo.length > 0) setMemoList(res.data.memo);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+
+
   const [activeTab, setActiveTab] = useState<ActiveTab>("input");
   const [isDbModalOpen, setIsDbModalOpen] = useState<boolean>(false);
+
 
   // Active Cost Columns State (Default: Transportasi Darat PP only)
   const [activeCols, setActiveCols] = useState<Record<ActiveCostKey, boolean>>({
@@ -64,7 +99,7 @@ export default function Home() {
   });
 
   // Find default PPK (Arif Wibowo)
-  const defaultPpk = pegawaiList.find((p) => p.nama.toLowerCase().includes("arif wibowo"));
+  const defaultPpk = pegawaiList.find((p) => (p?.nama || "").toLowerCase().includes("arif wibowo"));
 
   // Header Data State (Clean defaults as requested)
   const [header, setHeader] = useState<HeaderData>({
@@ -82,7 +117,7 @@ export default function Home() {
     alatAngkut: "Angkutan Darat",
     tanggalSpd: new Date().toISOString().split("T")[0],
     tanggalMemo: new Date().toISOString().split("T")[0],
-    nomorMemo: "M.xxx/INS/PPK/VIII/2026",
+    nomorMemo: "",
     nomorStMaster: "",
     ppkNama: defaultPpk?.nama || "Arif Wibowo, S.H., M.H.",
     ppkNip: defaultPpk?.nip || "19830124200801 1 006",
@@ -194,16 +229,12 @@ export default function Home() {
 
   // Handle Next Memo Number Generation
   const handleGenerateMemoNumber = () => {
-    const romanMonths = [
-      "I", "II", "III", "IV", "V", "VI",
-      "VII", "VIII", "IX", "X", "XI", "XII",
-    ];
-    const now = new Date();
-    const currentMonthRom = romanMonths[now.getMonth()];
-    const currentYear = now.getFullYear();
-    const nextSeq = memoList.length > 0 ? memoList.length + 1 : 269;
-    const generated = `M.${nextSeq}/INS/PPK/${currentMonthRom}/${currentYear}`;
-    setHeader((prev) => ({ ...prev, nomorMemo: generated }));
+    const { nextMemoNumber } = generateNextMemoNumber(
+      memoList,
+      header.nomorMemo,
+      header.tanggalMemo
+    );
+    setHeader((prev) => ({ ...prev, nomorMemo: nextMemoNumber }));
   };
 
   // Handle Add New Pegawai to master list

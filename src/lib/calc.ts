@@ -1,4 +1,4 @@
-import { ParticipantRow, SbmRate, ActiveCostKey, ActiveUhKey } from "./types";
+import { ParticipantRow, SbmRate, ActiveCostKey, ActiveUhKey, NomorMemo } from "./types";
 
 export function calculateLamaHari(start: string, end: string): number {
   if (!start || !end) return 1;
@@ -30,18 +30,16 @@ export function calculateRowTotal(
 ): ParticipantRow {
   const updated = { ...row };
 
-  // 1. Lama Hari
-  const previousLamaHari = row.lamaHari;
+  // 1. Lama Hari (Durasi Perjalanan Dinas Kalender)
   updated.lamaHari = calculateLamaHari(row.tanggalMulai, row.tanggalSelesai);
-  const isDateChanged = previousLamaHari !== updated.lamaHari;
 
-  // 2. Uang Harian (Sync with lamaHari when dates change or when not set)
+  // 2. Uang Harian (Mandiri & Fleksibel: Durasi dinas vs Hari UH riil)
   const uhRateBiasa = sbm?.uhBiasa || 0;
   const uhRateHalfday = sbm?.uhHalfday || 0;
   const uhRateFullboard = sbm?.uhFullboard || 0;
 
   if (activeUh.uhBiasa) {
-    const hari = (isDateChanged || !updated.hariUhBiasa) ? updated.lamaHari : updated.hariUhBiasa;
+    const hari = updated.hariUhBiasa !== undefined ? updated.hariUhBiasa : updated.lamaHari;
     updated.hariUhBiasa = hari;
     updated.biayaUhBiasa = hari * uhRateBiasa;
   } else {
@@ -49,7 +47,7 @@ export function calculateRowTotal(
   }
 
   if (activeUh.uhBiasa60) {
-    const hari = (isDateChanged || !updated.hariUhBiasa60) ? updated.lamaHari : updated.hariUhBiasa60;
+    const hari = updated.hariUhBiasa60 !== undefined ? updated.hariUhBiasa60 : updated.lamaHari;
     updated.hariUhBiasa60 = hari;
     updated.biayaUhBiasa60 = Math.round(hari * uhRateBiasa * 0.6);
   } else {
@@ -57,7 +55,7 @@ export function calculateRowTotal(
   }
 
   if (activeUh.uhHalfday) {
-    const hari = (isDateChanged || !updated.hariUhHalfday) ? updated.lamaHari : updated.hariUhHalfday;
+    const hari = updated.hariUhHalfday !== undefined ? updated.hariUhHalfday : updated.lamaHari;
     updated.hariUhHalfday = hari;
     updated.biayaUhHalfday = hari * uhRateHalfday;
   } else {
@@ -65,7 +63,7 @@ export function calculateRowTotal(
   }
 
   if (activeUh.uhFullboard) {
-    const hari = (isDateChanged || !updated.hariUhFullboard) ? updated.lamaHari : updated.hariUhFullboard;
+    const hari = updated.hariUhFullboard !== undefined ? updated.hariUhFullboard : updated.lamaHari;
     updated.hariUhFullboard = hari;
     updated.biayaUhFullboard = hari * uhRateFullboard;
   } else {
@@ -134,4 +132,126 @@ export function calculateRowTotal(
 
   updated.totalJumlah = total;
   return updated;
+}
+
+/**
+ * Menghitung dan menghasilkan nomor memorandum dinas berikutnya berdasarkan database master.
+ * Contoh: Jika nomor memorandum terakhir terdaftar adalah M.320/INS/PPK/XI/2026,
+ * maka nomor berikutnya yang dihasilkan adalah M.321/INS/PPK/XI/2026.
+ */
+export function generateNextMemoNumber(
+  memoList: NomorMemo[],
+  currentMemo?: string,
+  tanggalMemo?: string
+): { nextMemoNumber: string; latestRegisteredNumber: number; nextNumber: number } {
+  let maxUsedNumber = 0;
+  let firstUnusedNumber: number | null = null;
+  let templatePrefix = "M.";
+  let templateUnit = "/INS/PPK/";
+  let templateBulan = "XI";
+  let templateTahun = "2026";
+
+  if (Array.isArray(memoList) && memoList.length > 0) {
+    for (const m of memoList) {
+      // 1. Ekstrak nomor angka
+      let numVal = 0;
+      if (m.nomor_urut && !isNaN(Number(m.nomor_urut))) {
+        numVal = Number(m.nomor_urut);
+      } else if (m.nomor && !isNaN(parseInt(m.nomor, 10))) {
+        numVal = parseInt(m.nomor, 10);
+      } else {
+        const str = m.format_lengkap || m.noMemo || "";
+        if (str) {
+          const match = str.match(/\bM\.?(\d+)/i) || str.match(/(\d+)/);
+          if (match) numVal = parseInt(match[1], 10);
+        }
+      }
+
+      if (numVal > 0) {
+        // Cek apakah baris ini sudah dipakai / memiliki perihal / status TERPAKAI
+        const isUsed = Boolean(
+          (m.status && String(m.status).trim().toUpperCase().includes("TERPAKAI")) ||
+          (m.id_kegiatan_ref && String(m.id_kegiatan_ref).trim().length > 0) ||
+          (m.perihal && String(m.perihal).trim().length > 0) ||
+          (m.tanggal_memo && String(m.tanggal_memo).trim().length > 0) ||
+          (m.noMemo && String(m.noMemo).trim().length > 0 && m.tanggal && String(m.tanggal).trim().length > 0)
+        );
+
+        if (isUsed) {
+          if (numVal > maxUsedNumber) {
+            maxUsedNumber = numVal;
+            if (m.prefix) templatePrefix = m.prefix;
+            if (m.unit) templateUnit = m.unit;
+            if (m.bulanRomawi) templateBulan = m.bulanRomawi;
+            if (m.tahun) templateTahun = m.tahun.replace(/\//g, "").trim();
+            if (m.tahun_anggaran) templateTahun = String(m.tahun_anggaran).trim();
+
+            // Ekstrak dari string lengkap jika tersedia (e.g. M.320/INS/PPK/XI/2026)
+            const memoStr = m.format_lengkap || m.noMemo;
+            if (memoStr) {
+              const parts =
+                memoStr.match(/^([A-Za-z]+\.)?\s*(\d+)\s*(\/.*?\/)([IVXLCDM]+)\/(\d{4})/i) ||
+                memoStr.match(/^([A-Za-z]+\.)?\s*(\d+)\s*(\/[^\/]+\/)?([A-Za-z]+)?(\/\d{4})?/);
+              if (parts) {
+                if (parts[1]) templatePrefix = parts[1];
+                if (parts[3]) templateUnit = parts[3];
+                if (parts[4]) templateBulan = parts[4];
+                if (parts[5]) templateTahun = parts[5].replace(/\//g, "").trim();
+              }
+            }
+          }
+        } else {
+          // Baris kosong teralokasi di database master
+          if (firstUnusedNumber === null || numVal < firstUnusedNumber) {
+            firstUnusedNumber = numVal;
+          }
+        }
+      }
+    }
+  }
+
+  // Jika tidak ada data sama sekali atau maxUsedNumber masih 0, gunakan fallback 320 -> 321
+  if (maxUsedNumber === 0) {
+    maxUsedNumber = 320;
+  }
+
+  // Tentukan nomor angka berikutnya
+  let nextSeq: number;
+  if (firstUnusedNumber !== null && firstUnusedNumber > maxUsedNumber) {
+    nextSeq = firstUnusedNumber;
+  } else {
+    nextSeq = maxUsedNumber + 1;
+  }
+
+  // Jika currentMemo sudah terisi dan nilainya >= nextSeq, naikkan 1 (fitur klik berulang)
+  if (currentMemo) {
+    const curMatch = currentMemo.match(/\bM\.?(\d+)/i) || currentMemo.match(/(\d+)/);
+    if (curMatch) {
+      const curVal = parseInt(curMatch[1], 10);
+      if (curVal >= nextSeq) {
+        nextSeq = curVal + 1;
+      }
+    }
+  }
+
+  // Format unit
+  let formattedUnit = templateUnit.trim();
+  if (!formattedUnit.startsWith("/")) formattedUnit = "/" + formattedUnit;
+  if (!formattedUnit.endsWith("/")) formattedUnit = formattedUnit + "/";
+
+  // Format tahun
+  let formattedYear = templateTahun || "2026";
+  if (tanggalMemo) {
+    const d = new Date(tanggalMemo);
+    if (!isNaN(d.getTime())) {
+      formattedYear = String(d.getFullYear());
+    }
+  }
+
+  const generated = `${templatePrefix}${nextSeq}${formattedUnit}${templateBulan}/${formattedYear}`;
+  return {
+    nextMemoNumber: generated,
+    latestRegisteredNumber: maxUsedNumber,
+    nextNumber: nextSeq,
+  };
 }

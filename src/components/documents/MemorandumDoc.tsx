@@ -104,10 +104,10 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
           <button
             type="button"
             onClick={() => setIsEditMode(!isEditMode)}
-            className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+            className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
               isEditMode
-                ? "bg-amber-500 text-white border-amber-600 shadow-sm"
-                : "bg-white/80 hover:bg-white text-slate-700 border-slate-300"
+                ? "bg-[#0071e3] text-white border-[#0071e3] shadow-sm"
+                : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
             }`}
           >
             <Edit3 className="w-3.5 h-3.5" />
@@ -128,7 +128,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
 
           <button
             onClick={() => window.print()}
-            className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm cursor-pointer"
+            className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold shadow-sm cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Cetak Memorandum (2 Hal)</span>
@@ -137,9 +137,9 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
       </div>
 
       {isEditMode && (
-        <div className="no-print p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2">
+        <div className="no-print p-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 text-xs flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Edit3 className="w-4 h-4 shrink-0 text-amber-600" />
+            <Edit3 className="w-4 h-4 shrink-0 text-slate-700" />
             <span>
               <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada Memorandum (kop instansi, nomor surat, perihal, narasi alinea, rincian MAK, hingga 4 kolom tanda tangan) dapat langsung Anda klik dan edit secara bebas.
             </span>
@@ -157,7 +157,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
           contentEditable={isEditMode}
           suppressContentEditableWarning={true}
           className={`print-page print-page-memo memo-page-1 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-5 transition-all ${
-            isEditMode ? "ring-2 ring-blue-400/40 ring-offset-2" : ""
+            isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
           }`}
         >
           {/* Header Kop Garuda & Instansi */}
@@ -266,7 +266,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
           contentEditable={isEditMode}
           suppressContentEditableWarning={true}
           className={`print-page print-page-memo bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-6 transition-all ${
-            isEditMode ? "ring-2 ring-blue-400/40 ring-offset-2" : ""
+            isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
           }`}
         >
           {/* Header Lampiran Surat */}

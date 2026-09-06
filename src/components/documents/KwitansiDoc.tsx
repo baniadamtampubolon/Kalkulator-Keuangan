@@ -127,10 +127,10 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
           <button
             type="button"
             onClick={() => setIsEditMode(!isEditMode)}
-            className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+            className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
               isEditMode
-                ? "bg-amber-500 text-white border-amber-600 shadow-sm"
-                : "bg-white/80 hover:bg-white text-slate-700 border-slate-300"
+                ? "bg-[#0071e3] text-white border-[#0071e3] shadow-sm"
+                : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
             }`}
           >
             <Edit3 className="w-3.5 h-3.5" />
@@ -151,7 +151,7 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
 
           <button
             onClick={() => window.print()}
-            className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm cursor-pointer"
+            className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold shadow-sm cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>
@@ -162,9 +162,9 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
       </div>
 
       {isEditMode && (
-        <div className="no-print p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2">
+        <div className="no-print p-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 text-xs flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Edit3 className="w-4 h-4 shrink-0 text-amber-600" />
+            <Edit3 className="w-4 h-4 shrink-0 text-slate-700" />
             <span>
               <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada kuitansi (nama, uraian, tanggal, angka, instansi, jabatan tanda tangan) dapat langsung Anda klik dan ubah secara bebas layaknya di Microsoft Word.
             </span>
@@ -189,7 +189,7 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
               contentEditable={isEditMode}
               suppressContentEditableWarning={true}
               className={`kwitansi-sheet bg-white text-black p-10 md:p-14 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-12 transition-all ${
-                isEditMode ? "ring-2 ring-blue-400/40 ring-offset-2" : ""
+                isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
               }`}
             >
               {/* Top Header: Instansi Name on Left + Box Table on Right */}

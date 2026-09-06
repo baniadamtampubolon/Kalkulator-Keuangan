@@ -54,16 +54,16 @@ export const ModalTiket: React.FC<ModalTiketProps> = ({ row, isOpen, onClose, on
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md transition-all">
       <div className="bg-white/95 rounded-3xl w-full max-w-4xl shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
-          <div className="flex items-center gap-2.5 text-blue-800">
-            <Plane className="w-5 h-5" />
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white">
+          <div className="flex items-center gap-2.5 text-slate-800">
+            <Plane className="w-5 h-5 text-slate-700" />
             <h3 className="font-bold text-sm md:text-base text-slate-900">
-              Tiket: <span className="text-blue-700">{row.nama || "Pelaksana Dinas"}</span>
+              Tiket: <span className="text-slate-800">{row.nama || "Pelaksana Dinas"}</span>
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -73,8 +73,8 @@ export const ModalTiket: React.FC<ModalTiketProps> = ({ row, isOpen, onClose, on
         <div className="p-6 overflow-y-auto space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Kolom 1: Keberangkatan */}
-            <div className="bg-slate-50/70 p-5 rounded-2xl border border-slate-200/90 space-y-3.5">
-              <div className="flex items-center gap-2 font-bold text-blue-700 text-xs md:text-sm border-b border-slate-200 pb-2">
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3.5">
+              <div className="flex items-center gap-2 font-bold text-slate-800 text-xs md:text-sm border-b border-slate-200 pb-2">
                 <Plane className="w-4 h-4" />
                 <span>Keberangkatan</span>
               </div>
@@ -163,14 +163,14 @@ export const ModalTiket: React.FC<ModalTiketProps> = ({ row, isOpen, onClose, on
                   value={pergi.harga !== undefined && pergi.harga !== 0 ? pergi.harga : ""}
                   onChange={(e) => setPergi({ ...pergi, harga: parseFloat(e.target.value) || 0 })}
                   placeholder="0"
-                  className="input-glass w-full h-9 px-3 text-xs font-mono font-black text-right text-blue-900 bg-white"
+                  className="input-glass w-full h-9 px-3 text-xs font-mono font-bold text-right text-slate-900 bg-white"
                 />
               </div>
             </div>
 
             {/* Kolom 2: Kepulangan */}
-            <div className="bg-slate-50/70 p-5 rounded-2xl border border-slate-200/90 space-y-3.5">
-              <div className="flex items-center gap-2 font-bold text-amber-700 text-xs md:text-sm border-b border-slate-200 pb-2">
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3.5">
+              <div className="flex items-center gap-2 font-bold text-slate-800 text-xs md:text-sm border-b border-slate-200 pb-2">
                 <Plane className="w-4 h-4 rotate-90" />
                 <span>Kepulangan</span>
               </div>
@@ -259,20 +259,20 @@ export const ModalTiket: React.FC<ModalTiketProps> = ({ row, isOpen, onClose, on
                   value={pulang.harga !== undefined && pulang.harga !== 0 ? pulang.harga : ""}
                   onChange={(e) => setPulang({ ...pulang, harga: parseFloat(e.target.value) || 0 })}
                   placeholder="0"
-                  className="input-glass w-full h-9 px-3 text-xs font-mono font-black text-right text-amber-900 bg-white"
+                  className="input-glass w-full h-9 px-3 text-xs font-mono font-bold text-right text-slate-900 bg-white"
                 />
               </div>
             </div>
           </div>
 
           {/* Bottom Bar: Boarding Pass & Total Fare */}
-          <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/80 flex flex-wrap items-center justify-between gap-3">
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <label className="text-xs font-bold text-slate-700">Status Boarding Pass:</label>
               <select
                 value={boardingPass}
                 onChange={(e) => setBoardingPass(e.target.value as "ADA" | "TIDAK")}
-                className="input-glass h-8 px-3 text-xs font-bold text-blue-800 bg-white"
+                className="input-glass h-8 px-3 text-xs font-medium text-slate-900 bg-white"
               >
                 <option value="ADA">ADA (Lengkap)</option>
                 <option value="TIDAK">TIDAK (Belum Ada)</option>
@@ -281,7 +281,7 @@ export const ModalTiket: React.FC<ModalTiketProps> = ({ row, isOpen, onClose, on
 
             <div className="text-right">
               <span className="text-[11px] font-semibold text-slate-500 block">Total Tiket PP:</span>
-              <span className="text-base font-black font-mono text-blue-900">
+              <span className="text-base font-bold font-mono text-slate-900">
                 Rp {totalTiket.toLocaleString("id-ID")}
               </span>
             </div>
@@ -289,7 +289,7 @@ export const ModalTiket: React.FC<ModalTiketProps> = ({ row, isOpen, onClose, on
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 bg-slate-50/80 border-t border-slate-200 flex justify-end gap-2.5">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
@@ -300,7 +300,7 @@ export const ModalTiket: React.FC<ModalTiketProps> = ({ row, isOpen, onClose, on
           <button
             type="button"
             onClick={() => onSave(totalTiket, pergi, pulang, boardingPass)}
-            className="btn-tactile px-5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold shadow-md cursor-pointer"
+            className="btn-tactile px-5 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-bold shadow-sm cursor-pointer"
           >
             Simpan Tiket
           </button>
@@ -372,16 +372,16 @@ export const ModalHotel: React.FC<ModalHotelProps> = ({ row, isOpen, onClose, on
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md transition-all">
       <div className="bg-white/95 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-amber-200/60 flex items-center justify-between bg-amber-50/60">
-          <div className="flex items-center gap-2.5 text-amber-900">
-            <Hotel className="w-5 h-5 text-amber-700" />
-            <h3 className="font-bold text-sm md:text-base text-amber-950">
-              Penginapan: <span className="text-amber-800">{row.nama || "Pelaksana Dinas"}</span>
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white">
+          <div className="flex items-center gap-2.5 text-slate-800">
+            <Hotel className="w-5 h-5 text-slate-700" />
+            <h3 className="font-bold text-sm md:text-base text-slate-900">
+              Penginapan: <span className="text-slate-800">{row.nama || "Pelaksana Dinas"}</span>
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -477,17 +477,17 @@ export const ModalHotel: React.FC<ModalHotelProps> = ({ row, isOpen, onClose, on
             </div>
           </div>
 
-          {/* Highlighted Total Biaya Hotel Box (Exact Sesuai Gambar 2) */}
+          {/* Highlighted Total Biaya Hotel Box */}
           <div className="space-y-1 pt-1">
             <label className="font-bold text-slate-800 block text-xs">Total Biaya Hotel (Rp)</label>
-            <div className="p-3.5 rounded-xl bg-amber-100/80 border border-amber-300 text-right font-mono font-black text-amber-950 text-base shadow-2xs">
+            <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-200 text-right font-mono font-bold text-slate-900 text-base shadow-2xs">
               {total.toLocaleString("id-ID")}
             </div>
           </div>
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 bg-slate-50/80 border-t border-slate-200 flex justify-end gap-2.5">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
@@ -510,7 +510,7 @@ export const ModalHotel: React.FC<ModalHotelProps> = ({ row, isOpen, onClose, on
                 noKamar
               )
             }
-            className="btn-tactile px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md cursor-pointer"
+            className="btn-tactile px-5 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-bold shadow-sm cursor-pointer"
           >
             Simpan Hotel
           </button>
@@ -551,16 +551,16 @@ export const ModalSpjExtra: React.FC<ModalSpjExtraProps> = ({ row, isOpen, onClo
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md transition-all">
       <div className="bg-white/95 rounded-3xl w-full max-w-md shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-indigo-200/60 flex items-center justify-between bg-indigo-50/60">
-          <div className="flex items-center gap-2.5 text-indigo-900">
-            <FileSpreadsheet className="w-5 h-5 text-indigo-700" />
-            <h3 className="font-bold text-sm text-indigo-950">
-              Data SPJ: <span className="text-indigo-800">{row.nama || "Pelaksana Dinas"}</span>
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white">
+          <div className="flex items-center gap-2.5 text-slate-800">
+            <FileSpreadsheet className="w-5 h-5 text-slate-700" />
+            <h3 className="font-bold text-sm text-slate-900">
+              Data SPJ: <span className="text-slate-800">{row.nama || "Pelaksana Dinas"}</span>
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -642,7 +642,7 @@ export const ModalSpjExtra: React.FC<ModalSpjExtraProps> = ({ row, isOpen, onClo
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-slate-50/80 border-t border-slate-200 flex justify-end gap-2.5">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
@@ -662,7 +662,7 @@ export const ModalSpjExtra: React.FC<ModalSpjExtraProps> = ({ row, isOpen, onClo
                 pengembalian,
               })
             }
-            className="btn-tactile px-5 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold shadow-md cursor-pointer"
+            className="btn-tactile px-5 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-bold shadow-sm cursor-pointer"
           >
             Simpan Data SPJ
           </button>
@@ -717,16 +717,16 @@ export const ModalRiil: React.FC<ModalRiilProps> = ({ row, isOpen, onClose, onSa
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md transition-all">
       <div className="glass-modal w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-700 flex items-center justify-center border border-emerald-500/20">
-              <DollarSign className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
+              <DollarSign className="w-4 h-4 text-slate-700" />
             </div>
             <h3 className="font-bold text-sm text-slate-900">
               Daftar Pengeluaran Riil
             </h3>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -739,7 +739,7 @@ export const ModalRiil: React.FC<ModalRiilProps> = ({ row, isOpen, onClose, onSa
             <button
               type="button"
               onClick={handleAddItem}
-              className="btn-tactile flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50/80 px-2.5 py-1 rounded-lg border border-emerald-300/80 cursor-pointer"
+              className="btn-tactile flex items-center gap-1 text-[11px] font-bold text-slate-700 hover:text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 cursor-pointer"
             >
               <Plus className="w-3 h-3" />
               <span>Tambah Baris</span>
@@ -775,24 +775,24 @@ export const ModalRiil: React.FC<ModalRiilProps> = ({ row, isOpen, onClose, onSa
             ))}
           </div>
 
-          <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex justify-between items-center text-xs">
-            <span className="font-semibold text-emerald-900">Total Pengeluaran Riil:</span>
-            <span className="font-mono font-black text-emerald-900 text-sm">
+          <div className="p-3 rounded-xl bg-slate-100 border border-slate-200 flex justify-between items-center text-xs">
+            <span className="font-semibold text-slate-800">Total Pengeluaran Riil:</span>
+            <span className="font-mono font-bold text-slate-900 text-sm">
               Rp {total.toLocaleString("id-ID")}
             </span>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-slate-200/80">
+        <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-white/60 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
           >
             Batal
           </button>
           <button
             onClick={() => onSave(items)}
-            className="btn-tactile px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white text-xs font-bold shadow-md cursor-pointer"
+            className="btn-tactile px-4 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-bold shadow-sm cursor-pointer"
           >
             Simpan Daftar Riil
           </button>

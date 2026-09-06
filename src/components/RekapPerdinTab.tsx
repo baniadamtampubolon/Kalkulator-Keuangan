@@ -1,9 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HeaderData, ParticipantRow } from "@/lib/types";
-import { Download, FileSpreadsheet, Search, Database } from "lucide-react";
+import {
+  Download,
+  Search,
+  Database,
+  RefreshCw,
+  Cloud,
+  FileText,
+  Plus,
+  Edit3,
+  Trash2,
+  AlertTriangle,
+  CheckCircle2,
+  CloudUpload,
+  X,
+} from "lucide-react";
 import * as XLSX from "xlsx";
+import { fetchRekapFromSheet, syncAllRekapToGoogleSheet } from "@/lib/googleSheetsService";
+import { ModalRekapRowEditor } from "./ModalRekapRowEditor";
 
 interface RekapPerdinTabProps {
   header: HeaderData;
@@ -13,164 +29,360 @@ interface RekapPerdinTabProps {
 
 export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows, onOpenDatabaseSync }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewSource, setViewSource] = useState<"cloud" | "draft">("cloud");
+  const [cloudRows, setCloudRows] = useState<Array<Record<string, unknown>>>(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("perdin_cached_rekap_data");
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch {
+          return [];
+        }
+      }
+    }
+    return [];
+  });
+  const [isFetching, setIsFetching] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const filteredRows = rows.filter((r) =>
-    (r.nama || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.nip || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.jabatan || "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // CRUD Modal States
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editorMode, setEditorMode] = useState<"create" | "edit">("create");
+  const [editingRow, setEditingRow] = useState<Record<string, unknown> | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
+  // Delete Confirmation State
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    index: number | null;
+    name: string;
+  }>({
+    isOpen: false,
+    index: null,
+    name: "",
+  });
 
-  // Export to Excel (.xlsx) matching contoh-rekap perdin.xlsx
-  const handleExportExcel = () => {
-    // 1. Column Headers (Exact standard of Rekap Perdin)
-    const headers = [
-      "No SPBY",
-      "JENIS PENGAJUAN",
-      "No SPM",
-      "",
-      "NAMA PEGAWAI INTERNAL INSPEKTORAT",
-      "NAMA EXTERNAL",
-      "NIP",
-      "Gol",
-      "Jabatan",
-      "Jenis Perdin",
-      "Status Pegawai",
-      "Nama Kegiatan",
-      "No Surat Tugas",
-      "Unit Kerja",
-      "Angkutan",
-      "Berangkat dari-",
-      "Tujuan ke-",
-      "Tgl Berangkat",
-      "Tgl Kembali",
-      "Nomor Tiket",
-      "Nama Maskapai",
-      "Kode Booking",
-      "Boarding Pass (Ada/Tidak)",
-      "Nama Penginapan",
-      "Tanggal Check In",
-      "Tanggal Check Out",
-      "Jumlah Hari Menginap",
-      "Lama Hari 100%",
-      "Lama Hari 40%",
-      "Total Hari",
-      "UH 100% ()",
-      "UH 40% ()",
-      "UH Fullboard/Fullday/Halfday/Diklat",
-      "Biaya Penginapan Biasa (Hotel)",
-      "Penginapan 30%",
-      "Biaya Fullboard/Fullday/Halfday ()",
-      "Kurs ()",
-      "Riil ()",
-      "Harga Fare Tiket Pergi ()",
-      "Harga FareTiket Pulang ()",
-      "Transport Jakarta PP",
-      "Transport Daerah PP",
-      "Biaya Transport ()",
-      "Sewa kendaraan ()",
-      "Representatif ()",
-      "Taksi Bandara",
-      "Biaya Reschedule ()",
-      "Total",
-      "Nilai Nominal di Daftar Nominatif",
-      "PENGEMBALIAN",
-    ];
+  // Notification / Feedback State
+  const [statusMessage, setStatusMessage] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
 
-    // 2. Data Rows
-    const dataRows = rows.map((r) => {
-      // Format tiket multiline if available
-      const noTiket =
-        r.tiketDetailPergi?.noTiket || r.tiketDetailPulang?.noTiket
-          ? `Berangkat : ${r.tiketDetailPergi?.noTiket || "-"}\r\nPulang : ${r.tiketDetailPulang?.noTiket || "-"}`
-          : "";
+  useEffect(() => {
+    let isMounted = true;
+    fetchRekapFromSheet().then((res) => {
+      if (isMounted && res.success && res.data) {
+        setCloudRows(res.data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-      const maskapai =
-        r.tiketDetailPergi?.maskapai || r.tiketDetailPulang?.maskapai
-          ? `Berangkat : ${r.tiketDetailPergi?.maskapai || "-"}\r\nPulang : ${r.tiketDetailPulang?.maskapai || "-"}`
-          : "";
+  const handleManualRefresh = async () => {
+    setIsFetching(true);
+    const res = await fetchRekapFromSheet();
+    setIsFetching(false);
+    if (res.success && res.data) {
+      setCloudRows(res.data);
+      setViewSource("cloud");
+      setStatusMessage({
+        type: "success",
+        text: `Berhasil memperbarui ${res.data.length} data rekap dari Google Spreadsheet.`,
+      });
+    } else {
+      setStatusMessage({
+        type: "error",
+        text: res.message || "Gagal memuat data dari Spreadsheet.",
+      });
+    }
+  };
 
-      const kodeBooking =
-        r.tiketDetailPergi?.kodeBooking || r.tiketDetailPulang?.kodeBooking
-          ? `Berangkat : ${r.tiketDetailPergi?.kodeBooking || "-"}\r\nPulang : ${r.tiketDetailPulang?.kodeBooking || "-"}`
-          : "";
+  // Headers standard 48 columns
+  const standardHeaders = [
+    "No SPBY",
+    "JENIS PENGAJUAN",
+    "No SPM",
+    "",
+    "NAMA PEGAWAI INTERNAL INSPEKTORAT",
+    "NAMA EXTERNAL",
+    "NIP",
+    "Gol",
+    "Jabatan",
+    "Jenis Perdin",
+    "Status Pegawai",
+    "Nama Kegiatan",
+    "No Surat Tugas",
+    "Unit Kerja",
+    "Angkutan",
+    "Berangkat dari-",
+    "Tujuan ke-",
+    "Tgl Berangkat",
+    "Tgl Kembali",
+    "Nomor Tiket",
+    "Nama Maskapai",
+    "Kode Booking",
+    "Boarding Pass (Ada/Tidak)",
+    "Nama Penginapan",
+    "Tanggal Check In",
+    "Tanggal Check Out",
+    "Jumlah Hari Menginap",
+    "Lama Hari 100%",
+    "Lama Hari 40%",
+    "Total Hari",
+    "UH 100% ()",
+    "UH 40% ()",
+    "UH Fullboard/Fullday/Halfday/Diklat",
+    "Biaya Penginapan Biasa (Hotel)",
+    "Penginapan 30%",
+    "Biaya Fullboard/Fullday/Halfday ()",
+    "Kurs ()",
+    "Riil ()",
+    "Harga Fare Tiket Pergi ()",
+    "Harga FareTiket Pulang ()",
+    "Transport Jakarta PP",
+    "Transport Daerah PP",
+    "Biaya Transport ()",
+    "Sewa kendaraan ()",
+    "Representatif ()",
+    "Taksi Bandara",
+    "Biaya Reschedule ()",
+    "Total",
+    "Nilai Nominal di Daftar Nominatif",
+    "PENGEMBALIAN",
+  ];
 
-      const farePergi =
-        r.tiketDetailPergi?.harga !== undefined
-          ? r.tiketDetailPergi.harga
-          : (r.tiket ? Math.round(r.tiket / 2) : "");
+  // Map draft rows into 48-column objects
+  const draftFormattedRows: Array<Record<string, unknown>> = rows.map((r) => {
+    const noTiket =
+      r.tiketDetailPergi?.noTiket || r.tiketDetailPulang?.noTiket
+        ? `Berangkat : ${r.tiketDetailPergi?.noTiket || "-"}\nPulang : ${r.tiketDetailPulang?.noTiket || "-"}`
+        : "";
 
-      const farePulang =
-        r.tiketDetailPulang?.harga !== undefined
-          ? r.tiketDetailPulang.harga
-          : (r.tiket ? Math.round(r.tiket / 2) : "");
+    const maskapai =
+      r.tiketDetailPergi?.maskapai || r.tiketDetailPulang?.maskapai
+        ? `Berangkat : ${r.tiketDetailPergi?.maskapai || "-"}\nPulang : ${r.tiketDetailPulang?.maskapai || "-"}`
+        : "";
 
-      const biayaTransport =
-        (r.transportasiDarat || 0) + (r.transportasiLokal || 0) + (r.dukunganTransportasi || 0);
+    const kodeBooking =
+      r.tiketDetailPergi?.kodeBooking || r.tiketDetailPulang?.kodeBooking
+        ? `Berangkat : ${r.tiketDetailPergi?.kodeBooking || "-"}\nPulang : ${r.tiketDetailPulang?.kodeBooking || "-"}`
+        : "";
 
-      const biayaMeeting = (r.fulldayMeeting || 0) + (r.fullboardMeeting || 0);
-      const uhMeeting = (r.biayaUhHalfday || 0) + (r.biayaUhFullboard || 0);
+    const farePergi =
+      r.tiketDetailPergi?.harga !== undefined
+        ? r.tiketDetailPergi.harga
+        : r.tiket ? Math.round(r.tiket / 2) : 0;
 
-      return [
-        header.noSpby || "",
-        header.jenisPengajuan || "RAMPUNG",
-        header.noSpm || "",
-        "",
-        r.namaExternal ? "" : r.nama,
-        r.namaExternal || "",
-        r.nip || "",
-        r.golongan || "",
-        r.jabatan || "",
-        header.jenisPerdin || "Perdin Luar Kota",
-        r.nip ? "PNS" : "",
-        header.keteranganKegiatan || "",
-        r.nomorSt || header.nomorStStaff || header.nomorStMaster || "",
-        header.unitKerja || "INSPEKTORAT",
-        header.alatAngkut || "Angkutan Darat",
-        header.berangkatDari || "Jakarta",
-        r.tujuanKota || header.provinsiTujuan || "",
-        r.tanggalMulai || "",
-        r.tanggalSelesai || "",
-        noTiket,
-        maskapai,
-        kodeBooking,
-        r.boardingPass || (r.tiket > 0 ? "ADA" : ""),
-        r.namaHotel || "",
-        r.checkInHotel || (r.hotel > 0 ? r.tanggalMulai : ""),
-        r.checkOutHotel || (r.hotel > 0 ? r.tanggalSelesai : ""),
-        r.malamHotel || (r.hotel > 0 ? 1 : ""),
-        r.hariUhBiasa || "",
-        r.hariUhBiasa60 || "",
-        r.lamaHari || 1,
-        r.biayaUhBiasa || "",
-        r.biayaUhBiasa60 || "",
-        uhMeeting || "",
-        r.hotel || "",
-        r.penginapan30 || "",
-        biayaMeeting || "",
-        r.kurs || "",
-        r.pengRill || "",
-        farePergi,
-        farePulang,
-        r.transportJakartaPp || "",
-        r.transportDaerahPp || "",
-        biayaTransport || "",
-        r.sewaKendaraan || "",
-        r.representatif || "",
-        r.taksiBandara || "",
-        r.biayaReschedule || "",
-        r.totalJumlah || 0,
-        r.totalJumlah || 0,
-        r.pengembalian || "",
-      ];
+    const farePulang =
+      r.tiketDetailPulang?.harga !== undefined
+        ? r.tiketDetailPulang.harga
+        : r.tiket ? Math.round(r.tiket / 2) : 0;
+
+    const biayaTransport =
+      (r.transportasiDarat || 0) + (r.transportasiLokal || 0) + (r.dukunganTransportasi || 0);
+
+    const biayaMeeting = (r.fulldayMeeting || 0) + (r.fullboardMeeting || 0);
+    const uhMeeting = (r.biayaUhHalfday || 0) + (r.biayaUhFullboard || 0);
+
+    return {
+      "No SPBY": header.noSpby || "",
+      "JENIS PENGAJUAN": header.jenisPengajuan || "RAMPUNG",
+      "No SPM": header.noSpm || "",
+      "": "",
+      "NAMA PEGAWAI INTERNAL INSPEKTORAT": r.namaExternal ? "" : r.nama,
+      "NAMA EXTERNAL": r.namaExternal || "",
+      NIP: r.nip || "",
+      Gol: r.golongan || "",
+      Jabatan: r.jabatan || "",
+      "Jenis Perdin": header.jenisPerdin || "Perdin Luar Kota",
+      "Status Pegawai": r.nip ? "PNS" : "Non-PNS",
+      "Nama Kegiatan": header.keteranganKegiatan || "",
+      "No Surat Tugas": r.nomorSt || header.nomorStStaff || header.nomorStMaster || "",
+      "Unit Kerja": header.unitKerja || "INSPEKTORAT",
+      Angkutan: header.alatAngkut || "Angkutan Darat",
+      "Berangkat dari-": header.berangkatDari || "Jakarta",
+      "Tujuan ke-": r.tujuanKota || header.provinsiTujuan || "",
+      "Tgl Berangkat": r.tanggalMulai || "",
+      "Tgl Kembali": r.tanggalSelesai || "",
+      "Nomor Tiket": noTiket,
+      "Nama Maskapai": maskapai,
+      "Kode Booking": kodeBooking,
+      "Boarding Pass (Ada/Tidak)": r.boardingPass || (r.tiket > 0 ? "ADA" : ""),
+      "Nama Penginapan": r.namaHotel || "",
+      "Tanggal Check In": r.checkInHotel || (r.hotel > 0 ? r.tanggalMulai : ""),
+      "Tanggal Check Out": r.checkOutHotel || (r.hotel > 0 ? r.tanggalSelesai : ""),
+      "Jumlah Hari Menginap": r.malamHotel || (r.hotel > 0 ? 1 : 0),
+      "Lama Hari 100%": r.hariUhBiasa !== undefined ? r.hariUhBiasa : r.lamaHari || 1,
+      "Lama Hari 40%": r.hariUhBiasa60 || 0,
+      "Total Hari": r.lamaHari || 1,
+      "UH 100% ()": r.biayaUhBiasa || 0,
+      "UH 40% ()": r.biayaUhBiasa60 || 0,
+      "UH Fullboard/Fullday/Halfday/Diklat": uhMeeting || 0,
+      "Biaya Penginapan Biasa (Hotel)": r.hotel || 0,
+      "Penginapan 30%": r.penginapan30 || 0,
+      "Biaya Fullboard/Fullday/Halfday ()": biayaMeeting || 0,
+      "Kurs ()": r.kurs || 0,
+      "Riil ()": r.pengRill || 0,
+      "Harga Fare Tiket Pergi ()": farePergi,
+      "Harga FareTiket Pulang ()": farePulang,
+      "Transport Jakarta PP": r.transportJakartaPp || 0,
+      "Transport Daerah PP": r.transportDaerahPp || 0,
+      "Biaya Transport ()": biayaTransport,
+      "Sewa kendaraan ()": r.sewaKendaraan || 0,
+      "Representatif ()": r.representatif || 0,
+      "Taksi Bandara": r.taksiBandara || 0,
+      "Biaya Reschedule ()": r.biayaReschedule || 0,
+      Total: r.totalJumlah || 0,
+      "Nilai Nominal di Daftar Nominatif": r.totalJumlah || 0,
+      PENGEMBALIAN: r.pengembalian || 0,
+    };
+  });
+
+  const activeDataList = viewSource === "cloud" ? cloudRows : draftFormattedRows;
+
+  // Filter based on search
+  const filteredData = activeDataList.filter((item) => {
+    const nama = String(item["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || item["NAMA EXTERNAL"] || "");
+    const nip = String(item["NIP"] || "");
+    const jabatan = String(item["Jabatan"] || "");
+    const kegiatan = String(item["Nama Kegiatan"] || "");
+    const query = searchTerm.toLowerCase();
+
+    return (
+      nama.toLowerCase().includes(query) ||
+      nip.toLowerCase().includes(query) ||
+      jabatan.toLowerCase().includes(query) ||
+      kegiatan.toLowerCase().includes(query)
+    );
+  });
+
+  const grandTotal = filteredData.reduce((acc, r) => acc + (Number(r["Total"]) || 0), 0);
+
+  // CRUD Handlers
+  const handleOpenCreate = () => {
+    setViewSource("cloud");
+    setEditorMode("create");
+    setEditingRow(null);
+    setEditingIndex(null);
+    setIsEditorOpen(true);
+  };
+
+  const handleOpenEdit = (item: Record<string, unknown>, filteredIdx: number) => {
+    const actualIdx = cloudRows.findIndex((r) => r === item);
+    setViewSource("cloud");
+    setEditorMode("edit");
+    setEditingRow(item);
+    setEditingIndex(actualIdx !== -1 ? actualIdx : filteredIdx);
+    setIsEditorOpen(true);
+  };
+
+  const handleOpenDelete = (item: Record<string, unknown>, filteredIdx: number) => {
+    const actualIdx = cloudRows.findIndex((r) => r === item);
+    const name = String(item["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || item["NAMA EXTERNAL"] || "Pegawai");
+    setDeleteModal({
+      isOpen: true,
+      index: actualIdx !== -1 ? actualIdx : filteredIdx,
+      name,
+    });
+  };
+
+  const handleSaveRow = (savedRow: Record<string, unknown>) => {
+    let updatedRows: Array<Record<string, unknown>>;
+    if (editorMode === "create") {
+      updatedRows = [savedRow, ...cloudRows];
+      setStatusMessage({
+        type: "success",
+        text: "Baris rekap baru berhasil ditambahkan ke memori lokal. Klik 'Sinkronkan ke Cloud' untuk memperbarui Google Spreadsheet.",
+      });
+    } else if (editingIndex !== null && editingIndex >= 0 && editingIndex < cloudRows.length) {
+      updatedRows = [...cloudRows];
+      updatedRows[editingIndex] = savedRow;
+      setStatusMessage({
+        type: "success",
+        text: "Perubahan data berhasil disimpan di memori lokal. Klik 'Sinkronkan ke Cloud' untuk menyelaraskan ke Google Spreadsheet.",
+      });
+    } else {
+      updatedRows = [savedRow, ...cloudRows];
+    }
+
+    setCloudRows(updatedRows);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(updatedRows));
+    }
+    setIsEditorOpen(false);
+    setEditingRow(null);
+    setEditingIndex(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteModal.index !== null && deleteModal.index >= 0 && deleteModal.index < cloudRows.length) {
+      const deletedName = deleteModal.name;
+      const updated = cloudRows.filter((_, idx) => idx !== deleteModal.index);
+      setCloudRows(updated);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(updated));
+      }
+      setStatusMessage({
+        type: "info",
+        text: `Data perjalanan dinas untuk ${deletedName} berhasil dihapus dari daftar lokal. Klik 'Sinkronkan ke Cloud' untuk memperbarui Spreadsheet.`,
+      });
+    }
+    setDeleteModal({ isOpen: false, index: null, name: "" });
+  };
+
+  const handleSyncToSpreadsheet = async () => {
+    if (cloudRows.length === 0) {
+      setStatusMessage({
+        type: "error",
+        text: "Tidak ada data rekap untuk disinkronkan.",
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    setStatusMessage({
+      type: "info",
+      text: "Sedang menyinkronkan seluruh baris rekap ke Google Spreadsheet...",
     });
 
-    const worksheetData = [headers, ...dataRows];
+    try {
+      const res = await syncAllRekapToGoogleSheet(cloudRows);
+      if (res.success) {
+        setStatusMessage({
+          type: "success",
+          text: res.message || "Berhasil menyinkronkan data ke Google Spreadsheet!",
+        });
+      } else {
+        setStatusMessage({
+          type: "error",
+          text: res.message || "Gagal menyinkronkan data ke Google Spreadsheet.",
+        });
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setStatusMessage({
+        type: "error",
+        text: `Gagal sinkronisasi: ${errMsg}`,
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Export to Excel (.xlsx) matching active data
+  const handleExportExcel = () => {
+    const dataRows = filteredData.map((item) => {
+      return standardHeaders.map((h) => item[h] ?? "");
+    });
+
+    const worksheetData = [standardHeaders, ...dataRows];
     const ws = XLSX.utils.aoa_to_sheet(worksheetData);
 
     // Auto-fit column widths
-    const colWidths = headers.map((h, i) => {
+    const colWidths = standardHeaders.map((h, i) => {
       let maxLen = h.length;
       dataRows.forEach((row) => {
         const val = String(row[i] || "");
@@ -182,322 +394,524 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows, on
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Rekap Perdin");
+    const filename = `Rekap_Perdin_Inspektorat_${viewSource === "cloud" ? "CloudDB" : "Draft"}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
+  };
 
-    const safeTitle = (header.keteranganKegiatan || "Rekap_Perdin")
-      .slice(0, 30)
-      .replace(/[/\\?%*:|"<>]/g, "_");
-    const fileName = `Rekap_Perdin_${safeTitle}_${new Date().toISOString().split("T")[0]}.xlsx`;
-
-    XLSX.writeFile(wb, fileName);
+  const formatCellDate = (val: unknown) => {
+    if (!val) return "—";
+    const str = String(val);
+    if (str.includes("T")) {
+      try {
+        return str.split("T")[0];
+      } catch {
+        return str;
+      }
+    }
+    return str;
   };
 
   return (
-    <div className="space-y-5">
-      {/* Top Banner & Action Controls */}
-      <div className="glass-base rounded-3xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-700 text-white flex items-center justify-center shadow-md shadow-indigo-600/20">
-              <FileSpreadsheet className="w-5 h-5" />
+    <div className="space-y-4">
+      {/* Consolidated Toolbar */}
+      <div className="glass-base rounded-2xl p-4 md:p-5 space-y-3.5">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 pb-3 border-b border-slate-200/70">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs md:text-sm font-bold text-slate-800">
+                Rekap Pertanggungjawaban Perdin
+              </h2>
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+                48 Kolom SPJ
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm md:text-base font-bold text-slate-900">
-                  Tabel Rekap Perdin Inspektorat
-                </h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  48 Kolom SPJ Lengkap
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">
-                Format database pertanggungjawaban dinas resmi terintegrasi dengan kalkulasi SBM dan modal rincian
-              </p>
-            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Data pertanggungjawaban dinas resmi terintegrasi dengan Google Spreadsheet Cloud
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Cari pegawai / NIP..."
-                className="input-glass h-9 pl-8 pr-3 text-xs w-48 sm:w-60 font-medium"
-              />
+          {/* Action Group */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* View Source Switcher */}
+            <div className="flex items-center p-0.5 bg-slate-200/60 rounded-lg border border-slate-300/50 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => setViewSource("cloud")}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                  viewSource === "cloud"
+                    ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                <Cloud className="w-3.5 h-3.5 text-slate-600" />
+                <span>Cloud DB ({cloudRows.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewSource("draft")}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                  viewSource === "draft"
+                    ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-slate-600" />
+                <span>Draft ({rows.length})</span>
+              </button>
             </div>
+
+            {/* Refresh from Cloud */}
+            <button
+              type="button"
+              onClick={handleManualRefresh}
+              disabled={isFetching}
+              className="btn-tactile inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200/80 cursor-pointer disabled:opacity-50 shadow-2xs"
+              title="Muat ulang data dari Google Spreadsheet"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isFetching ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+
+            {/* Create New Row */}
+            <button
+              type="button"
+              onClick={handleOpenCreate}
+              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer shadow-2xs"
+              title="Tambah baris perjalanan dinas baru secara langsung"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Tambah Baris</span>
+            </button>
+
+            {/* Push / Sync All Rekap to Google Sheet */}
+            {viewSource === "cloud" && (
+              <button
+                type="button"
+                onClick={handleSyncToSpreadsheet}
+                disabled={isSyncing || cloudRows.length === 0}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium cursor-pointer disabled:opacity-50 shadow-2xs"
+                title="Sinkronkan seluruh perubahan data rekap ke Google Spreadsheet"
+              >
+                <CloudUpload className={`w-3.5 h-3.5 ${isSyncing ? "animate-bounce" : ""}`} />
+                <span>{isSyncing ? "Menyinkronkan..." : "Sinkron ke Cloud"}</span>
+              </button>
+            )}
 
             {onOpenDatabaseSync && (
               <button
                 type="button"
                 onClick={onOpenDatabaseSync}
-                className="btn-tactile flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-md shadow-slate-900/20 cursor-pointer"
+                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300/80 text-xs font-medium cursor-pointer shadow-2xs"
+                title="Buka panel koneksi Google Apps Script"
               >
-                <Database className="w-3.5 h-3.5 text-blue-400" />
-                <span>Simpan ke Spreadsheet</span>
+                <Database className="w-3.5 h-3.5 text-slate-600" />
+                <span className="hidden sm:inline">Database Cloud</span>
               </button>
             )}
 
             <button
               type="button"
               onClick={handleExportExcel}
-              className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-md shadow-emerald-700/20 cursor-pointer"
+              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-2xs"
             >
-              <Download className="w-4 h-4" />
-              <span>Ekspor ke Excel (.xlsx)</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Ekspor Excel</span>
             </button>
           </div>
         </div>
 
-        {/* Quick Meta Info Badges */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-200/60 text-xs">
-          <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-            <span className="text-[10px] font-semibold text-slate-500 block uppercase">Jenis Pengajuan</span>
-            <span className="font-bold text-indigo-900">{header.jenisPengajuan || "RAMPUNG"}</span>
+        {/* Status Notification Banner */}
+        {statusMessage && (
+          <div
+            className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800"
+          >
+            <div className="flex items-center gap-2">
+              {statusMessage.type === "success" && <CheckCircle2 className="w-4 h-4 text-slate-900 shrink-0" />}
+              {statusMessage.type === "error" && <AlertTriangle className="w-4 h-4 text-slate-900 shrink-0" />}
+              {statusMessage.type === "info" && <RefreshCw className="w-4 h-4 text-slate-600 shrink-0 animate-spin" />}
+              <p className="font-medium">{statusMessage.text}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setStatusMessage(null)}
+              className="p-1 rounded hover:bg-slate-200 text-slate-500 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-            <span className="text-[10px] font-semibold text-slate-500 block uppercase">No. SPM</span>
-            <span className="font-mono font-bold text-slate-900">{header.noSpm || "—"}</span>
+        )}
+
+        {/* Filter & Metric Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 flex-1 min-w-[220px] max-w-sm">
+            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Cari pegawai, NIP, kegiatan, atau jabatan..."
+              className="input-glass h-8 px-2.5 text-xs w-full font-normal"
+            />
           </div>
-          <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-            <span className="text-[10px] font-semibold text-slate-500 block uppercase">Jenis Perdin</span>
-            <span className="font-semibold text-slate-900">{header.jenisPerdin || "Perdin Luar Kota"}</span>
-          </div>
-          <div className="p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80">
-            <span className="text-[10px] font-semibold text-blue-700 block uppercase">Total Anggaran</span>
-            <span className="font-mono font-black text-blue-900">Rp {grandTotal.toLocaleString("id-ID")}</span>
+
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-400 text-[11px]">
+              Menampilkan {filteredData.length} data {viewSource === "cloud" ? "(Cloud DB)" : "(Draft Kalkulator)"}
+            </span>
+            <div className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs">
+              Total Biaya: <span className="font-mono font-bold text-slate-900">Rp {grandTotal.toLocaleString("id-ID")}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 48-Column Database Table View */}
-      <div className="glass-base rounded-3xl p-4 shadow-sm border border-slate-200/80 overflow-hidden space-y-3">
-        <div className="flex items-center justify-between px-2">
-          <span className="text-xs font-bold text-slate-700">
-            Menampilkan {filteredRows.length} dari {rows.length} Pegawai Terdaftar
-          </span>
-          <span className="text-[11px] text-slate-500">
-            Geser horizontal untuk melihat seluruh 48 kolom data
-          </span>
-        </div>
-
-        <div className="overflow-x-auto rounded-2xl border border-slate-200/90 max-h-[600px] overflow-y-auto">
-          <table className="w-full text-[11px] border-collapse bg-white whitespace-nowrap">
-            <thead className="sticky top-0 z-20 bg-slate-100/95 backdrop-blur-md border-b-2 border-slate-300 font-bold text-slate-800 text-[10.5px]">
+      {/* Main 48-Column Table */}
+      <div className="rounded-xl border border-slate-200/80 bg-white overflow-hidden shadow-2xs">
+        <div className="overflow-x-auto max-h-[72vh]">
+          <table className="w-full text-[11px] text-left border-collapse whitespace-nowrap">
+            <thead className="bg-slate-100 text-slate-700 sticky top-0 z-30 font-semibold text-[11px] border-b border-slate-300">
               <tr>
-                <th className="p-2.5 border-r border-slate-200 text-center w-10">No</th>
-                <th className="p-2.5 border-r border-slate-200">No SPBY</th>
-                <th className="p-2.5 border-r border-slate-200">Jenis Pengajuan</th>
-                <th className="p-2.5 border-r border-slate-200">No SPM</th>
-                <th className="p-2.5 border-r border-slate-200 sticky left-0 bg-slate-100 z-30 shadow-xs">
-                  Nama Pegawai Internal
+                <th className="p-2 border-r border-slate-200 text-center w-10">No</th>
+                {viewSource === "cloud" && (
+                  <th className="p-2 border-r border-slate-200 text-center min-w-[70px] sticky left-0 z-50 bg-slate-100">
+                    Aksi
+                  </th>
+                )}
+                <th className="p-2 border-r border-slate-200 min-w-[90px]">No SPBY</th>
+                <th className="p-2 border-r border-slate-200 min-w-[110px]">Jenis Pengajuan</th>
+                <th className="p-2 border-r border-slate-200 min-w-[100px]">No SPM</th>
+                <th
+                  className={`p-2 border-r border-slate-200 min-w-[200px] ${
+                    viewSource === "cloud" ? "sticky left-[70px]" : "sticky left-0"
+                  } bg-slate-100 z-40 shadow-[2px_0_4px_rgba(0,0,0,0.06)]`}
+                >
+                  Nama Pegawai
                 </th>
-                <th className="p-2.5 border-r border-slate-200">Nama External</th>
-                <th className="p-2.5 border-r border-slate-200">NIP</th>
-                <th className="p-2.5 border-r border-slate-200">Gol</th>
-                <th className="p-2.5 border-r border-slate-200">Jabatan</th>
-                <th className="p-2.5 border-r border-slate-200">Jenis Perdin</th>
-                <th className="p-2.5 border-r border-slate-200">No Surat Tugas</th>
-                <th className="p-2.5 border-r border-slate-200">Angkutan</th>
-                <th className="p-2.5 border-r border-slate-200">Berangkat dari</th>
-                <th className="p-2.5 border-r border-slate-200">Tujuan ke</th>
-                <th className="p-2.5 border-r border-slate-200">Tgl Berangkat</th>
-                <th className="p-2.5 border-r border-slate-200">Tgl Kembali</th>
-                <th className="p-2.5 border-r border-slate-200">Nomor Tiket</th>
-                <th className="p-2.5 border-r border-slate-200">Maskapai</th>
-                <th className="p-2.5 border-r border-slate-200">Kode Booking</th>
-                <th className="p-2.5 border-r border-slate-200">Boarding Pass</th>
-                <th className="p-2.5 border-r border-slate-200">Nama Penginapan</th>
-                <th className="p-2.5 border-r border-slate-200">Check In</th>
-                <th className="p-2.5 border-r border-slate-200">Check Out</th>
-                <th className="p-2.5 border-r border-slate-200 text-center">Hari Inap</th>
-                <th className="p-2.5 border-r border-slate-200 text-center">Total Hari</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">UH Biasa</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">UH 60%</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Hotel</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Penginapan 30%</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Meeting</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Riil</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Fare Pergi</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Fare Pulang</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Trans. Jakarta PP</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Trans. Daerah PP</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Trans. Darat/Lokal</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Sewa Kendaraan</th>
-                <th className="p-2.5 border-r border-slate-200 text-right">Representatif</th>
-                <th className="p-2.5 border-r border-slate-200 text-right font-black text-blue-900 bg-blue-100/50">
+                <th className="p-2 border-r border-slate-200 min-w-[130px]">Nama External</th>
+                <th className="p-2 border-r border-slate-200 min-w-[150px]">NIP</th>
+                <th className="p-2 border-r border-slate-200 min-w-[60px]">Gol</th>
+                <th className="p-2 border-r border-slate-200 min-w-[160px]">Jabatan</th>
+                <th className="p-2 border-r border-slate-200 min-w-[110px]">Jenis Perdin</th>
+                <th className="p-2 border-r border-slate-200 min-w-[180px]">Nama Kegiatan</th>
+                <th className="p-2 border-r border-slate-200 min-w-[140px]">No Surat Tugas</th>
+                <th className="p-2 border-r border-slate-200 min-w-[110px]">Angkutan</th>
+                <th className="p-2 border-r border-slate-200 min-w-[110px]">Berangkat</th>
+                <th className="p-2 border-r border-slate-200 min-w-[120px]">Tujuan</th>
+                <th className="p-2 border-r border-slate-200 min-w-[95px]">Tgl Pergi</th>
+                <th className="p-2 border-r border-slate-200 min-w-[95px]">Tgl Pulang</th>
+                <th className="p-2 border-r border-slate-200 min-w-[150px]">No Tiket</th>
+                <th className="p-2 border-r border-slate-200 min-w-[140px]">Maskapai</th>
+                <th className="p-2 border-r border-slate-200 min-w-[120px]">Kode Booking</th>
+                <th className="p-2 border-r border-slate-200 min-w-[90px] text-center">Boarding Pass</th>
+                <th className="p-2 border-r border-slate-200 min-w-[150px]">Penginapan</th>
+                <th className="p-2 border-r border-slate-200 min-w-[95px]">Check In</th>
+                <th className="p-2 border-r border-slate-200 min-w-[95px]">Check Out</th>
+                <th className="p-2 border-r border-slate-200 text-center min-w-[60px]">Malam</th>
+                <th className="p-2 border-r border-slate-200 text-center min-w-[60px]">Hari</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[100px]">UH 100%</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[90px]">UH 40%</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[100px]">Biaya Hotel</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[95px]">Penginapan 30%</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[100px]">Fullboard/Meeting</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[90px]">Riil</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[100px]">Fare Pergi</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[100px]">Fare Pulang</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[105px]">Trans Jakarta PP</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[105px]">Trans Daerah PP</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[100px]">Transport Total</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[90px]">Sewa Mobil</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[95px]">Representatif</th>
+                <th className="p-2 border-r border-slate-200 text-right min-w-[120px] bg-slate-200 text-slate-900 font-bold">
                   Total Biaya
                 </th>
-                <th className="p-2.5 text-right font-semibold text-slate-700">Pengembalian</th>
+                <th className="p-2 text-right min-w-[95px]">Pengembalian</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200/80">
-              {filteredRows.map((r, idx) => {
-                const noTiket =
-                  r.tiketDetailPergi?.noTiket || r.tiketDetailPulang?.noTiket
-                    ? `${r.tiketDetailPergi?.noTiket || "-"} / ${r.tiketDetailPulang?.noTiket || "-"}`
-                    : "-";
-                const maskapai =
-                  r.tiketDetailPergi?.maskapai || r.tiketDetailPulang?.maskapai
-                    ? `${r.tiketDetailPergi?.maskapai || "-"} / ${r.tiketDetailPulang?.maskapai || "-"}`
-                    : "-";
-                const kodeBooking =
-                  r.tiketDetailPergi?.kodeBooking || r.tiketDetailPulang?.kodeBooking
-                    ? `${r.tiketDetailPergi?.kodeBooking || "-"} / ${r.tiketDetailPulang?.kodeBooking || "-"}`
-                    : "-";
+            <tbody className="divide-y divide-slate-200">
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={viewSource === "cloud" ? 43 : 42} className="p-8 text-center text-slate-500 font-medium">
+                    {isFetching ? (
+                      <div className="flex items-center justify-center gap-2 text-slate-600">
+                        <RefreshCw className="w-4 h-4 animate-spin text-slate-600" />
+                        <span>Sedang memuat data dari Google Spreadsheet...</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <p className="font-semibold text-slate-700">Belum ada data perjalanan dinas yang ditemukan.</p>
+                        <p className="text-xs text-slate-400">
+                          {viewSource === "cloud"
+                            ? "Klik tombol '+ Tambah Baris' untuk membuat entri rekap baru, atau klik 'Refresh'."
+                            : "Isi data peserta pada tab Input & Kalkulator."}
+                        </p>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ) : (
+                filteredData.map((item, idx) => {
+                  const nama = String(item["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || item["NAMA EXTERNAL"] || "—");
+                  const namaExt = String(item["NAMA EXTERNAL"] || "");
+                  const totalNum = Number(item["Total"]) || 0;
+                  const uh100 = Number(item["UH 100% ()"]) || 0;
+                  const uh40 = Number(item["UH 40% ()"]) || 0;
+                  const hotelNum = Number(item["Biaya Penginapan Biasa (Hotel)"]) || 0;
+                  const p30Num = Number(item["Penginapan 30%"]) || 0;
+                  const meetingNum = Number(item["Biaya Fullboard/Fullday/Halfday ()"]) || 0;
+                  const riilNum = Number(item["Riil ()"]) || 0;
+                  const farePergiNum = Number(item["Harga Fare Tiket Pergi ()"]) || 0;
+                  const farePulangNum = Number(item["Harga FareTiket Pulang ()"]) || 0;
+                  const transJkt = Number(item["Transport Jakarta PP"]) || 0;
+                  const transDaerah = Number(item["Transport Daerah PP"]) || 0;
+                  const transTotal = Number(item["Biaya Transport ()"]) || 0;
+                  const sewaMobil = Number(item["Sewa kendaraan ()"]) || 0;
+                  const repNum = Number(item["Representatif ()"]) || 0;
+                  const pengembalianNum = Number(item["PENGEMBALIAN"]) || 0;
 
-                const transTotal =
-                  (r.transportasiDarat || 0) + (r.transportasiLokal || 0) + (r.dukunganTransportasi || 0);
-
-                return (
-                  <tr key={r.id || idx} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-2 border-r border-slate-200 text-center font-bold text-slate-500">
-                      {idx + 1}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-mono text-slate-600">
-                      {header.noSpby || "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-semibold text-indigo-900">
-                      {header.jenisPengajuan || "RAMPUNG"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-mono font-bold text-slate-800">
-                      {header.noSpm || "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-bold text-slate-900 sticky left-0 bg-white shadow-xs">
-                      {r.nama || "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-slate-600">
-                      {r.namaExternal || "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-mono text-slate-600">
-                      {r.nip || "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-medium">
-                      {r.golongan || "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-slate-700">
-                      {r.jabatan || "Pelaksana"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-slate-700">
-                      {header.jenisPerdin || "Perdin Luar Kota"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-mono text-slate-700">
-                      {r.nomorSt || header.nomorStStaff || header.nomorStMaster || "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200">
-                      {header.alatAngkut || "Angkutan Darat"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200">
-                      {header.berangkatDari || "Jakarta"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-medium text-slate-800">
-                      {r.tujuanKota || header.provinsiTujuan}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-slate-600">
-                      {r.tanggalMulai}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-slate-600">
-                      {r.tanggalSelesai}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-mono text-slate-700">
-                      {noTiket}
-                    </td>
-                    <td className="p-2 border-r border-slate-200">
-                      {maskapai}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-mono font-bold text-blue-800">
-                      {kodeBooking}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-center">
-                      <span className={`px-2 py-0.5 rounded text-[9.5px] font-bold ${
-                        r.boardingPass === "ADA" || (r.tiket > 0 && r.boardingPass !== "TIDAK")
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-slate-100 text-slate-600"
-                      }`}>
-                        {r.boardingPass || (r.tiket > 0 ? "ADA" : "-")}
-                      </span>
-                    </td>
-                    <td className="p-2 border-r border-slate-200 font-medium">
-                      {r.namaHotel || "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-slate-600">
-                      {r.checkInHotel || (r.hotel > 0 ? r.tanggalMulai : "—")}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-slate-600">
-                      {r.checkOutHotel || (r.hotel > 0 ? r.tanggalSelesai : "—")}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-center font-bold">
-                      {r.malamHotel || (r.hotel > 0 ? 1 : "—")}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-center font-bold">
-                      {r.lamaHari}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.biayaUhBiasa ? `Rp ${r.biayaUhBiasa.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.biayaUhBiasa60 ? `Rp ${r.biayaUhBiasa60.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.hotel ? `Rp ${r.hotel.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.penginapan30 ? `Rp ${r.penginapan30.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.fulldayMeeting || r.fullboardMeeting ? `Rp ${(r.fulldayMeeting + r.fullboardMeeting).toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.pengRill ? `Rp ${r.pengRill.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.tiketDetailPergi?.harga ? `Rp ${r.tiketDetailPergi.harga.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.tiketDetailPulang?.harga ? `Rp ${r.tiketDetailPulang.harga.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.transportJakartaPp ? `Rp ${r.transportJakartaPp.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.transportDaerahPp ? `Rp ${r.transportDaerahPp.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {transTotal ? `Rp ${transTotal.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.sewaKendaraan ? `Rp ${r.sewaKendaraan.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono">
-                      {r.representatif ? `Rp ${r.representatif.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                    <td className="p-2 border-r border-slate-200 text-right font-mono font-black text-blue-900 bg-blue-50/50">
-                      Rp {r.totalJumlah.toLocaleString("id-ID")}
-                    </td>
-                    <td className="p-2 text-right font-mono text-slate-600">
-                      {r.pengembalian ? `Rp ${r.pengembalian.toLocaleString("id-ID")}` : "—"}
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-2 border-r border-slate-200 text-center font-medium text-slate-400">
+                        {idx + 1}
+                      </td>
+                      {viewSource === "cloud" && (
+                        <td className="p-2 border-r border-slate-200 text-center sticky left-0 z-20 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEdit(item, idx)}
+                              title="Edit baris rekap ini"
+                              className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDelete(item, idx)}
+                              title="Hapus baris rekap ini"
+                              className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                      <td className="p-2 border-r border-slate-200 font-mono text-slate-600">
+                        {String(item["No SPBY"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 font-medium text-slate-800">
+                        {String(item["JENIS PENGAJUAN"] || "RAMPUNG")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 font-mono font-semibold text-slate-800">
+                        {String(item["No SPM"] || "—")}
+                      </td>
+                      <td
+                        className={`p-2 border-r border-slate-200 font-semibold text-slate-900 ${
+                          viewSource === "cloud" ? "sticky left-[70px]" : "sticky left-0"
+                        } bg-white shadow-[2px_0_4px_rgba(0,0,0,0.04)]`}
+                      >
+                        {nama}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-slate-600">
+                        {namaExt || "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 font-mono text-slate-600">
+                        {String(item["NIP"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 font-medium">
+                        {String(item["Gol"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-slate-700">
+                        {String(item["Jabatan"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-slate-700">
+                        {String(item["Jenis Perdin"] || "Perdin Luar Kota")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 font-medium text-slate-800 max-w-xs truncate" title={String(item["Nama Kegiatan"] || "")}>
+                        {String(item["Nama Kegiatan"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 font-mono text-slate-700">
+                        {String(item["No Surat Tugas"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200">
+                        {String(item["Angkutan"] || "Angkutan Darat")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200">
+                        {String(item["Berangkat dari-"] || "Jakarta")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 font-medium text-slate-800">
+                        {String(item["Tujuan ke-"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-slate-600 font-mono">
+                        {formatCellDate(item["Tgl Berangkat"])}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-slate-600 font-mono">
+                        {formatCellDate(item["Tgl Kembali"])}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 font-mono text-slate-700 whitespace-pre-line">
+                        {String(item["Nomor Tiket"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 whitespace-pre-line">
+                        {String(item["Nama Maskapai"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 font-mono font-medium text-slate-800 whitespace-pre-line">
+                        {String(item["Kode Booking"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-center">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            String(item["Boarding Pass (Ada/Tidak)"]).toUpperCase() === "ADA"
+                              ? "bg-slate-100 text-slate-700"
+                              : "bg-slate-50 text-slate-400"
+                          }`}
+                        >
+                          {String(item["Boarding Pass (Ada/Tidak)"] || "—")}
+                        </span>
+                      </td>
+                      <td className="p-2 border-r border-slate-200 font-medium">
+                        {String(item["Nama Penginapan"] || "—")}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-slate-600 font-mono">
+                        {formatCellDate(item["Tanggal Check In"])}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-slate-600 font-mono">
+                        {formatCellDate(item["Tanggal Check Out"])}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-center font-medium">
+                        {String(item["Jumlah Hari Menginap"] || 0)}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-center font-medium">
+                        {String(item["Total Hari"] || 1)}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {uh100 ? `Rp ${uh100.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {uh40 ? `Rp ${uh40.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {hotelNum ? `Rp ${hotelNum.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {p30Num ? `Rp ${p30Num.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {meetingNum ? `Rp ${meetingNum.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {riilNum ? `Rp ${riilNum.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {farePergiNum ? `Rp ${farePergiNum.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {farePulangNum ? `Rp ${farePulangNum.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {transJkt ? `Rp ${transJkt.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {transDaerah ? `Rp ${transDaerah.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {transTotal ? `Rp ${transTotal.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {sewaMobil ? `Rp ${sewaMobil.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono">
+                        {repNum ? `Rp ${repNum.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-right font-mono font-bold text-slate-900 bg-slate-50">
+                        Rp {totalNum.toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-2 text-right font-mono text-slate-600">
+                        {pengembalianNum ? `Rp ${pengembalianNum.toLocaleString("id-ID")}` : "—"}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
-            <tfoot className="bg-slate-200/90 font-bold border-t-2 border-slate-300 text-slate-900">
-              <tr>
-                <td colSpan={5} className="p-2.5 text-center uppercase tracking-wider">
-                  Total ({rows.length} Pegawai Terdaftar)
-                </td>
-                <td colSpan={33} className="p-2.5 text-right">
-                  Grand Total Keseluruhan:
-                </td>
-                <td className="p-2.5 text-right font-mono font-black text-blue-950 bg-blue-100">
-                  Rp {grandTotal.toLocaleString("id-ID")}
-                </td>
-                <td className="p-2.5 text-right font-mono"></td>
-              </tr>
-            </tfoot>
+            {filteredData.length > 0 && (
+              <tfoot className="bg-slate-100/90 font-semibold border-t border-slate-200 text-slate-800 sticky bottom-0 z-20">
+                <tr>
+                  <td colSpan={viewSource === "cloud" ? 6 : 5} className="p-2.5 text-center">
+                    Total ({filteredData.length} baris data)
+                  </td>
+                  <td colSpan={34} className="p-2.5 text-right">
+                    Grand Total:
+                  </td>
+                  <td className="p-2.5 text-right font-mono font-bold text-slate-900 bg-slate-200/60">
+                    Rp {grandTotal.toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-2.5 text-right font-mono"></td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       </div>
+
+      {/* Modal Editor for 48 Columns SPJ (Create / Edit) */}
+      <ModalRekapRowEditor
+        isOpen={isEditorOpen}
+        mode={editorMode}
+        initialData={editingRow}
+        onClose={() => {
+          setIsEditorOpen(false);
+          setEditingRow(null);
+          setEditingIndex(null);
+        }}
+        onSave={handleSaveRow}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="p-2.5 bg-red-50 rounded-xl border border-red-100">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-800">Hapus Baris Rekap?</h3>
+                <p className="text-xs text-slate-500">
+                  Data perjalanan dinas ini akan dihapus dari daftar rekap.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-700">
+              <span className="text-slate-400">Pegawai:</span>{" "}
+              <span className="font-semibold text-slate-900">{deleteModal.name}</span>
+            </div>
+
+            <p className="text-[11px] text-slate-400">
+              Catatan: Setelah menghapus, Anda dapat mengeklik tombol{" "}
+              <span className="font-semibold text-slate-600">Sinkron ke Cloud</span> untuk memperbarui data di Google Spreadsheet secara permanen.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeleteModal({ isOpen: false, index: null, name: "" })}
+                className="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-medium cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Ya, Hapus Data</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

@@ -25,14 +25,27 @@ export interface SbmRate {
 }
 
 export interface NomorMemo {
-  no: string;
-  prefix: string;
-  nomor: string;
-  unit: string;
-  bulanRomawi: string;
-  tahun: string;
-  tanggal: string;
+  // Format baku 9 kolom Google Sheets MASTER_MEMO
+  tahun_anggaran?: number | string;
+  nomor_urut?: number | string;
+  format_lengkap?: string;
+  tanggal_memo?: string;
   perihal: string;
+  id_kegiatan_ref?: string;
+  status?: string;
+  nominal?: number | string;
+  MAK?: string;
+
+  // Backward compatibility / convenience aliases
+  no?: string;
+  prefix?: string;
+  nomor?: string;
+  unit?: string;
+  bulanRomawi?: string;
+  tahun?: string;
+  noMemo?: string;
+  tanggal?: string;
+  mak?: string;
 }
 
 export interface RiilItem {

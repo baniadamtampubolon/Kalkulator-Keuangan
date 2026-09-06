@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { Pegawai } from "@/lib/types";
-import { X, UserPlus } from "lucide-react";
+import { X, UserPlus, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import { savePegawaiToGoogleSheet } from "@/lib/googleSheetsService";
 
 interface ModalTambahPegawaiProps {
   isOpen: boolean;
@@ -18,48 +19,95 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
   const [nama, setNama] = useState("");
   const [nip, setNip] = useState("");
   const [golongan, setGolongan] = useState("III/a");
+  const [pangkat, setPangkat] = useState("Penata Muda");
   const [jabatan, setJabatan] = useState("");
+  const [jenisKelamin, setJenisKelamin] = useState("Laki-laki");
+  const [isSaving, setIsSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nama.trim()) return;
 
+    setIsSaving(true);
+    setFeedback(null);
+
+    const kodeNama = nama.trim().split(" ")[0].replace(/[^a-zA-Z]/g, "") || "Peg";
     const newPeg: Pegawai = {
-      kodeNama: nama.toLowerCase().split(" ")[0] || "peg",
-      no: Date.now().toString(),
+      kodeNama,
+      no: Date.now().toString().slice(-4),
       nama: nama.trim(),
       nip: nip.trim(),
       golongan: golongan.trim(),
+      pangkat: pangkat.trim(),
       jabatan: jabatan.trim() || "Pelaksana",
-      jenisKelamin: "",
-      pangkat: "",
+      jenisKelamin: jenisKelamin,
+      kelasJabatan: "",
+      namaBank: "",
+      nomorRekening: "",
     };
 
-    onSave(newPeg);
-    setNama("");
-    setNip("");
-    setGolongan("III/a");
-    setJabatan("");
+    try {
+      const res = await savePegawaiToGoogleSheet(newPeg);
+      setIsSaving(false);
+      if (res.success) {
+        onSave(newPeg);
+        setFeedback({ type: "success", text: res.message || "Pegawai berhasil disimpan ke MASTER_PEGAWAI!" });
+        setTimeout(() => {
+          setNama("");
+          setNip("");
+          setGolongan("III/a");
+          setPangkat("Penata Muda");
+          setJabatan("");
+          setFeedback(null);
+          onClose();
+        }, 1200);
+      } else {
+        setFeedback({ type: "error", text: res.message || "Gagal menyimpan pegawai." });
+      }
+    } catch (err: unknown) {
+      setIsSaving(false);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setFeedback({ type: "error", text: `Terjadi kesalahan: ${errMsg}` });
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md transition-all animate-in fade-in duration-200">
       <div className="glass-modal w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-700 flex items-center justify-center border border-blue-500/20">
-              <UserPlus className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
+              <UserPlus className="w-4 h-4 text-slate-700" />
             </div>
-            <h3 className="font-bold text-sm text-slate-900">
-              Tambah Pegawai ke Master Data
-            </h3>
+            <div>
+              <h3 className="font-bold text-sm text-slate-900">
+                Tambah Pegawai ke Master Data
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Tersimpan otomatis ke database cloud <code>MASTER_PEGAWAI</code>
+              </p>
+            </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {feedback && (
+          <div
+            className="p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 flex items-start gap-2 text-xs animate-in fade-in duration-200"
+          >
+            {feedback.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 text-slate-900 shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-slate-900 shrink-0 mt-0.5" />
+            )}
+            <div className="flex-1 leading-tight">{feedback.text}</div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
           <div>
@@ -122,6 +170,21 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
 
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
+                Pangkat ASN
+              </label>
+              <input
+                type="text"
+                value={pangkat}
+                onChange={(e) => setPangkat(e.target.value)}
+                placeholder="Contoh: Penata Muda"
+                className="input-glass w-full h-10 px-3 font-medium"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
                 Jabatan Kedinasan
               </label>
               <input
@@ -132,21 +195,38 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
                 className="input-glass w-full h-10 px-3 font-medium"
               />
             </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Jenis Kelamin
+              </label>
+              <select
+                value={jenisKelamin}
+                onChange={(e) => setJenisKelamin(e.target.value)}
+                className="input-glass w-full h-10 px-3 font-semibold cursor-pointer"
+              >
+                <option value="Laki-laki">Laki-laki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-3 border-t border-slate-200/80">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-white/60 cursor-pointer"
+              disabled={isSaving}
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-white/60 cursor-pointer disabled:opacity-50"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="btn-tactile px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold shadow-md cursor-pointer"
+              disabled={isSaving || !nama.trim()}
+              className="btn-tactile px-4 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-bold shadow-sm cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
-              Simpan Pegawai
+              {isSaving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
+              <span>{isSaving ? "Menyimpan ke Cloud..." : "Simpan ke Database"}</span>
             </button>
           </div>
         </form>
@@ -154,3 +234,4 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
     </div>
   );
 };
+
