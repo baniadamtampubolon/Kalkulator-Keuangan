@@ -1,4 +1,5 @@
 # Sistem Otomasi SPPD & Kalkulator Keuangan Perjalanan Dinas
+
 ### Inspektorat — Kementerian Koordinator Bidang Pangan Republik Indonesia
 
 Aplikasi web modern untuk otomatisasi perhitungan Uang Harian SBM PMK, pembuatan rincian biaya perjalanan dinas, pencetakan 6 dokumen pertanggungjawaban resmi standar Inspektorat, dan sinkronisasi database cloud Google Sheets.
@@ -6,12 +7,14 @@ Aplikasi web modern untuk otomatisasi perhitungan Uang Harian SBM PMK, pembuatan
 ---
 
 ## 📖 Panduan Penggunaan Lengkap
+
 Untuk panduan penggunaan langkah demi langkah dari awal sampai akhir, silakan baca:
 👉 **[Buku Panduan Penggunaan (MANUAL_BOOK.md)](./MANUAL_BOOK.md)**
 
 ---
 
 ## 🚀 Fitur Utama
+
 - **Kalkulasi SBM Otomatis:** Perhitungan tarif Uang Harian (100%, 60%, Halfday, Fullboard) dan batas penginapan berdasarkan SBM PMK seluruh provinsi di Indonesia.
 - **Input Angka Rupiah Otomatis:** Dilengkapi pemisah ribuan standar Indonesia (`1.000.000`) secara *real-time* saat mengetik.
 - **Pencetakan Dokumen Resmi:**
@@ -30,15 +33,15 @@ Untuk panduan penggunaan langkah demi langkah dari awal sampai akhir, silakan ba
 ## 🛠️ Menjalankan di Komputer Lokal
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
-
 2. **Jalankan development server:**
+
    ```bash
    npm run dev
    ```
-
 3. Buka peramban di [http://localhost:3000](http://localhost:3000).
 
 ---
@@ -46,13 +49,14 @@ Untuk panduan penggunaan langkah demi langkah dari awal sampai akhir, silakan ba
 ## 🌐 Deployment ke Vercel
 
 1. Push repository ke GitHub:
+
    ```bash
    git add .
    git commit -m "feat: update project"
    git push origin main
    ```
-
 2. Import repository di [Vercel](https://vercel.com/new).
 3. Tambahkan Environment Variable:
+
    - `NEXT_PUBLIC_GAS_API_URL`: URL Web App Google Apps Script.
 4. Klik **Deploy**.
