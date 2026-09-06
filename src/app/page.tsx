@@ -12,6 +12,7 @@ import { RincianBiayaDoc } from "@/components/documents/RincianBiayaDoc";
 import { BiayaRiilDoc } from "@/components/documents/BiayaRiilDoc";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
 import { ModalDatabaseSync } from "@/components/ModalDatabaseSync";
+import { ManualBookView } from "@/components/ManualBookView";
 import { Footer } from "@/components/Footer";
 import {
   MasterSyncData,
@@ -367,6 +368,14 @@ export default function Home() {
           <RekapPerdinTab
             header={header}
             rows={rows}
+          />
+        )}
+
+        {/* Tab 7: Panduan (Manual Book & Tutorial Setup Database) */}
+        {activeTab === "panduan" && (
+          <ManualBookView
+            onOpenDatabaseSync={() => setIsDbModalOpen(true)}
+            onNavigateToTab={(tab) => setActiveTab(tab as ActiveTab)}
           />
         )}
       </main>

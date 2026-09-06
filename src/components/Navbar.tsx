@@ -11,9 +11,10 @@ import {
   FileCheck,
   Printer,
   Database,
+  BookOpen,
 } from "lucide-react";
 
-export type ActiveTab = "input" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "rekap";
+export type ActiveTab = "input" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "rekap" | "panduan";
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -40,6 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: "rincian", label: "4. Rincian Biaya", icon: ListOrdered },
     { id: "riil", label: "5. Biaya Riil", icon: FileCheck },
     { id: "rekap", label: "6. Rekap Perdin", icon: FileSpreadsheet },
+    { id: "panduan", label: "7. Panduan (Manual Book)", icon: BookOpen },
   ];
 
   return (
@@ -86,6 +88,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Rp {totalExpenditure.toLocaleString("id-ID")}
               </span>
             </div>
+
+            {/* Panduan Quick Button */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("panduan")}
+              className={`btn-tactile flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border shadow-2xs transition-all cursor-pointer ${
+                activeTab === "panduan"
+                  ? "bg-slate-900 text-white border-slate-900 font-semibold"
+                  : "bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-300/80"
+              }`}
+              title="Buku Panduan Penggunaan & Tutorial Setup Database"
+            >
+              <BookOpen className={`w-3.5 h-3.5 ${activeTab === "panduan" ? "text-white" : "text-slate-700"}`} />
+              <span>Panduan</span>
+            </button>
 
             {/* Database Button */}
             {onOpenDatabaseSync && (

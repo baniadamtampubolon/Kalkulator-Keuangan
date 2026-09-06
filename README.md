@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistem Otomasi SPPD & Kalkulator Keuangan Perjalanan Dinas
+### Inspektorat — Kementerian Koordinator Bidang Pangan Republik Indonesia
 
-## Getting Started
+Aplikasi web modern untuk otomatisasi perhitungan Uang Harian SBM PMK, pembuatan rincian biaya perjalanan dinas, pencetakan 6 dokumen pertanggungjawaban resmi standar Inspektorat, dan sinkronisasi database cloud Google Sheets.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📖 Panduan Penggunaan Lengkap
+Untuk panduan penggunaan langkah demi langkah dari awal sampai akhir, silakan baca:
+👉 **[Buku Panduan Penggunaan (MANUAL_BOOK.md)](./MANUAL_BOOK.md)**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Fitur Utama
+- **Kalkulasi SBM Otomatis:** Perhitungan tarif Uang Harian (100%, 60%, Halfday, Fullboard) dan batas penginapan berdasarkan SBM PMK seluruh provinsi di Indonesia.
+- **Input Angka Rupiah Otomatis:** Dilengkapi pemisah ribuan standar Indonesia (`1.000.000`) secara *real-time* saat mengetik.
+- **Pencetakan Dokumen Resmi:**
+  1. Kwitansi Nominatif / Kwitansi SPJ (4 Tanda Tangan)
+  2. Memorandum Master Nota Dinas
+  3. Daftar Nominatif Rencana Kegiatan (Tabel Landscape Font Tahoma)
+  4. Surat Pernyataan Daftar Pengeluaran Riil
+  5. Rincian Biaya Perjalanan Dinas
+  6. Lampiran SPPD Depan & Belakang (Visum Stempel)
+- **Mode Edit Bebas on Canvas:** Fitur koreksi langsung pada kanvas dokumen sebelum dicetak.
+- **Integrasi Database Cloud (Google Sheets):** Tombol All-in-One untuk menyimpan data SPJ ke Google Spreadsheet sekaligus menyinkronkan data rekap perdin.
+- **Keamanan Konfigurasi:** Menu konfigurasi database dilindungi oleh PIN Admin (`311001`).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🛠️ Menjalankan di Komputer Lokal
 
-To learn more about Next.js, take a look at the following resources:
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Jalankan development server:**
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Buka peramban di [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🌐 Deployment ke Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push repository ke GitHub:
+   ```bash
+   git add .
+   git commit -m "feat: update project"
+   git push origin main
+   ```
+
+2. Import repository di [Vercel](https://vercel.com/new).
+3. Tambahkan Environment Variable:
+   - `NEXT_PUBLIC_GAS_API_URL`: URL Web App Google Apps Script.
+4. Klik **Deploy**.
