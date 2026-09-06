@@ -197,7 +197,7 @@ export default function Home() {
       const nextHeader = typeof action === "function" ? action(prevHeader) : action;
       if (nextHeader.provinsiTujuan !== prevHeader.provinsiTujuan) {
         const sbm = findSbmByProvince(sbmList, nextHeader.provinsiTujuan);
-        setRows((prevRows) => prevRows.map((r) => calculateRowTotal(r, sbm, activeUh, activeCols)));
+        setRows((prevRows) => prevRows.map((r) => calculateRowTotal(r, sbm, activeUh, activeCols, { forceRecalcUh: true })));
       }
       return nextHeader;
     });
@@ -366,7 +366,6 @@ export default function Home() {
           <RekapPerdinTab
             header={header}
             rows={rows}
-            onOpenDatabaseSync={() => setIsDbModalOpen(true)}
           />
         )}
       </main>

@@ -268,10 +268,10 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
               <th className="p-2.5 w-16 min-w-[60px] text-center" title="Lama Perjalanan Dinas Kalender">Durasi</th>
 
               {/* Dynamic Cost & UH Columns */}
-              {activeUh.uhBiasa && <th className="p-2.5 w-40 min-w-[155px] text-right">UH Biasa (Hari & Rp)</th>}
-              {activeUh.uhBiasa60 && <th className="p-2.5 w-40 min-w-[155px] text-right">UH 60% (Hari & Rp)</th>}
-              {activeUh.uhHalfday && <th className="p-2.5 w-40 min-w-[155px] text-right">UH Halfday (Hari & Rp)</th>}
-              {activeUh.uhFullboard && <th className="p-2.5 w-40 min-w-[155px] text-right">UH Fullboard (Hari & Rp)</th>}
+              {activeUh.uhBiasa && <th className="p-2.5 w-48 min-w-[185px] text-right">UH Biasa (Hari & Rp)</th>}
+              {activeUh.uhBiasa60 && <th className="p-2.5 w-48 min-w-[185px] text-right">UH 60% (Hari & Rp)</th>}
+              {activeUh.uhHalfday && <th className="p-2.5 w-48 min-w-[185px] text-right">UH Halfday (Hari & Rp)</th>}
+              {activeUh.uhFullboard && <th className="p-2.5 w-48 min-w-[185px] text-right">UH Fullboard (Hari & Rp)</th>}
 
               {activeCols.tiket && <th className="p-2.5 w-28 min-w-[110px] text-center">Tiket PP</th>}
               {activeCols.dukunganTransportasi && <th className="p-2.5 w-32 min-w-[125px] text-right">Duk. Transport</th>}
@@ -455,84 +455,160 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
 
                 {/* UH Biasa */}
                 {activeUh.uhBiasa && (
-                  <td className="p-2 w-40 min-w-[155px] text-right">
+                  <td className="p-2 w-48 min-w-[185px] text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <div className="flex items-center gap-0.5 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/80 shadow-2xs" title="Jumlah hari uang harian yang dibayarkan">
                         <input
                           type="number"
                           min={0}
                           value={row.hariUhBiasa !== undefined ? row.hariUhBiasa : row.lamaHari}
-                          onChange={(e) => handleUpdateRow(row.id, { hariUhBiasa: Math.max(0, parseInt(e.target.value) || 0) })}
+                          onChange={(e) => {
+                            const newHari = Math.max(0, parseInt(e.target.value) || 0);
+                            const rate = currentSbm?.uhBiasa || 0;
+                            handleUpdateRow(row.id, {
+                              hariUhBiasa: newHari,
+                              biayaUhBiasa: newHari * rate,
+                            });
+                          }}
                           className="w-8 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
                         />
                         <span className="text-[10px] text-slate-400 font-medium">hr</span>
                       </div>
-                      <span className="font-mono font-medium text-slate-800 text-xs whitespace-nowrap">
-                        Rp {row.biayaUhBiasa.toLocaleString("id-ID")}
-                      </span>
+                      <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                        <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={1000}
+                          value={row.biayaUhBiasa !== undefined ? row.biayaUhBiasa : 0}
+                          onChange={(e) => {
+                            const val = Math.max(0, parseInt(e.target.value) || 0);
+                            handleUpdateRow(row.id, { biayaUhBiasa: val });
+                          }}
+                          className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
+                          title="Nominal Uang Harian (Editable: dapat disesuaikan bila dipotong uang makan/lainnya)"
+                        />
+                      </div>
                     </div>
                   </td>
                 )}
 
                 {/* UH 60% */}
                 {activeUh.uhBiasa60 && (
-                  <td className="p-2 w-40 min-w-[155px] text-right">
+                  <td className="p-2 w-48 min-w-[185px] text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <div className="flex items-center gap-0.5 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/80 shadow-2xs" title="Jumlah hari UH 60% yang dibayarkan">
                         <input
                           type="number"
                           min={0}
                           value={row.hariUhBiasa60 !== undefined ? row.hariUhBiasa60 : row.lamaHari}
-                          onChange={(e) => handleUpdateRow(row.id, { hariUhBiasa60: Math.max(0, parseInt(e.target.value) || 0) })}
+                          onChange={(e) => {
+                            const newHari = Math.max(0, parseInt(e.target.value) || 0);
+                            const rate = currentSbm?.uhBiasa || 0;
+                            handleUpdateRow(row.id, {
+                              hariUhBiasa60: newHari,
+                              biayaUhBiasa60: Math.round(newHari * rate * 0.6),
+                            });
+                          }}
                           className="w-8 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
                         />
                         <span className="text-[10px] text-slate-400 font-medium">hr</span>
                       </div>
-                      <span className="font-mono font-medium text-slate-800 text-xs whitespace-nowrap">
-                        Rp {row.biayaUhBiasa60.toLocaleString("id-ID")}
-                      </span>
+                      <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                        <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={1000}
+                          value={row.biayaUhBiasa60 !== undefined ? row.biayaUhBiasa60 : 0}
+                          onChange={(e) => {
+                            const val = Math.max(0, parseInt(e.target.value) || 0);
+                            handleUpdateRow(row.id, { biayaUhBiasa60: val });
+                          }}
+                          className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
+                          title="Nominal UH 60% (Editable: dapat disesuaikan)"
+                        />
+                      </div>
                     </div>
                   </td>
                 )}
 
                 {/* UH Halfday */}
                 {activeUh.uhHalfday && (
-                  <td className="p-2 w-40 min-w-[155px] text-right">
+                  <td className="p-2 w-48 min-w-[185px] text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <div className="flex items-center gap-0.5 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/80 shadow-2xs" title="Jumlah hari UH Halfday yang dibayarkan">
                         <input
                           type="number"
                           min={0}
                           value={row.hariUhHalfday !== undefined ? row.hariUhHalfday : row.lamaHari}
-                          onChange={(e) => handleUpdateRow(row.id, { hariUhHalfday: Math.max(0, parseInt(e.target.value) || 0) })}
+                          onChange={(e) => {
+                            const newHari = Math.max(0, parseInt(e.target.value) || 0);
+                            const rate = currentSbm?.uhHalfday || 0;
+                            handleUpdateRow(row.id, {
+                              hariUhHalfday: newHari,
+                              biayaUhHalfday: newHari * rate,
+                            });
+                          }}
                           className="w-8 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
                         />
                         <span className="text-[10px] text-slate-400 font-medium">hr</span>
                       </div>
-                      <span className="font-mono font-medium text-slate-800 text-xs whitespace-nowrap">
-                        Rp {row.biayaUhHalfday.toLocaleString("id-ID")}
-                      </span>
+                      <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                        <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={1000}
+                          value={row.biayaUhHalfday !== undefined ? row.biayaUhHalfday : 0}
+                          onChange={(e) => {
+                            const val = Math.max(0, parseInt(e.target.value) || 0);
+                            handleUpdateRow(row.id, { biayaUhHalfday: val });
+                          }}
+                          className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
+                          title="Nominal UH Halfday (Editable: dapat disesuaikan)"
+                        />
+                      </div>
                     </div>
                   </td>
                 )}
 
                 {/* UH Fullboard */}
                 {activeUh.uhFullboard && (
-                  <td className="p-2 w-40 min-w-[155px] text-right">
+                  <td className="p-2 w-48 min-w-[185px] text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <div className="flex items-center gap-0.5 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/80 shadow-2xs" title="Jumlah hari UH Fullboard yang dibayarkan">
                         <input
                           type="number"
                           min={0}
                           value={row.hariUhFullboard !== undefined ? row.hariUhFullboard : row.lamaHari}
-                          onChange={(e) => handleUpdateRow(row.id, { hariUhFullboard: Math.max(0, parseInt(e.target.value) || 0) })}
+                          onChange={(e) => {
+                            const newHari = Math.max(0, parseInt(e.target.value) || 0);
+                            const rate = currentSbm?.uhFullboard || 0;
+                            handleUpdateRow(row.id, {
+                              hariUhFullboard: newHari,
+                              biayaUhFullboard: newHari * rate,
+                            });
+                          }}
                           className="w-8 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
                         />
                         <span className="text-[10px] text-slate-400 font-medium">hr</span>
                       </div>
-                      <span className="font-mono font-medium text-slate-800 text-xs whitespace-nowrap">
-                        Rp {row.biayaUhFullboard.toLocaleString("id-ID")}
-                      </span>
+                      <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                        <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={1000}
+                          value={row.biayaUhFullboard !== undefined ? row.biayaUhFullboard : 0}
+                          onChange={(e) => {
+                            const val = Math.max(0, parseInt(e.target.value) || 0);
+                            handleUpdateRow(row.id, { biayaUhFullboard: val });
+                          }}
+                          className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
+                          title="Nominal UH Fullboard (Editable: dapat disesuaikan)"
+                        />
+                      </div>
                     </div>
                   </td>
                 )}

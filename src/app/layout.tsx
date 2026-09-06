@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Kalkulator Keuangan & SPJ Perjalanan Dinas - Inspektorat",
   description: "Aplikasi Kalkulator Keuangan, Perhitungan SBM 2026, Rekap 48 Kolom, dan Pembuatan Dokumen SPJ",
+  icons: {
+    icon: "/logo-kemenkopangan.png",
+    shortcut: "/logo-kemenkopangan.png",
+    apple: "/logo-kemenkopangan.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

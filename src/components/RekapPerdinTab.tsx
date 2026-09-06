@@ -5,7 +5,6 @@ import { HeaderData, ParticipantRow } from "@/lib/types";
 import {
   Download,
   Search,
-  Database,
   RefreshCw,
   Cloud,
   FileText,
@@ -18,16 +17,15 @@ import {
   X,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import { fetchRekapFromSheet, syncAllRekapToGoogleSheet } from "@/lib/googleSheetsService";
+import { fetchRekapFromSheet, syncAllRekapToGoogleSheet, savePerdinToGoogleSheet } from "@/lib/googleSheetsService";
 import { ModalRekapRowEditor } from "./ModalRekapRowEditor";
 
 interface RekapPerdinTabProps {
   header: HeaderData;
   rows: ParticipantRow[];
-  onOpenDatabaseSync?: () => void;
 }
 
-export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows, onOpenDatabaseSync }) => {
+export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewSource, setViewSource] = useState<"cloud" | "draft">("cloud");
   const [cloudRows, setCloudRows] = useState<Array<Record<string, unknown>>>(() => {
@@ -45,6 +43,7 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows, on
   });
   const [isFetching, setIsFetching] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSavingAndSyncing, setIsSavingAndSyncing] = useState(false);
 
   // CRUD Modal States
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -97,6 +96,64 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows, on
         type: "error",
         text: res.message || "Gagal memuat data dari Spreadsheet.",
       });
+    }
+  };
+
+  // Simpan Form SPJ aktif & langsung sinkronkan Rekap Perdin dari Google Sheet
+  const handleSaveAndSync = async () => {
+    if (rows.length === 0) {
+      setStatusMessage({
+        type: "error",
+        text: "Belum ada data peserta/form untuk disimpan. Silakan isi form terlebih dahulu.",
+      });
+      return;
+    }
+
+    setIsSavingAndSyncing(true);
+    setStatusMessage({
+      type: "info",
+      text: "Sedang menyimpan transaksi SPJ ke Google Spreadsheet & menyinkronkan Rekap Perdin...",
+    });
+
+    try {
+      // 1. Simpan form aktif ke Google Spreadsheet
+      const saveRes = await savePerdinToGoogleSheet(header, rows);
+      if (!saveRes.success) {
+        setStatusMessage({
+          type: "error",
+          text: saveRes.message || "Gagal menyimpan ke Google Spreadsheet.",
+        });
+        setIsSavingAndSyncing(false);
+        return;
+      }
+
+      // 2. Tarik & sinkronkan data terbaru dari Google Spreadsheet ke Rekap Perdin
+      const fetchRes = await fetchRekapFromSheet();
+      if (fetchRes.success && fetchRes.data) {
+        setCloudRows(fetchRes.data);
+        setViewSource("cloud");
+        if (typeof window !== "undefined") {
+          localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(fetchRes.data));
+        }
+        setStatusMessage({
+          type: "success",
+          text: `Berhasil! Transaksi SPJ disimpan dan ${fetchRes.data.length} baris Rekap Perdin berhasil disinkronkan dari Google Spreadsheet.`,
+        });
+      } else {
+        setViewSource("cloud");
+        setStatusMessage({
+          type: "success",
+          text: "Transaksi SPJ berhasil disimpan ke Spreadsheet, namun gagal memuat ulang rekap otomatis.",
+        });
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setStatusMessage({
+        type: "error",
+        text: `Terjadi kendala: ${errMsg}`,
+      });
+    } finally {
+      setIsSavingAndSyncing(false);
     }
   };
 
@@ -415,23 +472,71 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows, on
     <div className="space-y-4">
       {/* Consolidated Toolbar */}
       <div className="glass-base rounded-2xl p-4 md:p-5 space-y-3.5">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 pb-3 border-b border-slate-200/70">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xs md:text-sm font-bold text-slate-800">
+        {/* Row 1: Header Title & Primary Document Actions */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-200/70">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xs md:text-sm font-bold text-slate-900 tracking-tight">
                 Rekap Pertanggungjawaban Perdin
               </h2>
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/80">
                 48 Kolom SPJ
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-500">
               Data pertanggungjawaban dinas resmi terintegrasi dengan Google Spreadsheet Cloud
             </p>
           </div>
 
-          {/* Action Group */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {/* Primary Action Buttons (Simpan & Ekspor) */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleSaveAndSync}
+              disabled={isSavingAndSyncing || rows.length === 0}
+              className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer disabled:opacity-50 shadow-2xs transition-all"
+              title="Simpan form aktif ke Google Spreadsheet dan langsung perbarui Rekap Perdin"
+            >
+              <CloudUpload className={`w-3.5 h-3.5 ${isSavingAndSyncing ? "animate-bounce" : ""}`} />
+              <span>{isSavingAndSyncing ? "Menyimpan & Sinkron..." : "Simpan & Sinkron ke Spreadsheet"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-2xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Ekspor Excel</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Status Notification Banner */}
+        {statusMessage && (
+          <div
+            className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800"
+          >
+            <div className="flex items-center gap-2">
+              {statusMessage.type === "success" && <CheckCircle2 className="w-4 h-4 text-slate-900 shrink-0" />}
+              {statusMessage.type === "error" && <AlertTriangle className="w-4 h-4 text-slate-900 shrink-0" />}
+              {statusMessage.type === "info" && <RefreshCw className="w-4 h-4 text-slate-600 shrink-0 animate-spin" />}
+              <p className="font-medium">{statusMessage.text}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setStatusMessage(null)}
+              className="p-1 rounded hover:bg-slate-200 text-slate-500 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Row 2: Data Controls on Left, Search & Total on Right */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs">
+          {/* Sisi Kiri: Switcher Sumber Data, Refresh, Tambah Baris, & Sinkron Tabel */}
+          <div className="flex flex-wrap items-center gap-2">
             {/* View Source Switcher */}
             <div className="flex items-center p-0.5 bg-slate-200/60 rounded-lg border border-slate-300/50 text-xs font-medium">
               <button
@@ -469,97 +574,55 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows, on
               title="Muat ulang data dari Google Spreadsheet"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isFetching ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span>Refresh</span>
             </button>
 
             {/* Create New Row */}
             <button
               type="button"
               onClick={handleOpenCreate}
-              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer shadow-2xs"
+              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-800 border border-slate-300/80 text-xs font-semibold cursor-pointer shadow-2xs"
               title="Tambah baris perjalanan dinas baru secara langsung"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5 text-[#0071e3]" />
               <span>Tambah Baris</span>
             </button>
 
-            {/* Push / Sync All Rekap to Google Sheet */}
+            {/* Push / Sync All Rekap Edits to Google Sheet */}
             {viewSource === "cloud" && (
               <button
                 type="button"
                 onClick={handleSyncToSpreadsheet}
                 disabled={isSyncing || cloudRows.length === 0}
-                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium cursor-pointer disabled:opacity-50 shadow-2xs"
-                title="Sinkronkan seluruh perubahan data rekap ke Google Spreadsheet"
+                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300/80 text-xs font-medium cursor-pointer disabled:opacity-50 shadow-2xs"
+                title="Sinkronkan seluruh baris rekap ke Google Spreadsheet"
               >
-                <CloudUpload className={`w-3.5 h-3.5 ${isSyncing ? "animate-bounce" : ""}`} />
-                <span>{isSyncing ? "Menyinkronkan..." : "Sinkron ke Cloud"}</span>
+                <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${isSyncing ? "animate-spin" : ""}`} />
+                <span>{isSyncing ? "Menyinkronkan..." : "Sinkron Perubahan Tabel"}</span>
               </button>
             )}
-
-            {onOpenDatabaseSync && (
-              <button
-                type="button"
-                onClick={onOpenDatabaseSync}
-                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300/80 text-xs font-medium cursor-pointer shadow-2xs"
-                title="Buka panel koneksi Google Apps Script"
-              >
-                <Database className="w-3.5 h-3.5 text-slate-600" />
-                <span className="hidden sm:inline">Database Cloud</span>
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={handleExportExcel}
-              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-2xs"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Ekspor Excel</span>
-            </button>
           </div>
-        </div>
 
-        {/* Status Notification Banner */}
-        {statusMessage && (
-          <div
-            className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800"
-          >
-            <div className="flex items-center gap-2">
-              {statusMessage.type === "success" && <CheckCircle2 className="w-4 h-4 text-slate-900 shrink-0" />}
-              {statusMessage.type === "error" && <AlertTriangle className="w-4 h-4 text-slate-900 shrink-0" />}
-              {statusMessage.type === "info" && <RefreshCw className="w-4 h-4 text-slate-600 shrink-0 animate-spin" />}
-              <p className="font-medium">{statusMessage.text}</p>
+          {/* Sisi Kanan: Input Pencarian & Total Biaya Metric */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="relative flex items-center min-w-[200px] sm:min-w-[240px]">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Cari pegawai, NIP, kegiatan..."
+                className="input-glass h-8 pl-8 pr-2.5 text-xs w-full font-normal"
+              />
             </div>
-            <button
-              type="button"
-              onClick={() => setStatusMessage(null)}
-              className="p-1 rounded hover:bg-slate-200 text-slate-500 cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
 
-        {/* Filter & Metric Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 flex-1 min-w-[220px] max-w-sm">
-            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Cari pegawai, NIP, kegiatan, atau jabatan..."
-              className="input-glass h-8 px-2.5 text-xs w-full font-normal"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-400 text-[11px]">
-              Menampilkan {filteredData.length} data {viewSource === "cloud" ? "(Cloud DB)" : "(Draft Kalkulator)"}
-            </span>
-            <div className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs">
-              Total Biaya: <span className="font-mono font-bold text-slate-900">Rp {grandTotal.toLocaleString("id-ID")}</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-slate-400 text-[11px] hidden sm:inline">
+                {filteredData.length} data {viewSource === "cloud" ? "(Cloud)" : "(Draft)"}
+              </span>
+              <div className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs">
+                Total Biaya: <span className="font-mono font-bold text-slate-900">Rp {grandTotal.toLocaleString("id-ID")}</span>
+              </div>
             </div>
           </div>
         </div>

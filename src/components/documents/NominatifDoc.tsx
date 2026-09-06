@@ -149,13 +149,20 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
               border: none !important;
             }
             .print-page-landscape table {
-              font-size: ${isVeryDense ? "7.5pt" : isDense ? "8pt" : "9pt"} !important;
+              font-family: Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif !important;
+              font-size: ${isVeryDense ? "6.5pt" : isDense ? "7.2pt" : "8pt"} !important;
               line-height: 1.15 !important;
             }
             .print-page-landscape th,
             .print-page-landscape td {
-              padding: ${isVeryDense ? "1.5px 2px" : isDense ? "2px 3px" : "3px 4px"} !important;
-              word-break: break-word !important;
+              font-family: Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif !important;
+              padding: ${isVeryDense ? "1px 1.5px" : isDense ? "1.5px 2px" : "2px 3px"} !important;
+            }
+            .print-page-landscape td.tabular-nums,
+            .print-page-landscape td.text-right,
+            .print-page-landscape .whitespace-nowrap {
+              white-space: nowrap !important;
+              word-break: keep-all !important;
             }
             .no-print {
               display: none !important;
@@ -252,33 +259,33 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
         }`}
       >
         {/* Document Title Header */}
-        <div className="text-center space-y-1 px-2">
-          <h1 className="text-xs md:text-sm font-black tracking-wide uppercase text-black font-sans">
+        <div className="text-center space-y-1 px-2" style={{ fontFamily: "Tahoma, Geneva, sans-serif" }}>
+          <h1 className="text-xs md:text-sm font-black tracking-wide uppercase text-black">
             DAFTAR NOMINATIF RENCANA KEGIATAN
           </h1>
-          <p className="text-[10px] md:text-xs font-bold text-black max-w-4xl mx-auto leading-tight">
+          <p className="text-[9.5px] md:text-[10.5px] font-bold text-black max-w-4xl mx-auto leading-tight">
             {subtitleText}
           </p>
         </div>
 
         {/* Dynamic Auto-Fitting Table */}
         <div className="w-full overflow-x-auto pt-1">
-          <table className="w-full border-2 border-black border-collapse font-sans text-[10px] leading-tight">
+          <table className="w-full border-2 border-black border-collapse text-[8.5px] md:text-[9px] leading-tight" style={{ fontFamily: "Tahoma, Geneva, sans-serif" }}>
             <thead>
               <tr className="font-bold border-b border-black text-center bg-white text-black">
-                <th rowSpan={2} className="border border-black p-1 w-6 align-middle">
+                <th rowSpan={2} className="border border-black p-0.5 w-5 align-middle">
                   No
                 </th>
-                <th rowSpan={2} className="border border-black p-1 align-middle">
+                <th rowSpan={2} className="border border-black p-0.5 align-middle">
                   Nama
                 </th>
-                <th rowSpan={2} className="border border-black p-1 align-middle">
+                <th rowSpan={2} className="border border-black p-0.5 align-middle">
                   Jabatan
                 </th>
-                <th rowSpan={2} className="border border-black p-1 w-8 align-middle">
+                <th rowSpan={2} className="border border-black p-0.5 w-7 align-middle">
                   Gol
                 </th>
-                <th rowSpan={2} className="border border-black p-1 align-middle">
+                <th rowSpan={2} className="border border-black p-0.5 align-middle">
                   Tujuan
                 </th>
                 <th colSpan={2} className="border border-black p-0.5 align-middle">
@@ -359,63 +366,63 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
 
                     {/* Cost Columns */}
                     {showTransDarat && (
-                      <td className="border border-black p-1 text-right font-mono">
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.transportasiDarat || 0).toLocaleString("id-ID")}
                       </td>
                     )}
                     {showTransLokal && (
-                      <td className="border border-black p-1 text-right font-mono">
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.transportasiLokal || 0).toLocaleString("id-ID")}
                       </td>
                     )}
                     {showTransJakartaPp && (
-                      <td className="border border-black p-1 text-right font-mono">
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.transportJakartaPp || 0).toLocaleString("id-ID")}
                       </td>
                     )}
                     {showTransDaerahPp && (
-                      <td className="border border-black p-1 text-right font-mono">
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.transportDaerahPp || 0).toLocaleString("id-ID")}
                       </td>
                     )}
                     {showTiket && (
-                      <td className="border border-black p-1 text-right font-mono">
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.tiket || 0).toLocaleString("id-ID")}
                       </td>
                     )}
                     {showUh && (
-                      <td className="border border-black p-1 text-right font-mono">
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {uhRow.toLocaleString("id-ID")}
                       </td>
                     )}
                     {showHotel && (
-                      <td className="border border-black p-1 text-right font-mono">
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {hotelRow.toLocaleString("id-ID")}
                       </td>
                     )}
                     {showRiil && (
-                      <td className="border border-black p-1 text-right font-mono">
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.pengRill || 0).toLocaleString("id-ID")}
                       </td>
                     )}
                     {showRepresentatif && (
-                      <td className="border border-black p-1 text-right font-mono">
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.representatif || 0).toLocaleString("id-ID")}
                       </td>
                     )}
                     {showBelanjaBahan && (
-                      <td className="border border-black p-1 text-right font-mono">
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.belanjaBahan || 0).toLocaleString("id-ID")}
                       </td>
                     )}
 
                     {/* Jumlah Row Total */}
-                    <td className="border border-black p-1 text-right font-mono font-bold">
+                    <td className="border border-black p-0.5 text-right font-bold whitespace-nowrap tabular-nums">
                       {row.totalJumlah.toLocaleString("id-ID")}
                     </td>
 
                     {/* Keterangan */}
-                    <td className="border border-black p-1 text-center text-[9px]">
+                    <td className="border border-black p-0.5 text-center text-[8.5px]">
                       {row.nomorSt || header.nomorStStaff || header.nomorStMaster ? (
                         <span>ST: {row.nomorSt || header.nomorStStaff || header.nomorStMaster}</span>
                       ) : (
@@ -427,64 +434,64 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
               })}
 
               {/* Total Footer Row */}
-              <tr className="font-bold border-t-2 border-black bg-white text-black text-[9.5px]">
-                <td colSpan={8} className="border border-black p-1 text-center font-bold uppercase tracking-wider">
+              <tr className="font-bold border-t-2 border-black bg-white text-black text-[9px]">
+                <td colSpan={8} className="border border-black p-0.5 text-center font-bold uppercase tracking-wider">
                   Total
                 </td>
                 {showTransDarat && (
-                  <td className="border border-black p-1 text-right font-mono">
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalTransDarat.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showTransLokal && (
-                  <td className="border border-black p-1 text-right font-mono">
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalTransLokal.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showTransJakartaPp && (
-                  <td className="border border-black p-1 text-right font-mono">
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalTransJakartaPp.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showTransDaerahPp && (
-                  <td className="border border-black p-1 text-right font-mono">
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalTransDaerahPp.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showTiket && (
-                  <td className="border border-black p-1 text-right font-mono">
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalTiket.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showUh && (
-                  <td className="border border-black p-1 text-right font-mono">
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalUh.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showHotel && (
-                  <td className="border border-black p-1 text-right font-mono">
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalHotel.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showRiil && (
-                  <td className="border border-black p-1 text-right font-mono">
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalRiil.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showRepresentatif && (
-                  <td className="border border-black p-1 text-right font-mono">
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalRepresentatif.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showBelanjaBahan && (
-                  <td className="border border-black p-1 text-right font-mono">
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalBelanjaBahan.toLocaleString("id-ID")}
                   </td>
                 )}
-                <td className="border border-black p-1 text-right font-mono font-bold">
+                <td className="border border-black p-0.5 text-right font-bold whitespace-nowrap tabular-nums">
                   {grandTotal.toLocaleString("id-ID")}
                 </td>
-                <td className="border border-black p-1"></td>
+                <td className="border border-black p-0.5"></td>
               </tr>
             </tbody>
           </table>
