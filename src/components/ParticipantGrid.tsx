@@ -22,6 +22,11 @@ import {
   FileSpreadsheet,
   Zap,
   Copy,
+  CloudUpload,
+  CheckCircle2,
+  RefreshCw,
+  AlertCircle,
+  X,
 } from "lucide-react";
 
 interface ParticipantGridProps {
@@ -33,6 +38,12 @@ interface ParticipantGridProps {
   activeUh: Record<ActiveUhKey, boolean>;
   provinsiTujuan: string;
   header: HeaderData;
+  isSaved?: boolean;
+  hasChanges?: boolean;
+  isSaving?: boolean;
+  saveFeedback?: { type: "success" | "error" | "info"; text: string } | null;
+  onSaveOrUpdate?: () => void;
+  onClearFeedback?: () => void;
 }
 
 export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
@@ -44,6 +55,12 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
   activeUh,
   provinsiTujuan,
   header,
+  isSaved = false,
+  hasChanges = false,
+  isSaving = false,
+  saveFeedback = null,
+  onSaveOrUpdate,
+  onClearFeedback,
 }) => {
   const currentSbm = findSbmByProvince(sbmList, provinsiTujuan);
 
@@ -245,6 +262,46 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
             <Plus className="w-3.5 h-3.5" />
             <span>Tambah Pegawai</span>
           </button>
+
+          {/* Action Simpan Data / Update Data */}
+          {onSaveOrUpdate && (
+            <>
+              <div className="h-4 w-[1px] bg-slate-200/90 mx-0.5" />
+              {!isSaved ? (
+                <button
+                  type="button"
+                  onClick={onSaveOrUpdate}
+                  disabled={isSaving}
+                  className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer shadow-2xs transition-all disabled:opacity-50"
+                  title="Simpan data rincian peserta ke Rekap Perdin"
+                >
+                  <CloudUpload className={`w-3.5 h-3.5 ${isSaving ? "animate-bounce" : ""}`} />
+                  <span>{isSaving ? "Menyimpan..." : "Simpan Data"}</span>
+                </button>
+              ) : hasChanges ? (
+                <button
+                  type="button"
+                  onClick={onSaveOrUpdate}
+                  disabled={isSaving}
+                  className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold cursor-pointer shadow-md transition-all animate-pulse disabled:opacity-50"
+                  title="Ada perubahan data! Klik untuk memperbarui Rekap Perdin"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSaving ? "animate-spin" : ""}`} />
+                  <span>{isSaving ? "Memperbarui..." : "Update Data"}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onSaveOrUpdate}
+                  className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300/80 text-xs font-semibold cursor-pointer shadow-2xs transition-all"
+                  title="Data telah tersimpan di Rekap Perdin"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Data Tersimpan</span>
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -836,6 +893,122 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
           </tfoot>
         </table>
       </div>
+
+      {/* Save & Update Status & Action Bar */}
+      {onSaveOrUpdate && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200/80 bg-white/80 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                !isSaved
+                  ? "bg-slate-100 text-slate-500"
+                  : hasChanges
+                  ? "bg-amber-50 text-amber-600 border border-amber-200/60"
+                  : "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
+              }`}
+            >
+              {!isSaved ? (
+                <CloudUpload className="w-4 h-4" />
+              ) : hasChanges ? (
+                <AlertCircle className="w-4 h-4" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4" />
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-800">
+                  {!isSaved
+                    ? "Data Belum Disimpan ke Rekap"
+                    : hasChanges
+                    ? "Terdapat Perubahan Data yang Belum Diupdate"
+                    : "Data Telah Tersimpan di Rekap Perdin"}
+                </span>
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                    !isSaved
+                      ? "bg-slate-100 text-slate-600"
+                      : hasChanges
+                      ? "bg-amber-100 text-amber-800 animate-pulse"
+                      : "bg-emerald-100 text-emerald-800"
+                  }`}
+                >
+                  {!isSaved ? "Draft" : hasChanges ? "Perlu Update" : "Tersimpan"}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                {!isSaved
+                  ? "Klik tombol 'Simpan Data' agar rincian perjalanan dinas ini otomatis masuk ke database Rekap Perdin."
+                  : hasChanges
+                  ? "Perubahan pada rincian peserta telah dideteksi. Klik 'Update Data' untuk memperbarui data di Rekap Perdin."
+                  : "Semua data rincian peserta telah tersimpan mutakhir dan otomatis muncul di Rekap Perdin."}
+              </p>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <div className="flex items-center justify-end gap-2 shrink-0">
+            {!isSaved ? (
+              <button
+                type="button"
+                onClick={onSaveOrUpdate}
+                disabled={isSaving}
+                className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer shadow-sm disabled:opacity-50 transition-all"
+              >
+                <CloudUpload className={`w-4 h-4 ${isSaving ? "animate-bounce" : ""}`} />
+                <span>{isSaving ? "Menyimpan Data..." : "Simpan Data"}</span>
+              </button>
+            ) : hasChanges ? (
+              <button
+                type="button"
+                onClick={onSaveOrUpdate}
+                disabled={isSaving}
+                className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold cursor-pointer shadow-md disabled:opacity-50 transition-all animate-pulse"
+              >
+                <RefreshCw className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`} />
+                <span>{isSaving ? "Memperbarui..." : "Update Data"}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onSaveOrUpdate}
+                className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300/80 text-xs font-semibold cursor-pointer shadow-2xs transition-all"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Data Tersimpan</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Save Feedback Banner */}
+      {saveFeedback && (
+        <div
+          className={`flex items-center justify-between gap-2 p-3 rounded-xl border text-xs ${
+            saveFeedback.type === "success"
+              ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
+              : saveFeedback.type === "error"
+              ? "bg-rose-50/90 border-rose-200 text-rose-900"
+              : "bg-blue-50/90 border-blue-200 text-blue-900"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {saveFeedback.type === "success" && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+            {saveFeedback.type === "error" && <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+            <span className="font-medium">{saveFeedback.text}</span>
+          </div>
+          {onClearFeedback && (
+            <button
+              type="button"
+              onClick={onClearFeedback}
+              className="p-1 rounded hover:bg-black/5 cursor-pointer text-slate-500"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Modals Container */}
       {modalTiketRow && (

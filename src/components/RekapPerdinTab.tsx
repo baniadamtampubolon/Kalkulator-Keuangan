@@ -13,11 +13,11 @@ import {
   Trash2,
   AlertTriangle,
   CheckCircle2,
-  CloudUpload,
   X,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import { fetchRekapFromSheet, syncAllRekapToGoogleSheet, savePerdinToGoogleSheet } from "@/lib/googleSheetsService";
+import { fetchRekapFromSheet, syncAllRekapToGoogleSheet } from "@/lib/googleSheetsService";
+import { STANDARD_REKAP_HEADERS, formatRowsTo48Columns, STORAGE_KEY_REKAP } from "@/lib/rekapHelper";
 import { ModalRekapRowEditor } from "./ModalRekapRowEditor";
 
 interface RekapPerdinTabProps {
@@ -30,7 +30,7 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
   const [viewSource, setViewSource] = useState<"cloud" | "draft">("cloud");
   const [cloudRows, setCloudRows] = useState<Array<Record<string, unknown>>>(() => {
     if (typeof window !== "undefined") {
-      const cached = localStorage.getItem("perdin_cached_rekap_data");
+      const cached = localStorage.getItem(STORAGE_KEY_REKAP);
       if (cached) {
         try {
           return JSON.parse(cached);
@@ -43,7 +43,6 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
   });
   const [isFetching, setIsFetching] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isSavingAndSyncing, setIsSavingAndSyncing] = useState(false);
 
   // CRUD Modal States
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -70,13 +69,42 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
 
   useEffect(() => {
     let isMounted = true;
+
+    const reloadFromLocal = () => {
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem(STORAGE_KEY_REKAP);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (isMounted && Array.isArray(parsed)) {
+              setCloudRows(parsed);
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }
+    };
+
+    reloadFromLocal();
+
+    // Listen to real-time events from "Simpan Data" / "Update Data" in Proses
+    const handleUpdate = () => {
+      reloadFromLocal();
+    };
+    window.addEventListener("rekap-perdin-updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
     fetchRekapFromSheet().then((res) => {
       if (isMounted && res.success && res.data) {
         setCloudRows(res.data);
       }
     });
+
     return () => {
       isMounted = false;
+      window.removeEventListener("rekap-perdin-updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
     };
   }, []);
 
@@ -99,204 +127,11 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
     }
   };
 
-  // Simpan Form SPJ aktif & langsung sinkronkan Rekap Perdin dari Google Sheet
-  const handleSaveAndSync = async () => {
-    if (rows.length === 0) {
-      setStatusMessage({
-        type: "error",
-        text: "Belum ada data peserta/form untuk disimpan. Silakan isi form terlebih dahulu.",
-      });
-      return;
-    }
-
-    setIsSavingAndSyncing(true);
-    setStatusMessage({
-      type: "info",
-      text: "Sedang menyimpan transaksi SPJ ke Google Spreadsheet & menyinkronkan Rekap Perdin...",
-    });
-
-    try {
-      // 1. Simpan form aktif ke Google Spreadsheet
-      const saveRes = await savePerdinToGoogleSheet(header, rows);
-      if (!saveRes.success) {
-        setStatusMessage({
-          type: "error",
-          text: saveRes.message || "Gagal menyimpan ke Google Spreadsheet.",
-        });
-        setIsSavingAndSyncing(false);
-        return;
-      }
-
-      // 2. Tarik & sinkronkan data terbaru dari Google Spreadsheet ke Rekap Perdin
-      const fetchRes = await fetchRekapFromSheet();
-      if (fetchRes.success && fetchRes.data) {
-        setCloudRows(fetchRes.data);
-        setViewSource("cloud");
-        if (typeof window !== "undefined") {
-          localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(fetchRes.data));
-        }
-        setStatusMessage({
-          type: "success",
-          text: `Berhasil! Transaksi SPJ disimpan dan ${fetchRes.data.length} baris Rekap Perdin berhasil disinkronkan dari Google Spreadsheet.`,
-        });
-      } else {
-        setViewSource("cloud");
-        setStatusMessage({
-          type: "success",
-          text: "Transaksi SPJ berhasil disimpan ke Spreadsheet, namun gagal memuat ulang rekap otomatis.",
-        });
-      }
-    } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      setStatusMessage({
-        type: "error",
-        text: `Terjadi kendala: ${errMsg}`,
-      });
-    } finally {
-      setIsSavingAndSyncing(false);
-    }
-  };
-
   // Headers standard 48 columns
-  const standardHeaders = [
-    "No SPBY",
-    "JENIS PENGAJUAN",
-    "No SPM",
-    "",
-    "NAMA PEGAWAI INTERNAL INSPEKTORAT",
-    "NAMA EXTERNAL",
-    "NIP",
-    "Gol",
-    "Jabatan",
-    "Jenis Perdin",
-    "Status Pegawai",
-    "Nama Kegiatan",
-    "No Surat Tugas",
-    "Unit Kerja",
-    "Angkutan",
-    "Berangkat dari-",
-    "Tujuan ke-",
-    "Tgl Berangkat",
-    "Tgl Kembali",
-    "Nomor Tiket",
-    "Nama Maskapai",
-    "Kode Booking",
-    "Boarding Pass (Ada/Tidak)",
-    "Nama Penginapan",
-    "Tanggal Check In",
-    "Tanggal Check Out",
-    "Jumlah Hari Menginap",
-    "Lama Hari 100%",
-    "Lama Hari 40%",
-    "Total Hari",
-    "UH 100% ()",
-    "UH 40% ()",
-    "UH Fullboard/Fullday/Halfday/Diklat",
-    "Biaya Penginapan Biasa (Hotel)",
-    "Penginapan 30%",
-    "Biaya Fullboard/Fullday/Halfday ()",
-    "Kurs ()",
-    "Riil ()",
-    "Harga Fare Tiket Pergi ()",
-    "Harga FareTiket Pulang ()",
-    "Transport Jakarta PP",
-    "Transport Daerah PP",
-    "Biaya Transport ()",
-    "Sewa kendaraan ()",
-    "Representatif ()",
-    "Taksi Bandara",
-    "Biaya Reschedule ()",
-    "Total",
-    "Nilai Nominal di Daftar Nominatif",
-    "PENGEMBALIAN",
-  ];
+  const standardHeaders = STANDARD_REKAP_HEADERS;
 
   // Map draft rows into 48-column objects
-  const draftFormattedRows: Array<Record<string, unknown>> = rows.map((r) => {
-    const noTiket =
-      r.tiketDetailPergi?.noTiket || r.tiketDetailPulang?.noTiket
-        ? `Berangkat : ${r.tiketDetailPergi?.noTiket || "-"}\nPulang : ${r.tiketDetailPulang?.noTiket || "-"}`
-        : "";
-
-    const maskapai =
-      r.tiketDetailPergi?.maskapai || r.tiketDetailPulang?.maskapai
-        ? `Berangkat : ${r.tiketDetailPergi?.maskapai || "-"}\nPulang : ${r.tiketDetailPulang?.maskapai || "-"}`
-        : "";
-
-    const kodeBooking =
-      r.tiketDetailPergi?.kodeBooking || r.tiketDetailPulang?.kodeBooking
-        ? `Berangkat : ${r.tiketDetailPergi?.kodeBooking || "-"}\nPulang : ${r.tiketDetailPulang?.kodeBooking || "-"}`
-        : "";
-
-    const farePergi =
-      r.tiketDetailPergi?.harga !== undefined
-        ? r.tiketDetailPergi.harga
-        : r.tiket ? Math.round(r.tiket / 2) : 0;
-
-    const farePulang =
-      r.tiketDetailPulang?.harga !== undefined
-        ? r.tiketDetailPulang.harga
-        : r.tiket ? Math.round(r.tiket / 2) : 0;
-
-    const biayaTransport =
-      (r.transportasiDarat || 0) + (r.transportasiLokal || 0) + (r.dukunganTransportasi || 0);
-
-    const biayaMeeting = (r.fulldayMeeting || 0) + (r.fullboardMeeting || 0);
-    const uhMeeting = (r.biayaUhHalfday || 0) + (r.biayaUhFullboard || 0);
-
-    return {
-      "No SPBY": header.noSpby || "",
-      "JENIS PENGAJUAN": header.jenisPengajuan || "RAMPUNG",
-      "No SPM": header.noSpm || "",
-      "": "",
-      "NAMA PEGAWAI INTERNAL INSPEKTORAT": r.namaExternal ? "" : r.nama,
-      "NAMA EXTERNAL": r.namaExternal || "",
-      NIP: r.nip || "",
-      Gol: r.golongan || "",
-      Jabatan: r.jabatan || "",
-      "Jenis Perdin": header.jenisPerdin || "Perdin Luar Kota",
-      "Status Pegawai": r.nip ? "PNS" : "Non-PNS",
-      "Nama Kegiatan": header.keteranganKegiatan || "",
-      "No Surat Tugas": r.nomorSt || header.nomorStStaff || header.nomorStMaster || "",
-      "Unit Kerja": header.unitKerja || "INSPEKTORAT",
-      Angkutan: header.alatAngkut || "Angkutan Darat",
-      "Berangkat dari-": header.berangkatDari || "Jakarta",
-      "Tujuan ke-": r.tujuanKota || header.provinsiTujuan || "",
-      "Tgl Berangkat": r.tanggalMulai || "",
-      "Tgl Kembali": r.tanggalSelesai || "",
-      "Nomor Tiket": noTiket,
-      "Nama Maskapai": maskapai,
-      "Kode Booking": kodeBooking,
-      "Boarding Pass (Ada/Tidak)": r.boardingPass || (r.tiket > 0 ? "ADA" : ""),
-      "Nama Penginapan": r.namaHotel || "",
-      "Tanggal Check In": r.checkInHotel || (r.hotel > 0 ? r.tanggalMulai : ""),
-      "Tanggal Check Out": r.checkOutHotel || (r.hotel > 0 ? r.tanggalSelesai : ""),
-      "Jumlah Hari Menginap": r.malamHotel || (r.hotel > 0 ? 1 : 0),
-      "Lama Hari 100%": r.hariUhBiasa !== undefined ? r.hariUhBiasa : r.lamaHari || 1,
-      "Lama Hari 40%": r.hariUhBiasa60 || 0,
-      "Total Hari": r.lamaHari || 1,
-      "UH 100% ()": r.biayaUhBiasa || 0,
-      "UH 40% ()": r.biayaUhBiasa60 || 0,
-      "UH Fullboard/Fullday/Halfday/Diklat": uhMeeting || 0,
-      "Biaya Penginapan Biasa (Hotel)": r.hotel || 0,
-      "Penginapan 30%": r.penginapan30 || 0,
-      "Biaya Fullboard/Fullday/Halfday ()": biayaMeeting || 0,
-      "Kurs ()": r.kurs || 0,
-      "Riil ()": r.pengRill || 0,
-      "Harga Fare Tiket Pergi ()": farePergi,
-      "Harga FareTiket Pulang ()": farePulang,
-      "Transport Jakarta PP": r.transportJakartaPp || 0,
-      "Transport Daerah PP": r.transportDaerahPp || 0,
-      "Biaya Transport ()": biayaTransport,
-      "Sewa kendaraan ()": r.sewaKendaraan || 0,
-      "Representatif ()": r.representatif || 0,
-      "Taksi Bandara": r.taksiBandara || 0,
-      "Biaya Reschedule ()": r.biayaReschedule || 0,
-      Total: r.totalJumlah || 0,
-      "Nilai Nominal di Daftar Nominatif": r.totalJumlah || 0,
-      PENGEMBALIAN: r.pengembalian || 0,
-    };
-  });
+  const draftFormattedRows: Array<Record<string, unknown>> = formatRowsTo48Columns(header, rows);
 
   const activeDataList = viewSource === "cloud" ? cloudRows : draftFormattedRows;
 
@@ -486,25 +321,23 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
             <p className="text-[11px] text-slate-500">
               Data pertanggungjawaban dinas resmi terintegrasi dengan Google Spreadsheet Cloud
             </p>
-          </div>
-
-          {/* Primary Action Buttons (Simpan & Ekspor) */}
+          </div>          {/* Primary Action Buttons (Sinkron Data/Tabel & Ekspor) */}
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              onClick={handleSaveAndSync}
-              disabled={isSavingAndSyncing || rows.length === 0}
+              onClick={handleSyncToSpreadsheet}
+              disabled={isSyncing || cloudRows.length === 0}
               className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer disabled:opacity-50 shadow-2xs transition-all"
-              title="Simpan form aktif ke Google Spreadsheet dan langsung perbarui Rekap Perdin"
+              title="Sinkronkan data dan seluruh tabel Rekap Perdin dengan Google Spreadsheet Cloud"
             >
-              <CloudUpload className={`w-3.5 h-3.5 ${isSavingAndSyncing ? "animate-bounce" : ""}`} />
-              <span>{isSavingAndSyncing ? "Menyimpan & Sinkron..." : "Simpan & Sinkron ke Spreadsheet"}</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+              <span>{isSyncing ? "Menyinkronkan..." : "Sinkron Data / Tabel"}</span>
             </button>
 
             <button
               type="button"
               onClick={handleExportExcel}
-              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-2xs"
+              className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-2xs"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Ekspor Excel</span>
@@ -535,7 +368,7 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
 
         {/* Row 2: Data Controls on Left, Search & Total on Right */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs">
-          {/* Sisi Kiri: Switcher Sumber Data, Refresh, Tambah Baris, & Sinkron Tabel */}
+          {/* Sisi Kiri: Switcher Sumber Data, Refresh, & Tambah Baris */}
           <div className="flex flex-wrap items-center gap-2">
             {/* View Source Switcher */}
             <div className="flex items-center p-0.5 bg-slate-200/60 rounded-lg border border-slate-300/50 text-xs font-medium">
@@ -587,20 +420,6 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
               <Plus className="w-3.5 h-3.5 text-[#0071e3]" />
               <span>Tambah Baris</span>
             </button>
-
-            {/* Push / Sync All Rekap Edits to Google Sheet */}
-            {viewSource === "cloud" && (
-              <button
-                type="button"
-                onClick={handleSyncToSpreadsheet}
-                disabled={isSyncing || cloudRows.length === 0}
-                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300/80 text-xs font-medium cursor-pointer disabled:opacity-50 shadow-2xs"
-                title="Sinkronkan seluruh baris rekap ke Google Spreadsheet"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${isSyncing ? "animate-spin" : ""}`} />
-                <span>{isSyncing ? "Menyinkronkan..." : "Sinkron Perubahan Tabel"}</span>
-              </button>
-            )}
           </div>
 
           {/* Sisi Kanan: Input Pencarian & Total Biaya Metric */}

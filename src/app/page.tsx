@@ -18,7 +18,9 @@ import {
   MasterSyncData,
   getCachedMasterData,
   fetchMasterDataFromSheet,
+  savePerdinToGoogleSheet,
 } from "@/lib/googleSheetsService";
+import { saveOrUpdateRekapLocal } from "@/lib/rekapHelper";
 
 import {
   HeaderData,
@@ -259,6 +261,65 @@ export default function Home() {
     }
   };
 
+  // Save & Update State Tracking (Proses -> Rekap Perdin)
+  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
+  const [savedBatchId, setSavedBatchId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [saveFeedback, setSaveFeedback] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
+
+  // Derive whether data is currently saved and whether any edits occurred since saving
+  const currentSnapshot = JSON.stringify({ header, rows });
+  const isSaved = Boolean(savedSnapshot);
+  const hasChanges = isSaved && currentSnapshot !== savedSnapshot;
+
+  const handleSaveOrUpdateData = async () => {
+    if (rows.length === 0) {
+      setSaveFeedback({
+        type: "error",
+        text: "Belum ada data pelaksana perjalanan dinas untuk disimpan.",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const batchId = savedBatchId || `SPJ-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      // 1. Simpan / perbarui ke Rekap Perdin lokal terlebih dahulu (instan)
+      const { isUpdate } = saveOrUpdateRekapLocal(header, rows, batchId);
+      setSavedBatchId(batchId);
+      setSavedSnapshot(currentSnapshot);
+
+      // 2. Kirim data transaksi dan baris rekap ke Google Spreadsheet Cloud
+      const sheetRes = await savePerdinToGoogleSheet(header, rows);
+
+      if (sheetRes.success) {
+        setSaveFeedback({
+          type: "success",
+          text: isUpdate
+            ? "Data SPJ berhasil diperbarui di Rekap Perdin & tersinkron ke Google Spreadsheet!"
+            : "Data SPJ berhasil disimpan ke Rekap Perdin & tersinkron ke Google Spreadsheet!",
+        });
+      } else {
+        setSaveFeedback({
+          type: "info",
+          text: `Data tersimpan di Rekap Perdin lokal. (${sheetRes.message})`,
+        });
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setSaveFeedback({
+        type: "error",
+        text: `Gagal menyimpan data: ${errMsg}`,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
 
   return (
@@ -305,6 +366,12 @@ export default function Home() {
               activeUh={activeUh}
               provinsiTujuan={header.provinsiTujuan}
               header={header}
+              isSaved={isSaved}
+              hasChanges={hasChanges}
+              isSaving={isSaving}
+              saveFeedback={saveFeedback}
+              onSaveOrUpdate={handleSaveOrUpdateData}
+              onClearFeedback={() => setSaveFeedback(null)}
             />
           </div>
         )}
