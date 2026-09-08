@@ -3,7 +3,13 @@
 import React, { useState } from "react";
 import { HeaderData, SbmRate, NomorMemo, Pegawai } from "@/lib/types";
 import { getKabkotByProvinsi } from "@/data/kabkot";
-import { LIST_NOMOR_MAK, LIST_NOMOR_KOMPONEN, getMakAkunName, getKomponenName } from "@/data/mak_akun";
+import {
+  LIST_NOMOR_MAK,
+  LIST_NOMOR_KOMPONEN,
+  getMakAkunName,
+  getKomponenName,
+  OPSI_PERIHAL_MEMORANDUM,
+} from "@/data/mak_akun";
 import { generateIdKegiatan } from "@/lib/kegiatanHelper";
 import { ModalTambahPegawai } from "./ModalTambahPegawai";
 import {
@@ -44,6 +50,13 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   onOpenDaftarKegiatan,
 }) => {
   const [isModalTambahPegawaiOpen, setIsModalTambahPegawaiOpen] = useState(false);
+
+  // Mode input Perihal Memorandum: dropdown preset vs custom textarea (dihitung otomatis tanpa effect)
+  const [isManualOverride, setIsManualOverride] = useState<boolean | null>(null);
+  const isCustomMemo =
+    isManualOverride !== null
+      ? isManualOverride
+      : Boolean(header.keteranganMemo && !OPSI_PERIHAL_MEMORANDUM.includes(header.keteranganMemo));
 
   // Deteksi nomor memorandum terakhir yang sudah terdaftar di master database
   const latestMemoInfo = React.useMemo(() => {
@@ -323,16 +336,79 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
             {/* Perihal Memorandum */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-800 flex items-center gap-1">
-                <span>Perihal Memorandum (Nota Dinas)</span>
-              </label>
-              <textarea
-                rows={3}
-                value={header.keteranganMemo}
-                onChange={(e) => handleChange("keteranganMemo", e.target.value)}
-                placeholder="Contoh: Permintaan Pembayaran Langsung (LS) Biaya Perjalanan Dinas Luar Kota..."
-                className="input-human w-full p-2.5 text-xs font-normal resize-none"
-              />
+              <div className="flex items-center justify-between">
+                <label className="font-semibold text-slate-800 flex items-center gap-1">
+                  <span>Perihal Memorandum (Nota Dinas)</span>
+                  <span className="text-red-500 font-bold">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isCustomMemo) {
+                      setIsManualOverride(false);
+                      if (!OPSI_PERIHAL_MEMORANDUM.includes(header.keteranganMemo)) {
+                        handleChange("keteranganMemo", "");
+                      }
+                    } else {
+                      setIsManualOverride(true);
+                    }
+                  }}
+                  className="text-[11px] text-[#0071e3] hover:text-[#0077ed] font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  {isCustomMemo ? "Gunakan Pilihan Dropdown" : "Ketik Kustom / Edit"}
+                </button>
+              </div>
+
+              {!isCustomMemo ? (
+                <div className="space-y-1.5">
+                  <select
+                    value={
+                      OPSI_PERIHAL_MEMORANDUM.includes(header.keteranganMemo)
+                        ? header.keteranganMemo
+                        : header.keteranganMemo
+                        ? "__CUSTOM__"
+                        : ""
+                    }
+                    onChange={(e) => {
+                      if (e.target.value === "__CUSTOM__") {
+                        setIsManualOverride(true);
+                      } else {
+                        setIsManualOverride(false);
+                        handleChange("keteranganMemo", e.target.value);
+                      }
+                    }}
+                    className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 cursor-pointer bg-white"
+                  >
+                    <option value="">-- Pilih Perihal Memorandum --</option>
+                    {OPSI_PERIHAL_MEMORANDUM.map((opsi) => (
+                      <option key={opsi} value={opsi}>
+                        {opsi}
+                      </option>
+                    ))}
+                    <option value="__CUSTOM__">✏️ Ketik Manual / Perihal Kustom...</option>
+                  </select>
+
+                  {header.keteranganMemo && (
+                    <div className="text-[11px] text-slate-700 bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1.5 leading-relaxed flex items-center justify-between gap-2">
+                      <span className="truncate">
+                        <strong className="text-slate-900">Perihal Terpilih:</strong> {header.keteranganMemo}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <textarea
+                    rows={3}
+                    value={header.keteranganMemo}
+                    onChange={(e) => handleChange("keteranganMemo", e.target.value)}
+                    placeholder="Contoh: Permintaan Pembayaran Langsung (LS) Biaya Perjalanan Dinas Luar Kota..."
+                    className="input-human w-full p-2.5 text-xs font-normal resize-none"
+                    autoFocus
+                  />
+                </div>
+              )}
+
               <p className="text-[10.5px] text-slate-400">
                 Uraian perihal pada nota dinas internal pengajuan pencairan anggaran ke PPK.
               </p>

@@ -167,3 +167,18 @@ export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string): Ma
   };
 }
 
+/**
+ * Daftar Pilihan Standar Perihal Memorandum (Nota Dinas) Pengajuan Pembayaran Langsung (LS)
+ * Sesuai format standar operasional internal pengajuan SPJ
+ */
+export const OPSI_PERIHAL_MEMORANDUM: string[] = [
+  "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas",
+  "Permintaan Pembayaran Langsung (LS) Sewa Kendaraan",
+  "Permintaan Pembayaran Langsung (LS) ATK",
+  "Permintaan Pembayaran Langsung (LS) Jamuan Pimpinan",
+  "Permintaan Pembayaran Langsung (LS) Konsumsi",
+  "Permintaan Pembayaran Langsung (LS) Honorarium",
+  "Permintaan Pembayaran Langsung (LS) Seminar Kit",
+  "Permintaan Pembayaran Lansung (LS) Seminar Kit",
+];
+
