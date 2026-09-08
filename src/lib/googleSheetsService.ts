@@ -1,5 +1,5 @@
-import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo } from "./types";
-import { generateIdKegiatan } from "./kegiatanHelper";
+import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan } from "./types";
+import { generateIdKegiatan, getSavedKegiatanList } from "./kegiatanHelper";
 
 export interface GasApiResponse<T = unknown> {
   status: "success" | "error";
@@ -14,11 +14,14 @@ export interface MasterSyncData {
   memo?: NomorMemo[];
 }
 
+export const DEFAULT_GAS_API_URL =
+  "https://script.google.com/macros/s/AKfycbyHhSy4j0a3W0doKZ5JB_579IqkC5Cqjux7nuemnlbWUnTnVCKWGqlpcLXCYhrB6DuXcQ/exec";
+
 const STORAGE_KEY_URL = "perdin_gas_api_url";
 const STORAGE_KEY_MASTER_CACHE = "perdin_cached_master_data";
 
 export function getDefaultGasApiUrl(): string {
-  return process.env.NEXT_PUBLIC_GAS_API_URL || "";
+  return process.env.NEXT_PUBLIC_GAS_API_URL || DEFAULT_GAS_API_URL;
 }
 
 export function getGasApiUrl(): string {
@@ -371,6 +374,293 @@ export async function fetchRekapFromSheet(
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);
     return { success: false, message: `Gagal memuat rekap: ${errMsg}` };
+  }
+}
+
+function cleanIsoDate(val: unknown, fallback: string = new Date().toISOString().split("T")[0]): string {
+  if (!val) return fallback;
+  const str = String(val).trim();
+  if (str.includes("T")) return str.split("T")[0];
+  if (str.match(/^\d{4}-\d{2}-\d{2}$/)) return str;
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) return d.toISOString().split("T")[0];
+  return fallback;
+}
+
+function rekapRowToParticipant(rekap: Record<string, unknown>, idx: number): ParticipantRow {
+  const namaInternal = String(rekap["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || "").trim();
+  const namaExternal = String(rekap["NAMA EXTERNAL"] || "").trim();
+  const nama = namaInternal || namaExternal || `Peserta ${idx + 1}`;
+  const isExternal = Boolean(namaExternal);
+  const totalJumlah = Number(rekap["Total"] || rekap["Nilai Nominal di Daftar Nominatif"] || 0);
+
+  const tglMulai = cleanIsoDate(rekap["Tgl Berangkat"]);
+  const tglSelesai = cleanIsoDate(rekap["Tgl Kembali"]);
+
+  return {
+    id: String(idx + 1),
+    kodeNama: "",
+    nama,
+    namaExternal: isExternal ? namaExternal : undefined,
+    nip: String(rekap["NIP"] || ""),
+    golongan: String(rekap["Gol"] || ""),
+    jabatan: String(rekap["Jabatan"] || ""),
+    tujuanKota: String(rekap["Tujuan ke-"] || ""),
+    tujuanProvinsi: String(rekap["Tujuan ke-"] || "JAWA BARAT"),
+    tanggalMulai: tglMulai,
+    tanggalSelesai: tglSelesai,
+    lamaHari: Number(rekap["Total Hari"] || 1),
+    nomorSt: String(rekap["No Surat Tugas"] || ""),
+    nomorSpd: String(idx + 1).padStart(2, "0"),
+    hariUhBiasa: Number(rekap["Lama Hari 100%"] || 1),
+    biayaUhBiasa: Number(rekap["UH 100% ()"] || 0),
+    hariUhBiasa60: Number(rekap["Lama Hari 40%"] || 0),
+    biayaUhBiasa60: Number(rekap["UH 40% ()"] || 0),
+    hariUhHalfday: 0,
+    biayaUhHalfday: 0,
+    hariUhFullboard: 0,
+    biayaUhFullboard: Number(rekap["UH Fullboard/Fullday/Halfday/Diklat"] || 0),
+    tiket: Number(rekap["Harga Fare Tiket Pergi ()"] || 0) + Number(rekap["Harga FareTiket Pulang ()"] || 0),
+    dukunganTransportasi: 0,
+    transportasiDarat: Number(rekap["Biaya Transport ()"] || 0),
+    transportasiLokal: 0,
+    transportJakartaPp: Number(rekap["Transport Jakarta PP"] || 0),
+    transportDaerahPp: Number(rekap["Transport Daerah PP"] || 0),
+    hotel: Number(rekap["Biaya Penginapan Biasa (Hotel)"] || 0),
+    penginapan30: Number(rekap["Penginapan 30%"] || 0),
+    fulldayMeeting: 0,
+    fullboardMeeting: Number(rekap["Biaya Fullboard/Fullday/Halfday ()"] || 0),
+    representatif: Number(rekap["Representatif ()"] || 0),
+    belanjaBahan: 0,
+    pengRill: Number(rekap["Riil ()"] || 0),
+    riilItems: [],
+    totalJumlah,
+  };
+}
+
+/**
+ * Tarik seluruh daftar kegiatan dari tab DB_KEGIATAN & REKAP_PERDIN_48KOLOM di Google Spreadsheet
+ */
+export async function fetchKegiatanFromSheet(
+  customUrl?: string
+): Promise<{ success: boolean; data?: SavedKegiatan[]; message?: string }> {
+  const url = customUrl || getGasApiUrl();
+  if (!url) {
+    return { success: false, message: "URL Web App belum dikonfigurasi." };
+  }
+
+  try {
+    const fetchUrlKegiatan = url.includes("?") ? `${url}&action=GET_KEGIATAN_LIST` : `${url}?action=GET_KEGIATAN_LIST`;
+    const fetchUrlRekap = url.includes("?") ? `${url}&action=GET_REKAP` : `${url}?action=GET_REKAP`;
+
+    const [resKegiatan, resRekap] = await Promise.all([
+      fetch(fetchUrlKegiatan, { method: "GET", headers: { Accept: "application/json" } }),
+      fetch(fetchUrlRekap, { method: "GET", headers: { Accept: "application/json" } }),
+    ]);
+
+    const jsonKegiatan = await resKegiatan.json();
+    const jsonRekap = await resRekap.json().catch(() => ({ status: "error", data: [] }));
+
+    if (jsonKegiatan.status !== "success" || !Array.isArray(jsonKegiatan.data)) {
+      return { success: false, message: jsonKegiatan.message || "Data kegiatan tidak valid." };
+    }
+
+    const cloudKegiatanList: Array<Record<string, unknown>> = jsonKegiatan.data;
+    const rekapRows: Array<Record<string, unknown>> = Array.isArray(jsonRekap.data) ? jsonRekap.data : [];
+
+    if (typeof window !== "undefined" && rekapRows.length > 0) {
+      localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(rekapRows));
+    }
+
+    // Ambil data lokal yang sudah tersimpan untuk merge
+    const localList = typeof window !== "undefined" ? getSavedKegiatanList() : [];
+    const localMap = new Map<string, SavedKegiatan>();
+    localList.forEach((item) => {
+      if (item.idKegiatan) localMap.set(item.idKegiatan, item);
+    });
+
+    const parsedList: SavedKegiatan[] = cloudKegiatanList.map((item) => {
+      const idKegiatan = String(item.id_kegiatan || "").trim();
+      const namaKegiatan = String(item.nama_kegiatan || "Kegiatan Dinas").trim();
+
+      // Cari baris rekap yang memiliki nama kegiatan yang sama
+      const matchingRekap = rekapRows.filter((r) => {
+        const rowKgt = String(r["Nama Kegiatan"] || "").trim();
+        return rowKgt === namaKegiatan;
+      });
+
+      let kategori: "A" | "B" = "A";
+      if (idKegiatan.endsWith("-B")) {
+        kategori = "B";
+      } else if (idKegiatan.endsWith("-A")) {
+        kategori = "A";
+      } else {
+        const hasExternal = matchingRekap.some((r) => Boolean(r["NAMA EXTERNAL"]));
+        kategori = hasExternal ? "B" : "A";
+      }
+
+      const tanggalSpd = cleanIsoDate(item.tanggal_spd || item.tanggal_mulai);
+      let kotaTujuan = "";
+      try {
+        const rawKota = item.kota_tujuan_list;
+        if (typeof rawKota === "string" && rawKota.startsWith("[")) {
+          const parsed = JSON.parse(rawKota);
+          kotaTujuan = Array.isArray(parsed) && parsed.length > 0 ? String(parsed[0]) : "";
+        } else if (typeof rawKota === "string") {
+          kotaTujuan = rawKota;
+        }
+      } catch {
+        kotaTujuan = "";
+      }
+
+      const provinsiTujuan = String(item.provinsi_tujuan_list || item.provinsi_tujuan || "JAWA BARAT");
+      const grandTotal = Number(item.grand_total) || 0;
+      const jumlahPeserta = matchingRekap.length > 0 ? matchingRekap.length : 1;
+
+      // Jika ada di lokal dan memiliki rows peserta, gunakan local snapshot agar tidak kehilangan detail form
+      const existingLocal = localMap.get(idKegiatan);
+      if (existingLocal && existingLocal.rows && existingLocal.rows.length > 0) {
+        return {
+          ...existingLocal,
+          idKegiatan,
+          kategori,
+          namaKegiatan,
+          tanggalSpd,
+          kotaTujuan: kotaTujuan || existingLocal.kotaTujuan,
+          provinsiTujuan: provinsiTujuan || existingLocal.provinsiTujuan,
+          jumlahPeserta: existingLocal.rows.length,
+          grandTotal: grandTotal || existingLocal.grandTotal,
+        };
+      }
+
+      // Reconstruct rows dari tabel rekap jika di lokal belum ada
+      const reconstructedRows: ParticipantRow[] =
+        matchingRekap.length > 0
+          ? matchingRekap.map((r, idx) => rekapRowToParticipant(r, idx))
+          : [
+              {
+                id: "1",
+                kodeNama: "",
+                nama: "Peserta Dinas",
+                nip: "",
+                golongan: "",
+                jabatan: "",
+                tujuanKota: kotaTujuan,
+                tujuanProvinsi: provinsiTujuan,
+                tanggalMulai: tanggalSpd,
+                tanggalSelesai: tanggalSpd,
+                lamaHari: 1,
+                nomorSt: String(item.nomor_st_master || ""),
+                nomorSpd: "01",
+                hariUhBiasa: 1,
+                biayaUhBiasa: 0,
+                hariUhBiasa60: 0,
+                biayaUhBiasa60: 0,
+                hariUhHalfday: 0,
+                biayaUhHalfday: 0,
+                hariUhFullboard: 0,
+                biayaUhFullboard: 0,
+                tiket: 0,
+                dukunganTransportasi: 0,
+                transportasiDarat: 0,
+                transportasiLokal: 0,
+                transportJakartaPp: 0,
+                transportDaerahPp: 0,
+                hotel: 0,
+                penginapan30: 0,
+                fulldayMeeting: 0,
+                fullboardMeeting: 0,
+                representatif: 0,
+                belanjaBahan: 0,
+                pengRill: 0,
+                riilItems: [],
+                totalJumlah: grandTotal,
+              },
+            ];
+
+      // Reconstruct HeaderData
+      const reconstructedHeader: HeaderData = {
+        idKegiatan,
+        kategoriSpj: kategori,
+        noKegiatanUrut: idKegiatan.split("-")[2] || "01",
+        keteranganKegiatan: namaKegiatan,
+        keteranganMemo: namaKegiatan,
+        provinsiTujuan,
+        kotaTujuanList: kotaTujuan ? [kotaTujuan] : [""],
+        unitKerja: String(item.unit_kerja || "Inspektorat"),
+        picInisiator: String(item.ppk_nama || "Arif Wibowo, S.H., M.H."),
+        bendahara: String(item.bendahara_nama || "Raka Panji Wibowo, S.Kom, NIP. 19950408202012 1 001"),
+        petugasVerifikasi: String(item.verifikator_nama || "Noviarty Ningsi Sumirat, S.E, NIP. 19811112201001 2 001"),
+        nomorKomp: String(item.kode_komponen || ""),
+        nomorMak: String(item.kode_mak || ""),
+        itemDetail: String(item.item_detail || "001"),
+        alatAngkut: String(item.alat_angkut || "Angkutan Darat"),
+        tanggalSpd,
+        tanggalMemo: cleanIsoDate(item.tanggal_memo || item.tanggal_spd),
+        nomorMemo: String(item.nomor_memo || ""),
+        nomorStMaster: String(item.nomor_st_master || ""),
+        ppkNama: String(item.ppk_nama || "Arif Wibowo, S.H., M.H."),
+        ppkNip: String(item.ppk_nip || "19830124200801 1 006"),
+        ppkJabatan: "Kepala Bagian Tata Usaha Inspektorat",
+        penanggungJawabNama: "Reni Sutaryo, S.Si., M.Adm.Pemb",
+        penanggungJawabNip: "19791126200604 2 014",
+        penanggungJawabJabatan: "Inspektur",
+        jenisPengajuan: "RAMPUNG",
+        noSpm: String(item.no_spm || ""),
+        noSpby: String(item.no_spby || ""),
+        jenisPerdin: "Perdin Luar Kota",
+        berangkatDari: String(item.berangkat_dari || "Jakarta"),
+      };
+
+      return {
+        idKegiatan,
+        kategori,
+        namaKegiatan,
+        tanggalSpd,
+        kotaTujuan,
+        provinsiTujuan,
+        jumlahPeserta,
+        grandTotal,
+        header: reconstructedHeader,
+        rows: reconstructedRows,
+        activeCols: {
+          tiket: false,
+          dukunganTransportasi: false,
+          transportasiDarat: true,
+          transportasiLokal: false,
+          transportJakartaPp: false,
+          transportDaerahPp: false,
+          pengRill: true,
+          hotel: false,
+          penginapan30: false,
+          fulldayMeeting: false,
+          fullboardMeeting: false,
+          representatif: true,
+          belanjaBahan: false,
+        },
+        activeUh: {
+          uhBiasa: true,
+          uhBiasa60: false,
+          uhHalfday: false,
+          uhFullboard: false,
+        },
+      };
+    });
+
+    // Simpan ke localStorage agar offline / subsequent render cepat
+    if (typeof window !== "undefined") {
+      localStorage.setItem("perdin_saved_kegiatan_list", JSON.stringify(parsedList));
+      window.dispatchEvent(new CustomEvent("kegiatan-list-updated", { detail: { updatedList: parsedList } }));
+    }
+
+    return {
+      success: true,
+      data: parsedList,
+      message: `Berhasil memuat ${parsedList.length} paket kegiatan dari Google Spreadsheet.`,
+    };
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return { success: false, message: `Gagal memuat kegiatan: ${errMsg}` };
   }
 }
 

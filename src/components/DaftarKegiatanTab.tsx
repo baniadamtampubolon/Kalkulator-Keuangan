@@ -6,6 +6,7 @@ import {
   getSavedKegiatanList,
   deleteKegiatanRecord,
 } from "@/lib/kegiatanHelper";
+import { fetchKegiatanFromSheet } from "@/lib/googleSheetsService";
 import {
   Search,
   Plus,
@@ -15,6 +16,7 @@ import {
   FolderOpen,
   CheckCircle2,
   X,
+  RotateCw,
 } from "lucide-react";
 
 interface DaftarKegiatanTabProps {
@@ -28,9 +30,15 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
   onCreateNewKegiatan,
   currentLoadedId,
 }) => {
-  const [kegiatanList, setKegiatanList] = useState<SavedKegiatan[]>([]);
+  const [kegiatanList, setKegiatanList] = useState<SavedKegiatan[]>(() => {
+    if (typeof window !== "undefined") {
+      return getSavedKegiatanList();
+    }
+    return [];
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [filterKategori, setFilterKategori] = useState<"ALL" | "A" | "B">("ALL");
+  const [isLoadingCloud, setIsLoadingCloud] = useState<boolean>(false);
 
   // Modal Delete State
   const [deleteTarget, setDeleteTarget] = useState<SavedKegiatan | null>(null);
@@ -39,19 +47,41 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
     message: string;
   } | null>(null);
 
-  // Load list & subscribe to events
+  const syncWithCloud = async () => {
+    setIsLoadingCloud(true);
+    try {
+      const res = await fetchKegiatanFromSheet();
+      if (res.success && res.data) {
+        setKegiatanList(res.data);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsLoadingCloud(false);
+    }
+  };
+
+  // Load list & subscribe to events + auto-sync from cloud
   useEffect(() => {
     let isMounted = true;
 
-    const refreshList = () => {
-      const list = getSavedKegiatanList();
-      if (isMounted) setKegiatanList(list);
-    };
-
-    refreshList();
+    // Tarik data terbaru dari Google Spreadsheet Cloud secara otomatis
+    fetchKegiatanFromSheet()
+      .then((res) => {
+        if (isMounted) {
+          if (res.success && res.data) {
+            setKegiatanList(res.data);
+          }
+          setIsLoadingCloud(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setIsLoadingCloud(false);
+      });
 
     const handleUpdate = () => {
-      refreshList();
+      const updated = getSavedKegiatanList();
+      if (isMounted) setKegiatanList(updated);
     };
 
     window.addEventListener("kegiatan-list-updated", handleUpdate);
@@ -131,6 +161,18 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                 </button>
               )}
             </div>
+
+            {/* Sync from Google Spreadsheet Button */}
+            <button
+              type="button"
+              onClick={syncWithCloud}
+              disabled={isLoadingCloud}
+              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold cursor-pointer shadow-2xs transition-all disabled:opacity-50"
+              title="Tarik data kegiatan terbaru dari Google Spreadsheet"
+            >
+              <RotateCw className={`w-3.5 h-3.5 text-blue-600 ${isLoadingCloud ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">{isLoadingCloud ? "Menyinkronkan..." : "Sinkron Cloud"}</span>
+            </button>
 
             {/* Create New Activity Button */}
             <button
