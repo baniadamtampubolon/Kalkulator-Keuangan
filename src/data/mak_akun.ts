@@ -32,22 +32,8 @@ export const LIST_NOMOR_MAK: MakAkunItem[] = [
   { kode: "521111", nama: "Belanja Keperluan Perkantoran", kategori: "Operasional" },
 ];
 
-// Daftar Kode Komponen lengkap
+// Daftar Kode Komponen resmi dari docs/KODE MAK AKUN.xlsx
 export const LIST_NOMOR_KOMPONEN: KomponenItem[] = [
-  // Kode Komponen Prioritas (Gambar 2)
-  { kode: "7461.ABR.006.051.0A", nama: "Koordinasi dan Evaluasi Kebijakan Tata Niaga" },
-  { kode: "7461.ABR.006.052.0A", nama: "Sinkronisasi Kebijakan Bidang Pangan" },
-  { kode: "7461.ABR.006.052.AP", nama: "Alokasi Perjalanan Dinas Pimpinan" },
-  { kode: "7461.ABR.006.053.0A", nama: "Koordinasi Pelaksanaan Kebijakan" },
-  { kode: "WA.7457.EBA.962.962.0M", nama: "Dukungan Manajemen Kemenko Pangan" },
-  { kode: "WA.7457.EBD.Z24.953.0J", nama: "Layanan Umum dan Tata Usaha" },
-  { kode: "7461.ABR.006.076.AC", nama: "Monev Pengawasan Program Prioritas" },
-  { kode: "7461.ABR.006.076.FF", nama: "Pendampingan Percepatan Pascabencana Alam" },
-  { kode: "7461.ABR.006.076.MR", nama: "Monev MRPN Lintas Sektor" },
-  { kode: "7461.ABR.006.082.AC", nama: "Koordinasi Tindak Lanjut Pengawasan" },
-  { kode: "7461.ABR.006.082.FF", nama: "Fasilitasi Pengendalian Program" },
-
-  // Komponen dari KODE MAK AKUN.xlsx
   { kode: "CL.7458.ABR.006.051.0A", nama: "Koordinasi dan Evaluasi Kebijakan Tata Niaga" },
   { kode: "CL.7458.ABR.006.051.0B", nama: "Pelaksanaan Koordinasi Tata Niaga" },
   { kode: "CL.7458.ABR.006.051.0C", nama: "Penyelesaian Tunggakan TA 2025" },
@@ -60,7 +46,6 @@ export const LIST_NOMOR_KOMPONEN: KomponenItem[] = [
   { kode: "CL.7458.ABR.006.076.AN", nama: "Monev Pendampingan Pascabencana Alam (Aceh, Sumut, Sumbar)" },
   { kode: "CL.7458.ABR.006.076.FF", nama: "Pendampingan Pascabencana Alam" },
   { kode: "CL.7458.ABR.006.077.GG", nama: "Koordinasi Kebijakan Pengendalian Emisi GRK" },
-  { kode: "WA.7457.EBD.Z30.052.0A", nama: "Tata Kelola dan Pelayanan Internal" },
 ];
 
 export function getMakAkunName(kode: string): string {
@@ -122,7 +107,7 @@ const SUB_KOMP_DICT: Record<string, string> = {
 };
 
 export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string): MakHierarchyDetail {
-  const cleanKomp = (nomorKompRaw || "7458.ABR.006.071.AA").trim();
+  const cleanKomp = (nomorKompRaw || "CL.7458.ABR.006.051.0A").trim();
   const akunCode = (nomorMakRaw || "524111").trim();
   const akunUraian = getMakAkunName(akunCode) || "Belanja Perjalanan Dinas Biasa";
 
@@ -135,8 +120,8 @@ export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string): Ma
       : rawTokens;
 
   let kegOutputCode = "7458.ABR.006";
-  let komponenCode = "071.";
-  let subKomponenCode = "AA";
+  let komponenCode = "051.";
+  let subKomponenCode = "0A";
 
   if (tokens.length >= 5) {
     kegOutputCode = `${tokens[0]}.${tokens[1]}.${tokens[2]}`;

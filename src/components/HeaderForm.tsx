@@ -81,6 +81,38 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
   const availableKabkot = getKabkotByProvinsi(header.provinsiTujuan);
 
+  // Opsi Petugas Verifikasi khusus: Hanya Taufik Prasetyo & Noviarty Ningsi Sumirat (Noviati)
+  const verifikatorOptions = React.useMemo(() => {
+    const foundTaufik = pegawaiList.find(
+      (p) => p.kodeNama === "Taufik" || (p.nama && p.nama.toLowerCase().includes("taufik"))
+    );
+    const foundNovi = pegawaiList.find(
+      (p) =>
+        p.kodeNama === "Novi" ||
+        (p.nama && (p.nama.toLowerCase().includes("noviart") || p.nama.toLowerCase().includes("noviat")))
+    );
+
+    const taufikObj = {
+      nama: foundTaufik?.nama || "Taufik Prasetyo, SKom",
+      nip: foundTaufik?.nip || "19900826202521 1 026",
+      value: foundTaufik?.nip
+        ? `${foundTaufik.nama}, NIP. ${foundTaufik.nip}`
+        : "Taufik Prasetyo, SKom, NIP. 19900826202521 1 026",
+      label: `Taufik Prasetyo, SKom (${foundTaufik?.jabatan || "Penata Layanan Operasional"})`,
+    };
+
+    const noviObj = {
+      nama: foundNovi?.nama || "Noviarty Ningsi Sumirat, S.E",
+      nip: foundNovi?.nip || "19811112201001 2 001",
+      value: foundNovi?.nip
+        ? `${foundNovi.nama}, NIP. ${foundNovi.nip}`
+        : "Noviarty Ningsi Sumirat, S.E, NIP. 19811112201001 2 001",
+      label: `Noviarty Ningsi Sumirat, S.E (${foundNovi?.jabatan || "Penyusun Bahan Kebijakan"})`,
+    };
+
+    return [taufikObj, noviObj];
+  }, [pegawaiList]);
+
   const handleChange = <K extends keyof HeaderData>(field: K, value: HeaderData[K]) => {
     setHeader((prev) => ({ ...prev, [field]: value }));
   };
@@ -617,7 +649,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 )}
               </div>
               <select
-                value={header.nomorKomp || "7461.ABR.006.076.MR"}
+                value={header.nomorKomp || "CL.7458.ABR.006.051.0A"}
                 onChange={(e) => handleChange("nomorKomp", e.target.value)}
                 className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 cursor-pointer text-xs"
               >
@@ -833,40 +865,45 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               </span>
             </div>
 
-            {/* Petugas Verifikasi */}
+            {/* Petugas Verifikasi (Hanya Taufik Prasetyo & Noviarty) */}
             <div className="space-y-1.5">
               <label className="font-semibold text-slate-800 flex items-center gap-1">
                 <span>Petugas Verifikasi</span>
-                <span className="text-[10px] font-medium text-slate-400">(Opsional)</span>
+                <span className="text-[10px] font-medium text-slate-400">(Taufik / Noviarty)</span>
               </label>
               <select
-                value={header.petugasVerifikasi}
+                value={
+                  header.petugasVerifikasi && header.petugasVerifikasi.toLowerCase().includes("taufik")
+                    ? verifikatorOptions[0].value
+                    : header.petugasVerifikasi &&
+                      (header.petugasVerifikasi.toLowerCase().includes("noviart") ||
+                        header.petugasVerifikasi.toLowerCase().includes("noviat"))
+                    ? verifikatorOptions[1].value
+                    : header.petugasVerifikasi
+                }
                 onChange={(e) => handleChange("petugasVerifikasi", e.target.value)}
                 className="input-human w-full h-9.5 px-2.5 font-medium cursor-pointer"
               >
                 <option value="">-- Pilih Petugas Verifikasi --</option>
+                {verifikatorOptions.map((v) => (
+                  <option key={v.value} value={v.value}>
+                    {v.label}
+                  </option>
+                ))}
                 {header.petugasVerifikasi &&
-                  !pegawaiList.some(
-                    (p) =>
-                      p.nama === header.petugasVerifikasi ||
-                      `${p.nama}, NIP. ${p.nip}` === header.petugasVerifikasi ||
-                      header.petugasVerifikasi.startsWith(p.nama)
+                  !verifikatorOptions.some(
+                    (v) =>
+                      v.value === header.petugasVerifikasi ||
+                      header.petugasVerifikasi.toLowerCase().includes("taufik") ||
+                      header.petugasVerifikasi.toLowerCase().includes("novi")
                   ) && (
                     <option value={header.petugasVerifikasi}>
                       {header.petugasVerifikasi}
                     </option>
                   )}
-                {pegawaiList.map((p) => {
-                  const fullFormatted = p.nip ? `${p.nama}, NIP. ${p.nip}` : p.nama;
-                  return (
-                    <option key={p.kodeNama} value={fullFormatted}>
-                      {p.nama} ({p.jabatan})
-                    </option>
-                  );
-                })}
               </select>
               <span className="text-[10.5px] text-slate-400 block">
-                Pemeriksa kelengkapan berkas bukti riil dan tiket.
+                Pemeriksa kelengkapan berkas bukti riil dan tiket (Taufik Prasetyo / Noviarty).
               </span>
             </div>
           </div>

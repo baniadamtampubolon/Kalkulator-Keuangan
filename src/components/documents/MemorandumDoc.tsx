@@ -38,13 +38,13 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
   const tahunAnggaran = header.tanggalSpd ? new Date(header.tanggalSpd).getFullYear() : new Date().getFullYear();
 
   const fullMakCode = (() => {
-    const komp = (header.nomorKomp || "7461.ABR.006.076.MR").trim();
+    const komp = (header.nomorKomp || "CL.7458.ABR.006.051.0A").trim();
     const mak = (header.nomorMak || "524111").trim();
     if (komp && mak) {
       if (komp.endsWith(mak)) return komp;
       return `${komp}.${mak}`;
     }
-    return komp || mak || "7461.ABR.006.076.MR.524111";
+    return komp || mak || "CL.7458.ABR.006.051.0A.524111";
   })();
 
   const hierarchy = parseMakHierarchy(header.nomorKomp, header.nomorMak);
@@ -72,10 +72,21 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
     : "NIP. 198301242008011006";
 
   const verifikatorRaw = header.petugasVerifikasi || "Noviarty Ningsi Sumirat, NIP 19811112201001 2 001";
-  const verifikatorNama = verifikatorRaw.split(",")[0].trim() || "Noviarty Ningsi Sumirat";
-  const verifikatorNip = verifikatorRaw.includes("NIP")
-    ? verifikatorRaw.substring(verifikatorRaw.indexOf("NIP")).trim()
-    : "NIP 19811112201001 2 001";
+  let verifikatorNama = "Noviarty Ningsi Sumirat";
+  let verifikatorNip = "NIP 19811112201001 2 001";
+
+  if (verifikatorRaw.toLowerCase().includes("taufik")) {
+    verifikatorNama = "Taufik Prasetyo";
+    verifikatorNip = "NIP 19900826202521 1 026";
+  } else if (verifikatorRaw.toLowerCase().includes("novi")) {
+    verifikatorNama = "Noviarty Ningsi Sumirat";
+    verifikatorNip = "NIP 19811112201001 2 001";
+  } else {
+    verifikatorNama = verifikatorRaw.split(",")[0].trim() || "Noviarty Ningsi Sumirat";
+    verifikatorNip = verifikatorRaw.includes("NIP")
+      ? verifikatorRaw.substring(verifikatorRaw.indexOf("NIP")).replace(/NIP\.?\s*/i, "NIP ").trim()
+      : "NIP 19811112201001 2 001";
+  }
 
   const perihalText = header.keteranganMemo || header.keteranganKegiatan || "Permohonan Dana Perjalanan Dinas";
 

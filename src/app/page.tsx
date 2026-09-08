@@ -113,7 +113,7 @@ export default function Home() {
     picInisiator: defaultPpk?.nama || "Arif Wibowo, S.H., M.H.",
     bendahara: "Raka Panji Wibowo, S.Kom, NIP. 19950408202012 1 001",
     petugasVerifikasi: "Noviarty Ningsi Sumirat, S.E, NIP. 19811112201001 2 001",
-    nomorKomp: "7461.ABR.006.076.MR",
+    nomorKomp: "CL.7458.ABR.006.051.0A",
     nomorMak: "524111",
     itemDetail: "001",
     alatAngkut: "Angkutan Darat",
