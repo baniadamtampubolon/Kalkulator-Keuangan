@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { HeaderData, SbmRate, NomorMemo, Pegawai } from "@/lib/types";
 import { getKabkotByProvinsi } from "@/data/kabkot";
 import { LIST_NOMOR_MAK, LIST_NOMOR_KOMPONEN, getMakAkunName, getKomponenName } from "@/data/mak_akun";
+import { generateIdKegiatan } from "@/lib/kegiatanHelper";
 import { ModalTambahPegawai } from "./ModalTambahPegawai";
 import {
   FileText,
@@ -16,6 +17,7 @@ import {
   UserPlus,
   Wand2,
   CheckCircle2,
+  FolderKanban,
 } from "lucide-react";
 
 interface HeaderFormProps {
@@ -27,6 +29,7 @@ interface HeaderFormProps {
   onAddPegawai: (newPeg: Pegawai) => void;
   onApplyStToAll: (stNumber: string) => void;
   onGenerateMemoNumber: () => void;
+  onOpenDaftarKegiatan?: () => void;
 }
 
 export const HeaderForm: React.FC<HeaderFormProps> = ({
@@ -38,6 +41,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   onAddPegawai,
   onApplyStToAll,
   onGenerateMemoNumber,
+  onOpenDaftarKegiatan,
 }) => {
   const [isModalTambahPegawaiOpen, setIsModalTambahPegawaiOpen] = useState(false);
 
@@ -170,6 +174,20 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
     handleChange("kotaTujuanList", filtered);
   };
 
+  const updateIdKegiatan = (newDate?: string, newUrut?: string, newKategori?: "A" | "B") => {
+    const d = newDate !== undefined ? newDate : header.tanggalSpd;
+    const u = newUrut !== undefined ? newUrut : (header.noKegiatanUrut || "01");
+    const k = newKategori !== undefined ? newKategori : (header.kategoriSpj || "A");
+    const newId = generateIdKegiatan(d, u, k);
+    setHeader((prev) => ({
+      ...prev,
+      tanggalSpd: d,
+      noKegiatanUrut: u,
+      kategoriSpj: k,
+      idKegiatan: newId,
+    }));
+  };
+
   return (
     <div className="space-y-4">
       {/* -------------------------------------------------------------
@@ -196,6 +214,91 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             </div>
           </div>
           <FileText className="w-4 h-4 text-slate-400 hidden sm:block" />
+        </div>
+
+        {/* Banner ID Kegiatan & Klasifikasi SPJ (A / B) */}
+        <div className="p-3 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-slate-50 border border-blue-100 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <FolderKanban className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold tracking-wider text-blue-700 uppercase">ID Kegiatan</span>
+                <span className="px-2.5 py-0.5 rounded-md font-mono font-bold text-xs bg-white text-blue-950 border border-blue-200 shadow-2xs">
+                  {header.idKegiatan || generateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut || "01", header.kategoriSpj || "A")}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-semibold ${
+                  (header.kategoriSpj || "A") === "A"
+                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                    : "bg-purple-100 text-purple-800 border border-purple-200"
+                }`}>
+                  {(header.kategoriSpj || "A") === "A" ? "Kategori A: ASN (PNS/PPPK)" : "Kategori B: Non-ASN (Eksternal)"}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Format: <code className="font-mono text-slate-700 font-semibold">K-ddmmyy-nokegiatan-A/B</code> (Menghubungkan seluruh peserta dalam satu berkas SPJ)
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {/* Pilihan Kategori A/B */}
+            <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs text-xs">
+              <button
+                type="button"
+                onClick={() => updateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut, "A")}
+                className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                  (header.kategoriSpj || "A") === "A"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="Pilih ASN jika peserta memiliki NIP dan pangkat/jabatan"
+              >
+                ASN [A]
+              </button>
+              <button
+                type="button"
+                onClick={() => updateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut, "B")}
+                className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                  (header.kategoriSpj || "A") === "B"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="Pilih Non-ASN jika peserta adalah narasumber/ahli/mitra eksternal"
+              >
+                Non-ASN [B]
+              </button>
+            </div>
+
+            {/* No Urut Input */}
+            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1 shadow-2xs">
+              <span className="text-[11px] font-medium text-slate-500">No:</span>
+              <input
+                type="text"
+                maxLength={3}
+                value={header.noKegiatanUrut || "01"}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
+                  updateIdKegiatan(header.tanggalSpd, val, header.kategoriSpj);
+                }}
+                className="w-8 text-center text-xs font-mono font-bold text-slate-800 focus:outline-hidden"
+                title="Nomor Urut Kegiatan (contoh: 01, 08)"
+              />
+            </div>
+
+            {/* Tombol Lihat Daftar Kegiatan */}
+            {onOpenDaftarKegiatan && (
+              <button
+                type="button"
+                onClick={onOpenDaftarKegiatan}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-2xs hover:border-slate-300 transition-colors"
+              >
+                <FolderKanban className="w-3.5 h-3.5 text-blue-600" />
+                <span>Daftar Kegiatan</span>
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="form-group-panel">
@@ -464,7 +567,10 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               <input
                 type="date"
                 value={header.tanggalSpd}
-                onChange={(e) => handleChange("tanggalSpd", e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateIdKegiatan(val, header.noKegiatanUrut, header.kategoriSpj);
+                }}
                 className="input-human w-full h-9.5 px-3 font-medium cursor-pointer"
               />
               <span className="text-[10px] text-slate-400">Tanggal penetapan SPD resmi</span>

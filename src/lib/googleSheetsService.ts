@@ -1,4 +1,5 @@
 import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo } from "./types";
+import { generateIdKegiatan } from "./kegiatanHelper";
 
 export interface GasApiResponse<T = unknown> {
   status: "success" | "error";
@@ -384,9 +385,12 @@ export async function savePerdinToGoogleSheet(
   const url = customUrl || getGasApiUrl();
 
   const idKegiatan =
-    header.nomorKomp && header.nomorMak
-      ? `KGT-${header.nomorKomp}-${header.nomorMak}`
-      : `KGT-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.floor(1000 + Math.random() * 9000)}`;
+    header.idKegiatan ||
+    generateIdKegiatan(
+      header.tanggalSpd,
+      header.noKegiatanUrut || "01",
+      header.kategoriSpj || "A"
+    );
 
   const grandTotal = participants.reduce((sum, p) => sum + (p.totalJumlah || 0), 0);
 

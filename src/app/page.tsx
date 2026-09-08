@@ -11,6 +11,7 @@ import { NominatifDoc } from "@/components/documents/NominatifDoc";
 import { RincianBiayaDoc } from "@/components/documents/RincianBiayaDoc";
 import { BiayaRiilDoc } from "@/components/documents/BiayaRiilDoc";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
+import { DaftarKegiatanTab } from "@/components/DaftarKegiatanTab";
 import { ModalDatabaseSync } from "@/components/ModalDatabaseSync";
 import { ManualBookView } from "@/components/ManualBookView";
 import { Footer } from "@/components/Footer";
@@ -21,6 +22,11 @@ import {
   savePerdinToGoogleSheet,
 } from "@/lib/googleSheetsService";
 import { saveOrUpdateRekapLocal } from "@/lib/rekapHelper";
+import {
+  generateIdKegiatan,
+  saveKegiatanRecord,
+  getNextNoKegiatan,
+} from "@/lib/kegiatanHelper";
 
 import {
   HeaderData,
@@ -30,6 +36,7 @@ import {
   Pegawai,
   SbmRate,
   NomorMemo,
+  SavedKegiatan,
 } from "@/lib/types";
 import { calculateRowTotal, findSbmByProvince, generateNextMemoNumber } from "@/lib/calc";
 
@@ -104,9 +111,13 @@ export default function Home() {
 
   // Find default PPK (Arif Wibowo)
   const defaultPpk = pegawaiList.find((p) => (p?.nama || "").toLowerCase().includes("arif wibowo"));
+  const todayStr = new Date().toISOString().split("T")[0];
 
-  // Header Data State (Clean defaults as requested)
+  // Header Data State (Clean defaults with standardized ID Kegiatan)
   const [header, setHeader] = useState<HeaderData>({
+    idKegiatan: generateIdKegiatan(todayStr, "01", "A"),
+    kategoriSpj: "A",
+    noKegiatanUrut: "01",
     keteranganKegiatan: "",
     keteranganMemo: "",
     provinsiTujuan: "JAWA BARAT",
@@ -119,8 +130,8 @@ export default function Home() {
     nomorMak: "",
     itemDetail: "001",
     alatAngkut: "Angkutan Darat",
-    tanggalSpd: new Date().toISOString().split("T")[0],
-    tanggalMemo: new Date().toISOString().split("T")[0],
+    tanggalSpd: todayStr,
+    tanggalMemo: todayStr,
     nomorMemo: "",
     nomorStMaster: "",
     ppkNama: defaultPpk?.nama || "Arif Wibowo, S.H., M.H.",
@@ -275,6 +286,79 @@ export default function Home() {
   const isSaved = Boolean(savedSnapshot);
   const hasChanges = isSaved && currentSnapshot !== savedSnapshot;
 
+  // Edit kegiatan from Daftar Kegiatan
+  const handleEditKegiatan = (kegiatan: SavedKegiatan) => {
+    setHeader(kegiatan.header);
+    setRows(kegiatan.rows);
+    if (kegiatan.activeCols) setActiveCols(kegiatan.activeCols);
+    if (kegiatan.activeUh) setActiveUh(kegiatan.activeUh);
+    setSavedBatchId(kegiatan.idKegiatan);
+    setSavedSnapshot(JSON.stringify({ header: kegiatan.header, rows: kegiatan.rows }));
+    setActiveTab("input");
+  };
+
+  // Start fresh kegiatan with clean state and next sequential ID
+  const handleCreateNewKegiatan = () => {
+    const today = new Date().toISOString().split("T")[0];
+    const nextNo = getNextNoKegiatan(today, "A");
+    const newId = generateIdKegiatan(today, nextNo, "A");
+    const initialRow: ParticipantRow = {
+      id: "1",
+      kodeNama: "",
+      nama: "",
+      nip: "",
+      golongan: "",
+      jabatan: "",
+      tujuanKota: "",
+      tujuanProvinsi: "JAWA BARAT",
+      tanggalMulai: today,
+      tanggalSelesai: today,
+      lamaHari: 1,
+      nomorSt: "",
+      nomorSpd: "01",
+      hariUhBiasa: 1,
+      biayaUhBiasa: 0,
+      hariUhBiasa60: 0,
+      biayaUhBiasa60: 0,
+      hariUhHalfday: 0,
+      biayaUhHalfday: 0,
+      hariUhFullboard: 0,
+      biayaUhFullboard: 0,
+      tiket: 0,
+      dukunganTransportasi: 0,
+      transportasiDarat: 0,
+      transportasiLokal: 0,
+      transportJakartaPp: 0,
+      transportDaerahPp: 0,
+      hotel: 0,
+      penginapan30: 0,
+      fulldayMeeting: 0,
+      fullboardMeeting: 0,
+      representatif: 0,
+      belanjaBahan: 0,
+      pengRill: 0,
+      riilItems: [],
+      totalJumlah: 0,
+    };
+
+    setHeader((prev) => ({
+      ...prev,
+      idKegiatan: newId,
+      kategoriSpj: "A",
+      noKegiatanUrut: nextNo,
+      keteranganKegiatan: "",
+      keteranganMemo: "",
+      nomorMemo: "",
+      nomorStMaster: "",
+      tanggalSpd: today,
+      tanggalMemo: today,
+    }));
+    setRows([initialRow]);
+    setSavedBatchId(null);
+    setSavedSnapshot(null);
+    setActiveTab("input");
+  };
+
   const handleSaveOrUpdateData = async () => {
     if (rows.length === 0) {
       setSaveFeedback({
@@ -286,15 +370,41 @@ export default function Home() {
 
     setIsSaving(true);
     try {
-      const batchId = savedBatchId || `SPJ-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const today = header.tanggalSpd || new Date().toISOString().split("T")[0];
+      const idKegiatan =
+        header.idKegiatan ||
+        savedBatchId ||
+        generateIdKegiatan(today, header.noKegiatanUrut || "01", header.kategoriSpj || "A");
 
-      // 1. Simpan / perbarui ke Rekap Perdin lokal terlebih dahulu (instan)
-      const { isUpdate } = saveOrUpdateRekapLocal(header, rows, batchId);
-      setSavedBatchId(batchId);
-      setSavedSnapshot(currentSnapshot);
+      const updatedHeader = { ...header, idKegiatan };
+      if (header.idKegiatan !== idKegiatan) {
+        setHeader(updatedHeader);
+      }
 
-      // 2. Kirim data transaksi dan baris rekap ke Google Spreadsheet Cloud
-      const sheetRes = await savePerdinToGoogleSheet(header, rows);
+      // 1. Simpan ke database master kegiatan lokal (Daftar Kegiatan)
+      saveKegiatanRecord({
+        idKegiatan,
+        kategori: (header.kategoriSpj || "A") as "A" | "B",
+        namaKegiatan: header.keteranganKegiatan || "Kegiatan Tanpa Judul",
+        tanggalSpd: header.tanggalSpd || today,
+        kotaTujuan: header.kotaTujuanList?.[0] || "",
+        provinsiTujuan: header.provinsiTujuan || "",
+        jumlahPeserta: rows.length,
+        grandTotal: rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0),
+        header: updatedHeader,
+        rows,
+        activeCols,
+        activeUh,
+        updatedAt: new Date().toISOString(),
+      });
+
+      // 2. Simpan / perbarui ke Rekap Perdin lokal terlebih dahulu (instan)
+      const { isUpdate } = saveOrUpdateRekapLocal(updatedHeader, rows, idKegiatan);
+      setSavedBatchId(idKegiatan);
+      setSavedSnapshot(JSON.stringify({ header: updatedHeader, rows }));
+
+      // 3. Kirim data transaksi dan baris rekap ke Google Spreadsheet Cloud
+      const sheetRes = await savePerdinToGoogleSheet(updatedHeader, rows);
 
       if (sheetRes.success) {
         setSaveFeedback({
@@ -306,7 +416,7 @@ export default function Home() {
       } else {
         setSaveFeedback({
           type: "info",
-          text: `Data tersimpan di Rekap Perdin lokal. (${sheetRes.message})`,
+          text: `Data tersimpan di Rekap Perdin & Daftar Kegiatan lokal. (${sheetRes.message})`,
         });
       }
     } catch (err: unknown) {
@@ -348,6 +458,7 @@ export default function Home() {
               onAddPegawai={handleAddPegawai}
               onApplyStToAll={handleApplyStToAll}
               onGenerateMemoNumber={handleGenerateMemoNumber}
+              onOpenDaftarKegiatan={() => setActiveTab("kegiatan")}
             />
 
             <ChecklistFilter
@@ -438,6 +549,15 @@ export default function Home() {
           <RekapPerdinTab
             header={header}
             rows={rows}
+          />
+        )}
+
+        {/* Tab: Daftar Kegiatan */}
+        {activeTab === "kegiatan" && (
+          <DaftarKegiatanTab
+            onEditKegiatan={handleEditKegiatan}
+            onCreateNewKegiatan={handleCreateNewKegiatan}
+            currentLoadedId={savedBatchId || header.idKegiatan}
           />
         )}
 

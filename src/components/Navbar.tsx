@@ -12,9 +12,10 @@ import {
   Printer,
   Database,
   BookOpen,
+  FolderKanban,
 } from "lucide-react";
 
-export type ActiveTab = "input" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "rekap" | "panduan";
+export type ActiveTab = "input" | "kegiatan" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "rekap" | "panduan";
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -35,6 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const tabs = [
     { id: "input", label: "Input & Kalkulator", icon: Calculator },
+    { id: "kegiatan", label: "Daftar Kegiatan", icon: FolderKanban },
     { id: "kwitansi", label: "1. Kwitansi", icon: Receipt },
     { id: "memorandum", label: "2. Memorandum", icon: FileText },
     { id: "nominatif", label: "3. Nominatif", icon: FileSpreadsheet },

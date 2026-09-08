@@ -32,7 +32,9 @@ export function calculateRowTotal(
   const updated = { ...row };
 
   // 1. Lama Hari (Durasi Perjalanan Dinas Kalender)
-  updated.lamaHari = calculateLamaHari(row.tanggalMulai, row.tanggalSelesai);
+  const newLamaHari = calculateLamaHari(row.tanggalMulai, row.tanggalSelesai);
+  const isDurationChanged = row.lamaHari !== undefined && row.lamaHari !== newLamaHari;
+  updated.lamaHari = newLamaHari;
 
   // 2. Uang Harian (Mandiri & Fleksibel: Durasi dinas vs Hari UH riil & Editable Nominal)
   const uhRateBiasa = sbm?.uhBiasa || 0;
@@ -40,9 +42,12 @@ export function calculateRowTotal(
   const uhRateFullboard = sbm?.uhFullboard || 0;
 
   if (activeUh.uhBiasa) {
-    const hari = updated.hariUhBiasa !== undefined ? updated.hariUhBiasa : updated.lamaHari;
-    updated.hariUhBiasa = hari;
-    if (updated.biayaUhBiasa === undefined || updated.biayaUhBiasa === null || options?.forceRecalcUh) {
+    let hari = updated.hariUhBiasa;
+    if (hari === undefined || (isDurationChanged && (row.hariUhBiasa === row.lamaHari || row.hariUhBiasa === 0))) {
+      hari = updated.lamaHari;
+      updated.hariUhBiasa = hari;
+    }
+    if (updated.biayaUhBiasa === undefined || updated.biayaUhBiasa === null || isDurationChanged || options?.forceRecalcUh) {
       updated.biayaUhBiasa = hari * uhRateBiasa;
     }
   } else {
@@ -50,9 +55,12 @@ export function calculateRowTotal(
   }
 
   if (activeUh.uhBiasa60) {
-    const hari = updated.hariUhBiasa60 !== undefined ? updated.hariUhBiasa60 : updated.lamaHari;
-    updated.hariUhBiasa60 = hari;
-    if (updated.biayaUhBiasa60 === undefined || updated.biayaUhBiasa60 === null || options?.forceRecalcUh) {
+    let hari = updated.hariUhBiasa60;
+    if (hari === undefined || (isDurationChanged && (row.hariUhBiasa60 === row.lamaHari || row.hariUhBiasa60 === 0))) {
+      hari = updated.lamaHari;
+      updated.hariUhBiasa60 = hari;
+    }
+    if (updated.biayaUhBiasa60 === undefined || updated.biayaUhBiasa60 === null || isDurationChanged || options?.forceRecalcUh) {
       updated.biayaUhBiasa60 = Math.round(hari * uhRateBiasa * 0.6);
     }
   } else {
@@ -60,9 +68,12 @@ export function calculateRowTotal(
   }
 
   if (activeUh.uhHalfday) {
-    const hari = updated.hariUhHalfday !== undefined ? updated.hariUhHalfday : updated.lamaHari;
-    updated.hariUhHalfday = hari;
-    if (updated.biayaUhHalfday === undefined || updated.biayaUhHalfday === null || options?.forceRecalcUh) {
+    let hari = updated.hariUhHalfday;
+    if (hari === undefined || (isDurationChanged && (row.hariUhHalfday === row.lamaHari || row.hariUhHalfday === 0))) {
+      hari = updated.lamaHari;
+      updated.hariUhHalfday = hari;
+    }
+    if (updated.biayaUhHalfday === undefined || updated.biayaUhHalfday === null || isDurationChanged || options?.forceRecalcUh) {
       updated.biayaUhHalfday = hari * uhRateHalfday;
     }
   } else {
@@ -70,9 +81,12 @@ export function calculateRowTotal(
   }
 
   if (activeUh.uhFullboard) {
-    const hari = updated.hariUhFullboard !== undefined ? updated.hariUhFullboard : updated.lamaHari;
-    updated.hariUhFullboard = hari;
-    if (updated.biayaUhFullboard === undefined || updated.biayaUhFullboard === null || options?.forceRecalcUh) {
+    let hari = updated.hariUhFullboard;
+    if (hari === undefined || (isDurationChanged && (row.hariUhFullboard === row.lamaHari || row.hariUhFullboard === 0))) {
+      hari = updated.lamaHari;
+      updated.hariUhFullboard = hari;
+    }
+    if (updated.biayaUhFullboard === undefined || updated.biayaUhFullboard === null || isDurationChanged || options?.forceRecalcUh) {
       updated.biayaUhFullboard = hari * uhRateFullboard;
     }
   } else {

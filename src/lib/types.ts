@@ -175,11 +175,31 @@ export interface HeaderData {
   penanggungJawabJabatan?: string;
 
   // SPJ & Rekap Perdin Metadata
+  idKegiatan?: string; // Format: K-ddmmyy-nokegiatan-A/B (e.g. K-080926-08-A)
+  kategoriSpj?: "A" | "B"; // A: ASN, B: Non-ASN
+  noKegiatanUrut?: string; // e.g. "01", "08"
   noSpby?: string;
   jenisPengajuan?: "RENCANA" | "RAMPUNG" | "MERAMPUNGKAN";
   noSpm?: string;
   jenisPerdin?: "Perdin Jabodetabekdung" | "Perdin Luar Kota" | "Perdin Luar Negeri";
   berangkatDari?: string;
+}
+
+export interface SavedKegiatan {
+  idKegiatan: string; // e.g. "K-080926-08-A"
+  kategori: "A" | "B"; // A: ASN, B: Non-ASN
+  namaKegiatan: string;
+  tanggalSpd: string;
+  kotaTujuan: string;
+  provinsiTujuan: string;
+  jumlahPeserta: number;
+  grandTotal: number;
+  header: HeaderData;
+  rows: ParticipantRow[];
+  activeCols?: Record<ActiveCostKey, boolean>;
+  activeUh?: Record<ActiveUhKey, boolean>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type ActiveCostKey =
