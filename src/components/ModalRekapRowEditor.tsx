@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, Save, FileSpreadsheet, Calculator } from "lucide-react";
 import { CurrencyInput } from "./CurrencyInput";
+import { getPangkatByGolongan } from "@/data/pangkatGolongan";
 
 interface ModalRekapRowEditorProps {
   isOpen: boolean;
@@ -297,7 +298,14 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   <input
                     type="text"
                     value={String(formData["Gol"] || "")}
-                    onChange={(e) => handleChange("Gol", e.target.value)}
+                    onChange={(e) => {
+                      const newGol = e.target.value;
+                      handleChange("Gol", newGol);
+                      const autoPangkat = getPangkatByGolongan(newGol);
+                      if (autoPangkat && (!formData["Jabatan"] || formData["Jabatan"] === "Pelaksana")) {
+                        handleChange("Jabatan", autoPangkat);
+                      }
+                    }}
                     placeholder="III/a"
                     className="input-glass w-full h-8 px-2.5 text-xs text-center font-mono"
                   />

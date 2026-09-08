@@ -538,15 +538,15 @@ function upsertPegawai(sheet, idPegawai, namaLengkap, nip, rowData) {
   const nipCol = headers.indexOf('nip');
 
   for (let i = 1; i < data.length; i++) {
-    const curId = String(data[i][idCol] || '').trim();
-    const curName = String(data[i][nameCol] || '').trim().toLowerCase();
-    const curNip = String(data[i][nipCol] || '').trim();
+    const curId = idCol >= 0 ? String(data[i][idCol] || '').trim() : '';
+    const curName = nameCol >= 0 ? String(data[i][nameCol] || '').trim().toLowerCase() : '';
+    const curNip = nipCol >= 0 ? String(data[i][nipCol] || '').trim() : '';
 
-    if (
-      (curId && curId.toLowerCase() === String(idPegawai).toLowerCase()) ||
-      (nip && curNip && curNip === nip) ||
-      (namaLengkap && curName === namaLengkap.toLowerCase())
-    ) {
+    const isMatchId = curId && idPegawai && curId.toLowerCase() === String(idPegawai).toLowerCase();
+    const isMatchNip = nip && nip !== '-' && curNip && curNip !== '-' && curNip === nip;
+    const isMatchName = namaLengkap && curName && curName === namaLengkap.toLowerCase();
+
+    if (isMatchId || isMatchNip || isMatchName) {
       sheet.getRange(i + 1, 1, 1, rowData.length).setValues([rowData]);
       return;
     }

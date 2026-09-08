@@ -61,6 +61,80 @@ export function getCachedMasterData(): MasterSyncData | null {
 
 
 /**
+ * Executor terpadu request Google Apps Script:
+ * - Menggunakan proxy internal Next.js `/api/gas` saat di browser untuk menghindari issue CORS & HTTP 302 redirect.
+ * - Fallback ke direct fetch jika proxy tidak tersedia atau di luar lingkungan Next.js.
+ */
+export async function executeGasRequest<T = unknown>(
+  method: "GET" | "POST",
+  payloadOrParams: Record<string, unknown>,
+  customUrl?: string
+): Promise<GasApiResponse<T>> {
+  const targetUrl = customUrl || getGasApiUrl();
+
+  // 1. Coba lewat internal Next.js API Proxy di client browser
+  if (typeof window !== "undefined") {
+    try {
+      if (method === "GET") {
+        const query = new URLSearchParams();
+        Object.entries(payloadOrParams).forEach(([k, v]) => {
+          if (v !== undefined && v !== null) query.set(k, String(v));
+        });
+        if (targetUrl) query.set("gasUrl", targetUrl);
+        const res = await fetch(`/api/gas?${query.toString()}`, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        });
+        if (res.ok) {
+          const json = (await res.json()) as GasApiResponse<T>;
+          return json;
+        }
+      } else {
+        const res = await fetch("/api/gas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payloadOrParams, customUrl: targetUrl }),
+        });
+        if (res.ok) {
+          const json = (await res.json()) as GasApiResponse<T>;
+          return json;
+        }
+      }
+    } catch {
+      // Fallback ke direct fetch jika proxy gagal
+    }
+  }
+
+  // 2. Fallback: direct fetch ke Google Apps Script
+  if (!targetUrl) {
+    throw new Error("URL Google Apps Script belum dikonfigurasi.");
+  }
+
+  if (method === "GET") {
+    const query = new URLSearchParams();
+    Object.entries(payloadOrParams).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) query.set(k, String(v));
+    });
+    const qs = query.toString();
+    const fetchUrl = qs
+      ? (targetUrl.includes("?") ? `${targetUrl}&${qs}` : `${targetUrl}?${qs}`)
+      : targetUrl;
+    const res = await fetch(fetchUrl, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
+    return (await res.json()) as GasApiResponse<T>;
+  } else {
+    const res = await fetch(targetUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payloadOrParams),
+    });
+    return (await res.json()) as GasApiResponse<T>;
+  }
+}
+
+/**
  * Uji koneksi ke endpoint Google Apps Script Web App
  */
 export async function testGasConnection(customUrl?: string): Promise<{ success: boolean; message: string }> {
@@ -70,17 +144,7 @@ export async function testGasConnection(customUrl?: string): Promise<{ success: 
   }
 
   try {
-    const fetchUrl = url.includes("?") ? `${url}&action=GET_MASTERS` : `${url}?action=GET_MASTERS`;
-    const res = await fetch(fetchUrl, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-    });
-
-    if (!res.ok) {
-      return { success: false, message: `HTTP Error ${res.status}: ${res.statusText}` };
-    }
-
-    const json: GasApiResponse<MasterSyncData> = await res.json();
+    const json = await executeGasRequest<MasterSyncData>("GET", { action: "GET_MASTERS" }, url);
     if (json.status === "success") {
       return {
         success: true,
@@ -110,13 +174,7 @@ export async function fetchMasterDataFromSheet(
   }
 
   try {
-    const fetchUrl = url.includes("?") ? `${url}&action=GET_MASTERS` : `${url}?action=GET_MASTERS`;
-    const res = await fetch(fetchUrl, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-    });
-
-    const json: GasApiResponse<Record<string, unknown[]>> = await res.json();
+    const json = await executeGasRequest<Record<string, unknown[]>>("GET", { action: "GET_MASTERS" }, url);
     if (json.status === "success" && json.data) {
       const rawPegawai = (json.data.pegawai as Array<Record<string, unknown>>) || [];
       const rawSbm = (json.data.sbm as Array<Record<string, unknown>>) || [];
@@ -257,7 +315,7 @@ export async function savePegawaiToGoogleSheet(
   const url = customUrl || getGasApiUrl();
 
   const idPegawai = pegawai.kodeNama
-    ? `PEG-${pegawai.kodeNama.toUpperCase().replace(/\s+/g, "_")}`
+    ? `PEG-${pegawai.kodeNama.toUpperCase().replace(/\s+/g, "_")}-${Date.now().toString().slice(-4)}`
     : `PEG-${Date.now()}`;
 
   const payload = {
@@ -288,40 +346,22 @@ export async function savePegawaiToGoogleSheet(
     },
   };
 
-  // Cadangkan langsung ke memori cache browser (localStorage)
-  if (typeof window !== "undefined") {
-    try {
-      const cached = getCachedMasterData() || {};
-      const currentList = cached.pegawai || [];
-      const updatedList = [...currentList.filter((p) => p.nama !== pegawai.nama), pegawai];
-      cached.pegawai = updatedList;
-      localStorage.setItem(STORAGE_KEY_MASTER_CACHE, JSON.stringify(cached));
-    } catch {
-      // ignore
-    }
-  }
-
-  if (!url) {
-    return {
-      success: true,
-      message: `Pegawai ${pegawai.nama} disimpan di memori browser lokal (URL Web App belum diisi).`,
-      idPegawai,
-    };
-  }
-
   try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      return { success: false, message: `HTTP Error ${res.status}: ${res.statusText}` };
-    }
-
-    const json: GasApiResponse = await res.json();
+    const json = await executeGasRequest("POST", payload, url);
     if (json.status === "success") {
+      // Simpan ke cache browser setelah berhasil simpan ke database
+      if (typeof window !== "undefined") {
+        try {
+          const cached = getCachedMasterData() || {};
+          const currentList = cached.pegawai || [];
+          const updatedList = [...currentList.filter((p) => p.nama !== pegawai.nama), { ...pegawai, idPegawai }];
+          cached.pegawai = updatedList;
+          localStorage.setItem(STORAGE_KEY_MASTER_CACHE, JSON.stringify(cached));
+        } catch {
+          // ignore
+        }
+      }
+
       return {
         success: true,
         message: json.message || `Pegawai ${pegawai.nama} berhasil disimpan ke MASTER_PEGAWAI Google Spreadsheet.`,
@@ -332,9 +372,21 @@ export async function savePegawaiToGoogleSheet(
     }
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);
+    // Cadangkan ke local cache jika terjadi kegagalan koneksi
+    if (typeof window !== "undefined") {
+      try {
+        const cached = getCachedMasterData() || {};
+        const currentList = cached.pegawai || [];
+        const updatedList = [...currentList.filter((p) => p.nama !== pegawai.nama), { ...pegawai, idPegawai }];
+        cached.pegawai = updatedList;
+        localStorage.setItem(STORAGE_KEY_MASTER_CACHE, JSON.stringify(cached));
+      } catch {
+        // ignore
+      }
+    }
     return {
       success: false,
-      message: `Gagal mengirim ke Google Sheets: ${errMsg}`,
+      message: `Gagal mengirim ke Google Sheets: ${errMsg}. Data tersimpan sementara di memori browser lokal.`,
     };
   }
 }
@@ -352,13 +404,7 @@ export async function fetchRekapFromSheet(
   }
 
   try {
-    const fetchUrl = url.includes("?") ? `${url}&action=GET_REKAP` : `${url}?action=GET_REKAP`;
-    const res = await fetch(fetchUrl, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-    });
-
-    const json = await res.json();
+    const json = await executeGasRequest<Array<Record<string, unknown>>>("GET", { action: "GET_REKAP" }, url);
     if (json.status === "success" && Array.isArray(json.data)) {
       // Filter anti-hantu: buang baris yang tidak memiliki Nama Pegawai dan Nama Kegiatan
       const validData = (json.data as Array<Record<string, unknown>>).filter((r) => {
@@ -457,16 +503,13 @@ export async function fetchKegiatanFromSheet(
   }
 
   try {
-    const fetchUrlKegiatan = url.includes("?") ? `${url}&action=GET_KEGIATAN_LIST` : `${url}?action=GET_KEGIATAN_LIST`;
-    const fetchUrlRekap = url.includes("?") ? `${url}&action=GET_REKAP` : `${url}?action=GET_REKAP`;
-
-    const [resKegiatan, resRekap] = await Promise.all([
-      fetch(fetchUrlKegiatan, { method: "GET", headers: { Accept: "application/json" } }),
-      fetch(fetchUrlRekap, { method: "GET", headers: { Accept: "application/json" } }),
+    const [jsonKegiatan, jsonRekap] = await Promise.all([
+      executeGasRequest<Array<Record<string, unknown>>>("GET", { action: "GET_KEGIATAN_LIST" }, url),
+      executeGasRequest<Array<Record<string, unknown>>>("GET", { action: "GET_REKAP" }, url).catch(() => ({
+        status: "error" as const,
+        data: [],
+      })),
     ]);
-
-    const jsonKegiatan = await resKegiatan.json();
-    const jsonRekap = await resRekap.json().catch(() => ({ status: "error", data: [] }));
 
     if (jsonKegiatan.status !== "success" || !Array.isArray(jsonKegiatan.data)) {
       return { success: false, message: jsonKegiatan.message || "Data kegiatan tidak valid." };
@@ -850,18 +893,7 @@ export async function savePerdinToGoogleSheet(
   }
 
   try {
-    // Mode text/plain agar menghindari preflight CORS issue pada Google Apps Script
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      return { success: false, message: `HTTP Error ${res.status}: ${res.statusText}` };
-    }
-
-    const json: GasApiResponse = await res.json();
+    const json = await executeGasRequest("POST", payload, url);
     if (json.status === "success") {
       return {
         success: true,
@@ -918,17 +950,7 @@ export async function syncAllRekapToGoogleSheet(
       rekapRows: validRows,
     };
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      return { success: false, message: `HTTP Error ${res.status}: ${res.statusText}` };
-    }
-
-    const json = await res.json();
+    const json = await executeGasRequest("POST", payload, url);
     if (json.status === "success") {
       return {
         success: true,
@@ -969,17 +991,7 @@ export async function deleteKegiatanFromGoogleSheet(
       namaKegiatan: namaKegiatan || "",
     };
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      return { success: false, message: `HTTP Error ${res.status}: ${res.statusText}` };
-    }
-
-    const json = await res.json();
+    const json = await executeGasRequest("POST", payload, url);
     return {
       success: json.status === "success",
       message: json.message || `Kegiatan ${idKegiatan} berhasil dihapus dari cloud.`,
@@ -1007,17 +1019,7 @@ export async function resetTransaksiInGoogleSheet(
       action: "RESET_TRANSAKSI",
     };
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      return { success: false, message: `HTTP Error ${res.status}: ${res.statusText}` };
-    }
-
-    const json = await res.json();
+    const json = await executeGasRequest("POST", payload, url);
     if (json.status === "success") {
       // Bersihkan juga seluruh memori browser lokal seketika
       if (typeof window !== "undefined") {

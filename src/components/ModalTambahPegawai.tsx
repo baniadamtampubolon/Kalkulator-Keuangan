@@ -2,8 +2,13 @@
 
 import React, { useState } from "react";
 import { Pegawai } from "@/lib/types";
-import { X, UserPlus, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import { X, UserPlus, RefreshCw, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { savePegawaiToGoogleSheet } from "@/lib/googleSheetsService";
+import {
+  LIST_PANGKAT_GOLONGAN,
+  getPangkatByGolongan,
+  getGolonganKodeByPangkat,
+} from "@/data/pangkatGolongan";
 
 interface ModalTambahPegawaiProps {
   isOpen: boolean;
@@ -18,12 +23,31 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
 }) => {
   const [nama, setNama] = useState("");
   const [nip, setNip] = useState("");
-  const [golongan, setGolongan] = useState("III/a");
+  const [golongan, setGolongan] = useState("IIIa");
   const [pangkat, setPangkat] = useState("Penata Muda");
   const [jabatan, setJabatan] = useState("");
   const [jenisKelamin, setJenisKelamin] = useState("Laki-laki");
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
+
+  const handleGolonganChange = (newGol: string) => {
+    setGolongan(newGol);
+    const autoPangkat = getPangkatByGolongan(newGol);
+    if (autoPangkat) {
+      setPangkat(autoPangkat);
+    } else if (newGol === "Non-PNS") {
+      setPangkat("Non-PNS");
+    }
+    // Catatan: Kolom Jabatan sengaja dibiarkan kosong agar diisi manual oleh pengguna
+  };
+
+  const handlePangkatChange = (newPangkat: string) => {
+    setPangkat(newPangkat);
+    const matchedGol = getGolonganKodeByPangkat(newPangkat);
+    if (matchedGol) {
+      setGolongan(matchedGol);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -58,7 +82,7 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
         setTimeout(() => {
           setNama("");
           setNip("");
-          setGolongan("III/a");
+          setGolongan("IIIa");
           setPangkat("Penata Muda");
           setJabatan("");
           setFeedback(null);
@@ -144,54 +168,51 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
               </label>
               <select
                 value={golongan}
-                onChange={(e) => setGolongan(e.target.value)}
+                onChange={(e) => handleGolonganChange(e.target.value)}
                 className="input-glass w-full h-10 px-3 font-semibold cursor-pointer"
               >
-                <option value="I/a">I/a</option>
-                <option value="I/b">I/b</option>
-                <option value="I/c">I/c</option>
-                <option value="I/d">I/d</option>
-                <option value="II/a">II/a</option>
-                <option value="II/b">II/b</option>
-                <option value="II/c">II/c</option>
-                <option value="II/d">II/d</option>
-                <option value="III/a">III/a</option>
-                <option value="III/b">III/b</option>
-                <option value="III/c">III/c</option>
-                <option value="III/d">III/d</option>
-                <option value="IV/a">IV/a</option>
-                <option value="IV/b">IV/b</option>
-                <option value="IV/c">IV/c</option>
-                <option value="IV/d">IV/d</option>
-                <option value="IV/e">IV/e</option>
-                <option value="Non-PNS">Non-PNS / PPNPN</option>
+                {LIST_PANGKAT_GOLONGAN.map((item) => (
+                  <option key={item.golonganKode} value={item.golonganKode}>
+                    {item.golonganKode}
+                  </option>
+                ))}
+                <option value="Non-PNS">Non-PNS</option>
               </select>
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">
-                Pangkat ASN
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-semibold text-slate-700">
+                  Pangkat ASN
+                </label>
+                <span className="text-[10px] text-[#0071e3] font-medium flex items-center gap-0.5">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  Otomatis
+                </span>
+              </div>
               <input
                 type="text"
                 value={pangkat}
-                onChange={(e) => setPangkat(e.target.value)}
+                onChange={(e) => handlePangkatChange(e.target.value)}
                 placeholder="Contoh: Penata Muda"
-                className="input-glass w-full h-10 px-3 font-medium"
+                className="input-glass w-full h-10 px-3 font-medium bg-slate-50/70"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">
-                Jabatan Kedinasan
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-semibold text-slate-700">
+                  Jabatan Kedinasan
+                </label>
+                <span className="text-[10px] text-slate-400 font-normal">Isi manual</span>
+              </div>
               <input
                 type="text"
                 value={jabatan}
                 onChange={(e) => setJabatan(e.target.value)}
-                placeholder="Contoh: Auditor Muda"
+                placeholder="Contoh: Auditor Ahli Muda"
                 className="input-glass w-full h-10 px-3 font-medium"
               />
             </div>

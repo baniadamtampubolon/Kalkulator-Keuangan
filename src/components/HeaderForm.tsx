@@ -1098,7 +1098,6 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
         onClose={() => setIsModalTambahPegawaiOpen(false)}
         onSave={(newPeg) => {
           onAddPegawai(newPeg);
-          setIsModalTambahPegawaiOpen(false);
         }}
       />
     </div>
