@@ -1,5 +1,6 @@
 import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan } from "./types";
 import { generateIdKegiatan, getSavedKegiatanList } from "./kegiatanHelper";
+import { getMonthRoman } from "./calc";
 
 export interface GasApiResponse<T = unknown> {
   status: "success" | "error";
@@ -852,8 +853,10 @@ export async function savePerdinToGoogleSheet(
           if (cached && Array.isArray(cached.memo)) {
             const memoNumMatch = header.nomorMemo.match(/\bM\.?(\d+)/i) || header.nomorMemo.match(/(\d+)/);
             const numStr = memoNumMatch ? memoNumMatch[1] : "";
+            const memoRomanMonth = getMonthRoman(header.tanggalMemo) || "XI";
+            const memoYear = Number(header.tanggalMemo ? new Date(header.tanggalMemo).getFullYear() : 2026) || 2026;
             const memoEntry: NomorMemo = {
-              tahun_anggaran: 2026,
+              tahun_anggaran: memoYear,
               nomor_urut: numStr,
               format_lengkap: header.nomorMemo,
               tanggal_memo: header.tanggalMemo || "",
@@ -865,6 +868,7 @@ export async function savePerdinToGoogleSheet(
               noMemo: header.nomorMemo,
               tanggal: header.tanggalMemo || "",
               mak: header.nomorMak || "524111",
+              bulanRomawi: memoRomanMonth,
             };
 
             const existingIdx = cached.memo.findIndex(

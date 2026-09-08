@@ -157,16 +157,84 @@ export function calculateRowTotal(
   return updated;
 }
 
+export const ROMAN_MONTHS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"] as const;
+
+/**
+ * Mendapatkan representasi angka Romawi bulan (I s/d XII) dari tanggal (string YYYY-MM-DD atau Date)
+ */
+export function getMonthRoman(dateInput?: string | Date): string {
+  if (!dateInput) return "";
+
+  if (typeof dateInput === "string") {
+    const trimmed = dateInput.trim();
+    if (!trimmed) return "";
+    // Handle YYYY-MM-DD atau YYYY/MM/DD
+    const isoMatch = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (isoMatch) {
+      const m = parseInt(isoMatch[2], 10);
+      if (m >= 1 && m <= 12) return ROMAN_MONTHS[m - 1];
+    }
+    // Handle DD-MM-YYYY atau DD/MM/YYYY
+    const dmyMatch = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+    if (dmyMatch) {
+      const m = parseInt(dmyMatch[2], 10);
+      if (m >= 1 && m <= 12) return ROMAN_MONTHS[m - 1];
+    }
+  }
+
+  const d = new Date(dateInput);
+  if (!isNaN(d.getTime())) {
+    return ROMAN_MONTHS[d.getMonth()] || "";
+  }
+  return "";
+}
+
+/**
+ * Mengubah string nomor memo yang sudah ada agar bulan romawi dan tahunnya
+ * otomatis sinkron mengikuti tanggal memo yang dipilih.
+ * Contoh: "M.322/INS/PPK/XI/2026" dengan tanggal 2026-08-15 -> "M.322/INS/PPK/VIII/2026"
+ */
+export function updateMemoNumberWithDate(memoNumber: string, dateInput?: string | Date): string {
+  if (!memoNumber || !dateInput) return memoNumber;
+  const romanMonth = getMonthRoman(dateInput);
+  if (!romanMonth) return memoNumber;
+
+  let yearStr = "";
+  if (typeof dateInput === "string") {
+    const trimmed = dateInput.trim();
+    const isoMatch = trimmed.match(/^(\d{4})[-/]/);
+    if (isoMatch) yearStr = isoMatch[1];
+    const dmyMatch = trimmed.match(/[-/](\d{4})$/);
+    if (dmyMatch) yearStr = dmyMatch[1];
+  }
+  if (!yearStr) {
+    const d = new Date(dateInput);
+    if (!isNaN(d.getTime())) yearStr = String(d.getFullYear());
+  }
+
+  // Pola 1: /ROMAN/YEAR (e.g. /XI/2026)
+  if (/\/([IVXLCDM]+)\/(\d{4})/i.test(memoNumber)) {
+    return memoNumber.replace(/\/([IVXLCDM]+)\/(\d{4})/i, `/${romanMonth}/${yearStr || "$2"}`);
+  }
+
+  // Pola 2: /ROMAN di akhir string (e.g. /XI)
+  if (/\/([IVXLCDM]+)$/i.test(memoNumber)) {
+    return memoNumber.replace(/\/([IVXLCDM]+)$/i, `/${romanMonth}${yearStr ? "/" + yearStr : ""}`);
+  }
+
+  return memoNumber;
+}
+
 /**
  * Menghitung dan menghasilkan nomor memorandum dinas berikutnya berdasarkan database master.
- * Contoh: Jika nomor memorandum terakhir terdaftar adalah M.320/INS/PPK/XI/2026,
- * maka nomor berikutnya yang dihasilkan adalah M.321/INS/PPK/XI/2026.
+ * Bulan Romawi (I-XII) dan tahun otomatis mengikuti tanggal memo yang berlangsung.
+ * Contoh: Jika tanggal memo 2026-08-15 dan nomor terakhir 321, maka menghasilkan M.322/INS/PPK/VIII/2026.
  */
 export function generateNextMemoNumber(
   memoList: NomorMemo[],
   currentMemo?: string,
   tanggalMemo?: string
-): { nextMemoNumber: string; latestRegisteredNumber: number; nextNumber: number } {
+): { nextMemoNumber: string; latestRegisteredNumber: number; nextNumber: number; bulanRomawi: string } {
   let maxUsedNumber = 0;
   let firstUnusedNumber: number | null = null;
   let templatePrefix = "M.";
@@ -209,7 +277,7 @@ export function generateNextMemoNumber(
             if (m.tahun) templateTahun = m.tahun.replace(/\//g, "").trim();
             if (m.tahun_anggaran) templateTahun = String(m.tahun_anggaran).trim();
 
-            // Ekstrak dari string lengkap jika tersedia (e.g. M.320/INS/PPK/XI/2026)
+            // Ekstrak unit dari string lengkap jika tersedia (e.g. M.320/INS/PPK/XI/2026)
             const memoStr = m.format_lengkap || m.noMemo;
             if (memoStr) {
               const parts =
@@ -262,6 +330,14 @@ export function generateNextMemoNumber(
   if (!formattedUnit.startsWith("/")) formattedUnit = "/" + formattedUnit;
   if (!formattedUnit.endsWith("/")) formattedUnit = formattedUnit + "/";
 
+  // LOGIK AUTOMATION BULAN ROMAWI:
+  // Bulan romawi (I - XII) wajib mengikuti bulan pada tanggal memo yang berlangsung
+  let targetRomanMonth = getMonthRoman(tanggalMemo);
+  if (!targetRomanMonth) {
+    // Jika tanggalMemo belum ditentukan, gunakan bulan saat ini
+    targetRomanMonth = getMonthRoman(new Date()) || templateBulan || "XI";
+  }
+
   // Format tahun
   let formattedYear = templateTahun || "2026";
   if (tanggalMemo) {
@@ -269,12 +345,15 @@ export function generateNextMemoNumber(
     if (!isNaN(d.getTime())) {
       formattedYear = String(d.getFullYear());
     }
+  } else {
+    formattedYear = String(new Date().getFullYear());
   }
 
-  const generated = `${templatePrefix}${nextSeq}${formattedUnit}${templateBulan}/${formattedYear}`;
+  const generated = `${templatePrefix}${nextSeq}${formattedUnit}${targetRomanMonth}/${formattedYear}`;
   return {
     nextMemoNumber: generated,
     latestRegisteredNumber: maxUsedNumber,
     nextNumber: nextSeq,
+    bulanRomawi: targetRomanMonth,
   };
 }

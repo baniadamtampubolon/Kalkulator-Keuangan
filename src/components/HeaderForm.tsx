@@ -11,6 +11,7 @@ import {
   OPSI_PERIHAL_MEMORANDUM,
 } from "@/data/mak_akun";
 import { generateIdKegiatan } from "@/lib/kegiatanHelper";
+import { getMonthRoman, updateMemoNumberWithDate } from "@/lib/calc";
 import { ModalTambahPegawai } from "./ModalTambahPegawai";
 import {
   FileText,
@@ -96,6 +97,19 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
     };
   }, [memoList]);
 
+  // Bulan Romawi (I-XII) dan Tahun otomatis mengikuti Tanggal Memo
+  const currentMemoRomanMonth = React.useMemo(() => {
+    return getMonthRoman(header.tanggalMemo) || getMonthRoman(new Date()) || "XI";
+  }, [header.tanggalMemo]);
+
+  const currentMemoYear = React.useMemo(() => {
+    if (header.tanggalMemo) {
+      const d = new Date(header.tanggalMemo);
+      if (!isNaN(d.getTime())) return String(d.getFullYear());
+    }
+    return String(new Date().getFullYear());
+  }, [header.tanggalMemo]);
+
   const availableKabkot = getKabkotByProvinsi(header.provinsiTujuan);
 
   // Opsi Petugas Verifikasi khusus: Hanya Taufik Prasetyo & Noviarty Ningsi Sumirat (Noviati)
@@ -131,6 +145,17 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   }, [pegawaiList]);
 
   const handleChange = <K extends keyof HeaderData>(field: K, value: HeaderData[K]) => {
+    // Otomatis sinkronkan bulan Romawi dan tahun pada nomor memo saat tanggalMemo berubah
+    if (field === "tanggalMemo" && typeof value === "string") {
+      setHeader((prev) => {
+        const next = { ...prev, [field]: value };
+        if (prev.nomorMemo && prev.nomorMemo.trim() !== "") {
+          next.nomorMemo = updateMemoNumberWithDate(prev.nomorMemo, value);
+        }
+        return next;
+      });
+      return;
+    }
     setHeader((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -670,9 +695,17 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             {/* Nomor Memorandum + Ambil Nomor */}
             <div className="space-y-1">
               <div className="flex items-center justify-between gap-1">
-                <label className="font-semibold text-slate-800">
-                  Nomor Memorandum
-                </label>
+                <div className="flex items-center gap-1.5">
+                  <label className="font-semibold text-slate-800">
+                    Nomor Memorandum
+                  </label>
+                  <span
+                    className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/80 font-semibold"
+                    title={`Bulan Romawi otomatis mengikuti Tanggal Memo: ${currentMemoRomanMonth}/${currentMemoYear}`}
+                  >
+                    Bulan {currentMemoRomanMonth}
+                  </span>
+                </div>
                 {latestMemoInfo?.lastMemoStr && (
                   <span className="text-[10px] text-slate-500 font-normal truncate max-w-[190px]" title={`Nomor terakhir terdaftar di database master: ${latestMemoInfo.lastMemoStr}`}>
                     Terakhir: <strong className="font-mono text-slate-700">{latestMemoInfo.lastMemoStr}</strong>
@@ -684,14 +717,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   type="text"
                   value={header.nomorMemo}
                   onChange={(e) => handleChange("nomorMemo", e.target.value)}
-                  placeholder={latestMemoInfo ? `Contoh: M.${latestMemoInfo.maxNum + 1}/INS/PPK/XI/2026` : "M.xxx/INS/PPK/XI/2026"}
+                  placeholder={latestMemoInfo ? `Contoh: M.${latestMemoInfo.maxNum + 1}/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}` : `M.xxx/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}`}
                   className="input-human flex-1 h-9.5 px-2.5 font-mono text-xs font-semibold"
                 />
                 <button
                   type="button"
                   onClick={onGenerateMemoNumber}
                   className="btn-tactile px-3 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
-                  title="Generate nomor urut memorandum berikutnya dari master database"
+                  title={`Generate nomor urut memorandum berikutnya dengan Bulan Romawi (${currentMemoRomanMonth}) mengikuti tanggal memo`}
                 >
                   <Wand2 className="w-3.5 h-3.5" />
                   <span>Ambil No</span>
@@ -699,8 +732,8 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               </div>
               <span className="text-[10px] text-slate-400">
                 {latestMemoInfo 
-                  ? `Otomatis mengambil urutan berikutnya: M.${latestMemoInfo.maxNum + 1}/INS/PPK/XI/2026` 
-                  : "Otomatis generate dari register master memorandum"}
+                  ? `Otomatis urutan berikutnya: M.${latestMemoInfo.maxNum + 1}/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear} (Bulan Romawi ${currentMemoRomanMonth})` 
+                  : `Otomatis generate dari register master memorandum (Bulan Romawi ${currentMemoRomanMonth})`}
               </span>
             </div>
           </div>
