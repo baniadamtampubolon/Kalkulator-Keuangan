@@ -6,7 +6,7 @@ import {
   getSavedKegiatanList,
   deleteKegiatanRecord,
 } from "@/lib/kegiatanHelper";
-import { fetchKegiatanFromSheet } from "@/lib/googleSheetsService";
+import { fetchKegiatanFromSheet, deleteKegiatanFromGoogleSheet } from "@/lib/googleSheetsService";
 import {
   Search,
   Plus,
@@ -42,6 +42,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
 
   // Modal Delete State
   const [deleteTarget, setDeleteTarget] = useState<SavedKegiatan | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [notification, setNotification] = useState<{
     type: "success" | "info";
     message: string;
@@ -111,14 +112,32 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
   const countAsn = kegiatanList.filter((k) => k.kategori === "A").length;
   const countNonAsn = kegiatanList.filter((k) => k.kategori === "B").length;
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
-    deleteKegiatanRecord(deleteTarget.idKegiatan);
-    setNotification({
-      type: "success",
-      message: `Kegiatan "${deleteTarget.namaKegiatan}" beserta seluruh data pesertanya berhasil dihapus.`,
-    });
-    setDeleteTarget(null);
+    const target = deleteTarget;
+    setIsDeleting(true);
+    // 1. Hapus dari penyimpanan lokal terlebih dahulu
+    deleteKegiatanRecord(target.idKegiatan);
+    setKegiatanList((prev) => prev.filter((k) => k.idKegiatan !== target.idKegiatan));
+
+    // 2. Hapus dari Google Spreadsheet Cloud (DB_KEGIATAN, DB_PESERTA, REKAP_PERDIN_48KOLOM)
+    try {
+      const cloudRes = await deleteKegiatanFromGoogleSheet(target.idKegiatan, target.namaKegiatan);
+      setNotification({
+        type: "success",
+        message: cloudRes.success
+          ? `Kegiatan "${target.namaKegiatan}" berhasil dihapus dari sistem & cloud.`
+          : `Kegiatan "${target.namaKegiatan}" dihapus dari lokal (${cloudRes.message}).`,
+      });
+    } catch {
+      setNotification({
+        type: "success",
+        message: `Kegiatan "${target.namaKegiatan}" berhasil dihapus dari sistem.`,
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -419,17 +438,20 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
+                disabled={isDeleting}
                 onClick={() => setDeleteTarget(null)}
-                className="px-3.5 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer disabled:opacity-50"
               >
                 Batal
               </button>
               <button
                 type="button"
+                disabled={isDeleting}
                 onClick={handleConfirmDelete}
-                className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold cursor-pointer shadow-xs"
+                className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold cursor-pointer shadow-xs disabled:opacity-50 inline-flex items-center gap-1.5"
               >
-                Ya, Hapus Kegiatan
+                {isDeleting && <RotateCw className="w-3.5 h-3.5 animate-spin" />}
+                <span>{isDeleting ? "Menghapus..." : "Ya, Hapus Kegiatan"}</span>
               </button>
             </div>
           </div>

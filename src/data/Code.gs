@@ -232,6 +232,8 @@ function doPost(e) {
       const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
       const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
 
+      // Bersihkan baris hantu dan baris lama sebelum menulis data baru
+      pruneGhostRows(rekapSheet);
       deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.idKegiatan);
       deleteRowsByColumnValue(rekapSheet, 'Nama Kegiatan', header.namaKegiatan);
 
@@ -374,10 +376,20 @@ function doPost(e) {
 
     // 3. SINKRONISASI BARIS REKAP 48 KOLOM
     if (action === 'SYNC_REKAP') {
-      const rekapRows = payload.rekapRows || [];
+      const rawRekapRows = payload.rekapRows || [];
       const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
 
-      if (Array.isArray(rekapRows) && rekapRows.length > 0) {
+      // Bersihkan baris hantu di spreadsheet terlebih dahulu
+      pruneGhostRows(rekapSheet);
+
+      // FILTER ANTI-HANTU: Hanya baris yang memiliki nama pegawai ATAU nama kegiatan yang boleh diproses
+      const rekapRows = Array.isArray(rawRekapRows) ? rawRekapRows.filter(rowObj => {
+        const nama = (rowObj['NAMA PEGAWAI INTERNAL INSPEKTORAT'] || rowObj['NAMA EXTERNAL'] || '').toString().trim();
+        const kegiatan = (rowObj['Nama Kegiatan'] || '').toString().trim();
+        return nama !== '' || kegiatan !== '';
+      }) : [];
+
+      if (rekapRows.length > 0) {
         const lastRow = rekapSheet.getLastRow();
         const headers = lastRow > 0
           ? rekapSheet.getRange(1, 1, 1, rekapSheet.getLastColumn()).getValues()[0]
@@ -385,19 +397,19 @@ function doPost(e) {
 
         rekapRows.forEach(rowObj => {
           const rowArray = headers.map(h => (rowObj[h] !== undefined && rowObj[h] !== null ? rowObj[h] : ''));
-          const namaPegawai = rowObj['NAMA PEGAWAI INTERNAL INSPEKTORAT'] || rowObj['NAMA EXTERNAL'] || '';
-          const namaKegiatan = rowObj['Nama Kegiatan'] || '';
+          const namaPegawai = (rowObj['NAMA PEGAWAI INTERNAL INSPEKTORAT'] || rowObj['NAMA EXTERNAL'] || '').toString().trim();
+          const namaKegiatan = (rowObj['Nama Kegiatan'] || '').toString().trim();
 
           let updated = false;
-          if (lastRow >= 2) {
+          if (rekapSheet.getLastRow() >= 2) {
             const data = rekapSheet.getDataRange().getValues();
             const colPegawai = headers.indexOf('NAMA PEGAWAI INTERNAL INSPEKTORAT');
             const colKegiatan = headers.indexOf('Nama Kegiatan');
 
             for (let i = 1; i < data.length; i++) {
               if (
-                colKegiatan !== -1 && String(data[i][colKegiatan]).trim() === String(namaKegiatan).trim() &&
-                colPegawai !== -1 && String(data[i][colPegawai]).trim() === String(namaPegawai).trim()
+                colKegiatan !== -1 && String(data[i][colKegiatan]).trim() === namaKegiatan &&
+                colPegawai !== -1 && String(data[i][colPegawai]).trim() === namaPegawai
               ) {
                 rekapSheet.getRange(i + 1, 1, 1, rowArray.length).setValues([rowArray]);
                 updated = true;
@@ -418,11 +430,94 @@ function doPost(e) {
       });
     }
 
+    // 4. HAPUS PAKET KEGIATAN & SELURUH PESERTA DARI CLOUD
+    if (action === 'DELETE_KEGIATAN') {
+      const idKegiatan = (payload.idKegiatan || '').trim();
+      const namaKegiatan = (payload.namaKegiatan || '').trim();
+
+      if (!idKegiatan && !namaKegiatan) {
+        return createJsonResponse({ status: 'error', message: 'ID Kegiatan atau Nama Kegiatan wajib disertakan.' });
+      }
+
+      const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
+      const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
+      const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
+
+      if (idKegiatan) {
+        deleteRowsByColumnValue(kegiatanSheet, 'id_kegiatan', idKegiatan);
+        deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', idKegiatan);
+      }
+
+      if (namaKegiatan) {
+        deleteRowsByColumnValue(rekapSheet, 'Nama Kegiatan', namaKegiatan);
+      } else if (idKegiatan) {
+        deleteRowsByColumnValue(rekapSheet, 'No SPBY', idKegiatan);
+      }
+
+      pruneGhostRows(rekapSheet);
+      logAction(ss, 'DELETE_KEGIATAN', idKegiatan || namaKegiatan, 'Menghapus paket kegiatan ' + (namaKegiatan || idKegiatan));
+
+      return createJsonResponse({
+        status: 'success',
+        message: 'Paket kegiatan ' + (idKegiatan || namaKegiatan) + ' berhasil dihapus dari Google Spreadsheet.'
+      });
+    }
+
+    // 5. RESET SELURUH DATA TRANSAKSI TESTING (BERSIH TOTAL BARIS 2 KE BAWAH)
+    if (action === 'RESET_TRANSAKSI') {
+      const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
+      const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
+      const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
+
+      if (kegiatanSheet.getLastRow() >= 2) {
+        kegiatanSheet.deleteRows(2, kegiatanSheet.getLastRow() - 1);
+      }
+      if (pesertaSheet.getLastRow() >= 2) {
+        pesertaSheet.deleteRows(2, pesertaSheet.getLastRow() - 1);
+      }
+      if (rekapSheet.getLastRow() >= 2) {
+        rekapSheet.deleteRows(2, rekapSheet.getLastRow() - 1);
+      }
+
+      logAction(ss, 'RESET_TRANSAKSI', 'ALL', 'Mengosongkan seluruh data transaksi uji coba.');
+
+      return createJsonResponse({
+        status: 'success',
+        message: 'Seluruh data transaksi uji coba (DB_KEGIATAN, DB_PESERTA, REKAP_PERDIN_48KOLOM) berhasil dikosongkan 100% secara bersih.'
+      });
+    }
+
     return createJsonResponse({ status: 'error', message: 'Unknown action: ' + action });
   } catch (error) {
     return createJsonResponse({ status: 'error', message: error.toString() });
   } finally {
     lock.releaseLock();
+  }
+}
+
+/**
+ * Pembersih Baris Hantu: Hapus baris yang tidak memiliki Nama Pegawai dan Nama Kegiatan
+ */
+function pruneGhostRows(sheet) {
+  if (!sheet || sheet.getLastRow() < 2) return;
+  const data = sheet.getDataRange().getValues();
+  if (data.length < 2) return;
+
+  const headers = data[0] || [];
+  const colPegawai = headers.indexOf('NAMA PEGAWAI INTERNAL INSPEKTORAT');
+  const colExternal = headers.indexOf('NAMA EXTERNAL');
+  const colKegiatan = headers.indexOf('Nama Kegiatan');
+
+  // Loop mundur dari baris paling bawah ke atas
+  for (let i = data.length - 1; i >= 1; i--) {
+    const row = data[i];
+    const namaPegawai = colPegawai !== -1 ? String(row[colPegawai] || '').trim() : '';
+    const namaExternal = colExternal !== -1 ? String(row[colExternal] || '').trim() : '';
+    const namaKegiatan = colKegiatan !== -1 ? String(row[colKegiatan] || '').trim() : '';
+
+    if (namaPegawai === '' && namaExternal === '' && namaKegiatan === '') {
+      sheet.deleteRow(i + 1);
+    }
   }
 }
 

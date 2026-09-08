@@ -360,13 +360,20 @@ export async function fetchRekapFromSheet(
 
     const json = await res.json();
     if (json.status === "success" && Array.isArray(json.data)) {
+      // Filter anti-hantu: buang baris yang tidak memiliki Nama Pegawai dan Nama Kegiatan
+      const validData = (json.data as Array<Record<string, unknown>>).filter((r) => {
+        const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
+        const keg = String(r["Nama Kegiatan"] || "").trim();
+        return nama !== "" || keg !== "";
+      });
+
       if (typeof window !== "undefined") {
-        localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(json.data));
+        localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(validData));
       }
       return {
         success: true,
-        data: json.data as Array<Record<string, unknown>>,
-        message: `Berhasil memuat ${json.data.length} baris data rekap perdin.`,
+        data: validData,
+        message: `Berhasil memuat ${validData.length} baris data rekap perdin.`,
       };
     } else {
       return { success: false, message: json.message || "Data rekap tidak valid." };
@@ -882,10 +889,17 @@ export async function syncAllRekapToGoogleSheet(
 ): Promise<{ success: boolean; message: string }> {
   const url = customUrl || getGasApiUrl();
 
+  // Filter anti-hantu sebelum simpan ke local dan cloud
+  const validRows = rekapRows.filter((r) => {
+    const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
+    const keg = String(r["Nama Kegiatan"] || "").trim();
+    return nama !== "" || keg !== "";
+  });
+
   // Simpan selalu ke localStorage
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(rekapRows));
+      localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(validRows));
     } catch {
       // ignore
     }
@@ -894,14 +908,14 @@ export async function syncAllRekapToGoogleSheet(
   if (!url) {
     return {
       success: true,
-      message: `Pembaruan ${rekapRows.length} baris rekap tersimpan di memori browser lokal (URL Web App belum diisi).`,
+      message: `Pembaruan ${validRows.length} baris rekap tersimpan di memori browser lokal (URL Web App belum diisi).`,
     };
   }
 
   try {
     const payload = {
       action: "SYNC_REKAP",
-      rekapRows,
+      rekapRows: validRows,
     };
 
     const res = await fetch(url, {
@@ -918,7 +932,7 @@ export async function syncAllRekapToGoogleSheet(
     if (json.status === "success") {
       return {
         success: true,
-        message: json.message || `Berhasil menyinkronkan ${rekapRows.length} baris rekap ke Google Spreadsheet.`,
+        message: json.message || `Berhasil menyinkronkan ${validRows.length} baris rekap ke Google Spreadsheet.`,
       };
     } else {
       return {
@@ -932,6 +946,96 @@ export async function syncAllRekapToGoogleSheet(
       success: false,
       message: `Data tersimpan lokal, gagal sync ke cloud: ${errMsg}`,
     };
+  }
+}
+
+/**
+ * Hapus seluruh data sebuah paket kegiatan dari Google Spreadsheet (DB_KEGIATAN, DB_PESERTA, REKAP_PERDIN_48KOLOM)
+ */
+export async function deleteKegiatanFromGoogleSheet(
+  idKegiatan: string,
+  namaKegiatan?: string,
+  customUrl?: string
+): Promise<{ success: boolean; message: string }> {
+  const url = customUrl || getGasApiUrl();
+  if (!url) {
+    return { success: false, message: "URL Web App Google Apps Script belum diset." };
+  }
+
+  try {
+    const payload = {
+      action: "DELETE_KEGIATAN",
+      idKegiatan,
+      namaKegiatan: namaKegiatan || "",
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      return { success: false, message: `HTTP Error ${res.status}: ${res.statusText}` };
+    }
+
+    const json = await res.json();
+    return {
+      success: json.status === "success",
+      message: json.message || `Kegiatan ${idKegiatan} berhasil dihapus dari cloud.`,
+    };
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return { success: false, message: `Gagal menghapus kegiatan di cloud: ${errMsg}` };
+  }
+}
+
+/**
+ * Kosongkan seluruh data transaksi uji coba dari Google Spreadsheet (DB_KEGIATAN, DB_PESERTA, REKAP_PERDIN_48KOLOM)
+ * Master data (Pegawai, SBM, Memo) tetap aman terjaga.
+ */
+export async function resetTransaksiInGoogleSheet(
+  customUrl?: string
+): Promise<{ success: boolean; message: string }> {
+  const url = customUrl || getGasApiUrl();
+  if (!url) {
+    return { success: false, message: "URL Web App Google Apps Script belum diset." };
+  }
+
+  try {
+    const payload = {
+      action: "RESET_TRANSAKSI",
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      return { success: false, message: `HTTP Error ${res.status}: ${res.statusText}` };
+    }
+
+    const json = await res.json();
+    if (json.status === "success") {
+      // Bersihkan juga seluruh memori browser lokal seketika
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("perdin_cached_rekap_data");
+        localStorage.removeItem("perdin_saved_kegiatan_list");
+        window.dispatchEvent(new CustomEvent("rekap-perdin-updated", { detail: { updatedRekap: [] } }));
+        window.dispatchEvent(new CustomEvent("kegiatan-list-updated", { detail: { updatedList: [] } }));
+      }
+      return {
+        success: true,
+        message: json.message || "Seluruh data transaksi uji coba berhasil dikosongkan secara bersih.",
+      };
+    } else {
+      return { success: false, message: json.message || "Gagal mengosongkan transaksi di cloud." };
+    }
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return { success: false, message: `Gagal mengosongkan transaksi: ${errMsg}` };
   }
 }
 

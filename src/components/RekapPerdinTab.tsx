@@ -77,7 +77,15 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
           try {
             const parsed = JSON.parse(cached);
             if (isMounted && Array.isArray(parsed)) {
-              setCloudRows(parsed);
+              const clean = parsed.filter((r) => {
+                const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
+                const keg = String(r["Nama Kegiatan"] || "").trim();
+                return nama !== "" || keg !== "";
+              });
+              setCloudRows(clean);
+              if (clean.length !== parsed.length) {
+                localStorage.setItem(STORAGE_KEY_REKAP, JSON.stringify(clean));
+              }
             }
           } catch {
             // ignore
@@ -97,7 +105,12 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
 
     fetchRekapFromSheet().then((res) => {
       if (isMounted && res.success && res.data) {
-        setCloudRows(res.data);
+        const clean = res.data.filter((r) => {
+          const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
+          const keg = String(r["Nama Kegiatan"] || "").trim();
+          return nama !== "" || keg !== "";
+        });
+        setCloudRows(clean);
       }
     });
 
@@ -226,10 +239,16 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
   };
 
   const handleSyncToSpreadsheet = async () => {
-    if (cloudRows.length === 0) {
+    const validRows = cloudRows.filter((item) => {
+      const nama = String(item["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || item["NAMA EXTERNAL"] || "").trim();
+      const keg = String(item["Nama Kegiatan"] || "").trim();
+      return nama !== "" || keg !== "";
+    });
+
+    if (validRows.length === 0) {
       setStatusMessage({
         type: "error",
-        text: "Tidak ada data rekap untuk disinkronkan.",
+        text: "Tidak ada data rekap yang valid untuk disinkronkan.",
       });
       return;
     }
@@ -241,7 +260,7 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
     });
 
     try {
-      const res = await syncAllRekapToGoogleSheet(cloudRows);
+      const res = await syncAllRekapToGoogleSheet(validRows);
       if (res.success) {
         setStatusMessage({
           type: "success",
