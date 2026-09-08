@@ -170,6 +170,9 @@ export interface HeaderData {
   ppkNama: string;
   ppkNip: string;
   ppkJabatan: string;
+  penanggungJawabNama?: string;
+  penanggungJawabNip?: string;
+  penanggungJawabJabatan?: string;
 
   // SPJ & Rekap Perdin Metadata
   noSpby?: string;

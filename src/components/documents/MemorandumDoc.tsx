@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { HeaderData, ParticipantRow } from "@/lib/types";
 import { Printer, Edit3, RotateCcw } from "lucide-react";
+import { parseMakHierarchy } from "@/data/mak_akun";
+import { terbilang } from "@/lib/terbilang";
 
 interface MemorandumDocProps {
   header: HeaderData;
@@ -34,6 +36,46 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
   const tanggalMemo = formatDateIndo(header.tanggalMemo || new Date().toISOString());
   const kotaTujuanText = (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
   const tahunAnggaran = header.tanggalSpd ? new Date(header.tanggalSpd).getFullYear() : new Date().getFullYear();
+
+  const fullMakCode = (() => {
+    const komp = (header.nomorKomp || "7461.ABR.006.076.MR").trim();
+    const mak = (header.nomorMak || "524111").trim();
+    if (komp && mak) {
+      if (komp.endsWith(mak)) return komp;
+      return `${komp}.${mak}`;
+    }
+    return komp || mak || "7461.ABR.006.076.MR.524111";
+  })();
+
+  const hierarchy = parseMakHierarchy(header.nomorKomp, header.nomorMak);
+
+  // Signatory formatting for Page 2
+  const bendaharaRaw = header.bendahara || "Raka Panji Wibowo, NIP 199504082020121001";
+  const bendaharaNama = bendaharaRaw.split(",")[0].trim() || "Raka Panji Wibowo";
+  const bendaharaNip = bendaharaRaw.includes("NIP")
+    ? bendaharaRaw.substring(bendaharaRaw.indexOf("NIP")).trim()
+    : "NIP 199504082020121001";
+
+  const penanggungJawabRaw = header.penanggungJawabNama || "Reni Sutaryo";
+  const penanggungJawabNama = penanggungJawabRaw.split(",")[0].trim() || "Reni Sutaryo";
+  const penanggungJawabNip = header.penanggungJawabNip
+    ? (header.penanggungJawabNip.startsWith("NIP")
+        ? header.penanggungJawabNip
+        : `NIP ${header.penanggungJawabNip}`)
+    : "NIP 19791126 200604 2 014";
+
+  const ppkNama = header.ppkNama || "Arif Wibowo, SH, MH";
+  const ppkNip = header.ppkNip
+    ? (header.ppkNip.startsWith("NIP")
+        ? header.ppkNip
+        : `NIP. ${header.ppkNip}`)
+    : "NIP. 198301242008011006";
+
+  const verifikatorRaw = header.petugasVerifikasi || "Noviarty Ningsi Sumirat, NIP 19811112201001 2 001";
+  const verifikatorNama = verifikatorRaw.split(",")[0].trim() || "Noviarty Ningsi Sumirat";
+  const verifikatorNip = verifikatorRaw.includes("NIP")
+    ? verifikatorRaw.substring(verifikatorRaw.indexOf("NIP")).trim()
+    : "NIP 19811112201001 2 001";
 
   const perihalText = header.keteranganMemo || header.keteranganKegiatan || "Permohonan Dana Perjalanan Dinas";
 
@@ -235,7 +277,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
           <div className="space-y-4 text-justify text-xs md:text-[12px] leading-relaxed pt-2">
             <p>
               Sehubungan dengan {header.keteranganKegiatan || "kegiatan perjalanan dinas"} pada Tanggal {formatDateIndo(rows[0]?.tanggalMulai || header.tanggalSpd)} di {kotaTujuanText}, {header.provinsiTujuan} dengan ini kami mengajukan permohonan dana sebesar{" "}
-              <strong>Rp{grandTotal.toLocaleString("id-ID")}</strong> yang dibebankan pada APBN satuan kerja Kementerian Koordinator Bidang Pangan tahun anggaran {tahunAnggaran} dengan MAK.CL.7459.ABR.006.071.CC.{header.nomorMak || "524111"}
+              <strong>Rp{grandTotal.toLocaleString("id-ID")}</strong> yang dibebankan pada APBN satuan kerja Kementerian Koordinator Bidang Pangan tahun anggaran {tahunAnggaran} dengan MAK.{fullMakCode.replace(/^MAK\./, "")}
             </p>
 
             <p>
@@ -270,17 +312,17 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
           }`}
         >
           {/* Header Lampiran Surat */}
-          <div className="space-y-1 pt-2">
+          <div className="space-y-1.5 pt-2">
             <h2 className="font-bold text-xs md:text-sm tracking-wide uppercase text-black">
               LAMPIRAN SURAT
             </h2>
             <div className="space-y-0.5 text-xs">
-              <div className="grid grid-cols-12 max-w-md">
+              <div className="grid grid-cols-12 max-w-sm">
                 <span className="col-span-3">Nomor</span>
                 <span className="col-span-1 text-center">:</span>
-                <span className="col-span-8">{header.nomorMemo || "M.xxx/INS/PPK/VIII/2026"}</span>
+                <span className="col-span-8">{header.nomorMemo || "M.330/INS/PPK/IX/2026"}</span>
               </div>
-              <div className="grid grid-cols-12 max-w-md">
+              <div className="grid grid-cols-12 max-w-sm">
                 <span className="col-span-3">Tanggal</span>
                 <span className="col-span-1 text-center">:</span>
                 <span className="col-span-8">{tanggalMemo}</span>
@@ -288,116 +330,129 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
             </div>
           </div>
 
-          {/* Judul Bagian Pembebanan Anggaran */}
+          {/* Tabel Detail MAK & Akun */}
           <div className="pt-2">
-            <p className="font-bold text-black uppercase">
-              PEMBEBANAN ANGGARAN
-            </p>
-          </div>
-
-          {/* Tabel POK / MAK Pembebanan Anggaran */}
-          <div className="pt-1">
             <table className="w-full border border-black text-xs font-sans border-collapse">
               <thead>
-                <tr className="border-b border-black font-bold text-center bg-gray-50 text-black">
-                  <th className="border border-black p-2 w-10">No</th>
-                  <th className="border border-black p-2 text-left">Kode MAK / POK</th>
-                  <th className="border border-black p-2 text-left">Uraian Akun Kegiatan</th>
-                  <th className="border border-black p-2 text-right w-44">Jumlah (Rp)</th>
+                <tr className="border-b border-black">
+                  <th className="border-r border-black p-2 text-left font-normal w-[32%] leading-tight">
+                    Kegiatan, Output, Komponen, Sub Komponen, Akun
+                  </th>
+                  <th className="border-r border-black p-2 text-center font-normal w-[42%]">
+                    Uraian
+                  </th>
+                  <th className="border-r border-black p-2 text-center font-normal w-[8%]">
+                    Vol
+                  </th>
+                  <th className="p-2 text-center font-normal w-[18%]">
+                    Jumlah (Rp.)
+                  </th>
                 </tr>
               </thead>
               <tbody>
+                {/* 1. Baris Kegiatan & Output */}
                 <tr className="border-b border-black">
-                  <td className="border border-black p-2 text-center align-top">1</td>
-                  <td className="border border-black p-2 font-mono align-top">
-                    7459.ABR.006.071.CC.{header.nomorMak || "524111"}
+                  <td className="border-r border-black p-2 align-top font-mono">
+                    {hierarchy.kegOutputCode}
                   </td>
-                  <td className="border border-black p-2 align-top">
-                    <p className="font-semibold">{header.keteranganKegiatan || "Perjalanan Dinas Jabatan"}</p>
-                    <p className="text-[11px] text-gray-700 pt-0.5">
-                      Tujuan: {kotaTujuanText}, {header.provinsiTujuan} ({rows.length} Orang)
-                    </p>
+                  <td colSpan={3} className="p-2 align-top">
+                    {hierarchy.kegOutputUraian}
                   </td>
-                  <td className="border border-black p-2 text-right font-mono font-bold align-top">
-                    <div className="flex justify-between px-2">
-                      <span>Rp</span>
-                      <span>{grandTotal.toLocaleString("id-ID")}</span>
+                </tr>
+
+                {/* 2. Baris Komponen */}
+                <tr className="border-b border-black">
+                  <td className="border-r border-black p-2 align-top font-mono">
+                    {hierarchy.komponenCode}
+                  </td>
+                  <td colSpan={3} className="p-2 align-top">
+                    {hierarchy.komponenUraian}
+                  </td>
+                </tr>
+
+                {/* 3. Baris Sub Komponen */}
+                <tr className="border-b border-black">
+                  <td className="border-r border-black p-2 align-top font-mono">
+                    {hierarchy.subKomponenCode}
+                  </td>
+                  <td colSpan={3} className="p-2 align-top">
+                    {hierarchy.subKomponenUraian}
+                  </td>
+                </tr>
+
+                {/* 4. Baris Akun MAK & Nominal */}
+                <tr>
+                  <td className="border-r border-black p-2 align-top font-mono">
+                    {hierarchy.akunCode}
+                  </td>
+                  <td colSpan={3} className="p-2 align-top">
+                    <div className="flex justify-between items-center pr-2">
+                      <span>{hierarchy.akunUraian}</span>
+                      <span className="font-bold font-sans text-[13px]">
+                        Rp{grandTotal.toLocaleString("id-ID")}
+                      </span>
                     </div>
                   </td>
                 </tr>
               </tbody>
-              <tfoot>
-                <tr className="font-bold border-t border-black bg-gray-50 text-black">
-                  <td colSpan={3} className="border border-black p-2 text-center uppercase tracking-wider">
-                    Total Anggaran
-                  </td>
-                  <td className="border border-black p-2 text-right font-mono font-bold">
-                    <div className="flex justify-between px-2">
-                      <span>Rp</span>
-                      <span>{grandTotal.toLocaleString("id-ID")}</span>
-                    </div>
-                  </td>
-                </tr>
-              </tfoot>
             </table>
+
+            {/* Terbilang di bawah tabel */}
+            <div className="pt-2 flex items-start text-xs font-sans">
+              <div className="w-24 shrink-0 flex justify-between pr-2">
+                <span>Terbilang</span>
+                <span>:</span>
+              </div>
+              <div className="font-bold text-black flex-1 leading-snug">
+                {terbilang(grandTotal).toLowerCase()}
+              </div>
+            </div>
           </div>
 
-          {/* Grid 4 Kolom Tanda Tangan */}
-          <div className="pt-12 pb-4">
-            <div className="grid grid-cols-2 gap-x-12 gap-y-16 text-left text-xs font-sans">
-              {/* 1. Kiri Atas: PIC / Inisiator Kegiatan */}
-              <div className="space-y-16">
-                <div>
-                  <p>Inisiator Kegiatan,</p>
-                </div>
+          {/* Grid 4 Kolom Tanda Tangan (2 Baris x 2 Kolom) */}
+          <div className="pt-8 pb-4 space-y-12">
+            {/* Baris Atas: Bendahara & Penanggungjawab */}
+            <div className="grid grid-cols-2 gap-x-12 text-center text-xs font-sans">
+              {/* Kiri Atas: Bendahara Pengeluaran */}
+              <div className="flex flex-col justify-between min-h-[130px]">
+                <p>Bendahara Pengeluaran,</p>
                 <div className="space-y-0.5">
-                  <p className="font-semibold underline">{header.picInisiator || "Arif Wibowo, S.H., M.H."}</p>
-                  <p className="font-mono text-[11px]">NIP. 19830124200801 1 006</p>
+                  <p className="font-normal">{bendaharaNama}</p>
+                  <p className="font-mono text-[11px]">{bendaharaNip}</p>
                 </div>
               </div>
 
-              {/* 2. Kanan Atas: Petugas Verifikasi */}
-              <div className="space-y-16 pl-6">
+              {/* Kanan Atas: Penanggungjawab Kegiatan */}
+              <div className="flex flex-col justify-between min-h-[130px]">
+                <p>Penanggungjawab Kegiatan,</p>
+                <div className="space-y-0.5">
+                  <p className="font-normal">{penanggungJawabNama}</p>
+                  <p className="font-mono text-[11px]">{penanggungJawabNip}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Baris Bawah: PPK Inspektorat & Petugas Verifikasi */}
+            <div className="grid grid-cols-2 gap-x-12 text-center text-xs font-sans">
+              {/* Kiri Bawah: Mengetahui/menyetujui PPK Inspektorat */}
+              <div className="flex flex-col justify-between min-h-[140px]">
                 <div>
-                  <p>Petugas Verifikasi,</p>
+                  <p>Mengetahui/menyetujui,</p>
+                  <p>Pejabat pembuat Komitmen</p>
+                  <p>Inspektorat</p>
                 </div>
                 <div className="space-y-0.5">
-                  <p className="font-semibold underline">
-                    {header.petugasVerifikasi.split(",")[0] || "Nidya Hediyanti"}
-                  </p>
-                  <p className="font-mono text-[11px]">
-                    {header.petugasVerifikasi.includes("NIP")
-                      ? header.petugasVerifikasi.substring(header.petugasVerifikasi.indexOf("NIP"))
-                      : "NIP. 19920603 202521 2 034"}
-                  </p>
+                  <p className="font-normal">{ppkNama}</p>
+                  <p className="font-mono text-[11px]">{ppkNip}</p>
                 </div>
               </div>
 
-              {/* 3. Kiri Bawah: Bendahara Pengeluaran */}
-              <div className="space-y-16">
-                <div>
-                  <p>Bendahara Pengeluaran,</p>
-                </div>
+              {/* Kanan Bawah: Petugas Verifikasi */}
+              <div className="flex flex-col justify-between min-h-[140px]">
+                <p>Petugas Verifikasi,</p>
                 <div className="space-y-0.5">
-                  <p className="font-semibold underline">
-                    {header.bendahara.split(",")[0] || "Raka Panji Wibowo, S.Kom"}
-                  </p>
-                  <p className="font-mono text-[11px]">
-                    {header.bendahara.includes("NIP")
-                      ? header.bendahara.substring(header.bendahara.indexOf("NIP"))
-                      : "NIP. 19950408202012 1 001"}
-                  </p>
-                </div>
-              </div>
-
-              {/* 4. Kanan Bawah: Pejabat Pembuat Komitmen (PPK) */}
-              <div className="space-y-16 pl-6">
-                <div>
-                  <p>Pejabat Pembuat Komitmen,</p>
-                </div>
-                <div className="space-y-0.5">
-                  <p className="font-semibold underline">{header.ppkNama || "Arif Wibowo, S.H., M.H."}</p>
-                  <p className="font-mono text-[11px]">NIP. {header.ppkNip || "19830124200801 1 006"}</p>
+                  <p className="font-normal">{verifikatorNama}</p>
+                  <p className="font-mono text-[11px]">{verifikatorNip}</p>
                 </div>
               </div>
             </div>

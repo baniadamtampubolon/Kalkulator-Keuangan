@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { HeaderData, SbmRate, NomorMemo, Pegawai } from "@/lib/types";
 import { getKabkotByProvinsi } from "@/data/kabkot";
+import { LIST_NOMOR_MAK, LIST_NOMOR_KOMPONEN, getMakAkunName, getKomponenName } from "@/data/mak_akun";
 import { ModalTambahPegawai } from "./ModalTambahPegawai";
 import {
   FileText,
@@ -97,6 +98,23 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
       setHeader((prev) => ({
         ...prev,
         ppkNama: namaPegawai,
+      }));
+    }
+  };
+
+  const handlePenanggungJawabChange = (namaPegawai: string) => {
+    const found = pegawaiList.find((p) => p.nama === namaPegawai);
+    if (found) {
+      setHeader((prev) => ({
+        ...prev,
+        penanggungJawabNama: found.nama,
+        penanggungJawabNip: found.nip,
+        penanggungJawabJabatan: found.jabatan,
+      }));
+    } else {
+      setHeader((prev) => ({
+        ...prev,
+        penanggungJawabNama: namaPegawai,
       }));
     }
   };
@@ -580,8 +598,84 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           <Landmark className="w-4 h-4 text-slate-400 hidden sm:block" />
         </div>
 
-        <div className="form-group-panel space-y-2 text-xs">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="form-group-panel space-y-3.5 text-xs">
+          {/* Baris 1: NOMOR KOMPONEN & NOMOR MAK (Sesuai Gambar 1, 2, 3) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            {/* NOMOR KOMPONEN */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
+                  NOMOR KOMPONEN
+                </label>
+                {getKomponenName(header.nomorKomp) && (
+                  <span
+                    className="text-[10px] font-medium text-slate-500 truncate max-w-[240px]"
+                    title={getKomponenName(header.nomorKomp)}
+                  >
+                    {getKomponenName(header.nomorKomp)}
+                  </span>
+                )}
+              </div>
+              <select
+                value={header.nomorKomp || "7461.ABR.006.076.MR"}
+                onChange={(e) => handleChange("nomorKomp", e.target.value)}
+                className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 cursor-pointer text-xs"
+              >
+                <option value="">-- Pilih Komponen --</option>
+                {LIST_NOMOR_KOMPONEN.map((k) => (
+                  <option key={k.kode} value={k.kode}>
+                    {k.kode} - {k.nama}
+                  </option>
+                ))}
+                {header.nomorKomp &&
+                  !LIST_NOMOR_KOMPONEN.some((k) => k.kode === header.nomorKomp) && (
+                    <option value={header.nomorKomp}>
+                      {header.nomorKomp}
+                      {getKomponenName(header.nomorKomp) ? ` - ${getKomponenName(header.nomorKomp)}` : ""}
+                    </option>
+                  )}
+              </select>
+            </div>
+
+            {/* NOMOR MAK */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
+                  NOMOR MAK
+                </label>
+                {getMakAkunName(header.nomorMak) && (
+                  <span
+                    className="text-[10px] font-medium text-slate-500 truncate max-w-[240px]"
+                    title={getMakAkunName(header.nomorMak)}
+                  >
+                    {getMakAkunName(header.nomorMak)}
+                  </span>
+                )}
+              </div>
+              <select
+                value={header.nomorMak || "524111"}
+                onChange={(e) => handleChange("nomorMak", e.target.value)}
+                className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 cursor-pointer text-xs"
+              >
+                <option value="">-- Pilih MAK --</option>
+                {LIST_NOMOR_MAK.map((m) => (
+                  <option key={m.kode} value={m.kode}>
+                    {m.kode} - {m.nama}
+                  </option>
+                ))}
+                {header.nomorMak &&
+                  !LIST_NOMOR_MAK.some((m) => m.kode === header.nomorMak) && (
+                    <option value={header.nomorMak}>
+                      {header.nomorMak}
+                      {getMakAkunName(header.nomorMak) ? ` - ${getMakAkunName(header.nomorMak)}` : ""}
+                    </option>
+                  )}
+              </select>
+            </div>
+          </div>
+
+          {/* Baris 2: Unit Kerja, Item Detail, Pengajuan, No. SPM */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-0.5">
             {/* Unit Kerja */}
             <div className="space-y-1">
               <label className="font-semibold text-slate-700">Unit Kerja</label>
@@ -590,30 +684,6 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 value={header.unitKerja}
                 onChange={(e) => handleChange("unitKerja", e.target.value)}
                 className="input-default w-full h-9 px-2.5 font-medium"
-              />
-            </div>
-
-            {/* Kode MAK */}
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Kode MAK</label>
-              <input
-                type="text"
-                value={header.nomorMak}
-                onChange={(e) => handleChange("nomorMak", e.target.value)}
-                placeholder="524111"
-                className="input-default w-full h-9 px-2.5 font-mono font-bold text-slate-800"
-              />
-            </div>
-
-            {/* Sub Komponen */}
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Komponen</label>
-              <input
-                type="text"
-                value={header.nomorKomp}
-                onChange={(e) => handleChange("nomorKomp", e.target.value)}
-                placeholder="051"
-                className="input-default w-full h-9 px-2.5 font-mono font-bold text-slate-800"
               />
             </div>
 
@@ -634,7 +704,12 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               <label className="font-semibold text-slate-700">Pengajuan</label>
               <select
                 value={header.jenisPengajuan || "RAMPUNG"}
-                onChange={(e) => handleChange("jenisPengajuan", e.target.value as "RENCANA" | "RAMPUNG" | "MERAMPUNGKAN")}
+                onChange={(e) =>
+                  handleChange(
+                    "jenisPengajuan",
+                    e.target.value as "RENCANA" | "RAMPUNG" | "MERAMPUNGKAN"
+                  )
+                }
                 className="input-human w-full h-9 px-2 font-bold text-slate-800 cursor-pointer"
               >
                 <option value="RAMPUNG">RAMPUNG</option>
@@ -696,7 +771,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
         </div>
 
         <div className="form-group-panel">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             {/* PPK Selector */}
             <div className="space-y-1.5">
               <label className="font-semibold text-slate-800 flex items-center gap-1">
@@ -715,7 +790,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 ))}
               </select>
               <span className="text-[10.5px] text-slate-400 block">
-                Penandatangan komitmen anggaran pada Kuitansi dan SPD resmi.
+                Tanda tangan kiri pada Nominatif & Kuitansi (Arif Wibowo).
               </span>
             </div>
 
@@ -732,7 +807,29 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 className="input-human w-full h-9.5 px-3 font-medium text-slate-900"
               />
               <span className="text-[10.5px] text-slate-400 block">
-                Pejabat pembayar uang muka atau pelunasan rampung SPJ.
+                Tanda tangan tengah pada Nominatif (Raka Panji).
+              </span>
+            </div>
+
+            {/* Penanggung Jawab Kegiatan */}
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-800 flex items-center gap-1">
+                <span>Penanggung Jawab Kegiatan</span>
+                <span className="text-red-500 font-bold">*</span>
+              </label>
+              <select
+                value={header.penanggungJawabNama || "Reni Sutaryo, S.Si., M.Adm.Pemb"}
+                onChange={(e) => handlePenanggungJawabChange(e.target.value)}
+                className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 cursor-pointer"
+              >
+                {pegawaiList.map((p) => (
+                  <option key={p.kodeNama} value={p.nama}>
+                    {p.nama} ({p.jabatan})
+                  </option>
+                ))}
+              </select>
+              <span className="text-[10.5px] text-slate-400 block">
+                Tanda tangan kanan pada Nominatif (Reni Sutaryo).
               </span>
             </div>
 

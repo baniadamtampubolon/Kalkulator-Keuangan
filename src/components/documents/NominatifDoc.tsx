@@ -37,75 +37,62 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
 
   const kotaTujuanText = (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
 
-  // Calculate Column Totals across rows
+  // Calculate Column Totals across rows (sum each component safely)
   const totalUh = rows.reduce(
     (acc, r) =>
       acc +
-      (activeUh.uhBiasa ? r.biayaUhBiasa : 0) +
-      (activeUh.uhBiasa60 ? r.biayaUhBiasa60 : 0) +
-      (activeUh.uhHalfday ? r.biayaUhHalfday : 0) +
-      (activeUh.uhFullboard ? r.biayaUhFullboard : 0),
+      (r.biayaUhBiasa || 0) +
+      (r.biayaUhBiasa60 || 0) +
+      (r.biayaUhHalfday || 0) +
+      (r.biayaUhFullboard || 0),
     0
   );
 
-  const totalTiket = activeCols.tiket
-    ? rows.reduce((acc, r) => acc + (r.tiket || 0), 0)
-    : 0;
-
-  const totalTransDarat = activeCols.transportasiDarat
-    ? rows.reduce((acc, r) => acc + (r.transportasiDarat || 0), 0)
-    : 0;
-
-  const totalTransLokal = activeCols.transportasiLokal
-    ? rows.reduce((acc, r) => acc + (r.transportasiLokal || 0), 0)
-    : 0;
-
-  const totalTransJakartaPp = activeCols.transportJakartaPp
-    ? rows.reduce((acc, r) => acc + (r.transportJakartaPp || 0), 0)
-    : 0;
-
-  const totalTransDaerahPp = activeCols.transportDaerahPp
-    ? rows.reduce((acc, r) => acc + (r.transportDaerahPp || 0), 0)
-    : 0;
-
-  const totalHotel =
-    (activeCols.hotel ? rows.reduce((acc, r) => acc + (r.hotel || 0), 0) : 0) +
-    (activeCols.penginapan30 ? rows.reduce((acc, r) => acc + (r.penginapan30 || 0), 0) : 0);
-
-  const totalRiil = activeCols.pengRill
-    ? rows.reduce((acc, r) => acc + (r.pengRill || 0), 0)
-    : 0;
-
-  const totalRepresentatif = activeCols.representatif
-    ? rows.reduce((acc, r) => acc + (r.representatif || 0), 0)
-    : 0;
-
-  const totalBelanjaBahan = activeCols.belanjaBahan
-    ? rows.reduce((acc, r) => acc + (r.belanjaBahan || 0), 0)
-    : 0;
+  const totalTiket = rows.reduce((acc, r) => acc + (r.tiket || 0), 0);
+  const totalDukunganTransport = rows.reduce((acc, r) => acc + (r.dukunganTransportasi || 0), 0);
+  const totalTransDarat = rows.reduce((acc, r) => acc + (r.transportasiDarat || 0), 0);
+  const totalTransLokal = rows.reduce((acc, r) => acc + (r.transportasiLokal || 0), 0);
+  const totalTransJakartaPp = rows.reduce((acc, r) => acc + (r.transportJakartaPp || 0), 0);
+  const totalTransDaerahPp = rows.reduce((acc, r) => acc + (r.transportDaerahPp || 0), 0);
+  const totalHotel = rows.reduce((acc, r) => acc + (r.hotel || 0) + (r.penginapan30 || 0), 0);
+  const totalFullday = rows.reduce((acc, r) => acc + (r.fulldayMeeting || 0), 0);
+  const totalFullboard = rows.reduce((acc, r) => acc + (r.fullboardMeeting || 0), 0);
+  const totalRiil = rows.reduce((acc, r) => acc + (r.pengRill || 0), 0);
+  const totalRepresentatif = rows.reduce((acc, r) => acc + (r.representatif || 0), 0);
+  const totalBelanjaBahan = rows.reduce((acc, r) => acc + (r.belanjaBahan || 0), 0);
 
   const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
 
-  // Determine which cost columns should be displayed
-  const showTransDarat = activeCols.transportasiDarat && totalTransDarat > 0;
-  const showTransLokal = activeCols.transportasiLokal && totalTransLokal > 0;
-  const showTransJakartaPp = activeCols.transportJakartaPp && totalTransJakartaPp > 0;
-  const showTransDaerahPp = activeCols.transportDaerahPp && totalTransDaerahPp > 0;
-  const showTiket = activeCols.tiket && totalTiket > 0;
-  const showUh = totalUh > 0;
-  const showHotel = (activeCols.hotel || activeCols.penginapan30) && totalHotel > 0;
-  const showRiil = activeCols.pengRill && totalRiil > 0;
-  const showRepresentatif = activeCols.representatif;
-  const showBelanjaBahan = activeCols.belanjaBahan && totalBelanjaBahan > 0;
+  // Determine which cost columns should be displayed:
+  // Shown if explicitly checked in filter OR if any participant has an amount > 0
+  const isAnyUhActive = Boolean(
+    activeUh?.uhBiasa || activeUh?.uhBiasa60 || activeUh?.uhHalfday || activeUh?.uhFullboard
+  );
+  const showTransDarat = Boolean(activeCols?.transportasiDarat || totalTransDarat > 0);
+  const showDukunganTransport = Boolean(activeCols?.dukunganTransportasi || totalDukunganTransport > 0);
+  const showTransLokal = Boolean(activeCols?.transportasiLokal || totalTransLokal > 0);
+  const showTransJakartaPp = Boolean(activeCols?.transportJakartaPp || totalTransJakartaPp > 0);
+  const showTransDaerahPp = Boolean(activeCols?.transportDaerahPp || totalTransDaerahPp > 0);
+  const showTiket = Boolean(activeCols?.tiket || totalTiket > 0);
+  const showUh = Boolean(isAnyUhActive || totalUh > 0);
+  const showHotel = Boolean(activeCols?.hotel || activeCols?.penginapan30 || totalHotel > 0);
+  const showFullday = Boolean(activeCols?.fulldayMeeting || totalFullday > 0);
+  const showFullboard = Boolean(activeCols?.fullboardMeeting || totalFullboard > 0);
+  const showRiil = Boolean(activeCols?.pengRill || totalRiil > 0);
+  const showRepresentatif = Boolean(activeCols?.representatif || totalRepresentatif > 0);
+  const showBelanjaBahan = Boolean(activeCols?.belanjaBahan || totalBelanjaBahan > 0);
 
   let rincianColCount = 1; // Always has Jumlah
   if (showTransDarat) rincianColCount++;
+  if (showDukunganTransport) rincianColCount++;
   if (showTransLokal) rincianColCount++;
   if (showTransJakartaPp) rincianColCount++;
   if (showTransDaerahPp) rincianColCount++;
   if (showTiket) rincianColCount++;
   if (showUh) rincianColCount++;
   if (showHotel) rincianColCount++;
+  if (showFullday) rincianColCount++;
+  if (showFullboard) rincianColCount++;
   if (showRiil) rincianColCount++;
   if (showRepresentatif) rincianColCount++;
   if (showBelanjaBahan) rincianColCount++;
@@ -297,9 +284,6 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                 <th colSpan={rincianColCount} className="border border-black p-0.5 align-middle">
                   Rincian Biaya
                 </th>
-                <th rowSpan={2} className="border border-black p-1 max-w-[150px] align-middle">
-                  Keterangan
-                </th>
               </tr>
               <tr className="font-bold border-b border-black text-center bg-white text-black text-[9px]">
                 {/* Under Tanggal */}
@@ -308,12 +292,15 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
 
                 {/* Under Rincian Biaya */}
                 {showTransDarat && <th className="border border-black p-0.5">Transport Darat PP</th>}
+                {showDukunganTransport && <th className="border border-black p-0.5">Dukungan Transport</th>}
                 {showTransLokal && <th className="border border-black p-0.5">Transport Lokal</th>}
                 {showTransJakartaPp && <th className="border border-black p-0.5">Transport Jakarta PP</th>}
                 {showTransDaerahPp && <th className="border border-black p-0.5">Transport Daerah PP</th>}
                 {showTiket && <th className="border border-black p-0.5">Tiket PP</th>}
                 {showUh && <th className="border border-black p-0.5">Uang Harian</th>}
                 {showHotel && <th className="border border-black p-0.5">Hotel</th>}
+                {showFullday && <th className="border border-black p-0.5">Paket Fullday</th>}
+                {showFullboard && <th className="border border-black p-0.5">Paket Fullboard</th>}
                 {showRiil && <th className="border border-black p-0.5">Peng. Riil</th>}
                 {showRepresentatif && <th className="border border-black p-0.5">Representatif</th>}
                 {showBelanjaBahan && <th className="border border-black p-0.5">Belanja Bahan</th>}
@@ -323,14 +310,12 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
             <tbody>
               {rows.map((row, idx) => {
                 const uhRow =
-                  (activeUh.uhBiasa ? row.biayaUhBiasa : 0) +
-                  (activeUh.uhBiasa60 ? row.biayaUhBiasa60 : 0) +
-                  (activeUh.uhHalfday ? row.biayaUhHalfday : 0) +
-                  (activeUh.uhFullboard ? row.biayaUhFullboard : 0);
+                  (row.biayaUhBiasa || 0) +
+                  (row.biayaUhBiasa60 || 0) +
+                  (row.biayaUhHalfday || 0) +
+                  (row.biayaUhFullboard || 0);
 
-                const hotelRow =
-                  (activeCols.hotel ? (row.hotel || 0) : 0) +
-                  (activeCols.penginapan30 ? (row.penginapan30 || 0) : 0);
+                const hotelRow = (row.hotel || 0) + (row.penginapan30 || 0);
 
                 const tujuanDisplay =
                   row.tujuanKota
@@ -370,6 +355,11 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                         {(row.transportasiDarat || 0).toLocaleString("id-ID")}
                       </td>
                     )}
+                    {showDukunganTransport && (
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                        {(row.dukunganTransportasi || 0).toLocaleString("id-ID")}
+                      </td>
+                    )}
                     {showTransLokal && (
                       <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.transportasiLokal || 0).toLocaleString("id-ID")}
@@ -400,6 +390,16 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                         {hotelRow.toLocaleString("id-ID")}
                       </td>
                     )}
+                    {showFullday && (
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                        {(row.fulldayMeeting || 0).toLocaleString("id-ID")}
+                      </td>
+                    )}
+                    {showFullboard && (
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                        {(row.fullboardMeeting || 0).toLocaleString("id-ID")}
+                      </td>
+                    )}
                     {showRiil && (
                       <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.pengRill || 0).toLocaleString("id-ID")}
@@ -420,15 +420,6 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                     <td className="border border-black p-0.5 text-right font-bold whitespace-nowrap tabular-nums">
                       {row.totalJumlah.toLocaleString("id-ID")}
                     </td>
-
-                    {/* Keterangan */}
-                    <td className="border border-black p-0.5 text-center text-[8.5px]">
-                      {row.nomorSt || header.nomorStStaff || header.nomorStMaster ? (
-                        <span>ST: {row.nomorSt || header.nomorStStaff || header.nomorStMaster}</span>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
                   </tr>
                 );
               })}
@@ -436,11 +427,16 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
               {/* Total Footer Row */}
               <tr className="font-bold border-t border-black bg-white text-black text-[9px]">
                 <td colSpan={8} className="border border-black p-0.5 text-center font-bold uppercase tracking-wider">
-                  Total
+                  JUMLAH
                 </td>
                 {showTransDarat && (
                   <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalTransDarat.toLocaleString("id-ID")}
+                  </td>
+                )}
+                {showDukunganTransport && (
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                    {totalDukunganTransport.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showTransLokal && (
@@ -473,6 +469,16 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                     {totalHotel.toLocaleString("id-ID")}
                   </td>
                 )}
+                {showFullday && (
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                    {totalFullday.toLocaleString("id-ID")}
+                  </td>
+                )}
+                {showFullboard && (
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                    {totalFullboard.toLocaleString("id-ID")}
+                  </td>
+                )}
                 {showRiil && (
                   <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalRiil.toLocaleString("id-ID")}
@@ -491,7 +497,6 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                 <td className="border border-black p-0.5 text-right font-bold whitespace-nowrap tabular-nums">
                   {grandTotal.toLocaleString("id-ID")}
                 </td>
-                <td className="border border-black p-0.5"></td>
               </tr>
             </tbody>
           </table>
@@ -507,38 +512,72 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
           </p>
         </div>
 
-        {/* Signatures Section: Bendahara (Kiri) & PPK (Kanan) */}
-        <div className="pt-8 pb-4">
-          <div className="flex justify-between items-start text-xs font-sans px-8">
-            {/* Left: Bendahara Pengeluaran */}
-            <div className="space-y-16 text-left">
-              <div className="space-y-0.5">
-                <p>Lunas dibayar</p>
-                <p className="font-semibold">Bendahara Pengeluaran</p>
-              </div>
-              <div className="space-y-0.5">
-                <p className="font-semibold">{header.bendahara.split(",")[0] || "Raka Panji Wibowo, S.Kom"}</p>
-                <p className="font-mono text-[11px]">
-                  {header.bendahara.includes("NIP")
-                    ? header.bendahara.substring(header.bendahara.indexOf("NIP"))
-                    : "NIP. 19950408202012 1 001"}
-                </p>
-              </div>
-            </div>
+        {/* Signatures Section: 3 Columns (Kiri: PPK, Tengah: Bendahara, Kanan: Penanggung Jawab Kegiatan) */}
+        {(() => {
+          const bendaharaRaw = header.bendahara || "Raka Panji Wibowo, NIP. 19950408202012 1 001";
+          const bendaharaNama = bendaharaRaw.includes("NIP")
+            ? bendaharaRaw.substring(0, bendaharaRaw.indexOf("NIP")).replace(/,\s*$/, "").trim()
+            : bendaharaRaw.split(",")[0].trim() || "Raka Panji Wibowo";
+          const bendaharaNip = bendaharaRaw.includes("NIP")
+            ? bendaharaRaw.substring(bendaharaRaw.indexOf("NIP")).trim()
+            : "NIP. 19950408202012 1 001";
 
-            {/* Right: Pejabat Pembuat Komitmen */}
-            <div className="space-y-16 text-left">
-              <div className="space-y-0.5">
-                <p>Jakarta, {formatDateIndo(header.tanggalSpd || new Date().toISOString())}</p>
-                <p className="font-semibold">Pejabat Pembuat Komitmen</p>
-              </div>
-              <div className="space-y-0.5">
-                <p className="font-semibold">{header.ppkNama || "Arif Wibowo, S.H., M.H."}</p>
-                <p className="font-mono text-[11px]">NIP. {header.ppkNip || "19830124200801 1 006"}</p>
+          const ppkNama = header.ppkNama || "Arif Wibowo, S.H., M.H.";
+          const ppkNip = header.ppkNip
+            ? header.ppkNip.startsWith("NIP")
+              ? header.ppkNip
+              : `NIP. ${header.ppkNip}`
+            : "NIP. 19830124200801 1 006";
+
+          const penanggungJawabNama = header.penanggungJawabNama || "Reni Sutaryo, S.Si., M.Adm.Pemb";
+          const penanggungJawabNip = header.penanggungJawabNip
+            ? header.penanggungJawabNip.startsWith("NIP")
+              ? header.penanggungJawabNip
+              : `NIP. ${header.penanggungJawabNip}`
+            : "NIP. 19791126200604 2 014";
+
+          return (
+            <div className="pt-8 pb-4">
+              <div className="grid grid-cols-3 gap-6 text-xs font-sans px-4">
+                {/* Left: Pejabat Pembuat Komitmen */}
+                <div className="space-y-16 text-left">
+                  <div className="space-y-0.5">
+                    <p>Mengetahui/ Menyetujui</p>
+                    <p className="font-semibold">{header.ppkJabatan || "Pejabat Pembuat Komitmen"}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="font-semibold">{ppkNama}</p>
+                    <p className="font-mono text-[11px]">{ppkNip}</p>
+                  </div>
+                </div>
+
+                {/* Center: Bendahara Pengeluaran */}
+                <div className="space-y-16 text-left">
+                  <div className="space-y-0.5">
+                    <p>Bendahara Pengeluaran</p>
+                    <p className="font-semibold">{header.unitKerja || "Kemenko Pangan"}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="font-semibold">{bendaharaNama}</p>
+                    <p className="font-mono text-[11px]">{bendaharaNip}</p>
+                  </div>
+                </div>
+
+                {/* Right: Penanggung Jawab Kegiatan */}
+                <div className="space-y-16 text-left">
+                  <div className="space-y-0.5">
+                    <p>Penanggung Jawab Kegiatan,</p>
+                    <p className="invisible font-semibold">-</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="font-semibold">{penanggungJawabNama}</p>
+                    <p className="font-mono text-[11px]">{penanggungJawabNip}</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
     </div>
   );

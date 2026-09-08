@@ -269,6 +269,15 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
             });
           }
 
+          if (activeCols.dukunganTransportasi && (activeRow.dukunganTransportasi || 0) > 0) {
+            lineItems.push({
+              no: itemNum++,
+              title: "Dukungan Transportasi",
+              detail: "",
+              amount: activeRow.dukunganTransportasi,
+            });
+          }
+
           if (activeCols.tiket && activeRow.tiket > 0) {
             lineItems.push({
               no: itemNum++,
@@ -284,6 +293,24 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
               title: "Penginapan / Hotel",
               detail: `${activeRow.malamHotel || 1}  malam @ Rp  ${(activeRow.rateHotel || 0).toLocaleString("id-ID")}`,
               amount: activeRow.hotel,
+            });
+          }
+
+          if (activeCols.fulldayMeeting && (activeRow.fulldayMeeting || 0) > 0) {
+            lineItems.push({
+              no: itemNum++,
+              title: "Paket Fullday Meeting",
+              detail: "",
+              amount: activeRow.fulldayMeeting,
+            });
+          }
+
+          if (activeCols.fullboardMeeting && (activeRow.fullboardMeeting || 0) > 0) {
+            lineItems.push({
+              no: itemNum++,
+              title: "Paket Fullboard Meeting",
+              detail: "",
+              amount: activeRow.fullboardMeeting,
             });
           }
 
