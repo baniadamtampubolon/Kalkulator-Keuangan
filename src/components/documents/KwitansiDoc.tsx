@@ -201,27 +201,27 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
                   </h2>
                 </div>
 
-                {/* Right: Box Metadata Table */}
-                <div className="w-56 border border-black p-2 text-[11px] leading-tight space-y-1">
-                  <div className="grid grid-cols-12 items-center">
-                    <span className="col-span-5">Sub Keg</span>
-                    <span className="col-span-1">:</span>
-                    <span className="col-span-6 font-mono font-medium">{header.nomorKomp || "051"}</span>
+                {/* Right: Box Metadata Table (Natural left alignment for all rows) */}
+                <div className="w-fit min-w-[260px] border border-black px-3 py-2 text-[11px] leading-tight space-y-1 shrink-0">
+                  <div className="grid grid-cols-[68px_14px_auto] items-center">
+                    <span>Sub Keg</span>
+                    <span className="text-center">:</span>
+                    <span className="font-mono font-medium whitespace-nowrap pl-1">{header.nomorKomp || "-"}</span>
                   </div>
-                  <div className="grid grid-cols-12 items-center">
-                    <span className="col-span-5">Akun</span>
-                    <span className="col-span-1">:</span>
-                    <span className="col-span-6 font-mono font-medium">{header.nomorMak || "524111"}</span>
+                  <div className="grid grid-cols-[68px_14px_auto] items-center">
+                    <span>Akun</span>
+                    <span className="text-center">:</span>
+                    <span className="font-mono font-medium pl-1">{header.nomorMak || "-"}</span>
                   </div>
-                  <div className="grid grid-cols-12 items-center">
-                    <span className="col-span-5">Tanggal</span>
-                    <span className="col-span-1">:</span>
-                    <span className="col-span-6 text-right whitespace-nowrap">{tanggalCetak}</span>
+                  <div className="grid grid-cols-[68px_14px_auto] items-center">
+                    <span>Tanggal</span>
+                    <span className="text-center">:</span>
+                    <span className="whitespace-nowrap pl-1">{tanggalCetak}</span>
                   </div>
-                  <div className="grid grid-cols-12 items-center">
-                    <span className="col-span-5">APBN T.A</span>
-                    <span className="col-span-1">:</span>
-                    <span className="col-span-6 text-right font-mono">{tahunAnggaran}</span>
+                  <div className="grid grid-cols-[68px_14px_auto] items-center">
+                    <span>APBN T.A</span>
+                    <span className="text-center">:</span>
+                    <span className="font-mono pl-1">{tahunAnggaran}</span>
                   </div>
                 </div>
               </div>

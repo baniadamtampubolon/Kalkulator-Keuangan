@@ -649,7 +649,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 )}
               </div>
               <select
-                value={header.nomorKomp || "CL.7458.ABR.006.051.0A"}
+                value={header.nomorKomp || ""}
                 onChange={(e) => handleChange("nomorKomp", e.target.value)}
                 className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 cursor-pointer text-xs"
               >
@@ -685,7 +685,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 )}
               </div>
               <select
-                value={header.nomorMak || "524111"}
+                value={header.nomorMak || ""}
                 onChange={(e) => handleChange("nomorMak", e.target.value)}
                 className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 cursor-pointer text-xs"
               >

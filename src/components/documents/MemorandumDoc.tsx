@@ -331,7 +331,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
               <div className="grid grid-cols-12 max-w-sm">
                 <span className="col-span-3">Nomor</span>
                 <span className="col-span-1 text-center">:</span>
-                <span className="col-span-8">{header.nomorMemo || "M.330/INS/PPK/IX/2026"}</span>
+                <span className="col-span-8 font-semibold">{header.nomorMemo || "-"}</span>
               </div>
               <div className="grid grid-cols-12 max-w-sm">
                 <span className="col-span-3">Tanggal</span>

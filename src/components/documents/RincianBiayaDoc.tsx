@@ -490,45 +490,45 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
                 </div>
               </div>
 
-              {/* Section: PERHITUNGAN SPD RAMPUNG */}
-              <div className="pt-4 space-y-4">
+              {/* Section: PERHITUNGAN SPD RAMPUNG (Diberi jarak 2-3 enter agar tidak menempel) */}
+              <div className="pt-10 md:pt-12 space-y-5 border-t border-slate-100">
                 <div className="text-center">
                   <h3 className="font-bold text-xs uppercase tracking-wide text-black">
                     PERHITUNGAN SPD RAMPUNG
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-2 text-left gap-8 text-xs font-sans pt-1">
-                  {/* Left: Breakdown Calculation */}
-                  <div className="space-y-1 text-xs">
-                    <div className="grid grid-cols-12">
-                      <span className="col-span-6">Ditetapkan sejumlah</span>
-                      <span className="col-span-1 text-center">:</span>
-                      <div className="col-span-5 flex justify-between font-mono">
-                        <span>Rp</span>
-                        <span>{calculatedTotal.toLocaleString("id-ID")}</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-12">
-                      <span className="col-span-6">Yang telah dibayar semula</span>
-                      <span className="col-span-1 text-center">:</span>
-                      <div className="col-span-5 flex justify-between font-mono">
-                        <span>Rp</span>
-                        <span>{calculatedTotal.toLocaleString("id-ID")}</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-12">
-                      <span className="col-span-6">Sisa kurang / lebih</span>
-                      <span className="col-span-1 text-center">:</span>
-                      <div className="col-span-5 flex justify-between font-mono">
-                        <span>Rp</span>
-                        <span className="font-sans">Nihil</span>
-                      </div>
+                {/* Keterangan Perhitungan SPD Rampung */}
+                <div className="max-w-md space-y-1 text-xs font-sans pt-1">
+                  <div className="grid grid-cols-12">
+                    <span className="col-span-6">Ditetapkan sejumlah</span>
+                    <span className="col-span-1 text-center">:</span>
+                    <div className="col-span-5 flex justify-between font-mono">
+                      <span>Rp</span>
+                      <span>{calculatedTotal.toLocaleString("id-ID")}</span>
                     </div>
                   </div>
+                  <div className="grid grid-cols-12">
+                    <span className="col-span-6">Yang telah dibayar semula</span>
+                    <span className="col-span-1 text-center">:</span>
+                    <div className="col-span-5 flex justify-between font-mono">
+                      <span>Rp</span>
+                      <span>{calculatedTotal.toLocaleString("id-ID")}</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-12">
+                    <span className="col-span-6">Sisa kurang / lebih</span>
+                    <span className="col-span-1 text-center">:</span>
+                    <div className="col-span-5 flex justify-between font-mono">
+                      <span>Rp</span>
+                      <span className="font-sans">Nihil</span>
+                    </div>
+                  </div>
+                </div>
 
-                  {/* Right: PPK Signature */}
-                  <div className="space-y-16 pl-6">
+                {/* Tanda Tangan PPK: Berada di bawahnya, berjarak 2 enter ke bawah dari kata "Nihil" */}
+                <div className="pt-6 md:pt-8 flex justify-end">
+                  <div className="w-64 space-y-16 text-left text-xs font-sans">
                     <div>
                       <p>Pejabat Pembuat Komitmen</p>
                     </div>

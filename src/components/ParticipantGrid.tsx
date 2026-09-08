@@ -262,6 +262,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
               <th className="p-2.5 w-44 min-w-[170px]">Gol / Jabatan</th>
               <th className="p-2.5 w-20 min-w-[75px] text-center">No. SPD</th>
               <th className="p-2.5 w-48 min-w-[180px]">Nomor ST</th>
+              <th className="p-2.5 w-44 min-w-[160px] text-center">Nomor Komponen</th>
               <th className="p-2.5 w-24 min-w-[95px] text-center">Kode Akun</th>
               <th className="p-2.5 w-36 min-w-[135px]">Kota Tujuan</th>
               <th className="p-2.5 w-32 min-w-[130px]">Tgl Berangkat</th>
@@ -403,10 +404,23 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                   </div>
                 </td>
 
+                {/* Nomor Komponen */}
+                <td className="p-2 w-44 min-w-[160px] text-center font-mono text-slate-700">
+                  <span
+                    className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200/80 text-[11px] font-medium"
+                    title={header.nomorKomp || "Belum dipilih"}
+                  >
+                    {header.nomorKomp || "-"}
+                  </span>
+                </td>
+
                 {/* Kode Akun */}
                 <td className="p-2 w-24 min-w-[95px] text-center font-mono text-slate-700">
-                  <span className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200/80 text-[11px]">
-                    {header.nomorMak || "524111"}
+                  <span
+                    className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200/80 text-[11px]"
+                    title={header.nomorMak || "Belum dipilih"}
+                  >
+                    {header.nomorMak || "-"}
                   </span>
                 </td>
 
@@ -811,7 +825,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
           </tbody>
           <tfoot>
             <tr className="bg-slate-100/80 border-t border-slate-200 text-slate-700 font-semibold text-xs whitespace-nowrap">
-              <td colSpan={10} className="p-3 text-right">
+              <td colSpan={11} className="p-3 text-right">
                 Total Keseluruhan ({rows.length} Pegawai): &nbsp;&nbsp;
                 <span className="font-mono text-slate-900">{totalHari} hr</span>
               </td>
