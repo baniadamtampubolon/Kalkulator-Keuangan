@@ -134,6 +134,14 @@ function doGet(e) {
       });
     }
 
+    if (action === 'GET_PESERTA') {
+      const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
+      return createJsonResponse({
+        status: 'success',
+        data: sheetToObjects(pesertaSheet)
+      });
+    }
+
     return createJsonResponse({ status: 'error', message: 'Action not found' });
   } catch (error) {
     return createJsonResponse({ status: 'error', message: error.toString() });
@@ -233,11 +241,19 @@ function doPost(e) {
       const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
 
       // Bersihkan baris hantu dan baris lama sebelum menulis data baru
+      pruneGhostRows(pesertaSheet);
       pruneGhostRows(rekapSheet);
       deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.idKegiatan);
       deleteRowsByColumnValue(rekapSheet, 'Nama Kegiatan', header.namaKegiatan);
 
-      participants.forEach((p, idx) => {
+      // FILTER ANTI-HANTU: Hanya peserta yang memiliki nama yang disimpan ke database
+      const validParticipants = participants.filter(p => {
+        const nama = String(p.nama || '').trim();
+        const ext = String(p.spjExtra?.namaExternal || p.namaExternal || '').trim();
+        return nama !== '' || ext !== '';
+      });
+
+      validParticipants.forEach((p, idx) => {
         const idPeserta = header.idKegiatan + '-' + (idx + 1).toString().padStart(2, '0');
 
         pesertaSheet.appendRow([
@@ -352,6 +368,10 @@ function doPost(e) {
           p.spjExtra?.pengembalianKas || 0
         ]);
       });
+
+      // Pembersihan akhir baris hantu setelah penulisan selesai
+      pruneGhostRows(pesertaSheet);
+      pruneGhostRows(rekapSheet);
 
       // Simpan / Perbarui nomor memorandum di MASTER_MEMO (9 Kolom Baku)
       if (header.nomorMemo && String(header.nomorMemo).trim() !== '') {
@@ -487,6 +507,24 @@ function doPost(e) {
       });
     }
 
+    // 5. PEMBERSIHAN BARIS HANTU DI SELURUH TAB TRANSAKSI
+    if (action === 'PRUNE_GHOST_ROWS') {
+      const pesertaSheet = ss.getSheetByName(SHEET_NAMES.PESERTA);
+      const rekapSheet = ss.getSheetByName(SHEET_NAMES.REKAP);
+      const kegiatanSheet = ss.getSheetByName(SHEET_NAMES.KEGIATAN);
+
+      if (pesertaSheet) pruneGhostRows(pesertaSheet);
+      if (rekapSheet) pruneGhostRows(rekapSheet);
+      if (kegiatanSheet) pruneGhostRows(kegiatanSheet);
+
+      logAction(ss, 'PRUNE_GHOST_ROWS', 'ALL', 'Membersihkan seluruh baris hantu di DB_PESERTA, REKAP, dan DB_KEGIATAN.');
+
+      return createJsonResponse({
+        status: 'success',
+        message: 'Pembersihan baris hantu di tab DB_PESERTA, REKAP_PERDIN_48KOLOM, dan DB_KEGIATAN berhasil dilakukan.'
+      });
+    }
+
     return createJsonResponse({ status: 'error', message: 'Unknown action: ' + action });
   } catch (error) {
     return createJsonResponse({ status: 'error', message: error.toString() });
@@ -496,7 +534,8 @@ function doPost(e) {
 }
 
 /**
- * Pembersih Baris Hantu: Hapus baris yang tidak memiliki Nama Pegawai dan Nama Kegiatan
+ * Pembersih Baris Hantu Otomatis:
+ * Mendukung tab DB_PESERTA, REKAP_PERDIN_48KOLOM, dan DB_KEGIATAN
  */
 function pruneGhostRows(sheet) {
   if (!sheet || sheet.getLastRow() < 2) return;
@@ -504,19 +543,48 @@ function pruneGhostRows(sheet) {
   if (data.length < 2) return;
 
   const headers = data[0] || [];
-  const colPegawai = headers.indexOf('NAMA PEGAWAI INTERNAL INSPEKTORAT');
-  const colExternal = headers.indexOf('NAMA EXTERNAL');
-  const colKegiatan = headers.indexOf('Nama Kegiatan');
+  const colRekapInternal = headers.indexOf('NAMA PEGAWAI INTERNAL INSPEKTORAT');
+  const colRekapExternal = headers.indexOf('NAMA EXTERNAL');
+  const colRekapKegiatan = headers.indexOf('Nama Kegiatan');
+
+  const colPesertaNama = headers.indexOf('nama_snapshot');
+  const colPesertaExt = headers.indexOf('spj_nama_external');
+  const colPesertaKeg = headers.indexOf('id_kegiatan');
+
+  const colKegiatanId = headers.indexOf('id_kegiatan');
+  const colKegiatanNama = headers.indexOf('nama_kegiatan');
 
   // Loop mundur dari baris paling bawah ke atas
   for (let i = data.length - 1; i >= 1; i--) {
     const row = data[i];
-    const namaPegawai = colPegawai !== -1 ? String(row[colPegawai] || '').trim() : '';
-    const namaExternal = colExternal !== -1 ? String(row[colExternal] || '').trim() : '';
-    const namaKegiatan = colKegiatan !== -1 ? String(row[colKegiatan] || '').trim() : '';
 
-    if (namaPegawai === '' && namaExternal === '' && namaKegiatan === '') {
-      sheet.deleteRow(i + 1);
+    // 1. Deteksi jika ini sheet DB_PESERTA
+    if (colPesertaNama !== -1) {
+      const nama = String(row[colPesertaNama] || '').trim();
+      const ext = colPesertaExt !== -1 ? String(row[colPesertaExt] || '').trim() : '';
+      const idKeg = colPesertaKeg !== -1 ? String(row[colPesertaKeg] || '').trim() : '';
+      // Baris hantu jika tidak ada nama peserta ATAU tidak ada id_kegiatan
+      if ((nama === '' && ext === '') || idKeg === '') {
+        sheet.deleteRow(i + 1);
+      }
+    }
+    // 2. Deteksi jika ini sheet REKAP_PERDIN_48KOLOM
+    else if (colRekapInternal !== -1 || colRekapExternal !== -1) {
+      const nama = colRekapInternal !== -1 ? String(row[colRekapInternal] || '').trim() : '';
+      const ext = colRekapExternal !== -1 ? String(row[colRekapExternal] || '').trim() : '';
+      const keg = colRekapKegiatan !== -1 ? String(row[colRekapKegiatan] || '').trim() : '';
+      // Baris hantu jika tidak ada nama pegawai internal maupun external, ATAU tidak ada nama kegiatan
+      if ((nama === '' && ext === '') || keg === '') {
+        sheet.deleteRow(i + 1);
+      }
+    }
+    // 3. Deteksi jika ini sheet DB_KEGIATAN
+    else if (colKegiatanNama !== -1 && colKegiatanId !== -1) {
+      const idKeg = String(row[colKegiatanId] || '').trim();
+      const namaKeg = String(row[colKegiatanNama] || '').trim();
+      if (idKeg === '' || namaKeg === '') {
+        sheet.deleteRow(i + 1);
+      }
     }
   }
 }

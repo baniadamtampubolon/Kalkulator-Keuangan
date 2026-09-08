@@ -161,7 +161,9 @@ export function formatRowsTo48Columns(
   rows: ParticipantRow[],
   batchId?: string
 ): Array<Record<string, unknown>> {
-  return rows.map((r) => formatRowTo48Columns(header, r, batchId));
+  return rows
+    .filter((r) => Boolean((r.nama && r.nama.trim() !== "") || (r.namaExternal && r.namaExternal.trim() !== "")))
+    .map((r) => formatRowTo48Columns(header, r, batchId));
 }
 
 /**

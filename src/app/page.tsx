@@ -368,6 +368,18 @@ export default function Home() {
       return;
     }
 
+    const validRows = rows.filter(
+      (r) => Boolean((r.nama && r.nama.trim() !== "") || (r.namaExternal && r.namaExternal.trim() !== ""))
+    );
+
+    if (validRows.length === 0) {
+      setSaveFeedback({
+        type: "error",
+        text: "Gagal menyimpan: Silakan pilih minimal 1 nama pegawai/peserta pada tabel sebelum menyimpan.",
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const today = header.tanggalSpd || new Date().toISOString().split("T")[0];
@@ -389,22 +401,22 @@ export default function Home() {
         tanggalSpd: header.tanggalSpd || today,
         kotaTujuan: header.kotaTujuanList?.[0] || "",
         provinsiTujuan: header.provinsiTujuan || "",
-        jumlahPeserta: rows.length,
-        grandTotal: rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0),
+        jumlahPeserta: validRows.length,
+        grandTotal: validRows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0),
         header: updatedHeader,
-        rows,
+        rows: validRows,
         activeCols,
         activeUh,
         updatedAt: new Date().toISOString(),
       });
 
       // 2. Simpan / perbarui ke Rekap Perdin lokal terlebih dahulu (instan)
-      const { isUpdate } = saveOrUpdateRekapLocal(updatedHeader, rows, idKegiatan);
+      const { isUpdate } = saveOrUpdateRekapLocal(updatedHeader, validRows, idKegiatan);
       setSavedBatchId(idKegiatan);
-      setSavedSnapshot(JSON.stringify({ header: updatedHeader, rows }));
+      setSavedSnapshot(JSON.stringify({ header: updatedHeader, rows: validRows }));
 
       // 3. Kirim data transaksi dan baris rekap ke Google Spreadsheet Cloud
-      const sheetRes = await savePerdinToGoogleSheet(updatedHeader, rows);
+      const sheetRes = await savePerdinToGoogleSheet(updatedHeader, validRows);
 
       if (sheetRes.success) {
         setSaveFeedback({

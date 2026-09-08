@@ -21,6 +21,7 @@ import {
   KeyRound,
   Trash2,
   AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import {
   getGasApiUrl,
@@ -32,6 +33,7 @@ import {
   fetchRekapFromSheet,
   savePerdinToGoogleSheet,
   resetTransaksiInGoogleSheet,
+  pruneGhostRowsInGoogleSheet,
   MasterSyncData,
 } from "@/lib/googleSheetsService";
 import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo } from "@/lib/types";
@@ -219,6 +221,26 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
       setStatusMessage({
         type: "success",
         text: res.message || "Database transaksi (DB_KEGIATAN, DB_PESERTA, REKAP_PERDIN_48KOLOM) berhasil dikosongkan bersih!",
+      });
+    } else {
+      setStatusMessage({ type: "error", text: res.message });
+    }
+  };
+
+  const [isPruning, setIsPruning] = useState(false);
+  const handlePruneGhostRows = async () => {
+    if (!url) {
+      setStatusMessage({ type: "error", text: "Mohon masukkan URL Google Apps Script Web App terlebih dahulu." });
+      return;
+    }
+    setIsPruning(true);
+    setStatusMessage({ type: "info", text: "Sedang membersihkan seluruh baris hantu di cloud spreadsheet..." });
+    const res = await pruneGhostRowsInGoogleSheet(url);
+    setIsPruning(false);
+    if (res.success) {
+      setStatusMessage({
+        type: "success",
+        text: res.message || "Baris hantu di DB_PESERTA, REKAP_PERDIN_48KOLOM, & DB_KEGIATAN berhasil dibersihkan!",
       });
     } else {
       setStatusMessage({ type: "error", text: res.message });
@@ -466,6 +488,28 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                 <span>Tarik Data Master & Rekap</span>
               </button>
             </div>
+          </div>
+
+          {/* Area Bersihkan Baris Hantu Cloud */}
+          <div className="p-3.5 rounded-xl border border-amber-200/80 bg-amber-50/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                <span>Pembersih Baris / Data Hantu (Cloud Sanitizer)</span>
+              </div>
+              <p className="text-[10.5px] text-amber-800/80 leading-relaxed">
+                Scan & hapus otomatis baris kosong/tanpa nama di <strong>DB_PESERTA</strong>, <strong>REKAP_PERDIN_48KOLOM</strong>, dan <strong>DB_KEGIATAN</strong> tanpa mengganggu rekaman yang valid.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handlePruneGhostRows}
+              disabled={isPruning || !url}
+              className="btn-tactile shrink-0 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-2xs"
+            >
+              {isPruning ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              <span>Bersihkan Baris Hantu</span>
+            </button>
           </div>
 
           {/* Area Pengujian & Reset Transaksi */}

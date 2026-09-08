@@ -732,7 +732,11 @@ export async function savePerdinToGoogleSheet(
       header.kategoriSpj || "A"
     );
 
-  const grandTotal = participants.reduce((sum, p) => sum + (p.totalJumlah || 0), 0);
+  const validParticipants = participants.filter(
+    (p) => Boolean((p.nama && p.nama.trim() !== "") || (p.namaExternal && p.namaExternal.trim() !== ""))
+  );
+
+  const grandTotal = validParticipants.reduce((sum, p) => sum + (p.totalJumlah || 0), 0);
 
   const payload = {
     action: "SAVE_PERDIN",
@@ -747,8 +751,8 @@ export async function savePerdinToGoogleSheet(
       berangkatDari: header.berangkatDari || "Jakarta",
       provinsiTujuan: header.provinsiTujuan || "JAWA BARAT",
       kotaTujuanList: header.kotaTujuanList || [],
-      tanggalMulai: participants[0]?.tanggalMulai || header.tanggalSpd,
-      tanggalSelesai: participants[0]?.tanggalSelesai || header.tanggalSpd,
+      tanggalMulai: validParticipants[0]?.tanggalMulai || header.tanggalSpd,
+      tanggalSelesai: validParticipants[0]?.tanggalSelesai || header.tanggalSpd,
       alatAngkut: header.alatAngkut || "Angkutan Darat",
       nomorStMaster: header.nomorStMaster || "",
       nomorStStaff: header.nomorStStaff || header.nomorStMaster || "",
@@ -771,7 +775,7 @@ export async function savePerdinToGoogleSheet(
       grandTotal,
       statusDokumen: "FINAL",
     },
-    participants: participants.map((p) => ({
+    participants: validParticipants.map((p) => ({
       pegawaiId: p.kodeNama || "",
       nomorSpd: p.nomorSpd || "01",
       nomorStAssigned: p.nomorSt || header.nomorStMaster || "",
@@ -1038,6 +1042,25 @@ export async function resetTransaksiInGoogleSheet(
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);
     return { success: false, message: `Gagal mengosongkan transaksi: ${errMsg}` };
+  }
+}
+
+/**
+ * Jalankan pembersihan baris hantu di cloud spreadsheet (DB_PESERTA, REKAP_PERDIN_48KOLOM, DB_KEGIATAN)
+ */
+export async function pruneGhostRowsInGoogleSheet(
+  customUrl?: string
+): Promise<{ success: boolean; message: string }> {
+  const url = customUrl || getGasApiUrl();
+  try {
+    const json = await executeGasRequest("POST", { action: "PRUNE_GHOST_ROWS" }, url);
+    return {
+      success: json.status === "success",
+      message: json.message || "Pembersihan baris hantu berhasil.",
+    };
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return { success: false, message: `Gagal membersihkan baris hantu: ${errMsg}` };
   }
 }
 
