@@ -27,6 +27,12 @@ import {
   saveKegiatanRecord,
   getNextNoKegiatan,
 } from "@/lib/kegiatanHelper";
+import {
+  getLatestRegisteredSpdNumber,
+  formatSpdNumber,
+  parseSpdNumber,
+  saveLatestRegisteredSpdNumber,
+} from "@/lib/spdHelper";
 
 import {
   HeaderData,
@@ -147,8 +153,9 @@ export default function Home() {
     berangkatDari: "Jakarta",
   });
 
-  // Participant Rows State (Clean initial empty row)
+  // Participant Rows State (Clean initial empty row dengan nomor SPD berlanjut dari database)
   const [rows, setRows] = useState<ParticipantRow[]>(() => {
+    const nextSpd = typeof window !== "undefined" ? formatSpdNumber(getLatestRegisteredSpdNumber() + 1) : "01";
     const initialRow: ParticipantRow = {
       id: "1",
       kodeNama: "",
@@ -162,7 +169,7 @@ export default function Home() {
       tanggalSelesai: new Date().toISOString().split("T")[0],
       lamaHari: 1,
       nomorSt: "",
-      nomorSpd: "01",
+      nomorSpd: nextSpd,
       hariUhBiasa: 1,
       biayaUhBiasa: 0,
       hariUhBiasa60: 0,
@@ -191,12 +198,38 @@ export default function Home() {
     return [initialRow];
   });
 
+  // Sync initial row nomorSpd with database continuation on client mount
+  useEffect(() => {
+    const latest = getLatestRegisteredSpdNumber();
+    if (latest > 0) {
+      setRows((prev) => {
+        if (
+          prev.length === 1 &&
+          (!prev[0].nama || prev[0].nama.trim() === "") &&
+          prev[0].nomorSpd === "01"
+        ) {
+          return [{ ...prev[0], nomorSpd: formatSpdNumber(latest + 1) }];
+        }
+        return prev;
+      });
+    }
+  }, []);
+
   // Handlers for state updates with synchronized row recalculation
   const handleSetActiveCols: React.Dispatch<React.SetStateAction<Record<ActiveCostKey, boolean>>> = (action) => {
     setActiveCols((prevCols) => {
       const nextCols = typeof action === "function" ? action(prevCols) : action;
       const sbm = findSbmByProvince(sbmList, header.provinsiTujuan);
-      setRows((prevRows) => prevRows.map((r) => calculateRowTotal(r, sbm, activeUh, nextCols)));
+      const sbmJakarta = findSbmByProvince(sbmList, header.berangkatDari || "DKI JAKARTA");
+      const isActivatingTransportJkt = !prevCols.transportJakartaPp && nextCols.transportJakartaPp;
+      const isActivatingTransportDaerah = !prevCols.transportDaerahPp && nextCols.transportDaerahPp;
+      const forceRecalcTransport = isActivatingTransportJkt || isActivatingTransportDaerah;
+
+      setRows((prevRows) =>
+        prevRows.map((r) =>
+          calculateRowTotal(r, sbm, activeUh, nextCols, { sbmJakarta, forceRecalcTransport })
+        )
+      );
       return nextCols;
     });
   };
@@ -205,7 +238,8 @@ export default function Home() {
     setActiveUh((prevUh) => {
       const nextUh = typeof action === "function" ? action(prevUh) : action;
       const sbm = findSbmByProvince(sbmList, header.provinsiTujuan);
-      setRows((prevRows) => prevRows.map((r) => calculateRowTotal(r, sbm, nextUh, activeCols)));
+      const sbmJakarta = findSbmByProvince(sbmList, header.berangkatDari || "DKI JAKARTA");
+      setRows((prevRows) => prevRows.map((r) => calculateRowTotal(r, sbm, nextUh, activeCols, { sbmJakarta })));
       return nextUh;
     });
   };
@@ -213,9 +247,21 @@ export default function Home() {
   const handleSetHeader: React.Dispatch<React.SetStateAction<HeaderData>> = (action) => {
     setHeader((prevHeader) => {
       const nextHeader = typeof action === "function" ? action(prevHeader) : action;
-      if (nextHeader.provinsiTujuan !== prevHeader.provinsiTujuan) {
+      if (
+        nextHeader.provinsiTujuan !== prevHeader.provinsiTujuan ||
+        nextHeader.berangkatDari !== prevHeader.berangkatDari
+      ) {
         const sbm = findSbmByProvince(sbmList, nextHeader.provinsiTujuan);
-        setRows((prevRows) => prevRows.map((r) => calculateRowTotal(r, sbm, activeUh, activeCols, { forceRecalcUh: true })));
+        const sbmJakarta = findSbmByProvince(sbmList, nextHeader.berangkatDari || "DKI JAKARTA");
+        setRows((prevRows) =>
+          prevRows.map((r) =>
+            calculateRowTotal(r, sbm, activeUh, activeCols, {
+              forceRecalcUh: true,
+              forceRecalcTransport: true,
+              sbmJakarta,
+            })
+          )
+        );
       }
       return nextHeader;
     });
@@ -302,6 +348,7 @@ export default function Home() {
     const today = new Date().toISOString().split("T")[0];
     const nextNo = getNextNoKegiatan(today, "A");
     const newId = generateIdKegiatan(today, nextNo, "A");
+    const nextSpd = formatSpdNumber(getLatestRegisteredSpdNumber() + 1);
     const initialRow: ParticipantRow = {
       id: "1",
       kodeNama: "",
@@ -315,7 +362,7 @@ export default function Home() {
       tanggalSelesai: today,
       lamaHari: 1,
       nomorSt: "",
-      nomorSpd: "01",
+      nomorSpd: nextSpd,
       hariUhBiasa: 1,
       biayaUhBiasa: 0,
       hariUhBiasa60: 0,
@@ -409,6 +456,15 @@ export default function Home() {
         activeUh,
         updatedAt: new Date().toISOString(),
       });
+
+      // Perbarui nomor SPD tertinggi ke storage lokal
+      const maxSpd = validRows.reduce((max, r) => {
+        const parsed = parseSpdNumber(r.nomorSpd);
+        return Math.max(max, parsed.num);
+      }, 0);
+      if (maxSpd > 0) {
+        saveLatestRegisteredSpdNumber(maxSpd);
+      }
 
       // 2. Simpan / perbarui ke Rekap Perdin lokal terlebih dahulu (instan)
       const { isUpdate } = saveOrUpdateRekapLocal(updatedHeader, validRows, idKegiatan);

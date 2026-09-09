@@ -19,9 +19,6 @@ import {
   Lock,
   Unlock,
   KeyRound,
-  Trash2,
-  AlertTriangle,
-  Sparkles,
 } from "lucide-react";
 import {
   getGasApiUrl,
@@ -32,8 +29,6 @@ import {
   fetchMasterDataFromSheet,
   fetchRekapFromSheet,
   savePerdinToGoogleSheet,
-  resetTransaksiInGoogleSheet,
-  pruneGhostRowsInGoogleSheet,
   MasterSyncData,
 } from "@/lib/googleSheetsService";
 import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo } from "@/lib/types";
@@ -69,8 +64,6 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: "idle" | "success" | "error" | "info"; text: string }>({
     type: "idle",
     text: "",
@@ -204,46 +197,6 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
       });
     } else {
       setStatusMessage({ type: "error", text: resMaster.message || resRekap.message || "Gagal sinkronisasi data." });
-    }
-  };
-
-  const handleResetTransaksi = async () => {
-    if (!url) {
-      setStatusMessage({ type: "error", text: "Mohon masukkan URL Google Apps Script Web App terlebih dahulu." });
-      return;
-    }
-    setIsResetting(true);
-    setStatusMessage({ type: "info", text: "Mengosongkan seluruh data transaksi di cloud & membersihkan memori lokal..." });
-    const res = await resetTransaksiInGoogleSheet(url);
-    setIsResetting(false);
-    setShowResetConfirm(false);
-    if (res.success) {
-      setStatusMessage({
-        type: "success",
-        text: res.message || "Database transaksi (DB_KEGIATAN, DB_PESERTA, REKAP_PERDIN_48KOLOM) berhasil dikosongkan bersih!",
-      });
-    } else {
-      setStatusMessage({ type: "error", text: res.message });
-    }
-  };
-
-  const [isPruning, setIsPruning] = useState(false);
-  const handlePruneGhostRows = async () => {
-    if (!url) {
-      setStatusMessage({ type: "error", text: "Mohon masukkan URL Google Apps Script Web App terlebih dahulu." });
-      return;
-    }
-    setIsPruning(true);
-    setStatusMessage({ type: "info", text: "Sedang membersihkan seluruh baris hantu di cloud spreadsheet..." });
-    const res = await pruneGhostRowsInGoogleSheet(url);
-    setIsPruning(false);
-    if (res.success) {
-      setStatusMessage({
-        type: "success",
-        text: res.message || "Baris hantu di DB_PESERTA, REKAP_PERDIN_48KOLOM, & DB_KEGIATAN berhasil dibersihkan!",
-      });
-    } else {
-      setStatusMessage({ type: "error", text: res.message });
     }
   };
 
@@ -490,57 +443,6 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
             </div>
           </div>
 
-          {/* Area Bersihkan Baris Hantu Cloud */}
-          <div className="p-3.5 rounded-xl border border-amber-200/80 bg-amber-50/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                <span>Pembersih Baris / Data Hantu (Cloud Sanitizer)</span>
-              </div>
-              <p className="text-[10.5px] text-amber-800/80 leading-relaxed">
-                Scan & hapus otomatis baris kosong/tanpa nama di <strong>DB_PESERTA</strong>, <strong>REKAP_PERDIN_48KOLOM</strong>, dan <strong>DB_KEGIATAN</strong> tanpa mengganggu rekaman yang valid.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handlePruneGhostRows}
-              disabled={isPruning || !url}
-              className="btn-tactile shrink-0 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-2xs"
-            >
-              {isPruning ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-              <span>Bersihkan Baris Hantu</span>
-            </button>
-          </div>
-
-          {/* Area Pengujian & Reset Transaksi */}
-          <div className="p-3.5 rounded-xl border border-rose-200/80 bg-rose-50/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-rose-800">
-                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                <span>Reset / Kosongkan Data Transaksi (Testing)</span>
-              </div>
-              <p className="text-[10.5px] text-rose-700/80 leading-relaxed">
-                Hapus seluruh rekaman uji coba di DB_KEGIATAN, DB_PESERTA, & REKAP_PERDIN_48KOLOM agar pengujian mulai dari Baris 2. <strong>Data Master (Pegawai, SBM, Memo) tetap aman.</strong>
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                if (!isUnlocked) {
-                  setShowPinModal(true);
-                  setPinError("Masukkan PIN Admin untuk melakukan reset transaksi.");
-                  return;
-                }
-                setShowResetConfirm(true);
-              }}
-              disabled={isResetting || !url}
-              className="btn-tactile shrink-0 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-2xs"
-            >
-              {isResetting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-              <span>Kosongkan Transaksi</span>
-            </button>
-          </div>
-
           {/* Quick Info & Guide */}
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70 text-slate-600 flex items-start gap-2.5">
             <ShieldCheck className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
@@ -635,46 +537,6 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Confirmation Reset Modal */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 z-[65] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-sm w-full p-5 space-y-4">
-            <div className="text-center space-y-1.5">
-              <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto border border-rose-200">
-                <AlertTriangle className="w-5 h-5 text-rose-600" />
-              </div>
-              <h4 className="text-sm font-bold text-slate-900">Kosongkan Data Transaksi?</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Tindakan ini akan menghapus seluruh data transaksi di <strong>DB_KEGIATAN</strong>, <strong>DB_PESERTA</strong>, dan <strong>REKAP_PERDIN_48KOLOM</strong> di Google Spreadsheet serta memori cache browser.
-              </p>
-              <p className="text-[11px] text-emerald-700 bg-emerald-50 rounded-lg p-2 border border-emerald-200 font-medium">
-                ✓ Data Master (Pegawai, SBM, Memo) TIDAK AKAN DIHAPUS.
-              </p>
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                disabled={isResetting}
-                onClick={() => setShowResetConfirm(false)}
-                className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium cursor-pointer transition-colors"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                disabled={isResetting}
-                onClick={handleResetTransaksi}
-                className="flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold cursor-pointer shadow-2xs transition-all inline-flex items-center justify-center gap-1.5"
-              >
-                {isResetting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                <span>{isResetting ? "Memproses..." : "Ya, Kosongkan"}</span>
-              </button>
-            </div>
           </div>
         </div>
       )}

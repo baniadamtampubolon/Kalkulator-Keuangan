@@ -113,7 +113,8 @@ function doGet(e) {
         data: {
           pegawai: sheetToObjects(pegawaiSheet),
           sbm: sheetToObjects(sbmSheet),
-          memo: sheetToObjects(memoSheet)
+          memo: sheetToObjects(memoSheet),
+          latestSpdNumber: getLatestSpdNumberFromSheet(ss)
         }
       });
     }
@@ -138,7 +139,8 @@ function doGet(e) {
       const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
       return createJsonResponse({
         status: 'success',
-        data: sheetToObjects(pesertaSheet)
+        data: sheetToObjects(pesertaSheet),
+        latestSpdNumber: getLatestSpdNumberFromSheet(ss)
       });
     }
 
@@ -387,10 +389,12 @@ function doPost(e) {
 
       logAction(ss, 'SAVE_PERDIN', header.idKegiatan, 'Berhasil menyimpan transaksi ' + (header.namaKegiatan || ''));
 
+      const latestSpd = getLatestSpdNumberFromSheet(ss);
       return createJsonResponse({
         status: 'success',
         message: 'Data perjalanan dinas dan 48 kolom rekap berhasil disimpan ke Google Spreadsheet.',
-        idKegiatan: header.idKegiatan
+        idKegiatan: header.idKegiatan,
+        latestSpdNumber: latestSpd
       });
     }
 
@@ -781,4 +785,37 @@ function logAction(ss, action, refId, details) {
     const logSheet = getOrCreateSheet(ss, SHEET_NAMES.LOGS, ['Timestamp', 'Action', 'Reference_ID', 'Details']);
     logSheet.appendRow([new Date(), action, refId, details]);
   } catch (e) {}
+}
+
+/**
+ * Ambil nomor SPD tertinggi dari tab DB_PESERTA
+ */
+function getLatestSpdNumberFromSheet(ss) {
+  try {
+    const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
+    const lastRow = pesertaSheet.getLastRow();
+    if (lastRow <= 1) return 0;
+
+    const data = pesertaSheet.getDataRange().getValues();
+    const headers = data[0];
+    const spdIdx = headers.indexOf('nomor_spd');
+    if (spdIdx === -1) return 0;
+
+    let maxSpd = 0;
+    for (let i = 1; i < data.length; i++) {
+      const val = data[i][spdIdx];
+      if (val !== undefined && val !== null && val !== '') {
+        const match = String(val).match(/\d+/);
+        if (match) {
+          const num = parseInt(match[0], 10);
+          if (!isNaN(num) && num > maxSpd) {
+            maxSpd = num;
+          }
+        }
+      }
+    }
+    return maxSpd;
+  } catch (err) {
+    return 0;
+  }
 }

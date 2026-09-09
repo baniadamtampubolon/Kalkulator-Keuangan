@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ParticipantRow,
   Pegawai,
@@ -10,6 +8,12 @@ import {
   HeaderData,
 } from "@/lib/types";
 import { calculateRowTotal, findSbmByProvince } from "@/lib/calc";
+import {
+  getNextSpdNumber,
+  getLatestRegisteredSpdNumber,
+  formatSpdNumber,
+  sequenceSpdNumbers,
+} from "@/lib/spdHelper";
 import { ModalTiket, ModalHotel, ModalRiil, ModalSpjExtra } from "./Modals";
 import { CurrencyInput } from "./CurrencyInput";
 import {
@@ -27,6 +31,8 @@ import {
   RefreshCw,
   AlertCircle,
   X,
+  ArrowDownNarrowWide,
+  ListOrdered,
 } from "lucide-react";
 
 interface ParticipantGridProps {
@@ -63,19 +69,42 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
   onClearFeedback,
 }) => {
   const currentSbm = findSbmByProvince(sbmList, provinsiTujuan);
+  const sbmJakarta = findSbmByProvince(sbmList, header.berangkatDari || "DKI JAKARTA");
 
   // Modal States
   const [modalTiketRow, setModalTiketRow] = useState<ParticipantRow | null>(null);
   const [modalHotelRow, setModalHotelRow] = useState<ParticipantRow | null>(null);
   const [modalRiilRow, setModalRiilRow] = useState<ParticipantRow | null>(null);
   const [modalSpjRow, setModalSpjRow] = useState<ParticipantRow | null>(null);
+  const [latestSpdDb, setLatestSpdDb] = useState<number>(0);
 
-  const handleUpdateRow = (id: string, updates: Partial<ParticipantRow>) => {
+  // Pantau sinkronisasi nomor SPD terakhir dari database lokal / cloud
+  useEffect(() => {
+    setLatestSpdDb(getLatestRegisteredSpdNumber());
+    const handleSpdUpdate = () => {
+      setLatestSpdDb(getLatestRegisteredSpdNumber());
+    };
+    window.addEventListener("spd-latest-updated", handleSpdUpdate);
+    window.addEventListener("storage", handleSpdUpdate);
+    return () => {
+      window.removeEventListener("spd-latest-updated", handleSpdUpdate);
+      window.removeEventListener("storage", handleSpdUpdate);
+    };
+  }, []);
+
+  const handleUpdateRow = (
+    id: string,
+    updates: Partial<ParticipantRow>,
+    options?: { skipAutoTransport?: boolean }
+  ) => {
     setRows((prev) =>
       prev.map((r) => {
         if (r.id !== id) return r;
         const merged = { ...r, ...updates };
-        return calculateRowTotal(merged, currentSbm, activeUh, activeCols);
+        return calculateRowTotal(merged, currentSbm, activeUh, activeCols, {
+          sbmJakarta,
+          skipAutoTransport: options?.skipAutoTransport,
+        });
       })
     );
   };
@@ -118,6 +147,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
   const handleAddRow = () => {
     const nextNum = rows.length + 1;
     const newId = `row_${nextNum}`;
+    const lastRow = rows.length > 0 ? rows[rows.length - 1] : undefined;
+    const nextSpd = lastRow
+      ? getNextSpdNumber(lastRow.nomorSpd)
+      : formatSpdNumber(getLatestRegisteredSpdNumber() + 1);
+
     const newRow: ParticipantRow = {
       id: newId,
       kodeNama: "",
@@ -131,7 +165,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       tanggalSelesai: new Date().toISOString().split("T")[0],
       lamaHari: 1,
       nomorSt: "",
-      nomorSpd: `${rows.length + 1}`,
+      nomorSpd: nextSpd,
       hariUhBiasa: 1,
       biayaUhBiasa: currentSbm?.uhBiasa || 0,
       hariUhBiasa60: 0,
@@ -157,7 +191,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       totalJumlah: activeUh.uhBiasa ? currentSbm?.uhBiasa || 0 : 0,
     };
 
-    setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols)]);
+    setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols, { sbmJakarta })]);
   };
 
   const handleDuplicateLastRow = () => {
@@ -165,10 +199,12 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
     const lastRow = rows[rows.length - 1];
     const nextNum = rows.length + 1;
     const newId = `row_${nextNum}`;
+    const nextSpd = getNextSpdNumber(lastRow.nomorSpd);
+
     const newRow: ParticipantRow = {
       ...lastRow,
       id: newId,
-      nomorSpd: `${nextNum}`,
+      nomorSpd: nextSpd,
       nama: "",
       kodeNama: "",
       nip: "",
@@ -176,7 +212,13 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       jabatan: "",
       isPejabat: false,
     };
-    setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols)]);
+    setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols, { sbmJakarta })]);
+  };
+
+  const handleSequenceSpdNumbers = (customStart?: string | number) => {
+    if (rows.length === 0) return;
+    const sequenced = sequenceSpdNumbers(rows, customStart);
+    setRows(sequenced);
   };
 
   const handleSyncDatesAndCityToAll = () => {
@@ -194,7 +236,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
           tujuanKota,
           tujuanProvinsi: tujuanProvinsi || provinsiTujuan,
         };
-        return calculateRowTotal(merged, currentSbm, activeUh, activeCols);
+        return calculateRowTotal(merged, currentSbm, activeUh, activeCols, { sbmJakarta });
       })
     );
   };
@@ -232,6 +274,18 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
 
         {/* Quick Batch Actions */}
         <div className="flex flex-wrap items-center gap-1.5">
+          {rows.length > 1 && (
+            <button
+              type="button"
+              onClick={() => handleSequenceSpdNumbers()}
+              className="btn-tactile inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 text-xs font-medium cursor-pointer transition-all shadow-2xs"
+              title="Urutkan No. SPD secara berurutan (+1) mulai dari Baris 1 ke bawah"
+            >
+              <ListOrdered className="w-3 h-3 text-slate-600" />
+              <span>Urutkan No. SPD</span>
+            </button>
+          )}
+
           {rows.length > 1 && (
             <button
               type="button"
@@ -317,7 +371,28 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 Nama Pegawai
               </th>
               <th className="p-2.5 w-44 min-w-[170px]">Gol / Jabatan</th>
-              <th className="p-2.5 w-20 min-w-[75px] text-center">No. SPD</th>
+              <th className="p-2.5 w-24 min-w-[88px] text-center" title="Nomor SPD/SPPD berlaku per kepala/pelaksana dinas">
+                <div className="flex items-center justify-center gap-1">
+                  <span>No. SPD</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSequenceSpdNumbers()}
+                    className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"
+                    title="Urutkan No. SPD berurutan (+1) dari Baris 1 ke bawah"
+                  >
+                    <ArrowDownNarrowWide className="w-3 h-3" />
+                  </button>
+                </div>
+                {latestSpdDb > 0 && (
+                  <div
+                    className="text-[9px] font-mono text-slate-400 font-normal leading-tight cursor-pointer hover:text-blue-600 transition-colors"
+                    title={`Nomor SPD terakhir di database: #${latestSpdDb}. Klik untuk mulai baris 1 dari #${latestSpdDb + 1}`}
+                    onClick={() => handleSequenceSpdNumbers(formatSpdNumber(latestSpdDb + 1))}
+                  >
+                    DB: #{latestSpdDb}
+                  </div>
+                )}
+              </th>
               <th className="p-2.5 w-48 min-w-[180px]">Nomor ST</th>
               <th className="p-2.5 w-44 min-w-[160px] text-center">Nomor Komponen</th>
               <th className="p-2.5 w-24 min-w-[95px] text-center">Kode Akun</th>
@@ -336,8 +411,18 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
               {activeCols.dukunganTransportasi && <th className="p-2.5 w-32 min-w-[125px] text-right">Duk. Transport</th>}
               {activeCols.transportasiDarat && <th className="p-2.5 w-36 min-w-[140px] text-right">Trans. Darat (Rp)</th>}
               {activeCols.transportasiLokal && <th className="p-2.5 w-36 min-w-[140px] text-right">Trans. Lokal (Rp)</th>}
-              {activeCols.transportJakartaPp && <th className="p-2.5 w-36 min-w-[140px] text-right">Jakarta PP (Rp)</th>}
-              {activeCols.transportDaerahPp && <th className="p-2.5 w-36 min-w-[140px] text-right">Daerah PP (Rp)</th>}
+              {activeCols.transportJakartaPp && (
+                <th className="p-2.5 w-36 min-w-[140px] text-right" title="Transport Taksi Jakarta Pulang-Pergi (2x Tarif SBM Taksi Bandara)">
+                  <div>Jakarta PP (Rp)</div>
+                  <div className="text-[9.5px] font-normal text-blue-600 font-mono">2x SBM JKT</div>
+                </th>
+              )}
+              {activeCols.transportDaerahPp && (
+                <th className="p-2.5 w-36 min-w-[140px] text-right" title={`Transport Taksi Daerah Tujuan Pulang-Pergi (2x Tarif SBM Taksi Bandara ${provinsiTujuan || ""})`}>
+                  <div>Daerah PP (Rp)</div>
+                  <div className="text-[9.5px] font-normal text-blue-600 font-mono">2x SBM Daerah</div>
+                </th>
+              )}
               {activeCols.hotel && <th className="p-2.5 w-28 min-w-[110px] text-center">Hotel</th>}
               {activeCols.penginapan30 && <th className="p-2.5 w-32 min-w-[125px] text-right">Penginapan 30%</th>}
               {activeCols.pengRill && <th className="p-2.5 w-28 min-w-[110px] text-center">Peng. Riil</th>}
@@ -401,13 +486,20 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 </td>
 
                 {/* No. SPD */}
-                <td className="p-2 w-20 min-w-[75px]">
+                <td className="p-2 w-24 min-w-[85px]">
                   <input
                     type="text"
                     value={row.nomorSpd || ""}
                     onChange={(e) => handleUpdateRow(row.id, { nomorSpd: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSequenceSpdNumbers();
+                      }
+                    }}
                     placeholder="01"
                     className="input-glass w-full h-8 px-1.5 text-center font-mono font-semibold text-xs"
+                    title="Nomor SPD pelaksana ini (tekan Enter untuk mengurutkan ke bawah)"
                   />
                 </td>
 
@@ -729,7 +821,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                   <td className="p-2 w-36 min-w-[140px]">
                     <CurrencyInput
                       value={row.transportJakartaPp}
-                      onChange={(val) => handleUpdateRow(row.id, { transportJakartaPp: val })}
+                      onChange={(val) => handleUpdateRow(row.id, { transportJakartaPp: val }, { skipAutoTransport: true })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />
@@ -741,7 +833,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                   <td className="p-2 w-36 min-w-[140px]">
                     <CurrencyInput
                       value={row.transportDaerahPp}
-                      onChange={(val) => handleUpdateRow(row.id, { transportDaerahPp: val })}
+                      onChange={(val) => handleUpdateRow(row.id, { transportDaerahPp: val }, { skipAutoTransport: true })}
                       className="input-glass w-full h-8 px-2 text-right font-mono font-medium text-xs"
                       placeholder="0"
                     />

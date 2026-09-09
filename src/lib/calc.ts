@@ -27,7 +27,12 @@ export function calculateRowTotal(
   sbm: SbmRate | undefined,
   activeUh: Record<ActiveUhKey, boolean>,
   activeCols: Record<ActiveCostKey, boolean>,
-  options?: { forceRecalcUh?: boolean }
+  options?: {
+    forceRecalcUh?: boolean;
+    forceRecalcTransport?: boolean;
+    skipAutoTransport?: boolean;
+    sbmJakarta?: SbmRate;
+  }
 ): ParticipantRow {
   const updated = { ...row };
 
@@ -115,6 +120,43 @@ export function calculateRowTotal(
     updated.pengRill = updated.riilItems.reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
   } else if (!activeCols.pengRill) {
     updated.pengRill = 0;
+  }
+
+  // 5. Automasi Transportasi Taksi Bandara PP (SBM Taksi Bandara x 2 untuk Pulang-Pergi)
+  // Taksi Jakarta PP (Asal/Homebase: default Rp 250.000 x 2 = Rp 500.000)
+  const taksiJktRate = (options?.sbmJakarta?.taksiBandara && options.sbmJakarta.taksiBandara > 0)
+    ? options.sbmJakarta.taksiBandara
+    : (sbm?.provinsi?.toUpperCase().includes("JAKARTA") && sbm.taksiBandara ? sbm.taksiBandara : 250000);
+  const tarifJakartaPp = taksiJktRate * 2;
+
+  if (activeCols.transportJakartaPp) {
+    if (
+      !options?.skipAutoTransport &&
+      (updated.transportJakartaPp === undefined ||
+        updated.transportJakartaPp === 0 ||
+        options?.forceRecalcTransport)
+    ) {
+      updated.transportJakartaPp = tarifJakartaPp;
+    }
+  } else {
+    updated.transportJakartaPp = 0;
+  }
+
+  // Taksi Daerah PP (Tujuan: Tarif SBM Provinsi Tujuan x 2 untuk Pulang-Pergi)
+  const taksiDaerahRate = sbm?.taksiBandara || 0;
+  const tarifDaerahPp = taksiDaerahRate * 2;
+
+  if (activeCols.transportDaerahPp) {
+    if (
+      !options?.skipAutoTransport &&
+      (updated.transportDaerahPp === undefined ||
+        updated.transportDaerahPp === 0 ||
+        options?.forceRecalcTransport)
+    ) {
+      updated.transportDaerahPp = tarifDaerahPp;
+    }
+  } else {
+    updated.transportDaerahPp = 0;
   }
 
   // Inactive Cost Zeroing for strict synchronization

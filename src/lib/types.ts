@@ -22,6 +22,7 @@ export interface SbmRate {
   hotelEselon2: number;
   hotelEselon3Gol4: number;
   hotelEselon4Kebawah: number;
+  taksiBandara?: number;
 }
 
 export interface NomorMemo {

@@ -8,7 +8,8 @@
     "hotelEselon1": 4774000,
     "hotelEselon2": 3526000,
     "hotelEselon3Gol4": 1578000,
-    "hotelEselon4Kebawah": 770000
+    "hotelEselon4Kebawah": 770000,
+    "taksiBandara": 123000
   },
   {
     "no": "2",
@@ -19,7 +20,8 @@
     "hotelEselon1": 4960000,
     "hotelEselon2": 2195000,
     "hotelEselon3Gol4": 1188000,
-    "hotelEselon4Kebawah": 699000
+    "hotelEselon4Kebawah": 699000,
+    "taksiBandara": 232000
   },
   {
     "no": "3",
@@ -30,7 +32,8 @@
     "hotelEselon1": 3820000,
     "hotelEselon2": 3119000,
     "hotelEselon3Gol4": 1650000,
-    "hotelEselon4Kebawah": 852000
+    "hotelEselon4Kebawah": 852000,
+    "taksiBandara": 94000
   },
   {
     "no": "4",
@@ -41,7 +44,8 @@
     "hotelEselon1": 5772000,
     "hotelEselon2": 2318000,
     "hotelEselon3Gol4": 1297000,
-    "hotelEselon4Kebawah": 792000
+    "hotelEselon4Kebawah": 792000,
+    "taksiBandara": 137000
   },
   {
     "no": "5",
@@ -52,7 +56,8 @@
     "hotelEselon1": 5004000,
     "hotelEselon2": 4102000,
     "hotelEselon3Gol4": 1225000,
-    "hotelEselon4Kebawah": 580000
+    "hotelEselon4Kebawah": 580000,
+    "taksiBandara": 147000
   },
   {
     "no": "6",
@@ -63,7 +68,8 @@
     "hotelEselon1": 5236000,
     "hotelEselon2": 3332000,
     "hotelEselon3Gol4": 1353000,
-    "hotelEselon4Kebawah": 701000
+    "hotelEselon4Kebawah": 701000,
+    "taksiBandara": 190000
   },
   {
     "no": "7",
@@ -74,7 +80,8 @@
     "hotelEselon1": 6298000,
     "hotelEselon2": 3083000,
     "hotelEselon3Gol4": 1966000,
-    "hotelEselon4Kebawah": 861000
+    "hotelEselon4Kebawah": 861000,
+    "taksiBandara": 128000
   },
   {
     "no": "8",
@@ -85,7 +92,8 @@
     "hotelEselon1": 4491000,
     "hotelEselon2": 2488000,
     "hotelEselon3Gol4": 1539000,
-    "hotelEselon4Kebawah": 580000
+    "hotelEselon4Kebawah": 580000,
+    "taksiBandara": 167000
   },
   {
     "no": "9",
@@ -96,7 +104,8 @@
     "hotelEselon1": 2140000,
     "hotelEselon2": 1628000,
     "hotelEselon3Gol4": 1546000,
-    "hotelEselon4Kebawah": 692000
+    "hotelEselon4Kebawah": 692000,
+    "taksiBandara": 109000
   },
   {
     "no": "10",
@@ -107,7 +116,8 @@
     "hotelEselon1": 4134000,
     "hotelEselon2": 2838000,
     "hotelEselon3Gol4": 1957000,
-    "hotelEselon4Kebawah": 676000
+    "hotelEselon4Kebawah": 676000,
+    "taksiBandara": 90000
   },
   {
     "no": "11",
@@ -118,7 +128,8 @@
     "hotelEselon1": 5725000,
     "hotelEselon2": 2373000,
     "hotelEselon3Gol4": 1301000,
-    "hotelEselon4Kebawah": 724000
+    "hotelEselon4Kebawah": 724000,
+    "taksiBandara": 446000
   },
   {
     "no": "12",
@@ -129,7 +140,8 @@
     "hotelEselon1": 5812000,
     "hotelEselon2": 2755000,
     "hotelEselon3Gol4": 1298000,
-    "hotelEselon4Kebawah": 686000
+    "hotelEselon4Kebawah": 686000,
+    "taksiBandara": 166000
   },
   {
     "no": "13",
@@ -140,7 +152,8 @@
     "hotelEselon1": 8720000,
     "hotelEselon2": 2063000,
     "hotelEselon3Gol4": 992000,
-    "hotelEselon4Kebawah": 730000
+    "hotelEselon4Kebawah": 730000,
+    "taksiBandara": 250000
   },
   {
     "no": "14",
@@ -151,7 +164,8 @@
     "hotelEselon1": 5728000,
     "hotelEselon2": 1998000,
     "hotelEselon3Gol4": 1201000,
-    "hotelEselon4Kebawah": 810000
+    "hotelEselon4Kebawah": 810000,
+    "taksiBandara": 150000
   },
   {
     "no": "15",
@@ -162,7 +176,8 @@
     "hotelEselon1": 5017000,
     "hotelEselon2": 2695000,
     "hotelEselon3Gol4": 1495000,
-    "hotelEselon4Kebawah": 845000
+    "hotelEselon4Kebawah": 845000,
+    "taksiBandara": 150000
   },
   {
     "no": "16",
@@ -173,7 +188,8 @@
     "hotelEselon1": 4449000,
     "hotelEselon2": 2007000,
     "hotelEselon3Gol4": 1153000,
-    "hotelEselon4Kebawah": 814000
+    "hotelEselon4Kebawah": 814000,
+    "taksiBandara": 194000
   },
   {
     "no": "17",
@@ -184,7 +200,8 @@
     "hotelEselon1": 6848000,
     "hotelEselon2": 2433000,
     "hotelEselon3Gol4": 1685000,
-    "hotelEselon4Kebawah": 1138000
+    "hotelEselon4Kebawah": 1138000,
+    "taksiBandara": 170000
   },
   {
     "no": "18",
@@ -195,7 +212,8 @@
     "hotelEselon1": 4375000,
     "hotelEselon2": 2648000,
     "hotelEselon3Gol4": 1418000,
-    "hotelEselon4Kebawah": 907000
+    "hotelEselon4Kebawah": 907000,
+    "taksiBandara": 231000
   },
   {
     "no": "19",
@@ -206,7 +224,8 @@
     "hotelEselon1": 3750000,
     "hotelEselon2": 2133000,
     "hotelEselon3Gol4": 1355000,
-    "hotelEselon4Kebawah": 688000
+    "hotelEselon4Kebawah": 688000,
+    "taksiBandara": 100000
   },
   {
     "no": "20",
@@ -217,7 +236,8 @@
     "hotelEselon1": 2654000,
     "hotelEselon2": 1923000,
     "hotelEselon3Gol4": 1125000,
-    "hotelEselon4Kebawah": 538000
+    "hotelEselon4Kebawah": 538000,
+    "taksiBandara": 140000
   },
   {
     "no": "21",
@@ -228,7 +248,8 @@
     "hotelEselon1": 4901000,
     "hotelEselon2": 3391000,
     "hotelEselon3Gol4": 1160000,
-    "hotelEselon4Kebawah": 659000
+    "hotelEselon4Kebawah": 659000,
+    "taksiBandara": 111000
   },
   {
     "no": "22",
@@ -239,7 +260,8 @@
     "hotelEselon1": 4797000,
     "hotelEselon2": 3316000,
     "hotelEselon3Gol4": 1500000,
-    "hotelEselon4Kebawah": 697000
+    "hotelEselon4Kebawah": 697000,
+    "taksiBandara": 150000
   },
   {
     "no": "23",
@@ -250,7 +272,8 @@
     "hotelEselon1": 4000000,
     "hotelEselon2": 2188000,
     "hotelEselon3Gol4": 1507000,
-    "hotelEselon4Kebawah": 804000
+    "hotelEselon4Kebawah": 804000,
+    "taksiBandara": 360000
   },
   {
     "no": "24",
@@ -261,7 +284,8 @@
     "hotelEselon1": 4000000,
     "hotelEselon2": 2735000,
     "hotelEselon3Gol4": 1507000,
-    "hotelEselon4Kebawah": 904000
+    "hotelEselon4Kebawah": 904000,
+    "taksiBandara": 100000
   },
   {
     "no": "25",
@@ -272,7 +296,8 @@
     "hotelEselon1": 4919000,
     "hotelEselon2": 2290000,
     "hotelEselon3Gol4": 1270000,
-    "hotelEselon4Kebawah": 978000
+    "hotelEselon4Kebawah": 978000,
+    "taksiBandara": 138000
   },
   {
     "no": "26",
@@ -283,7 +308,8 @@
     "hotelEselon1": 4168000,
     "hotelEselon2": 3107000,
     "hotelEselon3Gol4": 1606000,
-    "hotelEselon4Kebawah": 955000
+    "hotelEselon4Kebawah": 955000,
+    "taksiBandara": 240000
   },
   {
     "no": "27",
@@ -294,7 +320,8 @@
     "hotelEselon1": 4076000,
     "hotelEselon2": 3098000,
     "hotelEselon3Gol4": 1344000,
-    "hotelEselon4Kebawah": 704000
+    "hotelEselon4Kebawah": 704000,
+    "taksiBandara": 313000
   },
   {
     "no": "28",
@@ -305,7 +332,8 @@
     "hotelEselon1": 4820000,
     "hotelEselon2": 1938000,
     "hotelEselon3Gol4": 1423000,
-    "hotelEselon4Kebawah": 745000
+    "hotelEselon4Kebawah": 745000,
+    "taksiBandara": 160000
   },
   {
     "no": "29",
@@ -316,7 +344,8 @@
     "hotelEselon1": 2309000,
     "hotelEselon2": 2027000,
     "hotelEselon3Gol4": 1679000,
-    "hotelEselon4Kebawah": 951000
+    "hotelEselon4Kebawah": 951000,
+    "taksiBandara": 165000
   },
   {
     "no": "30",
@@ -327,7 +356,8 @@
     "hotelEselon1": 3089000,
     "hotelEselon2": 2574000,
     "hotelEselon3Gol4": 1297000,
-    "hotelEselon4Kebawah": 786000
+    "hotelEselon4Kebawah": 786000,
+    "taksiBandara": 170000
   },
   {
     "no": "31",
@@ -338,7 +368,8 @@
     "hotelEselon1": 3467000,
     "hotelEselon2": 3240000,
     "hotelEselon3Gol4": 1059000,
-    "hotelEselon4Kebawah": 667000
+    "hotelEselon4Kebawah": 667000,
+    "taksiBandara": 240000
   },
   {
     "no": "32",
@@ -349,7 +380,8 @@
     "hotelEselon1": 4612000,
     "hotelEselon2": 3843000,
     "hotelEselon3Gol4": 1160000,
-    "hotelEselon4Kebawah": 654000
+    "hotelEselon4Kebawah": 654000,
+    "taksiBandara": 215000
   },
   {
     "no": "33",
@@ -360,7 +392,8 @@
     "hotelEselon1": 3859000,
     "hotelEselon2": 3318000,
     "hotelEselon3Gol4": 2521000,
-    "hotelEselon4Kebawah": 1038000
+    "hotelEselon4Kebawah": 1038000,
+    "taksiBandara": 430000
   },
   {
     "no": "34",
@@ -371,7 +404,8 @@
     "hotelEselon1": 3872000,
     "hotelEselon2": 3341000,
     "hotelEselon3Gol4": 2056000,
-    "hotelEselon4Kebawah": 967000
+    "hotelEselon4Kebawah": 967000,
+    "taksiBandara": 182000
   },
   {
     "no": "35",
@@ -382,7 +416,8 @@
     "hotelEselon1": 3872000,
     "hotelEselon2": 3341000,
     "hotelEselon3Gol4": 2056000,
-    "hotelEselon4Kebawah": 967000
+    "hotelEselon4Kebawah": 967000,
+    "taksiBandara": 230000
   },
   {
     "no": "36",
@@ -393,7 +428,8 @@
     "hotelEselon1": 3859000,
     "hotelEselon2": 3318000,
     "hotelEselon3Gol4": 2521000,
-    "hotelEselon4Kebawah": 1038000
+    "hotelEselon4Kebawah": 1038000,
+    "taksiBandara": 150000
   },
   {
     "no": "37",
@@ -404,7 +440,8 @@
     "hotelEselon1": 5673000,
     "hotelEselon2": 4877000,
     "hotelEselon3Gol4": 3706000,
-    "hotelEselon4Kebawah": 1526000
+    "hotelEselon4Kebawah": 1526000,
+    "taksiBandara": 150000
   },
   {
     "no": "38",
@@ -415,7 +452,8 @@
     "hotelEselon1": 5711000,
     "hotelEselon2": 4911000,
     "hotelEselon3Gol4": 3731000,
-    "hotelEselon4Kebawah": 1536000
+    "hotelEselon4Kebawah": 1536000,
+    "taksiBandara": 150000
   },
   {
     "no": "",
@@ -426,7 +464,8 @@
     "hotelEselon1": 0,
     "hotelEselon2": 0,
     "hotelEselon3Gol4": 0,
-    "hotelEselon4Kebawah": 0
+    "hotelEselon4Kebawah": 0,
+    "taksiBandara": 150000
   },
   {
     "no": "",
@@ -437,7 +476,8 @@
     "hotelEselon1": 0,
     "hotelEselon2": 0,
     "hotelEselon3Gol4": 0,
-    "hotelEselon4Kebawah": 0
+    "hotelEselon4Kebawah": 0,
+    "taksiBandara": 150000
   },
   {
     "no": "",
@@ -448,7 +488,8 @@
     "hotelEselon1": 0,
     "hotelEselon2": 0,
     "hotelEselon3Gol4": 0,
-    "hotelEselon4Kebawah": 0
+    "hotelEselon4Kebawah": 0,
+    "taksiBandara": 150000
   },
   {
     "no": "",
@@ -459,7 +500,8 @@
     "hotelEselon1": 0,
     "hotelEselon2": 0,
     "hotelEselon3Gol4": 0,
-    "hotelEselon4Kebawah": 0
+    "hotelEselon4Kebawah": 0,
+    "taksiBandara": 150000
   },
   {
     "no": "",
@@ -470,6 +512,7 @@
     "hotelEselon1": 0,
     "hotelEselon2": 0,
     "hotelEselon3Gol4": 0,
-    "hotelEselon4Kebawah": 0
+    "hotelEselon4Kebawah": 0,
+    "taksiBandara": 150000
   }
 ]

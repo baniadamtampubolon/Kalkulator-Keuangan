@@ -1,6 +1,7 @@
 import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan } from "./types";
 import { generateIdKegiatan, getSavedKegiatanList } from "./kegiatanHelper";
 import { getMonthRoman } from "./calc";
+import { parseSpdNumber, saveLatestRegisteredSpdNumber } from "./spdHelper";
 
 export interface GasApiResponse<T = unknown> {
   status: "success" | "error";
@@ -208,6 +209,15 @@ export async function fetchMasterDataFromSheet(
           hotelEselon2: Number(s.hotelEselon2 ?? s.hotel_eselon2 ?? 0),
           hotelEselon3Gol4: Number(s.hotelEselon3Gol4 ?? s.hotel_eselon3_gol4 ?? 0),
           hotelEselon4Kebawah: Number(s.hotelEselon4Kebawah ?? s.hotel_eselon4_kebawah ?? 0),
+          taksiBandara: Number(
+            s.taksiBandara ??
+            s.taksi_bandara ??
+            s["taksi bandara"] ??
+            s["Taksi Bandara"] ??
+            s["TAKSI BANDARA"] ??
+            s["Taksi Bandara (Terminal/Stasiun)"] ??
+            0
+          ),
         }))
         .filter((s) => s.provinsi !== "");
 
@@ -292,6 +302,14 @@ export async function fetchMasterDataFromSheet(
         sbm: normalizedSbm.length > 0 ? normalizedSbm : undefined,
         memo: normalizedMemo.length > 0 ? normalizedMemo : undefined,
       };
+
+      // Sinkronkan nomor SPD terakhir dari spreadsheet jika tersedia
+      if (json.data && (json.data as any).latestSpdNumber) {
+        const cloudSpd = Number((json.data as any).latestSpdNumber);
+        if (!isNaN(cloudSpd) && cloudSpd > 0) {
+          saveLatestRegisteredSpdNumber(cloudSpd);
+        }
+      }
 
       if (typeof window !== "undefined") {
         localStorage.setItem(STORAGE_KEY_MASTER_CACHE, JSON.stringify(normalizedData));
@@ -887,6 +905,15 @@ export async function savePerdinToGoogleSheet(
           }
         }
       }
+
+      // Perbarui nomor SPD tertinggi ke storage lokal dari peserta yang valid
+      const maxSpd = validParticipants.reduce((max, p) => {
+        const parsed = parseSpdNumber(p.nomorSpd);
+        return Math.max(max, parsed.num);
+      }, 0);
+      if (maxSpd > 0) {
+        saveLatestRegisteredSpdNumber(maxSpd);
+      }
     } catch {
       // ignore
     }
@@ -903,6 +930,10 @@ export async function savePerdinToGoogleSheet(
   try {
     const json = await executeGasRequest("POST", payload, url);
     if (json.status === "success") {
+      const cloudSpd = Number((json as any).latestSpdNumber || (json.data as any)?.latestSpdNumber);
+      if (!isNaN(cloudSpd) && cloudSpd > 0) {
+        saveLatestRegisteredSpdNumber(cloudSpd);
+      }
       return {
         success: true,
         message: json.message || "Data transaksi dan 48 kolom rekap berhasil disimpan ke Google Spreadsheet.",

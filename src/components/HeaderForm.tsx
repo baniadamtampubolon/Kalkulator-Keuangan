@@ -254,42 +254,40 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           <FileText className="w-4 h-4 text-slate-400 hidden sm:block" />
         </div>
 
-        {/* Banner ID Kegiatan & Klasifikasi SPJ (A / B) */}
-        <div className="p-3 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-slate-50 border border-blue-100 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <FolderKanban className="w-5 h-5" />
+        {/* Sub-panel Identitas Berkas SPJ & Klasifikasi Kegiatan */}
+        <div className="p-2.5 sm:p-3 bg-slate-50/70 border border-slate-200/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-white border border-slate-200/90 text-slate-600 flex items-center justify-center shrink-0 shadow-2xs">
+              <FolderKanban className="w-3.5 h-3.5 text-slate-500" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold tracking-wider text-blue-700 uppercase">ID Kegiatan</span>
-                <span className="px-2.5 py-0.5 rounded-md font-mono font-bold text-xs bg-white text-blue-950 border border-blue-200 shadow-2xs">
+                <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                  ID Kegiatan
+                </span>
+                <span className="px-2 py-0.5 rounded-md font-mono font-bold text-xs bg-white text-slate-800 border border-slate-200/90 shadow-2xs">
                   {header.idKegiatan || generateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut || "01", header.kategoriSpj || "A")}
                 </span>
-                <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-semibold ${
-                  (header.kategoriSpj || "A") === "A"
-                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                    : "bg-purple-100 text-purple-800 border border-purple-200"
-                }`}>
-                  {(header.kategoriSpj || "A") === "A" ? "Kategori A: ASN (PNS/PPPK)" : "Kategori B: Non-ASN (Eksternal)"}
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/60 text-slate-600 border border-slate-300/50">
+                  {(header.kategoriSpj || "A") === "A" ? "Kategori A • ASN (PNS/PPPK)" : "Kategori B • Non-ASN (Eksternal)"}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Format: <code className="font-mono text-slate-700 font-semibold">K-ddmmyy-nokegiatan-A/B</code> (Menghubungkan seluruh peserta dalam satu berkas SPJ)
+              <p className="text-[10.5px] text-slate-400 mt-0.5">
+                Pengenal berkas SPJ baku untuk integrasi database & rekapitulasi seluruh pelaksana
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            {/* Pilihan Kategori A/B */}
-            <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs text-xs">
+            {/* Segmented Control Kategori A / B (macOS Style) */}
+            <div className="inline-flex rounded-lg bg-slate-200/60 p-0.5 text-xs font-medium border border-slate-300/40">
               <button
                 type="button"
                 onClick={() => updateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut, "A")}
-                className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   (header.kategoriSpj || "A") === "A"
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
                 title="Pilih ASN jika peserta memiliki NIP dan pangkat/jabatan"
               >
@@ -298,20 +296,20 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               <button
                 type="button"
                 onClick={() => updateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut, "B")}
-                className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   (header.kategoriSpj || "A") === "B"
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
-                title="Pilih Non-ASN jika peserta adalah narasumber/ahli/mitra eksternal"
+                title="Pilih Non-ASN jika peserta adalah eksternal / narasumber"
               >
                 Non-ASN [B]
               </button>
             </div>
 
             {/* No Urut Input */}
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1 shadow-2xs">
-              <span className="text-[11px] font-medium text-slate-500">No:</span>
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200/90 rounded-lg px-2 py-1 shadow-2xs">
+              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">No:</span>
               <input
                 type="text"
                 maxLength={3}
@@ -320,8 +318,8 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   const val = e.target.value.replace(/[^0-9]/g, "");
                   updateIdKegiatan(header.tanggalSpd, val, header.kategoriSpj);
                 }}
-                className="w-8 text-center text-xs font-mono font-bold text-slate-800 focus:outline-hidden"
-                title="Nomor Urut Kegiatan (contoh: 01, 08)"
+                className="w-7 text-center text-xs font-mono font-bold text-slate-800 focus:outline-hidden"
+                title="Nomor Urut Kegiatan pada tanggal terpilih (contoh: 01, 02)"
               />
             </div>
 
@@ -330,14 +328,16 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               <button
                 type="button"
                 onClick={onOpenDaftarKegiatan}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-2xs hover:border-slate-300 transition-colors"
+                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-lg shadow-2xs hover:border-slate-300 transition-all cursor-pointer"
+                title="Buka Daftar Kegiatan Tersimpan"
               >
-                <FolderKanban className="w-3.5 h-3.5 text-blue-600" />
+                <FolderKanban className="w-3.5 h-3.5 text-slate-500" />
                 <span>Daftar Kegiatan</span>
               </button>
             )}
           </div>
         </div>
+
 
         <div className="form-group-panel">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">

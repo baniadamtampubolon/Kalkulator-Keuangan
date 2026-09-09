@@ -273,50 +273,66 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
                 </div>
               </div>
 
-              {/* Signatures Section (3 Kolom Bersih) */}
+              {/* Signatures Section (3 Kolom Bersih & Simetris) */}
               <div className="pt-16 pb-6">
-                <div className="grid grid-cols-3 text-left gap-4 text-xs font-sans">
-                  {/* 1. PPK (Kiri) */}
-                  <div className="space-y-16">
-                    <div className="space-y-0.5">
-                      <p>Setuju dibayar</p>
-                      <p>a.n Kuasa Pengguna Anggaran</p>
-                      <p>Pejabat Pembuat Komitmen</p>
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="font-normal">{header.ppkNama || "Arif Wibowo, S.H., M.H."}</p>
-                      <p className="font-mono text-[11px]">NIP. {header.ppkNip || "19830124200801 1 006"}</p>
-                    </div>
-                  </div>
+                {(() => {
+                  const bendaharaRaw = header.bendahara || "Raka Panji Wibowo, S.Kom, NIP. 19950408202012 1 001";
+                  const bendaharaNama = bendaharaRaw.includes("NIP")
+                    ? bendaharaRaw.substring(0, bendaharaRaw.indexOf("NIP")).replace(/,\s*$/, "").trim()
+                    : bendaharaRaw.split(",")[0].trim() || "Raka Panji Wibowo, S.Kom";
+                  const bendaharaNip = bendaharaRaw.includes("NIP")
+                    ? bendaharaRaw.substring(bendaharaRaw.indexOf("NIP")).trim()
+                    : "NIP. 19950408202012 1 001";
 
-                  {/* 2. Bendahara Pengeluaran (Tengah) */}
-                  <div className="space-y-16">
-                    <div className="space-y-0.5">
-                      <p>Setuju dan lunas dibayar</p>
-                      <p>Bendahara Pengeluaran,</p>
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="font-normal">{header.bendahara.split(",")[0] || "Raka Panji Wibowo, S.Kom"}</p>
-                      <p className="font-mono text-[11px]">
-                        {header.bendahara.includes("NIP")
-                          ? header.bendahara.substring(header.bendahara.indexOf("NIP"))
-                          : "NIP. 19950408202012 1 001"}
-                      </p>
-                    </div>
-                  </div>
+                  return (
+                    <div className="grid grid-cols-3 text-left gap-4 text-xs font-sans">
+                      {/* Baris 1: Header Jabatan & Tanggal (Tinggi seragam) */}
+                      <div className="space-y-0.5">
+                        <p>Setuju dibayar</p>
+                        <p>a.n Kuasa Pengguna Anggaran</p>
+                        <p>Pejabat Pembuat Komitmen</p>
+                      </div>
 
-                  {/* 3. Penerima (Kanan) */}
-                  <div className="space-y-16">
-                    <div className="space-y-0.5">
-                      <p>{tanggalCetak}</p>
-                      <p>Yang menerima,</p>
+                      <div className="space-y-0.5">
+                        <p>Setuju dan lunas dibayar</p>
+                        <p>Bendahara Pengeluaran,</p>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <p>{tanggalCetak}</p>
+                        <p>Yang menerima,</p>
+                      </div>
+
+                      {/* Baris 2: Tanda Tangan, Nama & NIP (100% sejajar di baris yang sama) */}
+                      <div className="space-y-0.5 pt-16">
+                        <p className="font-normal">{header.ppkNama || "Arif Wibowo, S.H., M.H."}</p>
+                        <p className="font-mono text-[11px]">
+                          {header.ppkNip
+                            ? header.ppkNip.startsWith("NIP")
+                              ? header.ppkNip
+                              : `NIP. ${header.ppkNip}`
+                            : "NIP. 19830124200801 1 006"}
+                        </p>
+                      </div>
+
+                      <div className="space-y-0.5 pt-16">
+                        <p className="font-normal">{bendaharaNama}</p>
+                        <p className="font-mono text-[11px]">{bendaharaNip}</p>
+                      </div>
+
+                      <div className="space-y-0.5 pt-16">
+                        <p className="font-normal">{activeRow.nama || "—"}</p>
+                        <p className="font-mono text-[11px]">
+                          {activeRow.nip
+                            ? activeRow.nip.startsWith("NIP")
+                              ? activeRow.nip
+                              : `NIP. ${activeRow.nip}`
+                            : "NIP. —"}
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-0.5">
-                      <p className="font-normal">{activeRow.nama || "—"}</p>
-                      <p className="font-mono text-[11px]">NIP. {activeRow.nip || "—"}</p>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
             </div>
           );
