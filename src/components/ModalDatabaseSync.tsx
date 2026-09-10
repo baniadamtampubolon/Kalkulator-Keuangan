@@ -191,9 +191,10 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
         onMasterSyncSuccess(resMaster.data);
       }
       const rekapCount = resRekap.data?.length ?? 0;
+      const makCountStr = resMaster.data.mak ? `${resMaster.data.mak.length} Item MAK, ` : "";
       setStatusMessage({
         type: "success",
-        text: `Berhasil sinkronisasi seluruh data Cloud! (${resMaster.data.pegawai?.length || 0} Pegawai, ${resMaster.data.sbm?.length || 0} SBM Provinsi, ${rekapCount} Baris Rekap Perdin).`,
+        text: `Berhasil sinkronisasi seluruh data Cloud! (${resMaster.data.pegawai?.length || 0} Pegawai, ${resMaster.data.sbm?.length || 0} SBM Provinsi, ${makCountStr}${rekapCount} Baris Rekap Perdin).`,
       });
     } else {
       setStatusMessage({ type: "error", text: resMaster.message || resRekap.message || "Gagal sinkronisasi data." });

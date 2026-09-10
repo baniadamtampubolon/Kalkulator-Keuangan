@@ -1,0 +1,1592 @@
+[
+  {
+    "kode": "004695",
+    "nama": "ATK dan Komputer Supply",
+    "fullLabel": "004695. ATK dan Komputer Supply",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "CL.7458.ABR.006.051.0A.521211"
+  },
+  {
+    "kode": "004696",
+    "nama": "Konsumsi Rapat Biasa D.K.I",
+    "fullLabel": "004696. Konsumsi Rapat Biasa D.K.I",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "CL.7458.ABR.006.051.0A.521211"
+  },
+  {
+    "kode": "013572",
+    "nama": "Jamuan Pimpinan",
+    "fullLabel": "013572. Jamuan Pimpinan",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "CL.7458.ABR.006.051.0A.521211"
+  },
+  {
+    "kode": "013573",
+    "nama": "Karangan Bunga",
+    "fullLabel": "013573. Karangan Bunga",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "CL.7458.ABR.006.051.0A.521211"
+  },
+  {
+    "kode": "000422",
+    "nama": "Sewa Kendaraan Roda 4",
+    "fullLabel": "000422. Sewa Kendaraan Roda 4",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "CL.7458.ABR.006.051.0A.522141"
+  },
+  {
+    "kode": "000427",
+    "nama": "Honorarium Narasumber",
+    "fullLabel": "000427. Honorarium Narasumber",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "CL.7458.ABR.006.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "CL.7458.ABR.006.051.0A.522151"
+  },
+  {
+    "kode": "004697",
+    "nama": "Biaya Pertemuan Full Day/Full Board di Dalam Kota terkait Program Prioritas Nasional Bidang Tata Niaga dan Distribusi Pangan",
+    "fullLabel": "004697. Biaya Pertemuan Full Day/Full Board di Dalam Kota terkait Program Prioritas Nasional Bidang Tata Niaga dan Distribusi Pangan",
+    "kodeMak": "524114",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "CL.7458.ABR.006.051.0A.524114"
+  },
+  {
+    "kode": "004702",
+    "nama": "Biaya Pertemuan Full Day/Full Board di Luar Kota terkait Program Prioritas Nasional Bidang Tata Niaga dan Distribusi Pangan",
+    "fullLabel": "004702. Biaya Pertemuan Full Day/Full Board di Luar Kota terkait Program Prioritas Nasional Bidang Tata Niaga dan Distribusi Pangan",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "CL.7458.ABR.006.051.0A.524119"
+  },
+  {
+    "kode": "000516",
+    "nama": "ATK dan Komputer Supply",
+    "fullLabel": "000516. ATK dan Komputer Supply",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "CL.7458.ABR.006.051.0B.521211"
+  },
+  {
+    "kode": "005332",
+    "nama": "Seminar Kit",
+    "fullLabel": "005332. Seminar Kit",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "CL.7458.ABR.006.051.0B.521211"
+  },
+  {
+    "kode": "000520",
+    "nama": "Sewa Kendaraan Roda 4",
+    "fullLabel": "000520. Sewa Kendaraan Roda 4",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "CL.7458.ABR.006.051.0B.522141"
+  },
+  {
+    "kode": "000533",
+    "nama": "Event Organizer rapat Koordinasi Setingkat Menteri dalam rangka Forum Regional Ketersediaan Pangan",
+    "fullLabel": "000533. Event Organizer rapat Koordinasi Setingkat Menteri dalam rangka Forum Regional Ketersediaan Pangan",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "CL.7458.ABR.006.051.0B.522191"
+  },
+  {
+    "kode": "004707",
+    "nama": "Kunjungan Lapangan terkait  Program Prioritas Nasional Bidang Tata Niaga dan Distribusi Pangan",
+    "fullLabel": "004707. Kunjungan Lapangan terkait  Program Prioritas Nasional Bidang Tata Niaga dan Distribusi Pangan",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "CL.7458.ABR.006.051.0B.524111"
+  },
+  {
+    "kode": "004708",
+    "nama": "Satuan Biaya Transport Kegiatan Dalam Kabupaten/Kota Pergi Pulang (PP)",
+    "fullLabel": "004708. Satuan Biaya Transport Kegiatan Dalam Kabupaten/Kota Pergi Pulang (PP)",
+    "kodeMak": "524113",
+    "namaMak": "Belanja Perjalanan Dinas Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "CL.7458.ABR.006.051.0B.524113"
+  },
+  {
+    "kode": "005368",
+    "nama": "ATK dan Cetak Buku",
+    "fullLabel": "005368. ATK dan Cetak Buku",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.521211"
+  },
+  {
+    "kode": "005369",
+    "nama": "Konsumsi Rapat DKI Jakarta",
+    "fullLabel": "005369. Konsumsi Rapat DKI Jakarta",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.521211"
+  },
+  {
+    "kode": "005370",
+    "nama": "Sewa Kendaraan Roda 4 (Jawa  Barat)",
+    "fullLabel": "005370. Sewa Kendaraan Roda 4 (Jawa  Barat)",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.522141"
+  },
+  {
+    "kode": "005372",
+    "nama": "Satuan Biaya Transportasi Darat",
+    "fullLabel": "005372. Satuan Biaya Transportasi Darat",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005373",
+    "nama": "Uang Harian Perjalanan Dinas Luar Kota (Jawa  Tengah)",
+    "fullLabel": "005373. Uang Harian Perjalanan Dinas Luar Kota (Jawa  Tengah)",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005374",
+    "nama": "Uang Representasi Luar Kota Pejabat Eselon II",
+    "fullLabel": "005374. Uang Representasi Luar Kota Pejabat Eselon II",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005375",
+    "nama": "Satuan Biaya Tiket Pesawat  Perjalanan Dinas Dalam Negeri (PP) Ekonomi JAKARTA - SEMARANG",
+    "fullLabel": "005375. Satuan Biaya Tiket Pesawat  Perjalanan Dinas Dalam Negeri (PP) Ekonomi JAKARTA - SEMARANG",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005376",
+    "nama": "Biaya Penginapan Perjalanan Dinas Pejabat  Eselon IV/Golongan III  (JAWA  TENGAH)",
+    "fullLabel": "005376. Biaya Penginapan Perjalanan Dinas Pejabat  Eselon IV/Golongan III  (JAWA  TENGAH)",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005378",
+    "nama": "Satuan Biaya Tiket Pesawat  Perjalanan Dinas Dalam Negeri (PP) Ekonomi JAKARTA - DENPASAR",
+    "fullLabel": "005378. Satuan Biaya Tiket Pesawat  Perjalanan Dinas Dalam Negeri (PP) Ekonomi JAKARTA - DENPASAR",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005379",
+    "nama": "Uang Representasi Luar Kota Pejabat Eselon II",
+    "fullLabel": "005379. Uang Representasi Luar Kota Pejabat Eselon II",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005380",
+    "nama": "Uang Harian Perjalanan Dinas Luar Kota (Bali)",
+    "fullLabel": "005380. Uang Harian Perjalanan Dinas Luar Kota (Bali)",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005381",
+    "nama": "Biaya Transportasi dari dan/atau ke Terminal Bus/Stasiun/Bandara/Pelabuhan Dalam Rangka Perjalanan Dinas Dalam Negeri (Bali)",
+    "fullLabel": "005381. Biaya Transportasi dari dan/atau ke Terminal Bus/Stasiun/Bandara/Pelabuhan Dalam Rangka Perjalanan Dinas Dalam Negeri (Bali)",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005383",
+    "nama": "Tiket Kereta ke Bandung",
+    "fullLabel": "005383. Tiket Kereta ke Bandung",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005384",
+    "nama": "Uang Harian Perjalanan Dinas Luar Kota (Jawa  Barat)",
+    "fullLabel": "005384. Uang Harian Perjalanan Dinas Luar Kota (Jawa  Barat)",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005385",
+    "nama": "Biaya Penginapan Perjalanan Dinas Pejabat  Eselon IV/Golongan III  (JAWA  BARAT)",
+    "fullLabel": "005385. Biaya Penginapan Perjalanan Dinas Pejabat  Eselon IV/Golongan III  (JAWA  BARAT)",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005386",
+    "nama": "Transportasi Darat ke Bogor",
+    "fullLabel": "005386. Transportasi Darat ke Bogor",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005387",
+    "nama": "Uang Representasi Luar Kota Pejabat Eselon I",
+    "fullLabel": "005387. Uang Representasi Luar Kota Pejabat Eselon I",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005388",
+    "nama": "Uang Representasi Luar Kota Pejabat Eselon II",
+    "fullLabel": "005388. Uang Representasi Luar Kota Pejabat Eselon II",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524111"
+  },
+  {
+    "kode": "005390",
+    "nama": "Satuan Biaya Tiket Pesawat  Perjalanan Dinas Dalam Negeri (PP) Bisnis JAKARTA - DENPASAR",
+    "fullLabel": "005390. Satuan Biaya Tiket Pesawat  Perjalanan Dinas Dalam Negeri (PP) Bisnis JAKARTA - DENPASAR",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524119"
+  },
+  {
+    "kode": "005391",
+    "nama": "Biaya Transportasi dari dan/atau ke Terminal Bus/Stasiun/Bandara/Pelabuhan Dalam Rangka Perjalanan Dinas Dalam Negeri (Bali)",
+    "fullLabel": "005391. Biaya Transportasi dari dan/atau ke Terminal Bus/Stasiun/Bandara/Pelabuhan Dalam Rangka Perjalanan Dinas Dalam Negeri (Bali)",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524119"
+  },
+  {
+    "kode": "005392",
+    "nama": "Uang Harian Perjalanan Dinas Luar Kota (Bali)",
+    "fullLabel": "005392. Uang Harian Perjalanan Dinas Luar Kota (Bali)",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524119"
+  },
+  {
+    "kode": "005393",
+    "nama": "Uang Representasi Luar Kota Pejabat Eselon I",
+    "fullLabel": "005393. Uang Representasi Luar Kota Pejabat Eselon I",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524119"
+  },
+  {
+    "kode": "005395",
+    "nama": "Satuan Biaya Tiket Pesawat  Perjalanan Dinas Dalam Negeri (PP) Bisnis JAKARTA - PADANG",
+    "fullLabel": "005395. Satuan Biaya Tiket Pesawat  Perjalanan Dinas Dalam Negeri (PP) Bisnis JAKARTA - PADANG",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524119"
+  },
+  {
+    "kode": "005396",
+    "nama": "Satuan Biaya Tiket Pesawat  Perjalanan Dinas Dalam Negeri (PP) Ekonomi JAKARTA - PADANG",
+    "fullLabel": "005396. Satuan Biaya Tiket Pesawat  Perjalanan Dinas Dalam Negeri (PP) Ekonomi JAKARTA - PADANG",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524119"
+  },
+  {
+    "kode": "005398",
+    "nama": "Uang Representasi Luar Kota Pejabat Eselon I",
+    "fullLabel": "005398. Uang Representasi Luar Kota Pejabat Eselon I",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524119"
+  },
+  {
+    "kode": "005399",
+    "nama": "Uang Representasi Luar Kota Pejabat Eselon II",
+    "fullLabel": "005399. Uang Representasi Luar Kota Pejabat Eselon II",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524119"
+  },
+  {
+    "kode": "005400",
+    "nama": "Uang Harian Perjalanan Dinas Luar Kota (Jawa  Barat)",
+    "fullLabel": "005400. Uang Harian Perjalanan Dinas Luar Kota (Jawa  Barat)",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.0C",
+    "subKomponen": "051.0C",
+    "fullMak": "CL.7458.ABR.006.051.0C.524119"
+  },
+  {
+    "kode": "005266",
+    "nama": "Jasa Konsultansi Perorangan Tenaga Ahli Program Prioritas Kemenko Pangan",
+    "fullLabel": "005266. Jasa Konsultansi Perorangan Tenaga Ahli Program Prioritas Kemenko Pangan",
+    "kodeMak": "522131",
+    "namaMak": "Belanja Jasa Konsultan",
+    "kodeKomponen": "CL.7458.ABR.006.051.AP",
+    "subKomponen": "051.AP",
+    "fullMak": "CL.7458.ABR.006.051.AP.522131"
+  },
+  {
+    "kode": "004710",
+    "nama": "Paket Perjalanan Dinas Biasa",
+    "fullLabel": "004710. Paket Perjalanan Dinas Biasa",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.051.AP",
+    "subKomponen": "051.AP",
+    "fullMak": "CL.7458.ABR.006.051.AP.524111"
+  },
+  {
+    "kode": "012955",
+    "nama": "Perjalanan Dinas dalam rangka Rapat Isu Prioritas Kemenko Pangan",
+    "fullLabel": "012955. Perjalanan Dinas dalam rangka Rapat Isu Prioritas Kemenko Pangan",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.051.AP",
+    "subKomponen": "051.AP",
+    "fullMak": "CL.7458.ABR.006.051.AP.524119"
+  },
+  {
+    "kode": "009496",
+    "nama": "Snack Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "009496. Snack Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.521211"
+  },
+  {
+    "kode": "009497",
+    "nama": "Penggandaan",
+    "fullLabel": "009497. Penggandaan",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.521211"
+  },
+  {
+    "kode": "009501",
+    "nama": "Honorarium Pengarah Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "fullLabel": "009501. Honorarium Pengarah Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.521213"
+  },
+  {
+    "kode": "009502",
+    "nama": "Honorarium Penanggungjawab Pelaksanaan Kegiatan di Tempat Praktik",
+    "fullLabel": "009502. Honorarium Penanggungjawab Pelaksanaan Kegiatan di Tempat Praktik",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.521213"
+  },
+  {
+    "kode": "009503",
+    "nama": "Honorarium Ketua Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "fullLabel": "009503. Honorarium Ketua Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.521213"
+  },
+  {
+    "kode": "009504",
+    "nama": "Honorarium Wakil Ketua Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "fullLabel": "009504. Honorarium Wakil Ketua Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.521213"
+  },
+  {
+    "kode": "009505",
+    "nama": "Honorarium Sekretaris  Satuan Tugas Pelaksana (STP)/Departemen",
+    "fullLabel": "009505. Honorarium Sekretaris  Satuan Tugas Pelaksana (STP)/Departemen",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.521213"
+  },
+  {
+    "kode": "009506",
+    "nama": "Honorarium Anggota Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "fullLabel": "009506. Honorarium Anggota Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.521213"
+  },
+  {
+    "kode": "009898",
+    "nama": "Sewa Kendaraan Roda 4 (Papua)",
+    "fullLabel": "009898. Sewa Kendaraan Roda 4 (Papua)",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.522141"
+  },
+  {
+    "kode": "009902",
+    "nama": "Honorarium Narasumber (Pejabat Eselon II)",
+    "fullLabel": "009902. Honorarium Narasumber (Pejabat Eselon II)",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.522151"
+  },
+  {
+    "kode": "013243",
+    "nama": "Tenaga Pendukung Administrasi Program Prioritas Presiden",
+    "fullLabel": "013243. Tenaga Pendukung Administrasi Program Prioritas Presiden",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.522191"
+  },
+  {
+    "kode": "009905",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "fullLabel": "009905. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524111"
+  },
+  {
+    "kode": "009939",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "fullLabel": "009939. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524111"
+  },
+  {
+    "kode": "009945",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "fullLabel": "009945. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524111"
+  },
+  {
+    "kode": "009983",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "fullLabel": "009983. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524111"
+  },
+  {
+    "kode": "013231",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "fullLabel": "013231. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524111"
+  },
+  {
+    "kode": "013233",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "fullLabel": "013233. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524111"
+  },
+  {
+    "kode": "013236",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "fullLabel": "013236. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524111"
+  },
+  {
+    "kode": "013238",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "fullLabel": "013238. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan terkait KDKMP",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524111"
+  },
+  {
+    "kode": "013239",
+    "nama": "Rapat Dalam Kota dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait KDKMP",
+    "fullLabel": "013239. Rapat Dalam Kota dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait KDKMP",
+    "kodeMak": "524114",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524114"
+  },
+  {
+    "kode": "013240",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait KDKMP",
+    "fullLabel": "013240. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait KDKMP",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524119"
+  },
+  {
+    "kode": "013241",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait KDKMP",
+    "fullLabel": "013241. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait KDKMP",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524119"
+  },
+  {
+    "kode": "013242",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait KDKMP",
+    "fullLabel": "013242. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait KDKMP",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.071.AA",
+    "subKomponen": "071.AA",
+    "fullMak": "CL.7458.ABR.006.071.AA.524119"
+  },
+  {
+    "kode": "010064",
+    "nama": "koonsumsi dan snack",
+    "fullLabel": "010064. koonsumsi dan snack",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.521211"
+  },
+  {
+    "kode": "010068",
+    "nama": "ATK dan Seminar KIT",
+    "fullLabel": "010068. ATK dan Seminar KIT",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.521211"
+  },
+  {
+    "kode": "010069",
+    "nama": "Honorarium Pengarah Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "fullLabel": "010069. Honorarium Pengarah Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.521213"
+  },
+  {
+    "kode": "010070",
+    "nama": "Honorarium Penanggungjawab Pelaksanaan Kegiatan di Tempat Praktik",
+    "fullLabel": "010070. Honorarium Penanggungjawab Pelaksanaan Kegiatan di Tempat Praktik",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.521213"
+  },
+  {
+    "kode": "010071",
+    "nama": "Honorarium Ketua Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "fullLabel": "010071. Honorarium Ketua Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.521213"
+  },
+  {
+    "kode": "010072",
+    "nama": "Honorarium Wakil Ketua Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "fullLabel": "010072. Honorarium Wakil Ketua Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.521213"
+  },
+  {
+    "kode": "010073",
+    "nama": "Honorarium Sekretaris  Satuan Tugas Pelaksana (STP)/Departemen",
+    "fullLabel": "010073. Honorarium Sekretaris  Satuan Tugas Pelaksana (STP)/Departemen",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.521213"
+  },
+  {
+    "kode": "010074",
+    "nama": "Honorarium Anggota Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "fullLabel": "010074. Honorarium Anggota Tim Pelaksana Kegiatan (ditetapkan dengan SK Es. 1)",
+    "kodeMak": "521213",
+    "namaMak": "Belanja Honor Output Kegiatan",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.521213"
+  },
+  {
+    "kode": "010081",
+    "nama": "Sewa Kendaraan dalam rangka monev implementasi MRPN LS Bidang Pangan terkait Makan Bergizi Gratis",
+    "fullLabel": "010081. Sewa Kendaraan dalam rangka monev implementasi MRPN LS Bidang Pangan terkait Makan Bergizi Gratis",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.522141"
+  },
+  {
+    "kode": "010082",
+    "nama": "Honorarium Narasumber Eselon I /II/III kebawah",
+    "fullLabel": "010082. Honorarium Narasumber Eselon I /II/III kebawah",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.522151"
+  },
+  {
+    "kode": "012960",
+    "nama": "Tenaga Pendukung Administrasi Prgram Prioritas Presiden",
+    "fullLabel": "012960. Tenaga Pendukung Administrasi Prgram Prioritas Presiden",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.522191"
+  },
+  {
+    "kode": "013529",
+    "nama": "Tenaga Pendukung Administrasi Program Prioritas Presiden  - BUHM",
+    "fullLabel": "013529. Tenaga Pendukung Administrasi Program Prioritas Presiden  - BUHM",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.522191"
+  },
+  {
+    "kode": "012962",
+    "nama": "Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Maluku",
+    "fullLabel": "012962. Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Maluku",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524111"
+  },
+  {
+    "kode": "012963",
+    "nama": "Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Maluku Utara",
+    "fullLabel": "012963. Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Maluku Utara",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524111"
+  },
+  {
+    "kode": "012964",
+    "nama": "Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Papua",
+    "fullLabel": "012964. Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Papua",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524111"
+  },
+  {
+    "kode": "012965",
+    "nama": "Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Sumatera",
+    "fullLabel": "012965. Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Sumatera",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524111"
+  },
+  {
+    "kode": "012966",
+    "nama": "Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke NTT",
+    "fullLabel": "012966. Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke NTT",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524111"
+  },
+  {
+    "kode": "012967",
+    "nama": "Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Kalimantan",
+    "fullLabel": "012967. Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Kalimantan",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524111"
+  },
+  {
+    "kode": "012968",
+    "nama": "Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Jawa Timur",
+    "fullLabel": "012968. Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis ke Jawa Timur",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524111"
+  },
+  {
+    "kode": "012969",
+    "nama": "Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratiske Bali",
+    "fullLabel": "012969. Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratiske Bali",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524111"
+  },
+  {
+    "kode": "012970",
+    "nama": "Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis",
+    "fullLabel": "012970. Perjalanan Dinas dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524111"
+  },
+  {
+    "kode": "010146",
+    "nama": "Rapat Dalam Kota dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis",
+    "fullLabel": "010146. Rapat Dalam Kota dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis",
+    "kodeMak": "524114",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524114"
+  },
+  {
+    "kode": "012961",
+    "nama": "Rapat meeting luar kota dalam  rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis",
+    "fullLabel": "012961. Rapat meeting luar kota dalam  rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.072.BB",
+    "subKomponen": "072.BB",
+    "fullMak": "CL.7458.ABR.006.072.BB.524119"
+  },
+  {
+    "kode": "010678",
+    "nama": "Konsumsi Rapat Makan dan Snack",
+    "fullLabel": "010678. Konsumsi Rapat Makan dan Snack",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.521211"
+  },
+  {
+    "kode": "010681",
+    "nama": "Seminar Kit",
+    "fullLabel": "010681. Seminar Kit",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.521211"
+  },
+  {
+    "kode": "010682",
+    "nama": "ATK, Komputer Supplies, dan Penggandaan Bahan",
+    "fullLabel": "010682. ATK, Komputer Supplies, dan Penggandaan Bahan",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.521211"
+  },
+  {
+    "kode": "010683",
+    "nama": "Sewa Kendaraan Roda 4 (bali)",
+    "fullLabel": "010683. Sewa Kendaraan Roda 4 (bali)",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.522141"
+  },
+  {
+    "kode": "010684",
+    "nama": "Sewa kendaraan Roda 4 - JAWA BARAT",
+    "fullLabel": "010684. Sewa kendaraan Roda 4 - JAWA BARAT",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.522141"
+  },
+  {
+    "kode": "010685",
+    "nama": "Sewa kendaraan Roda 4 - JAWA TIMUR",
+    "fullLabel": "010685. Sewa kendaraan Roda 4 - JAWA TIMUR",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.522141"
+  },
+  {
+    "kode": "010686",
+    "nama": "Sewa kendaraan Roda 4 - D.I.Yogyakarta",
+    "fullLabel": "010686. Sewa kendaraan Roda 4 - D.I.Yogyakarta",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.522141"
+  },
+  {
+    "kode": "010689",
+    "nama": "Honorarium Narasumber",
+    "fullLabel": "010689. Honorarium Narasumber",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.522151"
+  },
+  {
+    "kode": "013250",
+    "nama": "Event Organizer -  Monev Implementasi MRPN LS Bidang Pangan Terkait Pengelolaan Persampahan",
+    "fullLabel": "013250. Event Organizer -  Monev Implementasi MRPN LS Bidang Pangan Terkait Pengelolaan Persampahan",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.522191"
+  },
+  {
+    "kode": "013488",
+    "nama": "Tenaga Pendukung Administrasi ABT",
+    "fullLabel": "013488. Tenaga Pendukung Administrasi ABT",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.522191"
+  },
+  {
+    "kode": "010746",
+    "nama": "MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN JAWA TIMUR",
+    "fullLabel": "010746. MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN JAWA TIMUR",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.524111"
+  },
+  {
+    "kode": "010760",
+    "nama": "MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN BALI",
+    "fullLabel": "010760. MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN BALI",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.524111"
+  },
+  {
+    "kode": "013247",
+    "nama": "MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN D.I.YOGYAKARTA",
+    "fullLabel": "013247. MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN D.I.YOGYAKARTA",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.524111"
+  },
+  {
+    "kode": "013249",
+    "nama": "MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN JAWA BARAT",
+    "fullLabel": "013249. MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN JAWA BARAT",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.524111"
+  },
+  {
+    "kode": "013489",
+    "nama": "MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN",
+    "fullLabel": "013489. MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN",
+    "kodeMak": "524114",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.524114"
+  },
+  {
+    "kode": "010789",
+    "nama": "Satuan Biaya Tiket Pesawat Ekonomi/Transportasi Es.2",
+    "fullLabel": "010789. Satuan Biaya Tiket Pesawat Ekonomi/Transportasi Es.2",
+    "kodeMak": "524219",
+    "namaMak": "Belanja Perjalanan Dinas Lainnya - Luar Negeri",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.524219"
+  },
+  {
+    "kode": "010790",
+    "nama": "Uang Harian Eselon II",
+    "fullLabel": "010790. Uang Harian Eselon II",
+    "kodeMak": "524219",
+    "namaMak": "Belanja Perjalanan Dinas Lainnya - Luar Negeri",
+    "kodeKomponen": "CL.7458.ABR.006.073.CC",
+    "subKomponen": "073.CC",
+    "fullMak": "CL.7458.ABR.006.073.CC.524219"
+  },
+  {
+    "kode": "010791",
+    "nama": "Konsumsi  Rapat",
+    "fullLabel": "010791. Konsumsi  Rapat",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.521211"
+  },
+  {
+    "kode": "010795",
+    "nama": "ATK/Komupter Suplier",
+    "fullLabel": "010795. ATK/Komupter Suplier",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.521211"
+  },
+  {
+    "kode": "010808",
+    "nama": "Sewa Kendaraan Roda 4",
+    "fullLabel": "010808. Sewa Kendaraan Roda 4",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.522141"
+  },
+  {
+    "kode": "010802",
+    "nama": "Honorarium Narasumber",
+    "fullLabel": "010802. Honorarium Narasumber",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.522151"
+  },
+  {
+    "kode": "010818",
+    "nama": "Workshop Diseminasi Penyelenggaraan Ekosistem Pangan Haji",
+    "fullLabel": "010818. Workshop Diseminasi Penyelenggaraan Ekosistem Pangan Haji",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.522191"
+  },
+  {
+    "kode": "012971",
+    "nama": "Tenaga Pendukung Administrasi Program Prioritas Presiden",
+    "fullLabel": "012971. Tenaga Pendukung Administrasi Program Prioritas Presiden",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.522191"
+  },
+  {
+    "kode": "013530",
+    "nama": "Tenaga Pendukung Administrasi Program Prioritas Presiden - BUHM",
+    "fullLabel": "013530. Tenaga Pendukung Administrasi Program Prioritas Presiden - BUHM",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.522191"
+  },
+  {
+    "kode": "010820",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "fullLabel": "010820. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.524111"
+  },
+  {
+    "kode": "010828",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "fullLabel": "010828. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.524111"
+  },
+  {
+    "kode": "010836",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "fullLabel": "010836. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.524111"
+  },
+  {
+    "kode": "010844",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "fullLabel": "010844. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.524111"
+  },
+  {
+    "kode": "012972",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "fullLabel": "012972. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.524111"
+  },
+  {
+    "kode": "012973",
+    "nama": "Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "fullLabel": "012973. Perjalanan Dinas Biasa dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.524111"
+  },
+  {
+    "kode": "012974",
+    "nama": "Rapat dalam kota dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "fullLabel": "012974. Rapat dalam kota dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "kodeMak": "524114",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.524114"
+  },
+  {
+    "kode": "012975",
+    "nama": "Rapat Luar Kota dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "fullLabel": "012975. Rapat Luar Kota dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.524119"
+  },
+  {
+    "kode": "012976",
+    "nama": "Rapat Luar Kota dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "fullLabel": "012976. Rapat Luar Kota dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.524119"
+  },
+  {
+    "kode": "012977",
+    "nama": "Perjalanan dinas Luar Negeri dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "fullLabel": "012977. Perjalanan dinas Luar Negeri dalam rangka Monev Implementasi MRPN LS Bidang Pangan Terkait Ekosistem Pangan Haji",
+    "kodeMak": "524219",
+    "namaMak": "Belanja Perjalanan Dinas Lainnya - Luar Negeri",
+    "kodeKomponen": "CL.7458.ABR.006.074.DD",
+    "subKomponen": "074.DD",
+    "fullMak": "CL.7458.ABR.006.074.DD.524219"
+  },
+  {
+    "kode": "010897",
+    "nama": "Konsumsi Rapat",
+    "fullLabel": "010897. Konsumsi Rapat",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.521211"
+  },
+  {
+    "kode": "010901",
+    "nama": "ATK/Komupter Suplier",
+    "fullLabel": "010901. ATK/Komupter Suplier",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.521211"
+  },
+  {
+    "kode": "010902",
+    "nama": "Sewa Kendaraan",
+    "fullLabel": "010902. Sewa Kendaraan",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.522141"
+  },
+  {
+    "kode": "013253",
+    "nama": "Honorarium Narasumber",
+    "fullLabel": "013253. Honorarium Narasumber",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.522151"
+  },
+  {
+    "kode": "013531",
+    "nama": "Jasa Tenaga Administrasinya ABT - BUHM",
+    "fullLabel": "013531. Jasa Tenaga Administrasinya ABT - BUHM",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.522191"
+  },
+  {
+    "kode": "013255",
+    "nama": "Kunjungan Lapangan terkait Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
+    "fullLabel": "013255. Kunjungan Lapangan terkait Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.524111"
+  },
+  {
+    "kode": "013260",
+    "nama": "Kunjungan Lapangan terkait Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
+    "fullLabel": "013260. Kunjungan Lapangan terkait Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.524111"
+  },
+  {
+    "kode": "013264",
+    "nama": "Rapat Dalam Kota terkait Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
+    "fullLabel": "013264. Rapat Dalam Kota terkait Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
+    "kodeMak": "524114",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.524114"
+  },
+  {
+    "kode": "013263",
+    "nama": "Rapat Luar  Kota terkait Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
+    "fullLabel": "013263. Rapat Luar  Kota terkait Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.524119"
+  },
+  {
+    "kode": "013265",
+    "nama": "Rapat Luar  Kota terkait Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
+    "fullLabel": "013265. Rapat Luar  Kota terkait Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.524119"
+  },
+  {
+    "kode": "013439",
+    "nama": "Rapat Luar Kota Terkait Monev NEK dan GRK",
+    "fullLabel": "013439. Rapat Luar Kota Terkait Monev NEK dan GRK",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.524119"
+  },
+  {
+    "kode": "013496",
+    "nama": "Rapat Luar Kota Terkait Monev NEK dan GRK",
+    "fullLabel": "013496. Rapat Luar Kota Terkait Monev NEK dan GRK",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.524119"
+  },
+  {
+    "kode": "013527",
+    "nama": "Pertemuan Internasional Lingkungan Hidup",
+    "fullLabel": "013527. Pertemuan Internasional Lingkungan Hidup",
+    "kodeMak": "524211",
+    "namaMak": "Belanja Perjalanan Dinas Biasa - Luar Negeri",
+    "kodeKomponen": "CL.7458.ABR.006.075.EE",
+    "subKomponen": "075.EE",
+    "fullMak": "CL.7458.ABR.006.075.EE.524211"
+  },
+  {
+    "kode": "013427",
+    "nama": "Konsumsi Rapat dan Seminar Kit",
+    "fullLabel": "013427. Konsumsi Rapat dan Seminar Kit",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.076.AN",
+    "subKomponen": "076.AN",
+    "fullMak": "CL.7458.ABR.006.076.AN.521211"
+  },
+  {
+    "kode": "011215",
+    "nama": "Sewa Kendaraan Monev",
+    "fullLabel": "011215. Sewa Kendaraan Monev",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.076.AN",
+    "subKomponen": "076.AN",
+    "fullMak": "CL.7458.ABR.006.076.AN.522141"
+  },
+  {
+    "kode": "011216",
+    "nama": "Honorarium Narasumber (Pejabat Eselon II)",
+    "fullLabel": "011216. Honorarium Narasumber (Pejabat Eselon II)",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "CL.7458.ABR.006.076.AN",
+    "subKomponen": "076.AN",
+    "fullMak": "CL.7458.ABR.006.076.AN.522151"
+  },
+  {
+    "kode": "013532",
+    "nama": "Tenaga Pendukung Administrasi Program Prioritas Presiden - BUHM",
+    "fullLabel": "013532. Tenaga Pendukung Administrasi Program Prioritas Presiden - BUHM",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "CL.7458.ABR.006.076.AN",
+    "subKomponen": "076.AN",
+    "fullMak": "CL.7458.ABR.006.076.AN.522191"
+  },
+  {
+    "kode": "013428",
+    "nama": "Perjalanan Dinas Dalam Rangka Koordinasi dan Verifikasi Lapangan di Daerah Bencana Aceh, Sumatera Utara dan Sumatera Barat",
+    "fullLabel": "013428. Perjalanan Dinas Dalam Rangka Koordinasi dan Verifikasi Lapangan di Daerah Bencana Aceh, Sumatera Utara dan Sumatera Barat",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.076.AN",
+    "subKomponen": "076.AN",
+    "fullMak": "CL.7458.ABR.006.076.AN.524111"
+  },
+  {
+    "kode": "011222",
+    "nama": "Satuan Biaya Transport Kegiatan Dalam Kabupaten/Kota Pergi Pulang (PP)",
+    "fullLabel": "011222. Satuan Biaya Transport Kegiatan Dalam Kabupaten/Kota Pergi Pulang (PP)",
+    "kodeMak": "524113",
+    "namaMak": "Belanja Perjalanan Dinas Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.076.AN",
+    "subKomponen": "076.AN",
+    "fullMak": "CL.7458.ABR.006.076.AN.524113"
+  },
+  {
+    "kode": "013429",
+    "nama": "Rapat Dalam Kota dalam rangka Monev dan sinkronisasi, koordinasi dan pengendalian program MRPN LS Rehabilitasi dan Rekonstruksi Pa",
+    "fullLabel": "013429. Rapat Dalam Kota dalam rangka Monev dan sinkronisasi, koordinasi dan pengendalian program MRPN LS Rehabilitasi dan Rekonstruksi Pa",
+    "kodeMak": "524114",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.076.AN",
+    "subKomponen": "076.AN",
+    "fullMak": "CL.7458.ABR.006.076.AN.524114"
+  },
+  {
+    "kode": "013430",
+    "nama": "Konsumsi Rapat dan Seminar Kit",
+    "fullLabel": "013430. Konsumsi Rapat dan Seminar Kit",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.076.FF",
+    "subKomponen": "076.FF",
+    "fullMak": "CL.7458.ABR.006.076.FF.521211"
+  },
+  {
+    "kode": "011179",
+    "nama": "Sewa Kendaraan Monev",
+    "fullLabel": "011179. Sewa Kendaraan Monev",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "CL.7458.ABR.006.076.FF",
+    "subKomponen": "076.FF",
+    "fullMak": "CL.7458.ABR.006.076.FF.522141"
+  },
+  {
+    "kode": "011180",
+    "nama": "Honorarium Narasumber (Pejabat Eselon II)",
+    "fullLabel": "011180. Honorarium Narasumber (Pejabat Eselon II)",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "CL.7458.ABR.006.076.FF",
+    "subKomponen": "076.FF",
+    "fullMak": "CL.7458.ABR.006.076.FF.522151"
+  },
+  {
+    "kode": "013431",
+    "nama": "Perjalanan Dinas Dalam Rangka Koordinasi dan Verifikasi Lapangan di Aceh, Sumatera Utara, Sumatera Barat",
+    "fullLabel": "013431. Perjalanan Dinas Dalam Rangka Koordinasi dan Verifikasi Lapangan di Aceh, Sumatera Utara, Sumatera Barat",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.076.FF",
+    "subKomponen": "076.FF",
+    "fullMak": "CL.7458.ABR.006.076.FF.524111"
+  },
+  {
+    "kode": "011186",
+    "nama": "Satuan Biaya Transport Kegiatan Dalam Kabupaten/Kota Pergi Pulang (PP)",
+    "fullLabel": "011186. Satuan Biaya Transport Kegiatan Dalam Kabupaten/Kota Pergi Pulang (PP)",
+    "kodeMak": "524113",
+    "namaMak": "Belanja Perjalanan Dinas Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.076.FF",
+    "subKomponen": "076.FF",
+    "fullMak": "CL.7458.ABR.006.076.FF.524113"
+  },
+  {
+    "kode": "013432",
+    "nama": "Rapat Dalam Kota Dalam Rangka Monev Sinkronisasi, Koordinasi dan Pengendalian Program MRPN LS Bidang Pangan Terkait Percepatan Reh",
+    "fullLabel": "013432. Rapat Dalam Kota Dalam Rangka Monev Sinkronisasi, Koordinasi dan Pengendalian Program MRPN LS Bidang Pangan Terkait Percepatan Reh",
+    "kodeMak": "524114",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.076.FF",
+    "subKomponen": "076.FF",
+    "fullMak": "CL.7458.ABR.006.076.FF.524114"
+  },
+  {
+    "kode": "013272",
+    "nama": "Konsumsi Rapat",
+    "fullLabel": "013272. Konsumsi Rapat",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "CL.7458.ABR.006.077.GG",
+    "subKomponen": "077.GG",
+    "fullMak": "CL.7458.ABR.006.077.GG.521211"
+  },
+  {
+    "kode": "011296",
+    "nama": "Kajian Ilmiah Pengendalian Emisi GRK",
+    "fullLabel": "011296. Kajian Ilmiah Pengendalian Emisi GRK",
+    "kodeMak": "522131",
+    "namaMak": "Belanja Jasa Konsultan",
+    "kodeKomponen": "CL.7458.ABR.006.077.GG",
+    "subKomponen": "077.GG",
+    "fullMak": "CL.7458.ABR.006.077.GG.522131"
+  },
+  {
+    "kode": "013273",
+    "nama": "Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "fullLabel": "013273. Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.077.GG",
+    "subKomponen": "077.GG",
+    "fullMak": "CL.7458.ABR.006.077.GG.524111"
+  },
+  {
+    "kode": "013274",
+    "nama": "Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "fullLabel": "013274. Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.077.GG",
+    "subKomponen": "077.GG",
+    "fullMak": "CL.7458.ABR.006.077.GG.524111"
+  },
+  {
+    "kode": "013275",
+    "nama": "Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "fullLabel": "013275. Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.077.GG",
+    "subKomponen": "077.GG",
+    "fullMak": "CL.7458.ABR.006.077.GG.524111"
+  },
+  {
+    "kode": "013276",
+    "nama": "Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "fullLabel": "013276. Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.077.GG",
+    "subKomponen": "077.GG",
+    "fullMak": "CL.7458.ABR.006.077.GG.524111"
+  },
+  {
+    "kode": "013277",
+    "nama": "Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "fullLabel": "013277. Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.077.GG",
+    "subKomponen": "077.GG",
+    "fullMak": "CL.7458.ABR.006.077.GG.524111"
+  },
+  {
+    "kode": "013278",
+    "nama": "Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "fullLabel": "013278. Kunjungan Lapangan terkait Koordinasi Kebijakan Pengendalian Emisi GRK",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7458.ABR.006.077.GG",
+    "subKomponen": "077.GG",
+    "fullMak": "CL.7458.ABR.006.077.GG.524111"
+  },
+  {
+    "kode": "013279",
+    "nama": "Rapat Dalam Kota terkait Koordinasi Kebijakan pengendalian Emisi GRK",
+    "fullLabel": "013279. Rapat Dalam Kota terkait Koordinasi Kebijakan pengendalian Emisi GRK",
+    "kodeMak": "524114",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Dalam Kota",
+    "kodeKomponen": "CL.7458.ABR.006.077.GG",
+    "subKomponen": "077.GG",
+    "fullMak": "CL.7458.ABR.006.077.GG.524114"
+  }
+]

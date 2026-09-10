@@ -8,6 +8,7 @@ import {
   LIST_NOMOR_KOMPONEN,
   getMakAkunName,
   getKomponenName,
+  getItemDetailsForMak,
   OPSI_PERIHAL_MEMORANDUM,
 } from "@/data/mak_akun";
 import { generateIdKegiatan } from "@/lib/kegiatanHelper";
@@ -51,6 +52,12 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   onOpenDaftarKegiatan,
 }) => {
   const [isModalTambahPegawaiOpen, setIsModalTambahPegawaiOpen] = useState(false);
+  const [isCustomItemDetail, setIsCustomItemDetail] = useState(false);
+
+  // Daftar item detail sub-kategori MAK yang cocok dengan nomor Komponen & nomor MAK aktif
+  const availableItemDetails = React.useMemo(() => {
+    return getItemDetailsForMak(header.nomorKomp, header.nomorMak);
+  }, [header.nomorKomp, header.nomorMak]);
 
   // Mode input Perihal Memorandum: dropdown preset vs custom textarea (dihitung otomatis tanpa effect)
   const [isManualOverride, setIsManualOverride] = useState<boolean | null>(null);
@@ -936,14 +943,60 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
             {/* Item Detail */}
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Item Detail</label>
-              <input
-                type="text"
-                value={header.itemDetail}
-                onChange={(e) => handleChange("itemDetail", e.target.value)}
-                placeholder="001"
-                className="input-default w-full h-9 px-2.5 font-mono font-bold text-slate-800"
-              />
+              <div className="flex items-center justify-between">
+                <label className="font-semibold text-slate-700">Item Detail</label>
+                {availableItemDetails.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomItemDetail(!isCustomItemDetail)}
+                    className="text-[10px] font-medium text-slate-500 hover:text-slate-800 underline transition-colors cursor-pointer"
+                  >
+                    {isCustomItemDetail ? "Pilih dari daftar" : "Custom"}
+                  </button>
+                )}
+              </div>
+              {!isCustomItemDetail && availableItemDetails.length > 0 ? (
+                <select
+                  value={
+                    availableItemDetails.find(
+                      (i) => i.fullLabel === header.itemDetail || i.kode === header.itemDetail
+                    )?.fullLabel || header.itemDetail || ""
+                  }
+                  onChange={(e) => {
+                    if (e.target.value === "__CUSTOM__") {
+                      setIsCustomItemDetail(true);
+                    } else {
+                      handleChange("itemDetail", e.target.value);
+                    }
+                  }}
+                  className="input-human w-full h-9 px-2 font-mono font-medium text-slate-900 cursor-pointer text-xs truncate"
+                  title={header.itemDetail || "Pilih Item Detail"}
+                >
+                  <option value="">-- Pilih Item Detail ({availableItemDetails.length}) --</option>
+                  {availableItemDetails.map((item) => (
+                    <option key={item.kode} value={item.fullLabel}>
+                      {item.fullLabel}
+                    </option>
+                  ))}
+                  <option value="__CUSTOM__">✏️ Ketik Manual Lainnya...</option>
+                  {header.itemDetail &&
+                    !availableItemDetails.some(
+                      (i) => i.fullLabel === header.itemDetail || i.kode === header.itemDetail
+                    ) && (
+                      <option value={header.itemDetail}>
+                        {header.itemDetail} (Custom)
+                      </option>
+                    )}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={header.itemDetail}
+                  onChange={(e) => handleChange("itemDetail", e.target.value)}
+                  placeholder="001 atau nama item detail"
+                  className="input-default w-full h-9 px-2.5 font-mono font-bold text-slate-800 text-xs"
+                />
+              )}
             </div>
 
             {/* Jenis Pengajuan */}

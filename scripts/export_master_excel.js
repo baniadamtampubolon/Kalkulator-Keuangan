@@ -7,10 +7,12 @@ const XLSX = require('xlsx');
 const pegawaiPath = path.join(__dirname, '../src/data/pegawai.json');
 const sbmPath = path.join(__dirname, '../src/data/sbm.json');
 const memoPath = path.join(__dirname, '../src/data/nomor_memo.json');
+const itemDetailPath = path.join(__dirname, '../src/data/item_detail.json');
 
 const pegawaiData = JSON.parse(fs.readFileSync(pegawaiPath, 'utf8'));
 const sbmData = JSON.parse(fs.readFileSync(sbmPath, 'utf8'));
 const memoData = JSON.parse(fs.readFileSync(memoPath, 'utf8'));
+const itemDetailData = JSON.parse(fs.readFileSync(itemDetailPath, 'utf8'));
 
 // 2. Format Pegawai to MASTER_PEGAWAI columns
 const pegawaiRows = pegawaiData.map((p, idx) => ({
@@ -119,13 +121,42 @@ const outMemoPath = path.join(__dirname, '../master_memo.xlsx');
 XLSX.writeFile(wbMemo, outMemoPath);
 console.log(`✅ Berhasil membuat file: ${outMemoPath} (${memoRows.length} nomor memorandum)`);
 
-// 5. Create Full Database Workbook (master_database_lengkap.xlsx)
+// 5. Format MAK & Item Detail to MASTER_MAK columns
+const makRows = itemDetailData.map((item) => ({
+  kode_komponen: item.kodeKomponen || '',
+  kode_mak: item.kodeMak || '',
+  nama_mak: item.namaMak || '',
+  kode_item: item.kode || '',
+  nama_item: item.nama || '',
+  full_label: item.fullLabel || '',
+  full_mak: item.fullMak || ''
+}));
+
+const wbMak = XLSX.utils.book_new();
+const wsMakIndiv = XLSX.utils.json_to_sheet(makRows);
+wsMakIndiv['!cols'] = [
+  { wch: 30 }, // kode_komponen
+  { wch: 12 }, // kode_mak
+  { wch: 35 }, // nama_mak
+  { wch: 12 }, // kode_item
+  { wch: 60 }, // nama_item
+  { wch: 65 }, // full_label
+  { wch: 35 }, // full_mak
+];
+XLSX.utils.book_append_sheet(wbMak, wsMakIndiv, 'MASTER_MAK');
+const outMakPath = path.join(__dirname, '../master_mak.xlsx');
+XLSX.writeFile(wbMak, outMakPath);
+console.log(`✅ Berhasil membuat file: ${outMakPath} (${makRows.length} item detail MAK)`);
+
+// 6. Create Full Database Workbook (master_database_lengkap.xlsx)
 const wbFull = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wbFull, wsPegawai, 'MASTER_PEGAWAI');
 const wsSbm = XLSX.utils.json_to_sheet(sbmRows);
 XLSX.utils.book_append_sheet(wbFull, wsSbm, 'MASTER_SBM');
 const wsMemo = XLSX.utils.json_to_sheet(memoRows);
 XLSX.utils.book_append_sheet(wbFull, wsMemo, 'MASTER_MEMO');
+const wsMak = XLSX.utils.json_to_sheet(makRows);
+XLSX.utils.book_append_sheet(wbFull, wsMak, 'MASTER_MAK');
 
 // Empty structure tabs for transactions
 const wsKegiatan = XLSX.utils.aoa_to_sheet([[

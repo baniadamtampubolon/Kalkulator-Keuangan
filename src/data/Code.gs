@@ -14,6 +14,7 @@ const SHEET_NAMES = {
   PEGAWAI: 'MASTER_PEGAWAI',
   SBM: 'MASTER_SBM',
   MEMO: 'MASTER_MEMO',
+  MAK: 'MASTER_MAK',
   KEGIATAN: 'DB_KEGIATAN',
   PESERTA: 'DB_PESERTA',
   REKAP: 'REKAP_PERDIN_48KOLOM',
@@ -35,6 +36,9 @@ const DEFAULT_HEADERS = {
   MEMO: [
     'tahun_anggaran', 'nomor_urut', 'format_lengkap', 'tanggal_memo', 'perihal',
     'id_kegiatan_ref', 'status', 'nominal', 'MAK'
+  ],
+  MAK: [
+    'kode_komponen', 'kode_mak', 'nama_mak', 'kode_item', 'nama_item', 'full_label', 'full_mak'
   ],
   KEGIATAN: [
     'id_kegiatan', 'kode_kegiatan', 'nama_kegiatan', 'jenis_pengajuan', 'no_spm', 'no_spby',
@@ -81,11 +85,12 @@ function SETUP_INITIAL_TABS() {
   getOrCreateSheet(ss, SHEET_NAMES.PEGAWAI, DEFAULT_HEADERS.PEGAWAI);
   getOrCreateSheet(ss, SHEET_NAMES.SBM, DEFAULT_HEADERS.SBM);
   getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
+  getOrCreateSheet(ss, SHEET_NAMES.MAK, DEFAULT_HEADERS.MAK);
   getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
   getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
   getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
   getOrCreateSheet(ss, SHEET_NAMES.LOGS, ['Timestamp', 'Action', 'Reference_ID', 'Details']);
-  Logger.log('✅ Inisialisasi 7 tab lembar kerja berhasil!');
+  Logger.log('✅ Inisialisasi 8 tab lembar kerja berhasil!');
 }
 
 function getSpreadsheet() {
@@ -107,6 +112,7 @@ function doGet(e) {
       const pegawaiSheet = getOrCreateSheet(ss, SHEET_NAMES.PEGAWAI, DEFAULT_HEADERS.PEGAWAI);
       const sbmSheet = getOrCreateSheet(ss, SHEET_NAMES.SBM, DEFAULT_HEADERS.SBM);
       const memoSheet = getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
+      const makSheet = getOrCreateSheet(ss, SHEET_NAMES.MAK, DEFAULT_HEADERS.MAK);
 
       return createJsonResponse({
         status: 'success',
@@ -114,6 +120,7 @@ function doGet(e) {
           pegawai: sheetToObjects(pegawaiSheet),
           sbm: sheetToObjects(sbmSheet),
           memo: sheetToObjects(memoSheet),
+          mak: sheetToObjects(makSheet),
           latestSpdNumber: getLatestSpdNumberFromSheet(ss)
         }
       });
@@ -194,6 +201,30 @@ function doPost(e) {
         status: 'success',
         message: 'Data pegawai ' + namaLengkap + ' berhasil disimpan ke MASTER_PEGAWAI Google Spreadsheet.',
         idPegawai: idPegawai
+      });
+    }
+
+    // 1b. SINKRONISASI MASTER MAK & ITEM DETAIL
+    if (action === 'SYNC_MASTER_MAK') {
+      const items = payload.items || [];
+      const makSheet = getOrCreateSheet(ss, SHEET_NAMES.MAK, DEFAULT_HEADERS.MAK);
+      makSheet.clearContents();
+      makSheet.appendRow(DEFAULT_HEADERS.MAK);
+      if (items.length > 0) {
+        const rows = items.map(it => [
+          it.kodeKomponen || '',
+          it.kodeMak || '',
+          it.namaMak || '',
+          it.kode || '',
+          it.nama || '',
+          it.fullLabel || '',
+          it.fullMak || ''
+        ]);
+        makSheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
+      }
+      return createJsonResponse({
+        status: 'SUCCESS',
+        message: 'Master MAK & Item Detail (' + items.length + ' item) berhasil disinkronkan ke MASTER_MAK Google Spreadsheet.'
       });
     }
 

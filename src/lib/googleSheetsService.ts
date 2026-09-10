@@ -2,6 +2,7 @@ import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan 
 import { generateIdKegiatan, getSavedKegiatanList } from "./kegiatanHelper";
 import { getMonthRoman } from "./calc";
 import { parseSpdNumber, saveLatestRegisteredSpdNumber } from "./spdHelper";
+import { ItemDetailItem, LIST_ITEM_DETAIL } from "@/data/mak_akun";
 
 export interface GasApiResponse<T = unknown> {
   status: "success" | "error";
@@ -14,6 +15,7 @@ export interface MasterSyncData {
   pegawai?: Pegawai[];
   sbm?: SbmRate[];
   memo?: NomorMemo[];
+  mak?: ItemDetailItem[];
 }
 
 export const DEFAULT_GAS_API_URL =
@@ -297,14 +299,31 @@ export async function fetchMasterDataFromSheet(
         })
         .filter((m) => m.nomor !== "" || m.noMemo !== "" || m.perihal !== "");
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const normalizedMak: ItemDetailItem[] = ((json.data as any).mak || [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((m: any) => ({
+          kode: String(m.kode_item || m.kode || ""),
+          nama: String(m.nama_item || m.nama || ""),
+          fullLabel: String(m.full_label || m.fullLabel || ""),
+          kodeMak: String(m.kode_mak || m.kodeMak || ""),
+          namaMak: String(m.nama_mak || m.namaMak || ""),
+          kodeKomponen: String(m.kode_komponen || m.kodeKomponen || ""),
+          fullMak: String(m.full_mak || m.fullMak || ""),
+        }))
+        .filter((m: ItemDetailItem) => m.kode !== "");
+
       const normalizedData: MasterSyncData = {
         pegawai: normalizedPegawai.length > 0 ? normalizedPegawai : undefined,
         sbm: normalizedSbm.length > 0 ? normalizedSbm : undefined,
         memo: normalizedMemo.length > 0 ? normalizedMemo : undefined,
+        mak: normalizedMak.length > 0 ? normalizedMak : undefined,
       };
 
       // Sinkronkan nomor SPD terakhir dari spreadsheet jika tersedia
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (json.data && (json.data as any).latestSpdNumber) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const cloudSpd = Number((json.data as any).latestSpdNumber);
         if (!isNaN(cloudSpd) && cloudSpd > 0) {
           saveLatestRegisteredSpdNumber(cloudSpd);
@@ -1096,6 +1115,32 @@ export async function pruneGhostRowsInGoogleSheet(
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);
     return { success: false, message: `Gagal membersihkan baris hantu: ${errMsg}` };
+  }
+}
+
+/**
+ * Sinkronisasi Master MAK & Item Detail ke Google Spreadsheet
+ */
+export async function syncMasterMakToGoogleSheet(
+  customUrl?: string
+): Promise<{ success: boolean; message: string }> {
+  const url = customUrl || getGasApiUrl();
+  try {
+    const json = await executeGasRequest<{ status: string; message?: string }>(
+      "POST",
+      { action: "SYNC_MASTER_MAK", items: LIST_ITEM_DETAIL },
+      url
+    );
+    return {
+      success: json.status === "success",
+      message: json.message || "Master MAK & Item Detail berhasil disinkronkan ke Spreadsheet.",
+    };
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      message: `Gagal menyinkronkan Master MAK: ${errMsg}`,
+    };
   }
 }
 

@@ -3,6 +3,8 @@
  * Disarikan dari docs/KODE MAK AKUN.xlsx & kebutuhan operasional Kemenko Pangan
  */
 
+import rawItemDetailList from "./item_detail.json";
+
 export interface MakAkunItem {
   kode: string;
   nama: string;
@@ -48,6 +50,19 @@ export const LIST_NOMOR_KOMPONEN: KomponenItem[] = [
   { kode: "CL.7458.ABR.006.077.GG", nama: "Koordinasi Kebijakan Pengendalian Emisi GRK" },
 ];
 
+export interface ItemDetailItem {
+  kode: string;
+  nama: string;
+  fullLabel: string;
+  kodeMak: string;
+  namaMak?: string;
+  kodeKomponen: string;
+  subKomponen?: string;
+  fullMak: string;
+}
+
+export const LIST_ITEM_DETAIL: ItemDetailItem[] = rawItemDetailList as ItemDetailItem[];
+
 export function getMakAkunName(kode: string): string {
   const found = LIST_NOMOR_MAK.find((m) => m.kode === kode);
   return found ? found.nama : "";
@@ -56,6 +71,50 @@ export function getMakAkunName(kode: string): string {
 export function getKomponenName(kode: string): string {
   const found = LIST_NOMOR_KOMPONEN.find((k) => k.kode === kode);
   return found ? found.nama : "";
+}
+
+/**
+ * Mengambil daftar item detail yang relevan dengan nomor komponen dan/atau nomor MAK yang dipilih.
+ * Mendukung pencarian fleksibel:
+ * 1. Berdasarkan full MAK persis (contoh: "CL.7458.ABR.006.051.0A.521211")
+ * 2. Berdasarkan kombinasi nomorKomp dan nomorMak
+ * 3. Jika hanya salah satu yang terisi, mencocokkan yang ada.
+ */
+export function getItemDetailsForMak(nomorKomp?: string, nomorMak?: string): ItemDetailItem[] {
+  const cleanKomp = (nomorKomp || "").trim();
+  const cleanMak = (nomorMak || "").trim();
+
+  if (!cleanKomp && !cleanMak) return LIST_ITEM_DETAIL;
+
+  if (cleanKomp && cleanKomp.match(/\.\d{6}$/)) {
+    const matchedFull = LIST_ITEM_DETAIL.filter((item) => item.fullMak === cleanKomp);
+    if (matchedFull.length > 0) return matchedFull;
+  }
+
+  return LIST_ITEM_DETAIL.filter((item) => {
+    if (cleanMak && item.kodeMak !== cleanMak && !cleanMak.endsWith(item.kodeMak)) {
+      return false;
+    }
+
+    if (cleanKomp) {
+      if (item.kodeKomponen === cleanKomp) return true;
+      if (item.subKomponen === cleanKomp) return true;
+      if (cleanKomp.includes(item.subKomponen || "") || item.kodeKomponen.includes(cleanKomp)) return true;
+      return false;
+    }
+
+    return true;
+  });
+}
+
+export function getItemDetailByKode(kodeOrLabel: string): ItemDetailItem | undefined {
+  if (!kodeOrLabel) return undefined;
+  const clean = kodeOrLabel.trim();
+  return (
+    LIST_ITEM_DETAIL.find((item) => item.kode === clean) ||
+    LIST_ITEM_DETAIL.find((item) => item.fullLabel === clean) ||
+    LIST_ITEM_DETAIL.find((item) => item.fullLabel.toLowerCase() === clean.toLowerCase())
+  );
 }
 
 export interface MakHierarchyDetail {
