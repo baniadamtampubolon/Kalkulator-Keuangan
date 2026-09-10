@@ -38,15 +38,10 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
   const kotaTujuanText = (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
 
   // Calculate Column Totals across rows (sum each component safely)
-  const totalUh = rows.reduce(
-    (acc, r) =>
-      acc +
-      (r.biayaUhBiasa || 0) +
-      (r.biayaUhBiasa60 || 0) +
-      (r.biayaUhHalfday || 0) +
-      (r.biayaUhFullboard || 0),
-    0
-  );
+  const totalUhBiasa = rows.reduce((acc, r) => acc + (r.biayaUhBiasa || 0), 0);
+  const totalUhBiasa60 = rows.reduce((acc, r) => acc + (r.biayaUhBiasa60 || 0), 0);
+  const totalUhHalfday = rows.reduce((acc, r) => acc + (r.biayaUhHalfday || 0), 0);
+  const totalUhFullboard = rows.reduce((acc, r) => acc + (r.biayaUhFullboard || 0), 0);
 
   const totalTiket = rows.reduce((acc, r) => acc + (r.tiket || 0), 0);
   const totalDukunganTransport = rows.reduce((acc, r) => acc + (r.dukunganTransportasi || 0), 0);
@@ -63,18 +58,21 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
 
   const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
 
-  // Determine which cost columns should be displayed:
-  // Shown if explicitly checked in filter OR if any participant has an amount > 0
-  const isAnyUhActive = Boolean(
-    activeUh?.uhBiasa || activeUh?.uhBiasa60 || activeUh?.uhHalfday || activeUh?.uhFullboard
-  );
+  const showUhBiasa = Boolean(activeUh?.uhBiasa || totalUhBiasa > 0);
+  const showUhBiasa60 = Boolean(activeUh?.uhBiasa60 || totalUhBiasa60 > 0);
+  const showUhHalfday = Boolean(activeUh?.uhHalfday || totalUhHalfday > 0);
+  const showUhFullboard = Boolean(activeUh?.uhFullboard || totalUhFullboard > 0);
+
+  const hasMultipleUh =
+    [showUhBiasa, showUhBiasa60, showUhHalfday, showUhFullboard].filter(Boolean).length > 1;
+  const uhBiasaLabel = hasMultipleUh ? "UH Biasa (100%)" : "Uang Harian";
+
   const showTransDarat = Boolean(activeCols?.transportasiDarat || totalTransDarat > 0);
   const showDukunganTransport = Boolean(activeCols?.dukunganTransportasi || totalDukunganTransport > 0);
   const showTransLokal = Boolean(activeCols?.transportasiLokal || totalTransLokal > 0);
   const showTransJakartaPp = Boolean(activeCols?.transportJakartaPp || totalTransJakartaPp > 0);
   const showTransDaerahPp = Boolean(activeCols?.transportDaerahPp || totalTransDaerahPp > 0);
   const showTiket = Boolean(activeCols?.tiket || totalTiket > 0);
-  const showUh = Boolean(isAnyUhActive || totalUh > 0);
   const showHotel = Boolean(activeCols?.hotel || activeCols?.penginapan30 || totalHotel > 0);
   const showFullday = Boolean(activeCols?.fulldayMeeting || totalFullday > 0);
   const showFullboard = Boolean(activeCols?.fullboardMeeting || totalFullboard > 0);
@@ -89,7 +87,10 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
   if (showTransJakartaPp) rincianColCount++;
   if (showTransDaerahPp) rincianColCount++;
   if (showTiket) rincianColCount++;
-  if (showUh) rincianColCount++;
+  if (showUhBiasa) rincianColCount++;
+  if (showUhBiasa60) rincianColCount++;
+  if (showUhHalfday) rincianColCount++;
+  if (showUhFullboard) rincianColCount++;
   if (showHotel) rincianColCount++;
   if (showFullday) rincianColCount++;
   if (showFullboard) rincianColCount++;
@@ -297,7 +298,10 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                 {showTransJakartaPp && <th className="border border-black p-0.5">Transport Jakarta PP</th>}
                 {showTransDaerahPp && <th className="border border-black p-0.5">Transport Daerah PP</th>}
                 {showTiket && <th className="border border-black p-0.5">Tiket PP</th>}
-                {showUh && <th className="border border-black p-0.5">Uang Harian</th>}
+                {showUhBiasa && <th className="border border-black p-0.5">{uhBiasaLabel}</th>}
+                {showUhBiasa60 && <th className="border border-black p-0.5">UH 60%</th>}
+                {showUhHalfday && <th className="border border-black p-0.5">UH Halfday</th>}
+                {showUhFullboard && <th className="border border-black p-0.5">UH Fullboard</th>}
                 {showHotel && <th className="border border-black p-0.5">Hotel</th>}
                 {showFullday && <th className="border border-black p-0.5">Paket Fullday</th>}
                 {showFullboard && <th className="border border-black p-0.5">Paket Fullboard</th>}
@@ -309,12 +313,6 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
             </thead>
             <tbody>
               {rows.map((row, idx) => {
-                const uhRow =
-                  (row.biayaUhBiasa || 0) +
-                  (row.biayaUhBiasa60 || 0) +
-                  (row.biayaUhHalfday || 0) +
-                  (row.biayaUhFullboard || 0);
-
                 const hotelRow = (row.hotel || 0) + (row.penginapan30 || 0);
 
                 const tujuanDisplay =
@@ -380,9 +378,24 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                         {(row.tiket || 0).toLocaleString("id-ID")}
                       </td>
                     )}
-                    {showUh && (
+                    {showUhBiasa && (
                       <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
-                        {uhRow.toLocaleString("id-ID")}
+                        {(row.biayaUhBiasa || 0).toLocaleString("id-ID")}
+                      </td>
+                    )}
+                    {showUhBiasa60 && (
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                        {(row.biayaUhBiasa60 || 0).toLocaleString("id-ID")}
+                      </td>
+                    )}
+                    {showUhHalfday && (
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                        {(row.biayaUhHalfday || 0).toLocaleString("id-ID")}
+                      </td>
+                    )}
+                    {showUhFullboard && (
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                        {(row.biayaUhFullboard || 0).toLocaleString("id-ID")}
                       </td>
                     )}
                     {showHotel && (
@@ -459,9 +472,24 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                     {totalTiket.toLocaleString("id-ID")}
                   </td>
                 )}
-                {showUh && (
+                {showUhBiasa && (
                   <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
-                    {totalUh.toLocaleString("id-ID")}
+                    {totalUhBiasa.toLocaleString("id-ID")}
+                  </td>
+                )}
+                {showUhBiasa60 && (
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                    {totalUhBiasa60.toLocaleString("id-ID")}
+                  </td>
+                )}
+                {showUhHalfday && (
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                    {totalUhHalfday.toLocaleString("id-ID")}
+                  </td>
+                )}
+                {showUhFullboard && (
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                    {totalUhFullboard.toLocaleString("id-ID")}
                   </td>
                 )}
                 {showHotel && (
