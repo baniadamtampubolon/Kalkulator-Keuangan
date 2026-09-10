@@ -32,6 +32,7 @@ export function calculateRowTotal(
     forceRecalcTransport?: boolean;
     skipAutoTransport?: boolean;
     sbmJakarta?: SbmRate;
+    isCustomNominal?: boolean;
   }
 ): ParticipantRow {
   const updated = { ...row };
@@ -46,13 +47,26 @@ export function calculateRowTotal(
   const uhRateHalfday = sbm?.uhHalfday || 0;
   const uhRateFullboard = sbm?.uhFullboard || 0;
 
+  const shouldCalculateBiaya = (
+    currentBiaya: number | undefined | null,
+    hari: number,
+    rate: number
+  ) => {
+    if (currentBiaya === undefined || currentBiaya === null) return true;
+    if (isDurationChanged) return true;
+    if (options?.forceRecalcUh) return true;
+    // Auto-calculate initial 0 fee when hari > 0 and rate > 0, unless explicitly customized
+    if (currentBiaya === 0 && hari > 0 && rate > 0 && !options?.isCustomNominal) return true;
+    return false;
+  };
+
   if (activeUh.uhBiasa) {
     let hari = updated.hariUhBiasa;
     if (hari === undefined || (isDurationChanged && (row.hariUhBiasa === row.lamaHari || row.hariUhBiasa === 0))) {
       hari = updated.lamaHari;
       updated.hariUhBiasa = hari;
     }
-    if (updated.biayaUhBiasa === undefined || updated.biayaUhBiasa === null || isDurationChanged || options?.forceRecalcUh) {
+    if (shouldCalculateBiaya(updated.biayaUhBiasa, hari, uhRateBiasa)) {
       updated.biayaUhBiasa = hari * uhRateBiasa;
     }
   } else {
@@ -65,7 +79,7 @@ export function calculateRowTotal(
       hari = updated.lamaHari;
       updated.hariUhBiasa60 = hari;
     }
-    if (updated.biayaUhBiasa60 === undefined || updated.biayaUhBiasa60 === null || isDurationChanged || options?.forceRecalcUh) {
+    if (shouldCalculateBiaya(updated.biayaUhBiasa60, hari, Math.round(uhRateBiasa * 0.6))) {
       updated.biayaUhBiasa60 = Math.round(hari * uhRateBiasa * 0.6);
     }
   } else {
@@ -78,7 +92,7 @@ export function calculateRowTotal(
       hari = updated.lamaHari;
       updated.hariUhHalfday = hari;
     }
-    if (updated.biayaUhHalfday === undefined || updated.biayaUhHalfday === null || isDurationChanged || options?.forceRecalcUh) {
+    if (shouldCalculateBiaya(updated.biayaUhHalfday, hari, uhRateHalfday)) {
       updated.biayaUhHalfday = hari * uhRateHalfday;
     }
   } else {
@@ -91,7 +105,7 @@ export function calculateRowTotal(
       hari = updated.lamaHari;
       updated.hariUhFullboard = hari;
     }
-    if (updated.biayaUhFullboard === undefined || updated.biayaUhFullboard === null || isDurationChanged || options?.forceRecalcUh) {
+    if (shouldCalculateBiaya(updated.biayaUhFullboard, hari, uhRateFullboard)) {
       updated.biayaUhFullboard = hari * uhRateFullboard;
     }
   } else {

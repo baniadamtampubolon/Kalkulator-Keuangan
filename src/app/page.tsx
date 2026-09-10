@@ -156,6 +156,8 @@ export default function Home() {
   // Participant Rows State (Clean initial empty row dengan nomor SPD berlanjut dari database)
   const [rows, setRows] = useState<ParticipantRow[]>(() => {
     const nextSpd = typeof window !== "undefined" ? formatSpdNumber(getLatestRegisteredSpdNumber() + 1) : "01";
+    const initSbm = findSbmByProvince(sbmRaw as SbmRate[], "JAWA BARAT");
+    const initUhRate = initSbm?.uhBiasa || 430000;
     const initialRow: ParticipantRow = {
       id: "1",
       kodeNama: "",
@@ -171,7 +173,7 @@ export default function Home() {
       nomorSt: "",
       nomorSpd: nextSpd,
       hariUhBiasa: 1,
-      biayaUhBiasa: 0,
+      biayaUhBiasa: initUhRate,
       hariUhBiasa60: 0,
       biayaUhBiasa60: 0,
       hariUhHalfday: 0,
@@ -192,7 +194,7 @@ export default function Home() {
       belanjaBahan: 0,
       pengRill: 0,
       riilItems: [],
-      totalJumlah: 0,
+      totalJumlah: initUhRate,
     };
 
     return [initialRow];
@@ -239,7 +241,44 @@ export default function Home() {
       const nextUh = typeof action === "function" ? action(prevUh) : action;
       const sbm = findSbmByProvince(sbmList, header.provinsiTujuan);
       const sbmJakarta = findSbmByProvince(sbmList, header.berangkatDari || "DKI JAKARTA");
-      setRows((prevRows) => prevRows.map((r) => calculateRowTotal(r, sbm, nextUh, activeCols, { sbmJakarta })));
+
+      setRows((prevRows) =>
+        prevRows.map((r) => {
+          const updatedRow = { ...r };
+
+          // If a UH option is newly turned on, initialize its days to 1 (or lamaHari) and calculate its fee
+          if (!prevUh.uhBiasa && nextUh.uhBiasa) {
+            const hari = updatedRow.hariUhBiasa && updatedRow.hariUhBiasa > 0
+              ? updatedRow.hariUhBiasa
+              : Math.max(1, updatedRow.lamaHari || 1);
+            updatedRow.hariUhBiasa = hari;
+            updatedRow.biayaUhBiasa = hari * (sbm?.uhBiasa || 0);
+          }
+          if (!prevUh.uhBiasa60 && nextUh.uhBiasa60) {
+            const hari = updatedRow.hariUhBiasa60 && updatedRow.hariUhBiasa60 > 0
+              ? updatedRow.hariUhBiasa60
+              : Math.max(1, updatedRow.lamaHari || 1);
+            updatedRow.hariUhBiasa60 = hari;
+            updatedRow.biayaUhBiasa60 = Math.round(hari * (sbm?.uhBiasa || 0) * 0.6);
+          }
+          if (!prevUh.uhHalfday && nextUh.uhHalfday) {
+            const hari = updatedRow.hariUhHalfday && updatedRow.hariUhHalfday > 0
+              ? updatedRow.hariUhHalfday
+              : Math.max(1, updatedRow.lamaHari || 1);
+            updatedRow.hariUhHalfday = hari;
+            updatedRow.biayaUhHalfday = hari * (sbm?.uhHalfday || 0);
+          }
+          if (!prevUh.uhFullboard && nextUh.uhFullboard) {
+            const hari = updatedRow.hariUhFullboard && updatedRow.hariUhFullboard > 0
+              ? updatedRow.hariUhFullboard
+              : Math.max(1, updatedRow.lamaHari || 1);
+            updatedRow.hariUhFullboard = hari;
+            updatedRow.biayaUhFullboard = hari * (sbm?.uhFullboard || 0);
+          }
+
+          return calculateRowTotal(updatedRow, sbm, nextUh, activeCols, { sbmJakarta });
+        })
+      );
       return nextUh;
     });
   };
@@ -349,6 +388,11 @@ export default function Home() {
     const nextNo = getNextNoKegiatan(today, "A");
     const newId = generateIdKegiatan(today, nextNo, "A");
     const nextSpd = formatSpdNumber(getLatestRegisteredSpdNumber() + 1);
+    const sbm = findSbmByProvince(sbmList, "JAWA BARAT");
+    const uhRateBiasa = sbm?.uhBiasa || 430000;
+    const uhRateHalfday = sbm?.uhHalfday || 95000;
+    const uhRateFullboard = sbm?.uhFullboard || 130000;
+
     const initialRow: ParticipantRow = {
       id: "1",
       kodeNama: "",
@@ -363,14 +407,14 @@ export default function Home() {
       lamaHari: 1,
       nomorSt: "",
       nomorSpd: nextSpd,
-      hariUhBiasa: 1,
-      biayaUhBiasa: 0,
-      hariUhBiasa60: 0,
-      biayaUhBiasa60: 0,
-      hariUhHalfday: 0,
-      biayaUhHalfday: 0,
-      hariUhFullboard: 0,
-      biayaUhFullboard: 0,
+      hariUhBiasa: activeUh.uhBiasa ? 1 : 0,
+      biayaUhBiasa: activeUh.uhBiasa ? uhRateBiasa : 0,
+      hariUhBiasa60: activeUh.uhBiasa60 ? 1 : 0,
+      biayaUhBiasa60: activeUh.uhBiasa60 ? Math.round(uhRateBiasa * 0.6) : 0,
+      hariUhHalfday: activeUh.uhHalfday ? 1 : 0,
+      biayaUhHalfday: activeUh.uhHalfday ? uhRateHalfday : 0,
+      hariUhFullboard: activeUh.uhFullboard ? 1 : 0,
+      biayaUhFullboard: activeUh.uhFullboard ? uhRateFullboard : 0,
       tiket: 0,
       dukunganTransportasi: 0,
       transportasiDarat: 0,
@@ -388,6 +432,9 @@ export default function Home() {
       totalJumlah: 0,
     };
 
+    const sbmJakarta = findSbmByProvince(sbmList, header.berangkatDari || "DKI JAKARTA");
+    const calculatedInitialRow = calculateRowTotal(initialRow, sbm, activeUh, activeCols, { sbmJakarta });
+
     setHeader((prev) => ({
       ...prev,
       idKegiatan: newId,
@@ -400,7 +447,7 @@ export default function Home() {
       tanggalSpd: today,
       tanggalMemo: today,
     }));
-    setRows([initialRow]);
+    setRows([calculatedInitialRow]);
     setSavedBatchId(null);
     setSavedSnapshot(null);
     setActiveTab("input");

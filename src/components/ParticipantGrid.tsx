@@ -95,7 +95,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
   const handleUpdateRow = (
     id: string,
     updates: Partial<ParticipantRow>,
-    options?: { skipAutoTransport?: boolean }
+    options?: { skipAutoTransport?: boolean; isCustomNominal?: boolean }
   ) => {
     setRows((prev) =>
       prev.map((r) => {
@@ -104,6 +104,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
         return calculateRowTotal(merged, currentSbm, activeUh, activeCols, {
           sbmJakarta,
           skipAutoTransport: options?.skipAutoTransport,
+          isCustomNominal: options?.isCustomNominal,
         });
       })
     );
@@ -166,14 +167,14 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       lamaHari: 1,
       nomorSt: "",
       nomorSpd: nextSpd,
-      hariUhBiasa: 1,
-      biayaUhBiasa: currentSbm?.uhBiasa || 0,
-      hariUhBiasa60: 0,
-      biayaUhBiasa60: 0,
-      hariUhHalfday: 0,
-      biayaUhHalfday: 0,
-      hariUhFullboard: 0,
-      biayaUhFullboard: 0,
+      hariUhBiasa: activeUh.uhBiasa ? (lastRow?.hariUhBiasa ?? 1) : 0,
+      biayaUhBiasa: activeUh.uhBiasa ? (lastRow?.hariUhBiasa ?? 1) * (currentSbm?.uhBiasa || 0) : 0,
+      hariUhBiasa60: activeUh.uhBiasa60 ? (lastRow?.hariUhBiasa60 ?? 1) : 0,
+      biayaUhBiasa60: activeUh.uhBiasa60 ? Math.round((lastRow?.hariUhBiasa60 ?? 1) * (currentSbm?.uhBiasa || 0) * 0.6) : 0,
+      hariUhHalfday: activeUh.uhHalfday ? (lastRow?.hariUhHalfday ?? 1) : 0,
+      biayaUhHalfday: activeUh.uhHalfday ? (lastRow?.hariUhHalfday ?? 1) * (currentSbm?.uhHalfday || 0) : 0,
+      hariUhFullboard: activeUh.uhFullboard ? (lastRow?.hariUhFullboard ?? 1) : 0,
+      biayaUhFullboard: activeUh.uhFullboard ? (lastRow?.hariUhFullboard ?? 1) * (currentSbm?.uhFullboard || 0) : 0,
       tiket: 0,
       dukunganTransportasi: 0,
       transportasiDarat: 0,
@@ -188,7 +189,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       belanjaBahan: 0,
       pengRill: 0,
       riilItems: [],
-      totalJumlah: activeUh.uhBiasa ? currentSbm?.uhBiasa || 0 : 0,
+      totalJumlah: 0,
     };
 
     setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols, { sbmJakarta })]);
@@ -642,7 +643,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                         <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
                         <CurrencyInput
                           value={row.biayaUhBiasa}
-                          onChange={(val) => handleUpdateRow(row.id, { biayaUhBiasa: val })}
+                          onChange={(val) => handleUpdateRow(row.id, { biayaUhBiasa: val }, { isCustomNominal: true })}
                           className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
                           placeholder="0"
                           title="Nominal Uang Harian (Editable: dapat disesuaikan bila dipotong uang makan/lainnya)"
@@ -677,7 +678,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                         <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
                         <CurrencyInput
                           value={row.biayaUhBiasa60}
-                          onChange={(val) => handleUpdateRow(row.id, { biayaUhBiasa60: val })}
+                          onChange={(val) => handleUpdateRow(row.id, { biayaUhBiasa60: val }, { isCustomNominal: true })}
                           className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
                           placeholder="0"
                           title="Nominal UH 60% (Editable: dapat disesuaikan)"
@@ -712,7 +713,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                         <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
                         <CurrencyInput
                           value={row.biayaUhHalfday}
-                          onChange={(val) => handleUpdateRow(row.id, { biayaUhHalfday: val })}
+                          onChange={(val) => handleUpdateRow(row.id, { biayaUhHalfday: val }, { isCustomNominal: true })}
                           className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
                           placeholder="0"
                           title="Nominal UH Halfday (Editable: dapat disesuaikan)"
@@ -747,7 +748,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                         <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
                         <CurrencyInput
                           value={row.biayaUhFullboard}
-                          onChange={(val) => handleUpdateRow(row.id, { biayaUhFullboard: val })}
+                          onChange={(val) => handleUpdateRow(row.id, { biayaUhFullboard: val }, { isCustomNominal: true })}
                           className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
                           placeholder="0"
                           title="Nominal UH Fullboard (Editable: dapat disesuaikan)"
