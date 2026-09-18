@@ -48,6 +48,7 @@ export const LIST_NOMOR_KOMPONEN: KomponenItem[] = [
   { kode: "CL.7458.ABR.006.076.AN", nama: "Monev Pendampingan Pascabencana Alam (Aceh, Sumut, Sumbar)" },
   { kode: "CL.7458.ABR.006.076.FF", nama: "Pendampingan Pascabencana Alam" },
   { kode: "CL.7458.ABR.006.077.GG", nama: "Koordinasi Kebijakan Pengendalian Emisi GRK" },
+  { kode: "CL.7459.ABR.006.071.CC", nama: "Monev Direktif Presiden KSPEAN" },
 ];
 
 export interface ItemDetailItem {
@@ -150,6 +151,8 @@ const SUB_KOMP_DICT: Record<string, string> = {
   "051.0C": "Penyelesaian Tunggakan TA 2025",
   "051.AP": "Alokasi Perjalanan Dinas Pimpinan",
   "071.AA": "Monev Implementasi MRLNLS Bidang Pangan Terkait KDKMP",
+  "071.CC": "Monev Direktif Presiden KSPEAN",
+  "CC": "Monev Direktif Presiden KSPEAN",
   "072.BB": "Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis",
   "073.CC": "MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN",
   "074.DD": "MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT EKOSISTEM PANGAN HAJI",
@@ -200,14 +203,19 @@ export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string, cus
   // Determine descriptions
   let kegOutputUraian =
     "Rekomendasi Kebijakan Program Prioritas Nasional Bidang Tata Niaga dan Distribusi Pangan";
-  if (kegOutputCode.includes("EBA") || kegOutputCode.includes("962")) {
+  if (kegOutputCode.includes("7459")) {
+    kegOutputUraian = "Rekomendasi Kebijakan Program Prioritas Bidang Usaha Pangan dan Pertanian";
+  } else if (kegOutputCode.includes("EBA") || kegOutputCode.includes("962")) {
     kegOutputUraian = "Layanan Dukungan Manajemen Internal Kemenko Pangan";
   } else if (kegOutputCode.includes("EBD") || kegOutputCode.includes("Z24")) {
     kegOutputUraian = "Layanan Umum dan Tata Usaha Kemenko Pangan";
   }
 
   const rawKompNum = komponenCode.replace(/\.$/, "");
-  const defaultKompUraian = KOMP_DICT[rawKompNum] || `Monev dan Koordinasi Bidang ${rawKompNum}`;
+  let defaultKompUraian = KOMP_DICT[rawKompNum] || `Monev dan Koordinasi Bidang ${rawKompNum}`;
+  if (kegOutputCode.includes("7459") && rawKompNum === "071") {
+    defaultKompUraian = "Percepatan Pengawasan Swasembada Pangan, Energi, dan Air Nasional";
+  }
   const komponenUraian = customDetail?.trim() || defaultKompUraian;
 
   const subKeyWithKomp = `${rawKompNum}.${subKomponenCode}`;
