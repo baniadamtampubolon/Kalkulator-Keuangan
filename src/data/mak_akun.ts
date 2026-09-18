@@ -216,14 +216,16 @@ export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string, cus
   if (kegOutputCode.includes("7459") && rawKompNum === "071") {
     defaultKompUraian = "Percepatan Pengawasan Swasembada Pangan, Energi, dan Air Nasional";
   }
-  const komponenUraian = customDetail?.trim() || defaultKompUraian;
+  // Baris Komponen (3 digit, misal 071) mengambil uraian makro dari kamus database
+  const komponenUraian = defaultKompUraian;
 
+  // Baris Sub-Komponen (2 karakter, misal CC/CA) mengambil deskripsi spesifik dari custom detail yang diinput user
   const subKeyWithKomp = `${rawKompNum}.${subKomponenCode}`;
   const subKomponenUraian =
     customDetail?.trim() ||
     SUB_KOMP_DICT[subKeyWithKomp] ||
     SUB_KOMP_DICT[subKomponenCode] ||
-    komponenUraian;
+    defaultKompUraian;
 
   return {
     kegOutputCode,
