@@ -133,6 +133,7 @@ export default function Home() {
     bendahara: "Raka Panji Wibowo, S.Kom, NIP. 19950408202012 1 001",
     petugasVerifikasi: "Noviarty Ningsi Sumirat, S.E, NIP. 19811112201001 2 001",
     nomorKomp: "",
+    detailKomponen: "",
     nomorMak: "",
     itemDetail: "001",
     alatAngkut: "Angkutan Darat",
@@ -444,6 +445,8 @@ export default function Home() {
       keteranganMemo: "",
       nomorMemo: "",
       nomorStMaster: "",
+      nomorKomp: "",
+      detailKomponen: "",
       tanggalSpd: today,
       tanggalMemo: today,
     }));

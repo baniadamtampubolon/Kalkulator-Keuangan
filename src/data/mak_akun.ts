@@ -68,7 +68,8 @@ export function getMakAkunName(kode: string): string {
   return found ? found.nama : "";
 }
 
-export function getKomponenName(kode: string): string {
+export function getKomponenName(kode: string, customDetail?: string): string {
+  if (customDetail && customDetail.trim()) return customDetail.trim();
   const found = LIST_NOMOR_KOMPONEN.find((k) => k.kode === kode);
   return found ? found.nama : "";
 }
@@ -165,7 +166,7 @@ const SUB_KOMP_DICT: Record<string, string> = {
   "Z24.0J": "Layanan Umum dan Tata Usaha",
 };
 
-export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string): MakHierarchyDetail {
+export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string, customDetail?: string): MakHierarchyDetail {
   const cleanKomp = (nomorKompRaw || "CL.7458.ABR.006.051.0A").trim();
   const akunCode = (nomorMakRaw || "524111").trim();
   const akunUraian = getMakAkunName(akunCode) || "Belanja Perjalanan Dinas Biasa";
@@ -206,10 +207,12 @@ export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string): Ma
   }
 
   const rawKompNum = komponenCode.replace(/\.$/, "");
-  const komponenUraian = KOMP_DICT[rawKompNum] || `Monev dan Koordinasi Bidang ${rawKompNum}`;
+  const defaultKompUraian = KOMP_DICT[rawKompNum] || `Monev dan Koordinasi Bidang ${rawKompNum}`;
+  const komponenUraian = customDetail?.trim() || defaultKompUraian;
 
   const subKeyWithKomp = `${rawKompNum}.${subKomponenCode}`;
   const subKomponenUraian =
+    customDetail?.trim() ||
     SUB_KOMP_DICT[subKeyWithKomp] ||
     SUB_KOMP_DICT[subKomponenCode] ||
     komponenUraian;

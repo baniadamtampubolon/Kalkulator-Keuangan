@@ -47,7 +47,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
     return komp || mak || "CL.7458.ABR.006.051.0A.524111";
   })();
 
-  const hierarchy = parseMakHierarchy(header.nomorKomp, header.nomorMak);
+  const hierarchy = parseMakHierarchy(header.nomorKomp, header.nomorMak, header.detailKomponen);
 
   // Signatory formatting for Page 2
   const bendaharaRaw = header.bendahara || "Raka Panji Wibowo, NIP 199504082020121001";

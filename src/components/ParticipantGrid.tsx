@@ -558,7 +558,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 <td className="p-2 w-44 min-w-[160px] text-center font-mono text-slate-700">
                   <span
                     className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200/80 text-[11px] font-medium"
-                    title={header.nomorKomp || "Belum dipilih"}
+                    title={
+                      header.nomorKomp
+                        ? `${header.nomorKomp}${header.detailKomponen ? ` - ${header.detailKomponen}` : ""}`
+                        : "Belum dipilih"
+                    }
                   >
                     {header.nomorKomp || "-"}
                   </span>

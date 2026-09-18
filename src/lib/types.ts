@@ -158,6 +158,7 @@ export interface HeaderData {
   bendahara: string;
   petugasVerifikasi: string;
   nomorKomp: string;
+  detailKomponen?: string;
   nomorMak: string;
   itemDetail: string;
   alatAngkut: string;

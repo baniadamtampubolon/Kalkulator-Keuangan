@@ -54,6 +54,13 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   const [isModalTambahPegawaiOpen, setIsModalTambahPegawaiOpen] = useState(false);
   const [isCustomItemDetail, setIsCustomItemDetail] = useState(false);
 
+  // Mode input Nomor Komponen: dropdown preset vs custom form inputs
+  const [isManualKomponenOverride, setIsManualKomponenOverride] = useState<boolean | null>(null);
+  const isCustomKomponen =
+    isManualKomponenOverride !== null
+      ? isManualKomponenOverride
+      : Boolean(header.nomorKomp && !LIST_NOMOR_KOMPONEN.some((k) => k.kode === header.nomorKomp));
+
   // Daftar item detail sub-kategori MAK yang cocok dengan nomor Komponen & nomor MAK aktif
   const availableItemDetails = React.useMemo(() => {
     return getItemDetailsForMak(header.nomorKomp, header.nomorMak);
@@ -859,36 +866,89 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
-                  NOMOR KOMPONEN
+                  NOMOR KOMPONEN {isCustomKomponen ? "(CUSTOM)" : ""}
                 </label>
-                {getKomponenName(header.nomorKomp) && (
-                  <span
-                    className="text-[10px] font-medium text-slate-500 truncate max-w-[240px]"
-                    title={getKomponenName(header.nomorKomp)}
-                  >
-                    {getKomponenName(header.nomorKomp)}
-                  </span>
-                )}
-              </div>
-              <select
-                value={header.nomorKomp || ""}
-                onChange={(e) => handleChange("nomorKomp", e.target.value)}
-                className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 cursor-pointer text-xs"
-              >
-                <option value="">-- Pilih Komponen --</option>
-                {LIST_NOMOR_KOMPONEN.map((k) => (
-                  <option key={k.kode} value={k.kode}>
-                    {k.kode} - {k.nama}
-                  </option>
-                ))}
-                {header.nomorKomp &&
-                  !LIST_NOMOR_KOMPONEN.some((k) => k.kode === header.nomorKomp) && (
-                    <option value={header.nomorKomp}>
-                      {header.nomorKomp}
-                      {getKomponenName(header.nomorKomp) ? ` - ${getKomponenName(header.nomorKomp)}` : ""}
-                    </option>
+                <div className="flex items-center gap-2">
+                  {!isCustomKomponen && getKomponenName(header.nomorKomp, header.detailKomponen) && (
+                    <span
+                      className="text-[10px] font-medium text-slate-500 truncate max-w-[180px]"
+                      title={getKomponenName(header.nomorKomp, header.detailKomponen)}
+                    >
+                      {getKomponenName(header.nomorKomp, header.detailKomponen)}
+                    </span>
                   )}
-              </select>
+                  <button
+                    type="button"
+                    onClick={() => setIsManualKomponenOverride(!isCustomKomponen)}
+                    className="text-[10px] font-medium text-slate-500 hover:text-slate-800 underline transition-colors cursor-pointer"
+                  >
+                    {isCustomKomponen ? "Pilih dari daftar" : "Custom"}
+                  </button>
+                </div>
+              </div>
+
+              {!isCustomKomponen ? (
+                <select
+                  value={header.nomorKomp || ""}
+                  onChange={(e) => {
+                    if (e.target.value === "__CUSTOM__") {
+                      setIsManualKomponenOverride(true);
+                    } else {
+                      const selected = LIST_NOMOR_KOMPONEN.find((k) => k.kode === e.target.value);
+                      setHeader((prev) => ({
+                        ...prev,
+                        nomorKomp: e.target.value,
+                        detailKomponen: selected ? selected.nama : prev.detailKomponen || "",
+                      }));
+                    }
+                  }}
+                  className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 cursor-pointer text-xs"
+                >
+                  <option value="">-- Pilih Komponen --</option>
+                  {LIST_NOMOR_KOMPONEN.map((k) => (
+                    <option key={k.kode} value={k.kode}>
+                      {k.kode} - {k.nama}
+                    </option>
+                  ))}
+                  <option value="__CUSTOM__">✏️ Ketik Manual / Komponen Custom...</option>
+                  {header.nomorKomp &&
+                    !LIST_NOMOR_KOMPONEN.some((k) => k.kode === header.nomorKomp) && (
+                      <option value={header.nomorKomp}>
+                        {header.nomorKomp}
+                        {header.detailKomponen || getKomponenName(header.nomorKomp)
+                          ? ` - ${header.detailKomponen || getKomponenName(header.nomorKomp)}`
+                          : ""} (Custom)
+                      </option>
+                    )}
+                </select>
+              ) : (
+                <div className="space-y-2.5 p-3 bg-slate-50/90 rounded-xl border border-slate-200">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-700 block">
+                      Masukan nomor Komponen Custom:
+                    </label>
+                    <input
+                      type="text"
+                      value={header.nomorKomp || ""}
+                      onChange={(e) => handleChange("nomorKomp", e.target.value)}
+                      placeholder="Contoh: CL.7458.ABR.006.051.0A"
+                      className="input-default w-full h-8 px-2.5 font-mono font-bold text-slate-800 text-xs bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-700 block">
+                      Masukan detail Nomor Komponen:
+                    </label>
+                    <input
+                      type="text"
+                      value={header.detailKomponen || ""}
+                      onChange={(e) => handleChange("detailKomponen", e.target.value)}
+                      placeholder="Contoh: Koordinasi dan Evaluasi Kebijakan Tata Niaga"
+                      className="input-default w-full h-8 px-2.5 font-medium text-slate-800 text-xs bg-white"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* NOMOR MAK */}
