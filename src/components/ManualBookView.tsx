@@ -42,8 +42,8 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
 
   const filteredSections = searchQuery.trim()
     ? sections.filter((s) =>
-        s.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      s.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : sections;
 
   const scrollToSection = (id: string) => {
@@ -103,11 +103,10 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                     key={sec.id}
                     type="button"
                     onClick={() => scrollToSection(sec.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
-                      isSelected
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${isSelected
                         ? "bg-[#0071e3] text-white shadow-xs font-semibold"
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <Icon className={`w-4 h-4 shrink-0 ${isSelected ? "text-white" : "text-slate-400"}`} />
@@ -115,11 +114,10 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                     </div>
                     {sec.badge && (
                       <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                          isSelected
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${isSelected
                             ? "bg-white/20 text-white"
                             : "bg-amber-100 text-amber-800 border border-amber-200"
-                        }`}
+                          }`}
                       >
                         {sec.badge}
                       </span>

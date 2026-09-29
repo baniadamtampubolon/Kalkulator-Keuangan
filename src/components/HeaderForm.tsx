@@ -9,6 +9,8 @@ import {
   getMakAkunName,
   getKomponenName,
   getItemDetailsForMak,
+  getItemDetailByKode,
+  saveCustomItemDetail,
   OPSI_PERIHAL_MEMORANDUM,
 } from "@/data/mak_akun";
 import { generateIdKegiatan } from "@/lib/kegiatanHelper";
@@ -226,9 +228,9 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
     handleChange("kotaTujuanList", filtered);
   };
 
-  const updateIdKegiatan = (newDate?: string, newUrut?: string, newKategori?: "A" | "B") => {
+  const updateIdKegiatan = (newDate?: string, newUrut?: string, newKategori?: "A" | "NA" | "B") => {
     const d = newDate !== undefined ? newDate : header.tanggalSpd;
-    const u = newUrut !== undefined ? newUrut : (header.noKegiatanUrut || "01");
+    const u = newUrut !== undefined ? newUrut : (header.noKegiatanUrut || "001");
     const k = newKategori !== undefined ? newKategori : (header.kategoriSpj || "A");
     const newId = generateIdKegiatan(d, u, k);
     setHeader((prev) => ({
@@ -238,6 +240,49 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
       kategoriSpj: k,
       idKegiatan: newId,
     }));
+  };
+
+  // Item Detail & Keterangannya Handlers (Auto-Save ke Database Sistem)
+  const handleItemDetailKodeChange = (kodeVal: string) => {
+    handleChange("itemDetail", kodeVal);
+    const found = getItemDetailByKode(kodeVal);
+    if (found && (!header.keteranganItemDetail || header.keteranganItemDetail.trim() === "")) {
+      handleChange("keteranganItemDetail", found.nama);
+    }
+    if (kodeVal) {
+      saveCustomItemDetail({
+        kode: kodeVal,
+        nama: header.keteranganItemDetail || (found ? found.nama : `Item Detail ${kodeVal}`),
+        kodeMak: header.nomorMak,
+        kodeKomponen: header.nomorKomp,
+      });
+    }
+  };
+
+  const handleItemDetailKeteranganChange = (ketVal: string) => {
+    handleChange("keteranganItemDetail", ketVal);
+    if (header.itemDetail) {
+      saveCustomItemDetail({
+        kode: header.itemDetail,
+        nama: ketVal,
+        kodeMak: header.nomorMak,
+        kodeKomponen: header.nomorKomp,
+      });
+    }
+  };
+
+  const handleSelectQuickItemDetail = (selectedVal: string) => {
+    if (!selectedVal) return;
+    const found =
+      availableItemDetails.find((i) => i.fullLabel === selectedVal || i.kode === selectedVal) ||
+      getItemDetailByKode(selectedVal);
+    if (found) {
+      handleChange("itemDetail", found.kode);
+      handleChange("keteranganItemDetail", found.nama);
+      saveCustomItemDetail(found);
+    } else {
+      handleChange("itemDetail", selectedVal);
+    }
   };
 
   return (
@@ -280,10 +325,10 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   ID Kegiatan
                 </span>
                 <span className="px-2 py-0.5 rounded-md font-mono font-bold text-xs bg-white text-slate-800 border border-slate-200/90 shadow-2xs">
-                  {header.idKegiatan || generateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut || "01", header.kategoriSpj || "A")}
+                  {header.idKegiatan || generateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut || "001", header.kategoriSpj || "A")}
                 </span>
                 <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/60 text-slate-600 border border-slate-300/50">
-                  {(header.kategoriSpj || "A") === "A" ? "Kategori A • ASN (PNS/PPPK)" : "Kategori B • Non-ASN (Eksternal)"}
+                  {(header.kategoriSpj || "A") === "A" ? "Kategori A • ASN (PNS/PPPK)" : "Kategori NA • Non-ASN (Eksternal)"}
                 </span>
               </div>
               <p className="text-[10.5px] text-slate-400 mt-0.5">
@@ -293,7 +338,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            {/* Segmented Control Kategori A / B (macOS Style) */}
+            {/* Segmented Control Kategori A / NA (macOS Style) */}
             <div className="inline-flex rounded-lg bg-slate-200/60 p-0.5 text-xs font-medium border border-slate-300/40">
               <button
                 type="button"
@@ -309,15 +354,15 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => updateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut, "B")}
+                onClick={() => updateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut, "NA")}
                 className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                  (header.kategoriSpj || "A") === "B"
+                  (header.kategoriSpj || "A") === "NA" || (header.kategoriSpj as string) === "B"
                     ? "bg-white text-slate-900 shadow-xs"
                     : "text-slate-500 hover:text-slate-800"
                 }`}
                 title="Pilih Non-ASN jika peserta adalah eksternal / narasumber"
               >
-                Non-ASN [B]
+                Non-ASN [NA]
               </button>
             </div>
 
@@ -327,13 +372,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               <input
                 type="text"
                 maxLength={3}
-                value={header.noKegiatanUrut || "01"}
+                placeholder="001"
+                value={header.noKegiatanUrut || "001"}
                 onChange={(e) => {
                   const val = e.target.value.replace(/[^0-9]/g, "");
                   updateIdKegiatan(header.tanggalSpd, val, header.kategoriSpj);
                 }}
-                className="w-7 text-center text-xs font-mono font-bold text-slate-800 focus:outline-hidden"
-                title="Nomor Urut Kegiatan pada tanggal terpilih (contoh: 01, 02)"
+                className="w-9 text-center text-xs font-mono font-bold text-slate-800 focus:outline-hidden"
+                title="Nomor Urut Kegiatan pada periode bulan terpilih (contoh: 001, 002)"
               />
             </div>
 
@@ -852,7 +898,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-                Kode akun anggaran DIPA, jenis pengajuan biaya, dan nomor SPM (dapat disesuaikan jika perlu)
+                Kode akun anggaran DIPA dan jenis pengajuan biaya (dapat disesuaikan jika perlu)
               </p>
             </div>
           </div>
@@ -988,8 +1034,8 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             </div>
           </div>
 
-          {/* Baris 2: Unit Kerja, Item Detail, Pengajuan, No. SPM */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-0.5">
+          {/* Baris 2: Unit Kerja, Pengajuan, Pilihan Cepat DIPA */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-0.5">
             {/* Unit Kerja */}
             <div className="space-y-1">
               <label className="font-semibold text-slate-700">Unit Kerja</label>
@@ -999,64 +1045,6 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 onChange={(e) => handleChange("unitKerja", e.target.value)}
                 className="input-default w-full h-9 px-2.5 font-medium"
               />
-            </div>
-
-            {/* Item Detail */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <label className="font-semibold text-slate-700">Item Detail</label>
-                {availableItemDetails.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setIsCustomItemDetail(!isCustomItemDetail)}
-                    className="text-[10px] font-medium text-slate-500 hover:text-slate-800 underline transition-colors cursor-pointer"
-                  >
-                    {isCustomItemDetail ? "Pilih dari daftar" : "Custom"}
-                  </button>
-                )}
-              </div>
-              {!isCustomItemDetail && availableItemDetails.length > 0 ? (
-                <select
-                  value={
-                    availableItemDetails.find(
-                      (i) => i.fullLabel === header.itemDetail || i.kode === header.itemDetail
-                    )?.fullLabel || header.itemDetail || ""
-                  }
-                  onChange={(e) => {
-                    if (e.target.value === "__CUSTOM__") {
-                      setIsCustomItemDetail(true);
-                    } else {
-                      handleChange("itemDetail", e.target.value);
-                    }
-                  }}
-                  className="input-human w-full h-9 px-2 font-mono font-medium text-slate-900 cursor-pointer text-xs truncate"
-                  title={header.itemDetail || "Pilih Item Detail"}
-                >
-                  <option value="">-- Pilih Item Detail ({availableItemDetails.length}) --</option>
-                  {availableItemDetails.map((item) => (
-                    <option key={item.kode} value={item.fullLabel}>
-                      {item.fullLabel}
-                    </option>
-                  ))}
-                  <option value="__CUSTOM__">✏️ Ketik Manual Lainnya...</option>
-                  {header.itemDetail &&
-                    !availableItemDetails.some(
-                      (i) => i.fullLabel === header.itemDetail || i.kode === header.itemDetail
-                    ) && (
-                      <option value={header.itemDetail}>
-                        {header.itemDetail} (Custom)
-                      </option>
-                    )}
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  value={header.itemDetail}
-                  onChange={(e) => handleChange("itemDetail", e.target.value)}
-                  placeholder="001 atau nama item detail"
-                  className="input-default w-full h-9 px-2.5 font-mono font-bold text-slate-800 text-xs"
-                />
-              )}
             </div>
 
             {/* Jenis Pengajuan */}
@@ -1078,15 +1066,56 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               </select>
             </div>
 
-            {/* No SPM */}
+            {/* Pilihan Cepat DIPA */}
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">No. SPM</label>
+              <label className="font-semibold text-slate-700 truncate block" title="Pilih Cepat dari Database DIPA (Opsional)">
+                Pilih Cepat Item Detail DIPA
+              </label>
+              <select
+                value=""
+                onChange={(e) => handleSelectQuickItemDetail(e.target.value)}
+                className="input-human w-full h-9 px-2 font-mono text-slate-700 text-xs cursor-pointer truncate"
+                title="Pilih item detail bawaan untuk mengisi otomatis kode & keterangan"
+              >
+                <option value="">-- Pilih dari DIPA ({availableItemDetails.length}) --</option>
+                {availableItemDetails.map((item) => (
+                  <option key={item.kode} value={item.fullLabel}>
+                    {item.fullLabel}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Baris 3: Input Manual Kode Item Detail & Keterangan Item Detail (Auto-Save ke Database) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            {/* Kode Item Detail */}
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 text-xs flex items-center gap-1">
+                <span>Item Detail (Kode)</span>
+                <span className="text-[10px] font-normal text-slate-400">(contoh: 010010)</span>
+              </label>
               <input
                 type="text"
-                value={header.noSpm || ""}
-                onChange={(e) => handleChange("noSpm", e.target.value)}
-                placeholder="00073T"
-                className="input-default w-full h-9 px-2.5 font-mono font-bold text-slate-800"
+                value={header.itemDetail || ""}
+                onChange={(e) => handleItemDetailKodeChange(e.target.value)}
+                placeholder="010010"
+                className="input-default w-full h-9 px-2.5 font-mono font-bold text-slate-900 text-xs"
+              />
+            </div>
+
+            {/* Keterangan Item Detail */}
+            <div className="space-y-1 md:col-span-2">
+              <label className="font-bold text-slate-700 text-xs flex items-center gap-1">
+                <span>Keterangan / Uraian Item Detail</span>
+                <span className="text-[10px] font-normal text-slate-400">(contoh: Belanja Keperluan ATK)</span>
+              </label>
+              <input
+                type="text"
+                value={header.keteranganItemDetail || ""}
+                onChange={(e) => handleItemDetailKeteranganChange(e.target.value)}
+                placeholder="Belanja Keperluan ATK / Satuan Biaya Tiket Pesawat..."
+                className="input-default w-full h-9 px-2.5 font-medium text-slate-900 text-xs"
               />
             </div>
           </div>

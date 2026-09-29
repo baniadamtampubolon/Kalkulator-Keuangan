@@ -86,6 +86,19 @@ export function calculateRowTotal(
     updated.biayaUhBiasa60 = 0;
   }
 
+  if (activeUh.uhBiasa40) {
+    let hari = updated.hariUhBiasa40;
+    if (hari === undefined || (isDurationChanged && (row.hariUhBiasa40 === row.lamaHari || row.hariUhBiasa40 === 0))) {
+      hari = updated.lamaHari;
+      updated.hariUhBiasa40 = hari;
+    }
+    if (shouldCalculateBiaya(updated.biayaUhBiasa40, hari, Math.round(uhRateBiasa * 0.4))) {
+      updated.biayaUhBiasa40 = Math.round(hari * uhRateBiasa * 0.4);
+    }
+  } else {
+    updated.biayaUhBiasa40 = 0;
+  }
+
   if (activeUh.uhHalfday) {
     let hari = updated.hariUhHalfday;
     if (hari === undefined || (isDurationChanged && (row.hariUhHalfday === row.lamaHari || row.hariUhHalfday === 0))) {
@@ -192,6 +205,7 @@ export function calculateRowTotal(
   let total = 0;
   total += updated.biayaUhBiasa;
   total += updated.biayaUhBiasa60;
+  total += updated.biayaUhBiasa40 || 0;
   total += updated.biayaUhHalfday;
   total += updated.biayaUhFullboard;
 

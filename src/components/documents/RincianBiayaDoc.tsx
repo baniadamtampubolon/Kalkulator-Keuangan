@@ -177,6 +177,7 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
           const tanggalCetak = formatDateIndo(activeRow.tanggalMulai || header.tanggalSpd || new Date().toISOString());
           const hariUh100 = activeRow.hariUhBiasa !== undefined ? activeRow.hariUhBiasa : activeRow.lamaHari;
           const hariUh60 = activeRow.hariUhBiasa60 !== undefined ? activeRow.hariUhBiasa60 : activeRow.lamaHari;
+          const hariUh40 = activeRow.hariUhBiasa40 !== undefined ? activeRow.hariUhBiasa40 : activeRow.lamaHari;
           const hariHalfday = activeRow.hariUhHalfday !== undefined ? activeRow.hariUhHalfday : activeRow.lamaHari;
           const hariFullboard = activeRow.hariUhFullboard !== undefined ? activeRow.hariUhFullboard : activeRow.lamaHari;
 
@@ -212,6 +213,15 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
               title: "Uang Harian 60%",
               detail: `${hariUh60}  hari @ Rp  ${Math.round(uhRate * 0.6).toLocaleString("id-ID")}`,
               amount: activeRow.biayaUhBiasa60,
+            });
+          }
+
+          if (activeUh.uhBiasa40 && activeRow.biayaUhBiasa40 && activeRow.biayaUhBiasa40 > 0) {
+            lineItems.push({
+              no: itemNum++,
+              title: "Uang Harian 40%",
+              detail: `${hariUh40}  hari @ Rp  ${Math.round(uhRate * 0.4).toLocaleString("id-ID")}`,
+              amount: activeRow.biayaUhBiasa40,
             });
           }
 

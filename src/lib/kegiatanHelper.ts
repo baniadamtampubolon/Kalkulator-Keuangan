@@ -4,7 +4,24 @@ import { STORAGE_KEY_REKAP } from "./rekapHelper";
 export const STORAGE_KEY_KEGIATAN = "perdin_saved_kegiatan_list";
 
 /**
- * Format string tanggal YYYY-MM-DD menjadi ddmmyy (contoh: 2026-09-08 -> 080926)
+ * Format string tanggal YYYY-MM-DD menjadi YYMM (contoh: 2026-09-08 -> 2609)
+ */
+export function formatDateToYymm(dateStr?: string): string {
+  let d: Date;
+  if (dateStr && !isNaN(new Date(dateStr).getTime())) {
+    d = new Date(dateStr);
+  } else {
+    d = new Date();
+  }
+
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = String(d.getFullYear()).slice(-2);
+
+  return `${year}${month}`;
+}
+
+/**
+ * Format string tanggal YYYY-MM-DD menjadi ddmmyy (contoh: 2026-09-08 -> 080926) - Legacy helper
  */
 export function formatDateToDdmmyy(dateStr?: string): string {
   let d: Date;
@@ -22,30 +39,47 @@ export function formatDateToDdmmyy(dateStr?: string): string {
 }
 
 /**
- * Buat ID Kegiatan dengan format baku: K-ddmmyy-nokegiatan-A/B
- * Contoh: K-080926-08-A
+ * Buat ID Kegiatan dengan format baku baru: KEG-YYMM-001-A (ASN) / KEG-YYMM-001-NA (Non-ASN)
+ * Contoh: KEG-2609-001-A, KEG-2610-002-NA
  * A = ASN (memiliki NIP & pangkat/jabatan)
- * B = Non-ASN (tidak memiliki NIP / eksternal)
+ * NA = Non-ASN (tidak memiliki NIP / eksternal)
  */
 export function generateIdKegiatan(
   tanggalStr?: string,
-  noKegiatan: string | number = "01",
-  kategori: "A" | "B" = "A"
+  noKegiatan: string | number = "001",
+  kategori: "A" | "NA" | "B" = "A"
 ): string {
-  const ddmmyy = formatDateToDdmmyy(tanggalStr);
-  const formattedNo = String(noKegiatan).padStart(2, "0");
-  return `K-${ddmmyy}-${formattedNo}-${kategori}`;
+  const yymm = formatDateToYymm(tanggalStr);
+  const num =
+    typeof noKegiatan === "number"
+      ? noKegiatan
+      : parseInt(String(noKegiatan).replace(/\D/g, "") || "1", 10);
+  const formattedNo = String(isNaN(num) ? 1 : num).padStart(3, "0");
+  const kat = kategori === "NA" || kategori === "B" ? "NA" : "A";
+  return `KEG-${yymm}-${formattedNo}-${kat}`;
 }
 
 /**
- * Deteksi otomatis apakah peserta merupakan ASN (A) atau Non-ASN (B)
+ * Buat ID Peserta dengan format turunan: [ID_KEGIATAN]-[NOMOR_URUT_PESERTA]
+ * Contoh: KEG-2609-001-A-01, KEG-2609-001-A-02, KEG-2609-001-NA-01
  */
-export function detectKategoriFromRows(rows: ParticipantRow[]): "A" | "B" {
+export function generateIdPeserta(
+  idKegiatan: string,
+  urutPeserta: number | string = 1
+): string {
+  const pNo = String(urutPeserta).padStart(2, "0");
+  return `${idKegiatan}-${pNo}`;
+}
+
+/**
+ * Deteksi otomatis apakah peserta merupakan ASN (A) atau Non-ASN (NA)
+ */
+export function detectKategoriFromRows(rows: ParticipantRow[]): "A" | "NA" {
   if (!rows || rows.length === 0) return "A";
   const hasNonAsn = rows.some(
     (r) => Boolean(r.namaExternal && r.namaExternal.trim() !== "") || !r.nip || r.nip.trim() === ""
   );
-  return hasNonAsn ? "B" : "A";
+  return hasNonAsn ? "NA" : "A";
 }
 
 /**
@@ -65,50 +99,70 @@ export function getSavedKegiatanList(): SavedKegiatan[] {
 }
 
 /**
- * Cari nomor urut kegiatan berikutnya untuk tanggal yang dipilih
+ * Cari nomor urut kegiatan berikutnya untuk periode bulan/tahun yang dipilih
  */
 export function getNextNoKegiatan(
   tanggalStr?: string,
-  kategori?: "A" | "B" | SavedKegiatan[],
+  kategori?: "A" | "NA" | "B" | SavedKegiatan[],
   existingList?: SavedKegiatan[]
 ): string {
   const list = Array.isArray(kategori) ? kategori : (existingList || getSavedKegiatanList());
-  const katFilter = typeof kategori === "string" ? kategori : undefined;
-  const ddmmyy = formatDateToDdmmyy(tanggalStr);
+  const katFilter =
+    typeof kategori === "string"
+      ? kategori === "NA" || kategori === "B"
+        ? "NA"
+        : "A"
+      : undefined;
+  const yymm = formatDateToYymm(tanggalStr);
 
-  // Cari semua kegiatan yang memiliki tanggal ddmmyy yang sama
+  // Cari semua kegiatan yang berada pada periode YYMM yang sama
   const matchingNumbers: number[] = [];
   list.forEach((item) => {
-    if (item.idKegiatan && item.idKegiatan.startsWith(`K-${ddmmyy}-`)) {
+    if (!item.idKegiatan) return;
+
+    if (item.idKegiatan.startsWith(`KEG-${yymm}-`)) {
       const parts = item.idKegiatan.split("-");
       if (parts.length >= 4) {
-        if (!katFilter || parts[3] === katFilter) {
+        const itemKat = parts[3] === "NA" || parts[3] === "B" ? "NA" : "A";
+        if (!katFilter || itemKat === katFilter) {
           const num = parseInt(parts[2], 10);
           if (!isNaN(num)) matchingNumbers.push(num);
         }
+      }
+    } else if (item.idKegiatan.startsWith("K-")) {
+      // Legacy K-ddmmyy-no-A/B fallback
+      const parts = item.idKegiatan.split("-");
+      if (parts.length >= 4) {
+        const num = parseInt(parts[2], 10);
+        if (!isNaN(num)) matchingNumbers.push(num);
       }
     }
   });
 
   if (matchingNumbers.length === 0) {
-    return "01";
+    return "001";
   }
 
   const maxNum = Math.max(...matchingNumbers);
-  return String(maxNum + 1).padStart(2, "0");
+  return String(maxNum + 1).padStart(3, "0");
 }
 
 /**
  * Simpan atau perbarui data kegiatan di localStorage
  */
-export function saveKegiatanRecord(kegiatan: SavedKegiatan): {
+export function saveKegiatanRecord(
+  kegiatan: SavedKegiatan,
+  oldIdKegiatan?: string
+): {
   updatedList: SavedKegiatan[];
   isUpdate: boolean;
 } {
   if (typeof window === "undefined") return { updatedList: [], isUpdate: false };
 
   const currentList = getSavedKegiatanList();
-  const existingIdx = currentList.findIndex((k) => k.idKegiatan === kegiatan.idKegiatan);
+  const existingIdx = currentList.findIndex(
+    (k) => k.idKegiatan === kegiatan.idKegiatan || (oldIdKegiatan && k.idKegiatan === oldIdKegiatan)
+  );
 
   let updatedList: SavedKegiatan[];
   let isUpdate = false;

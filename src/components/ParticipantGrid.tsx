@@ -171,6 +171,8 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       biayaUhBiasa: activeUh.uhBiasa ? (lastRow?.hariUhBiasa ?? 1) * (currentSbm?.uhBiasa || 0) : 0,
       hariUhBiasa60: activeUh.uhBiasa60 ? (lastRow?.hariUhBiasa60 ?? 1) : 0,
       biayaUhBiasa60: activeUh.uhBiasa60 ? Math.round((lastRow?.hariUhBiasa60 ?? 1) * (currentSbm?.uhBiasa || 0) * 0.6) : 0,
+      hariUhBiasa40: activeUh.uhBiasa40 ? (lastRow?.hariUhBiasa40 ?? 1) : 0,
+      biayaUhBiasa40: activeUh.uhBiasa40 ? Math.round((lastRow?.hariUhBiasa40 ?? 1) * (currentSbm?.uhBiasa || 0) * 0.4) : 0,
       hariUhHalfday: activeUh.uhHalfday ? (lastRow?.hariUhHalfday ?? 1) : 0,
       biayaUhHalfday: activeUh.uhHalfday ? (lastRow?.hariUhHalfday ?? 1) * (currentSbm?.uhHalfday || 0) : 0,
       hariUhFullboard: activeUh.uhFullboard ? (lastRow?.hariUhFullboard ?? 1) : 0,
@@ -397,6 +399,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
               <th className="p-2.5 w-48 min-w-[180px]">Nomor ST</th>
               <th className="p-2.5 w-44 min-w-[160px] text-center">Nomor Komponen</th>
               <th className="p-2.5 w-24 min-w-[95px] text-center">Kode Akun</th>
+              <th className="p-2.5 w-28 min-w-[105px] text-center" title="Kode Item Detail DIPA">Item Detail</th>
               <th className="p-2.5 w-36 min-w-[135px]">Kota Tujuan</th>
               <th className="p-2.5 w-32 min-w-[130px]">Tgl Berangkat</th>
               <th className="p-2.5 w-32 min-w-[130px]">Tgl Pulang</th>
@@ -405,6 +408,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
               {/* Dynamic Cost & UH Columns */}
               {activeUh.uhBiasa && <th className="p-2.5 w-48 min-w-[185px] text-right">UH Biasa (Hari & Rp)</th>}
               {activeUh.uhBiasa60 && <th className="p-2.5 w-48 min-w-[185px] text-right">UH 60% (Hari & Rp)</th>}
+              {activeUh.uhBiasa40 && <th className="p-2.5 w-48 min-w-[185px] text-right">UH 40% (Hari & Rp)</th>}
               {activeUh.uhHalfday && <th className="p-2.5 w-48 min-w-[185px] text-right">UH Halfday (Hari & Rp)</th>}
               {activeUh.uhFullboard && <th className="p-2.5 w-48 min-w-[185px] text-right">UH Fullboard (Hari & Rp)</th>}
 
@@ -578,6 +582,20 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                   </span>
                 </td>
 
+                {/* Item Detail */}
+                <td className="p-2 w-28 min-w-[105px] text-center font-mono text-slate-700">
+                  <span
+                    className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200/80 text-[11px] font-semibold text-slate-800"
+                    title={
+                      header.itemDetail
+                        ? `${header.itemDetail}${header.keteranganItemDetail ? ` - ${header.keteranganItemDetail}` : ""}`
+                        : "Belum diisi"
+                    }
+                  >
+                    {header.itemDetail || "-"}
+                  </span>
+                </td>
+
                 {/* Kota Tujuan */}
                 <td className="p-2 w-36 min-w-[135px]">
                   <select
@@ -686,6 +704,41 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                           className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
                           placeholder="0"
                           title="Nominal UH 60% (Editable: dapat disesuaikan)"
+                        />
+                      </div>
+                    </div>
+                  </td>
+                )}
+
+                {/* UH 40% */}
+                {activeUh.uhBiasa40 && (
+                  <td className="p-2 w-48 min-w-[185px] text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center gap-0.5 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/80 shadow-2xs" title="Jumlah hari UH 40% yang dibayarkan">
+                        <input
+                          type="number"
+                          min={0}
+                          value={row.hariUhBiasa40 !== undefined ? row.hariUhBiasa40 : row.lamaHari}
+                          onChange={(e) => {
+                            const newHari = Math.max(0, parseInt(e.target.value) || 0);
+                            const rate = currentSbm?.uhBiasa || 0;
+                            handleUpdateRow(row.id, {
+                              hariUhBiasa40: newHari,
+                              biayaUhBiasa40: Math.round(newHari * rate * 0.4),
+                            });
+                          }}
+                          className="w-8 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
+                        />
+                        <span className="text-[10px] text-slate-400 font-medium">hr</span>
+                      </div>
+                      <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                        <span className="text-[10px] text-slate-400 font-medium mr-1 select-none">Rp</span>
+                        <CurrencyInput
+                          value={row.biayaUhBiasa40 || 0}
+                          onChange={(val) => handleUpdateRow(row.id, { biayaUhBiasa40: val }, { isCustomNominal: true })}
+                          className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900"
+                          placeholder="0"
+                          title="Nominal UH 40% (Editable: dapat disesuaikan)"
                         />
                       </div>
                     </div>
@@ -979,7 +1032,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
           </tbody>
           <tfoot>
             <tr className="bg-slate-100/80 border-t border-slate-200 text-slate-700 font-semibold text-xs whitespace-nowrap">
-              <td colSpan={11} className="p-3 text-right">
+              <td colSpan={12} className="p-3 text-right">
                 Total Keseluruhan ({rows.length} Pegawai): &nbsp;&nbsp;
                 <span className="font-mono text-slate-900">{totalHari} hr</span>
               </td>

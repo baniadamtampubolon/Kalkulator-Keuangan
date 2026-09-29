@@ -62,7 +62,104 @@ export interface ItemDetailItem {
   fullMak: string;
 }
 
+export const STORAGE_KEY_CUSTOM_ITEM_DETAILS = "perdin_custom_item_details";
+
 export const LIST_ITEM_DETAIL: ItemDetailItem[] = rawItemDetailList as ItemDetailItem[];
+
+/**
+ * Mengambil daftar item detail kustom yang pernah ditulis/disimpan oleh pengguna di sistem
+ */
+export function getCustomItemDetails(): ItemDetailItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CUSTOM_ITEM_DETAILS);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Menggabungkan master data item detail bawaan DIPA dengan item detail kustom yang tersimpan di sistem
+ */
+export function getAllItemDetails(): ItemDetailItem[] {
+  const custom = getCustomItemDetails();
+  if (custom.length === 0) return LIST_ITEM_DETAIL;
+
+  const combined = [...custom];
+  const seenKodes = new Set(custom.map((c) => c.kode));
+
+  LIST_ITEM_DETAIL.forEach((item) => {
+    if (!seenKodes.has(item.kode)) {
+      combined.push(item);
+    }
+  });
+
+  return combined;
+}
+
+/**
+ * Simpan atau perbarui item detail (beserta keterangannya) ke database sistem lokal
+ */
+export function saveCustomItemDetail(params: {
+  kode: string;
+  nama: string;
+  kodeMak?: string;
+  namaMak?: string;
+  kodeKomponen?: string;
+  subKomponen?: string;
+  fullMak?: string;
+}): ItemDetailItem | null {
+  if (typeof window === "undefined") return null;
+  const kode = (params.kode || "").trim();
+  const nama = (params.nama || "").trim();
+  if (!kode && !nama) return null;
+
+  const validKode = kode || `ITM-${Date.now().toString().slice(-4)}`;
+  const validNama = nama || `Item ${validKode}`;
+  const fullLabel = `${validKode}. ${validNama}`;
+  const kodeMak = (params.kodeMak || "524111").trim();
+  const namaMak = params.namaMak || getMakAkunName(kodeMak) || "Belanja Perjalanan Dinas Biasa";
+  const kodeKomponen = (params.kodeKomponen || "CL.7458.ABR.006.051.0A").trim();
+  const fullMak = params.fullMak || `${kodeKomponen}.${kodeMak}`;
+
+  const newItem: ItemDetailItem = {
+    kode: validKode,
+    nama: validNama,
+    fullLabel,
+    kodeMak,
+    namaMak,
+    kodeKomponen,
+    subKomponen: params.subKomponen || "",
+    fullMak,
+  };
+
+  try {
+    const current = getCustomItemDetails();
+    const existingIdx = current.findIndex(
+      (c) => c.kode === validKode || (nama && c.nama.toLowerCase() === nama.toLowerCase())
+    );
+
+    let updatedList: ItemDetailItem[];
+    if (existingIdx >= 0) {
+      updatedList = [...current];
+      updatedList[existingIdx] = { ...updatedList[existingIdx], ...newItem };
+    } else {
+      updatedList = [newItem, ...current];
+    }
+
+    localStorage.setItem(STORAGE_KEY_CUSTOM_ITEM_DETAILS, JSON.stringify(updatedList));
+    window.dispatchEvent(
+      new CustomEvent("item-detail-updated", { detail: { item: newItem, list: updatedList } })
+    );
+    return newItem;
+  } catch (err) {
+    console.error("Gagal menyimpan custom item detail:", err);
+    return newItem;
+  }
+}
 
 export function getMakAkunName(kode: string): string {
   const found = LIST_NOMOR_MAK.find((m) => m.kode === kode);
@@ -85,15 +182,16 @@ export function getKomponenName(kode: string, customDetail?: string): string {
 export function getItemDetailsForMak(nomorKomp?: string, nomorMak?: string): ItemDetailItem[] {
   const cleanKomp = (nomorKomp || "").trim();
   const cleanMak = (nomorMak || "").trim();
+  const allList = getAllItemDetails();
 
-  if (!cleanKomp && !cleanMak) return LIST_ITEM_DETAIL;
+  if (!cleanKomp && !cleanMak) return allList;
 
   if (cleanKomp && cleanKomp.match(/\.\d{6}$/)) {
-    const matchedFull = LIST_ITEM_DETAIL.filter((item) => item.fullMak === cleanKomp);
+    const matchedFull = allList.filter((item) => item.fullMak === cleanKomp);
     if (matchedFull.length > 0) return matchedFull;
   }
 
-  return LIST_ITEM_DETAIL.filter((item) => {
+  return allList.filter((item) => {
     if (cleanMak && item.kodeMak !== cleanMak && !cleanMak.endsWith(item.kodeMak)) {
       return false;
     }
@@ -112,10 +210,12 @@ export function getItemDetailsForMak(nomorKomp?: string, nomorMak?: string): Ite
 export function getItemDetailByKode(kodeOrLabel: string): ItemDetailItem | undefined {
   if (!kodeOrLabel) return undefined;
   const clean = kodeOrLabel.trim();
+  const allList = getAllItemDetails();
   return (
-    LIST_ITEM_DETAIL.find((item) => item.kode === clean) ||
-    LIST_ITEM_DETAIL.find((item) => item.fullLabel === clean) ||
-    LIST_ITEM_DETAIL.find((item) => item.fullLabel.toLowerCase() === clean.toLowerCase())
+    allList.find((item) => item.kode === clean) ||
+    allList.find((item) => item.fullLabel === clean) ||
+    allList.find((item) => item.fullLabel.toLowerCase() === clean.toLowerCase()) ||
+    allList.find((item) => item.nama.toLowerCase() === clean.toLowerCase())
   );
 }
 

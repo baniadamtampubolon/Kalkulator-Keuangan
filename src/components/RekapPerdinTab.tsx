@@ -17,7 +17,12 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { fetchRekapFromSheet, syncAllRekapToGoogleSheet } from "@/lib/googleSheetsService";
-import { STANDARD_REKAP_HEADERS, formatRowsTo48Columns, STORAGE_KEY_REKAP } from "@/lib/rekapHelper";
+import {
+  STANDARD_REKAP_HEADERS,
+  formatRowsTo48Columns,
+  STORAGE_KEY_REKAP,
+  getCompleteRekapData,
+} from "@/lib/rekapHelper";
 import { ModalRekapRowEditor } from "./ModalRekapRowEditor";
 
 interface RekapPerdinTabProps {
@@ -30,14 +35,7 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
   const [viewSource, setViewSource] = useState<"cloud" | "draft">("cloud");
   const [cloudRows, setCloudRows] = useState<Array<Record<string, unknown>>>(() => {
     if (typeof window !== "undefined") {
-      const cached = localStorage.getItem(STORAGE_KEY_REKAP);
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch {
-          return [];
-        }
-      }
+      return getCompleteRekapData();
     }
     return [];
   });
@@ -72,24 +70,9 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
 
     const reloadFromLocal = () => {
       if (typeof window !== "undefined") {
-        const cached = localStorage.getItem(STORAGE_KEY_REKAP);
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
-            if (isMounted && Array.isArray(parsed)) {
-              const clean = parsed.filter((r) => {
-                const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
-                const keg = String(r["Nama Kegiatan"] || "").trim();
-                return nama !== "" || keg !== "";
-              });
-              setCloudRows(clean);
-              if (clean.length !== parsed.length) {
-                localStorage.setItem(STORAGE_KEY_REKAP, JSON.stringify(clean));
-              }
-            }
-          } catch {
-            // ignore
-          }
+        const completeData = getCompleteRekapData();
+        if (isMounted) {
+          setCloudRows(completeData);
         }
       }
     };
@@ -101,22 +84,19 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
       reloadFromLocal();
     };
     window.addEventListener("rekap-perdin-updated", handleUpdate);
+    window.addEventListener("kegiatan-list-updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
 
     fetchRekapFromSheet().then((res) => {
       if (isMounted && res.success && res.data) {
-        const clean = res.data.filter((r) => {
-          const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
-          const keg = String(r["Nama Kegiatan"] || "").trim();
-          return nama !== "" || keg !== "";
-        });
-        setCloudRows(clean);
+        setCloudRows(res.data);
       }
     });
 
     return () => {
       isMounted = false;
       window.removeEventListener("rekap-perdin-updated", handleUpdate);
+      window.removeEventListener("kegiatan-list-updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
   }, []);

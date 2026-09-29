@@ -89,6 +89,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
   }
 
   const perihalText = header.keteranganMemo || header.keteranganKegiatan || "Permohonan Dana Perjalanan Dinas";
+  const judulKegiatan = header.keteranganKegiatan || header.keteranganMemo || "Kegiatan Perjalanan Dinas";
 
   const handleResetCanvas = () => {
     setRenderKey((prev) => prev + 1);
@@ -96,7 +97,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
 
   return (
     <div className="space-y-6" key={renderKey}>
-      {/* Scoped Print Portrait Style for 2-Page Memo */}
+      {/* Scoped Print Portrait Style for 3-Page Memo */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -116,7 +117,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
               box-shadow: none !important;
               border: none !important;
             }
-            .memo-page-1 {
+            .memo-page-1, .memo-page-2 {
               page-break-after: always !important;
               break-after: page !important;
             }
@@ -145,10 +146,10 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
       <div className="no-print glass-floating rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900">
-            Dokumen 2: Memorandum Dinas & Lampiran Anggaran (2 Halaman)
+            Dokumen 2: Memorandum Dinas & Lampiran Anggaran (3 Halaman)
           </h3>
           <p className="text-xs text-slate-500">
-            Halaman 1 Nota Pengajuan Dana, Halaman 2 Rincian POK / MAK dengan 4 Kolom Tanda Tangan
+            Halaman 1 Nota Pengajuan Dana, Halaman 2 Rincian POK / MAK dengan 4 TTD, Halaman 3 Laporan Memorandum & Rincian Transfer
           </p>
         </div>
 
@@ -184,7 +185,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
             className="btn-tactile flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold shadow-sm cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>Cetak Memorandum (2 Hal)</span>
+            <span>Cetak Memorandum (3 Hal)</span>
           </button>
         </div>
       </div>
@@ -194,7 +195,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
           <div className="flex items-center gap-2">
             <Edit3 className="w-4 h-4 shrink-0 text-slate-700" />
             <span>
-              <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada Memorandum (kop instansi, nomor surat, perihal, narasi alinea, rincian MAK, hingga 4 kolom tanda tangan) dapat langsung Anda klik dan edit secara bebas.
+              <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada Memorandum (kop instansi, nomor surat, perihal, narasi alinea, rincian MAK, 4 kolom tanda tangan, hingga rincian transfer Hal. 3) dapat langsung Anda klik dan edit secara bebas.
             </span>
           </div>
         </div>
@@ -262,7 +263,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
             <div className="grid grid-cols-12 gap-1">
               <span className="col-span-2">Dari</span>
               <span className="col-span-1 text-center">:</span>
-              <span className="col-span-9">Pejabat Pembuat Komitmen Inspektorat</span>
+              <span className="col-span-9">Pejabat Pembuat Komitmen</span>
             </div>
             <div className="grid grid-cols-12 gap-1 items-start">
               <span className="col-span-2">Hal</span>
@@ -301,7 +302,6 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
             <div className="w-64 space-y-16 text-left text-xs">
               <div>
                 <p>Pejabat Pembuat Komitmen</p>
-                <p>Inspektorat</p>
               </div>
               <div className="space-y-0.5">
                 <p className="font-bold">{header.ppkNama || "Arif Wibowo, S.H., M.H."}</p>
@@ -318,7 +318,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
           style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
           contentEditable={isEditMode}
           suppressContentEditableWarning={true}
-          className={`print-page print-page-memo bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-6 transition-all ${
+          className={`print-page print-page-memo memo-page-2 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-6 transition-all ${
             isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
           }`}
         >
@@ -445,12 +445,11 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
 
             {/* Baris Bawah: PPK Inspektorat & Petugas Verifikasi */}
             <div className="grid grid-cols-2 gap-x-12 text-center text-xs font-sans">
-              {/* Kiri Bawah: Mengetahui/menyetujui PPK Inspektorat */}
+              {/* Kiri Bawah: Mengetahui/menyetujui PPK */}
               <div className="flex flex-col justify-between min-h-[140px]">
                 <div>
                   <p>Mengetahui/menyetujui,</p>
-                  <p>Pejabat pembuat Komitmen</p>
-                  <p>Inspektorat</p>
+                  <p>Pejabat Pembuat Komitmen</p>
                 </div>
                 <div className="space-y-0.5">
                   <p className="font-normal">{ppkNama}</p>
@@ -467,6 +466,239 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* HALAMAN 3: LAPORAN MEMORANDUM & RINCIAN TRANSFER                         */}
+        {/* ========================================================================= */}
+        <div
+          style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
+          contentEditable={isEditMode}
+          suppressContentEditableWarning={true}
+          className={`print-page print-page-memo memo-page-3 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-6 transition-all ${
+            isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
+          }`}
+        >
+          {/* Header Title & Subtitle */}
+          <div className="text-center space-y-2 pt-2">
+            <h2 className="font-bold text-sm md:text-base tracking-wide uppercase text-black">
+              LAPORAN MEMORANDUM
+            </h2>
+            <p 
+              contentEditable={true}
+              suppressContentEditableWarning={true}
+              className="font-bold text-xs md:text-[13px] text-black leading-snug max-w-2xl mx-auto hover:bg-blue-50/40 p-1 rounded transition-colors cursor-text"
+              title="Klik untuk mengedit judul kegiatan jika diperlukan"
+            >
+              {judulKegiatan}
+            </p>
+          </div>
+
+          {/* Tabel 1: Kode Akun & Item Anggaran */}
+          <div className="pt-2">
+            <table className="w-full border border-black text-xs font-sans border-collapse">
+              <thead style={{ backgroundColor: "#e5e7eb", WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}>
+                <tr className="border-b border-black">
+                  <th className="border-r border-black p-2 text-center font-bold w-[30%]">
+                    Kode Akun/Item
+                  </th>
+                  <th className="border-r border-black p-2 text-center font-bold w-[20%]">
+                    Pagu
+                  </th>
+                  <th className="border-r border-black p-2 text-center font-bold w-[20%]">
+                    Pengajuan
+                  </th>
+                  <th className="border-r border-black p-2 text-center font-bold w-[18%]">
+                    Klasifikasi (TKDN, PDN, Impor)
+                  </th>
+                  <th className="p-2 text-center font-bold w-[12%]">
+                    Nilai %
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Baris 1: Kode Akun MAK */}
+                <tr className="border-b border-black">
+                  <td 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="border-r border-black p-2 text-left font-mono cursor-text hover:bg-blue-50/40"
+                  >
+                    {(() => {
+                      const komp = (header.nomorKomp || "7458.ABR.006.051.0A")
+                        .replace(/^CL\./, "")
+                        .replace(/^MAK\./, "")
+                        .trim();
+                      const mak = (header.nomorMak || "524111").trim();
+                      if (komp.endsWith(mak)) return komp;
+                      return `${komp}.${mak}`;
+                    })()}
+                  </td>
+                  <td 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="border-r border-black p-2 text-right font-sans min-w-[120px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
+                    title="Klik langsung untuk memasukkan nominal Pagu"
+                  >
+                  </td>
+                  <td 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="border-r border-black p-2 text-right font-sans font-medium cursor-text hover:bg-blue-50/40"
+                  >
+                    Rp{grandTotal.toLocaleString("id-ID")}
+                  </td>
+                  <td 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="border-r border-black p-2 text-center font-sans cursor-text hover:bg-blue-50/40"
+                  >
+                    PDN
+                  </td>
+                  <td 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="p-2 text-center font-sans cursor-text hover:bg-blue-50/40"
+                  >
+                    100%
+                  </td>
+                </tr>
+
+                {/* Baris 2: Item Detail */}
+                <tr>
+                  <td 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="border-r border-black p-2 text-right font-mono cursor-text hover:bg-blue-50/40"
+                  >
+                    {(() => {
+                      const raw = (header.itemDetail || "").trim();
+                      if (!raw) return "010028";
+                      if (raw.includes(".")) {
+                        return raw.split(".")[0].trim();
+                      }
+                      const match = raw.match(/^\d+/);
+                      return match ? match[0] : raw;
+                    })()}
+                  </td>
+                  <td 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="border-r border-black p-2 text-right font-sans min-w-[120px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
+                    title="Klik langsung untuk memasukkan nominal Pagu"
+                  >
+                  </td>
+                  <td 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="border-r border-black p-2 text-right font-sans font-medium cursor-text hover:bg-blue-50/40"
+                  >
+                    Rp{grandTotal.toLocaleString("id-ID")}
+                  </td>
+                  <td 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="border-r border-black p-2 text-center font-sans cursor-text hover:bg-blue-50/40"
+                  >
+                    PDN
+                  </td>
+                  <td 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="p-2 text-center font-sans cursor-text hover:bg-blue-50/40"
+                  >
+                    100%
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Seksi: RINCIAN TRANSFER */}
+          <div className="pt-2 space-y-2">
+            <h3 className="font-bold text-xs uppercase text-black tracking-wide">
+              RINCIAN TRANSFER
+            </h3>
+
+            {/* Tabel 2: Rincian Transfer Peserta */}
+            <table className="w-full border border-black text-xs font-sans border-collapse">
+              <thead style={{ backgroundColor: "#e5e7eb", WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}>
+                <tr className="border-b border-black">
+                  <th className="border-r border-black p-2 text-center font-bold w-[32%]">
+                    Nama
+                  </th>
+                  <th className="border-r border-black p-2 text-center font-bold w-[43%]">
+                    Keterangan Transfer
+                  </th>
+                  <th className="p-2 text-center font-bold w-[25%]">
+                    Total Bersih (Rp)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.id} className="border-b border-black">
+                    <td 
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      className="border-r border-black p-2 text-left font-medium uppercase cursor-text hover:bg-blue-50/40"
+                    >
+                      {r.nama || "-"}
+                    </td>
+                    <td 
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      className="border-r border-black p-2 text-center min-w-[150px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
+                      title="Klik langsung untuk memasukkan Rekening / Keterangan Transfer"
+                    >
+                    </td>
+                    <td 
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      className="p-2 text-right font-bold font-sans cursor-text hover:bg-blue-50/40"
+                    >
+                      Rp{(r.totalJumlah || 0).toLocaleString("id-ID")}
+                    </td>
+                  </tr>
+                ))}
+
+                {/* Baris Total */}
+                <tr className="border-b border-black font-bold">
+                  <td colSpan={2} className="border-r border-black p-2 text-right font-bold">
+                    Total
+                  </td>
+                  <td className="p-2 text-right font-bold font-sans">
+                    Rp{grandTotal.toLocaleString("id-ID")}
+                  </td>
+                </tr>
+
+                {/* Footer Baris ST */}
+                <tr className="border-b border-black">
+                  <td 
+                    colSpan={3} 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="p-2 text-left text-xs font-normal cursor-text hover:bg-blue-50/40"
+                  >
+                    ST: {header.nomorStMaster || rows[0]?.nomorSt || header.nomorStStaff || "-"}
+                  </td>
+                </tr>
+
+                {/* Footer Baris Perihal */}
+                <tr>
+                  <td 
+                    colSpan={3} 
+                    contentEditable={true}
+                    suppressContentEditableWarning={true}
+                    className="p-2 text-left text-xs font-normal leading-relaxed cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
+                    title="Klik langsung untuk mengedit perihal kegiatan"
+                  >
+                    Perihal: {judulKegiatan}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

@@ -240,7 +240,7 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
                   <span className="col-span-3 text-black">Sudah terima dari</span>
                   <span className="col-span-1 text-center">:</span>
                   <div className="col-span-8 space-y-0.5">
-                    <p>Pejabat Pembuat Komitmen Inspektorat</p>
+                    <p>Pejabat Pembuat Komitmen</p>
                     <p>Kementerian Koordinator Bidang Pangan</p>
                   </div>
                 </div>

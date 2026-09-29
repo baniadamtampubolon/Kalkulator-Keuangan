@@ -40,6 +40,7 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
   // Calculate Column Totals across rows (sum each component safely)
   const totalUhBiasa = rows.reduce((acc, r) => acc + (r.biayaUhBiasa || 0), 0);
   const totalUhBiasa60 = rows.reduce((acc, r) => acc + (r.biayaUhBiasa60 || 0), 0);
+  const totalUhBiasa40 = rows.reduce((acc, r) => acc + (r.biayaUhBiasa40 || 0), 0);
   const totalUhHalfday = rows.reduce((acc, r) => acc + (r.biayaUhHalfday || 0), 0);
   const totalUhFullboard = rows.reduce((acc, r) => acc + (r.biayaUhFullboard || 0), 0);
 
@@ -60,11 +61,12 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
 
   const showUhBiasa = Boolean(activeUh?.uhBiasa || totalUhBiasa > 0);
   const showUhBiasa60 = Boolean(activeUh?.uhBiasa60 || totalUhBiasa60 > 0);
+  const showUhBiasa40 = Boolean(activeUh?.uhBiasa40 || totalUhBiasa40 > 0);
   const showUhHalfday = Boolean(activeUh?.uhHalfday || totalUhHalfday > 0);
   const showUhFullboard = Boolean(activeUh?.uhFullboard || totalUhFullboard > 0);
 
   const hasMultipleUh =
-    [showUhBiasa, showUhBiasa60, showUhHalfday, showUhFullboard].filter(Boolean).length > 1;
+    [showUhBiasa, showUhBiasa60, showUhBiasa40, showUhHalfday, showUhFullboard].filter(Boolean).length > 1;
   const uhBiasaLabel = hasMultipleUh ? "UH Biasa (100%)" : "Uang Harian";
 
   const showTransDarat = Boolean(activeCols?.transportasiDarat || totalTransDarat > 0);
@@ -89,6 +91,7 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
   if (showTiket) rincianColCount++;
   if (showUhBiasa) rincianColCount++;
   if (showUhBiasa60) rincianColCount++;
+  if (showUhBiasa40) rincianColCount++;
   if (showUhHalfday) rincianColCount++;
   if (showUhFullboard) rincianColCount++;
   if (showHotel) rincianColCount++;
@@ -300,6 +303,7 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                 {showTiket && <th className="border border-black p-0.5">Tiket PP</th>}
                 {showUhBiasa && <th className="border border-black p-0.5">{uhBiasaLabel}</th>}
                 {showUhBiasa60 && <th className="border border-black p-0.5">UH 60%</th>}
+                {showUhBiasa40 && <th className="border border-black p-0.5">UH 40%</th>}
                 {showUhHalfday && <th className="border border-black p-0.5">UH Halfday</th>}
                 {showUhFullboard && <th className="border border-black p-0.5">UH Fullboard</th>}
                 {showHotel && <th className="border border-black p-0.5">Hotel</th>}
@@ -386,6 +390,11 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                     {showUhBiasa60 && (
                       <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                         {(row.biayaUhBiasa60 || 0).toLocaleString("id-ID")}
+                      </td>
+                    )}
+                    {showUhBiasa40 && (
+                      <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                        {(row.biayaUhBiasa40 || 0).toLocaleString("id-ID")}
                       </td>
                     )}
                     {showUhHalfday && (
@@ -482,6 +491,11 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                     {totalUhBiasa60.toLocaleString("id-ID")}
                   </td>
                 )}
+                {showUhBiasa40 && (
+                  <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
+                    {totalUhBiasa40.toLocaleString("id-ID")}
+                  </td>
+                )}
                 {showUhHalfday && (
                   <td className="border border-black p-0.5 text-right whitespace-nowrap tabular-nums">
                     {totalUhHalfday.toLocaleString("id-ID")}
@@ -571,7 +585,7 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                 <div className="space-y-16 text-left">
                   <div className="space-y-0.5">
                     <p>Mengetahui/ Menyetujui</p>
-                    <p className="font-semibold">{header.ppkJabatan || "Pejabat Pembuat Komitmen"}</p>
+                    <p className="font-semibold">Pejabat Pembuat Komitmen</p>
                   </div>
                   <div className="space-y-0.5">
                     <p className="font-semibold">{ppkNama}</p>
@@ -582,8 +596,8 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
                 {/* Center: Bendahara Pengeluaran */}
                 <div className="space-y-16 text-left">
                   <div className="space-y-0.5">
-                    <p>Bendahara Pengeluaran</p>
-                    <p className="font-semibold">{header.unitKerja || "Kemenko Pangan"}</p>
+                    <p>Bendahara Pengeluaran,</p>
+                    <p className="invisible font-semibold">-</p>
                   </div>
                   <div className="space-y-0.5">
                     <p className="font-semibold">{bendaharaNama}</p>

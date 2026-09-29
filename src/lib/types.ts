@@ -88,6 +88,8 @@ export interface ParticipantRow {
   biayaUhBiasa: number;
   hariUhBiasa60: number;
   biayaUhBiasa60: number;
+  hariUhBiasa40?: number;
+  biayaUhBiasa40?: number;
   hariUhHalfday: number;
   biayaUhHalfday: number;
   hariUhFullboard: number;
@@ -161,6 +163,7 @@ export interface HeaderData {
   detailKomponen?: string;
   nomorMak: string;
   itemDetail: string;
+  keteranganItemDetail?: string;
   alatAngkut: string;
   tanggalSpd: string;
   tanggalMemo: string;
@@ -177,9 +180,9 @@ export interface HeaderData {
   penanggungJawabJabatan?: string;
 
   // SPJ & Rekap Perdin Metadata
-  idKegiatan?: string; // Format: K-ddmmyy-nokegiatan-A/B (e.g. K-080926-08-A)
-  kategoriSpj?: "A" | "B"; // A: ASN, B: Non-ASN
-  noKegiatanUrut?: string; // e.g. "01", "08"
+  idKegiatan?: string; // Format: KEG-YYMM-001-A / KEG-YYMM-001-NA (e.g. KEG-2609-001-A)
+  kategoriSpj?: "A" | "NA" | "B"; // A: ASN, NA/B: Non-ASN
+  noKegiatanUrut?: string; // e.g. "001", "002"
   noSpby?: string;
   jenisPengajuan?: "RENCANA" | "RAMPUNG" | "MERAMPUNGKAN";
   noSpm?: string;
@@ -188,8 +191,8 @@ export interface HeaderData {
 }
 
 export interface SavedKegiatan {
-  idKegiatan: string; // e.g. "K-080926-08-A"
-  kategori: "A" | "B"; // A: ASN, B: Non-ASN
+  idKegiatan: string; // e.g. "KEG-2609-001-A"
+  kategori: "A" | "NA" | "B"; // A: ASN, NA/B: Non-ASN
   namaKegiatan: string;
   tanggalSpd: string;
   kotaTujuan: string;
@@ -219,4 +222,4 @@ export type ActiveCostKey =
   | "representatif"
   | "belanjaBahan";
 
-export type ActiveUhKey = "uhBiasa" | "uhBiasa60" | "uhHalfday" | "uhFullboard";
+export type ActiveUhKey = "uhBiasa" | "uhBiasa60" | "uhBiasa40" | "uhHalfday" | "uhFullboard";

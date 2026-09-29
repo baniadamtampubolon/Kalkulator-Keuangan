@@ -42,6 +42,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
   const uhList: { key: ActiveUhKey; label: string; sub: string }[] = [
     { key: "uhBiasa", label: "UH Biasa (100%)", sub: "Luar kota reguler" },
     { key: "uhBiasa60", label: "UH 60%", sub: "Diklat / workshop" },
+    { key: "uhBiasa40", label: "UH 40%", sub: "Meeting luar kota / perdin" },
     { key: "uhHalfday", label: "UH Halfday", sub: "Paket rapat siang" },
     { key: "uhFullboard", label: "UH Fullboard", sub: "Paket menginap" },
   ];
@@ -74,6 +75,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
     setActiveUh({
       uhBiasa: true,
       uhBiasa60: false,
+      uhBiasa40: false,
       uhHalfday: false,
       uhFullboard: false,
     });
@@ -98,6 +100,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
     setActiveUh({
       uhBiasa: true,
       uhBiasa60: false,
+      uhBiasa40: false,
       uhHalfday: false,
       uhFullboard: false,
     });
@@ -122,6 +125,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
     setActiveUh({
       uhBiasa: false,
       uhBiasa60: false,
+      uhBiasa40: false,
       uhHalfday: false,
       uhFullboard: true,
     });

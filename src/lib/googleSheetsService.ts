@@ -1,5 +1,6 @@
 import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan } from "./types";
 import { generateIdKegiatan, getSavedKegiatanList } from "./kegiatanHelper";
+import { buildRekapFromSavedKegiatanList, deduplicateRekapRows, isSameRekapRow } from "./rekapHelper";
 import { getMonthRoman } from "./calc";
 import { parseSpdNumber, saveLatestRegisteredSpdNumber } from "./spdHelper";
 import { ItemDetailItem, LIST_ITEM_DETAIL } from "@/data/mak_akun";
@@ -451,13 +452,29 @@ export async function fetchRekapFromSheet(
         return nama !== "" || keg !== "";
       });
 
+      // Gabungkan dengan baris rekap dari daftar kegiatan tersimpan di lokal tanpa duplikasi
+      const localRekapRows = buildRekapFromSavedKegiatanList();
+
+      let combinedData: Array<Record<string, unknown>>;
+      if (localRekapRows.length > 0) {
+        // Ambil baris dari cloud yang TIDAK ada di local activities
+        const extraCloudRows = validData.filter((cr) => {
+          const isMatched = localRekapRows.some((lr) => isSameRekapRow(cr, lr));
+          return !isMatched;
+        });
+        const dedupedExtra = deduplicateRekapRows(extraCloudRows);
+        combinedData = [...localRekapRows, ...dedupedExtra];
+      } else {
+        combinedData = deduplicateRekapRows(validData);
+      }
+
       if (typeof window !== "undefined") {
-        localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(validData));
+        localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(combinedData));
       }
       return {
         success: true,
-        data: validData,
-        message: `Berhasil memuat ${validData.length} baris data rekap perdin.`,
+        data: combinedData,
+        message: `Berhasil memuat ${combinedData.length} baris data rekap perdin.`,
       };
     } else {
       return { success: false, message: json.message || "Data rekap tidak valid." };
@@ -505,8 +522,10 @@ function rekapRowToParticipant(rekap: Record<string, unknown>, idx: number): Par
     nomorSpd: String(idx + 1).padStart(2, "0"),
     hariUhBiasa: Number(rekap["Lama Hari 100%"] || 1),
     biayaUhBiasa: Number(rekap["UH 100% ()"] || 0),
-    hariUhBiasa60: Number(rekap["Lama Hari 40%"] || 0),
-    biayaUhBiasa60: Number(rekap["UH 40% ()"] || 0),
+    hariUhBiasa60: 0,
+    biayaUhBiasa60: 0,
+    hariUhBiasa40: Number(rekap["Lama Hari 40%"] || 0),
+    biayaUhBiasa40: Number(rekap["UH 40% ()"] || 0),
     hariUhHalfday: 0,
     biayaUhHalfday: 0,
     hariUhFullboard: 0,
@@ -556,10 +575,6 @@ export async function fetchKegiatanFromSheet(
     const cloudKegiatanList: Array<Record<string, unknown>> = jsonKegiatan.data;
     const rekapRows: Array<Record<string, unknown>> = Array.isArray(jsonRekap.data) ? jsonRekap.data : [];
 
-    if (typeof window !== "undefined" && rekapRows.length > 0) {
-      localStorage.setItem("perdin_cached_rekap_data", JSON.stringify(rekapRows));
-    }
-
     // Ambil data lokal yang sudah tersimpan untuk merge
     const localList = typeof window !== "undefined" ? getSavedKegiatanList() : [];
     const localMap = new Map<string, SavedKegiatan>();
@@ -577,14 +592,14 @@ export async function fetchKegiatanFromSheet(
         return rowKgt === namaKegiatan;
       });
 
-      let kategori: "A" | "B" = "A";
-      if (idKegiatan.endsWith("-B")) {
-        kategori = "B";
+      let kategori: "A" | "NA" | "B" = "A";
+      if (idKegiatan.endsWith("-NA") || idKegiatan.endsWith("-B")) {
+        kategori = "NA";
       } else if (idKegiatan.endsWith("-A")) {
         kategori = "A";
       } else {
         const hasExternal = matchingRekap.some((r) => Boolean(r["NAMA EXTERNAL"]));
-        kategori = hasExternal ? "B" : "A";
+        kategori = hasExternal ? "NA" : "A";
       }
 
       const tanggalSpd = cleanIsoDate(item.tanggal_spd || item.tanggal_mulai);
@@ -670,7 +685,7 @@ export async function fetchKegiatanFromSheet(
       const reconstructedHeader: HeaderData = {
         idKegiatan,
         kategoriSpj: kategori,
-        noKegiatanUrut: idKegiatan.split("-")[2] || "01",
+        noKegiatanUrut: idKegiatan.split("-")[2] || "001",
         keteranganKegiatan: namaKegiatan,
         keteranganMemo: namaKegiatan,
         provinsiTujuan,
@@ -682,6 +697,7 @@ export async function fetchKegiatanFromSheet(
         nomorKomp: String(item.kode_komponen || ""),
         nomorMak: String(item.kode_mak || ""),
         itemDetail: String(item.item_detail || "001"),
+        keteranganItemDetail: String(item.keterangan_item_detail || ""),
         alatAngkut: String(item.alat_angkut || "Angkutan Darat"),
         tanggalSpd,
         tanggalMemo: cleanIsoDate(item.tanggal_memo || item.tanggal_spd),
@@ -729,22 +745,33 @@ export async function fetchKegiatanFromSheet(
         activeUh: {
           uhBiasa: true,
           uhBiasa60: false,
+          uhBiasa40: false,
           uhHalfday: false,
           uhFullboard: false,
         },
       };
     });
 
+    // Gabungkan kegiatan dari cloud dengan kegiatan lokal agar kegiatan lokal tidak tertimpa
+    const finalKegiatanMap = new Map<string, SavedKegiatan>();
+    parsedList.forEach((k) => finalKegiatanMap.set(k.idKegiatan, k));
+    localList.forEach((localKeg) => {
+      if (!finalKegiatanMap.has(localKeg.idKegiatan)) {
+        finalKegiatanMap.set(localKeg.idKegiatan, localKeg);
+      }
+    });
+    const mergedKegiatanList = Array.from(finalKegiatanMap.values());
+
     // Simpan ke localStorage agar offline / subsequent render cepat
     if (typeof window !== "undefined") {
-      localStorage.setItem("perdin_saved_kegiatan_list", JSON.stringify(parsedList));
-      window.dispatchEvent(new CustomEvent("kegiatan-list-updated", { detail: { updatedList: parsedList } }));
+      localStorage.setItem("perdin_saved_kegiatan_list", JSON.stringify(mergedKegiatanList));
+      window.dispatchEvent(new CustomEvent("kegiatan-list-updated", { detail: { updatedList: mergedKegiatanList } }));
     }
 
     return {
       success: true,
-      data: parsedList,
-      message: `Berhasil memuat ${parsedList.length} paket kegiatan dari Google Spreadsheet.`,
+      data: mergedKegiatanList,
+      message: `Berhasil memuat ${mergedKegiatanList.length} paket kegiatan.`,
     };
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);
@@ -758,7 +785,8 @@ export async function fetchKegiatanFromSheet(
 export async function savePerdinToGoogleSheet(
   header: HeaderData,
   participants: ParticipantRow[],
-  customUrl?: string
+  customUrl?: string,
+  oldIdKegiatan?: string
 ): Promise<{ success: boolean; message: string; idKegiatan?: string }> {
   const url = customUrl || getGasApiUrl();
 
@@ -766,7 +794,7 @@ export async function savePerdinToGoogleSheet(
     header.idKegiatan ||
     generateIdKegiatan(
       header.tanggalSpd,
-      header.noKegiatanUrut || "01",
+      header.noKegiatanUrut || "001",
       header.kategoriSpj || "A"
     );
 
@@ -780,6 +808,7 @@ export async function savePerdinToGoogleSheet(
     action: "SAVE_PERDIN",
     header: {
       idKegiatan,
+      oldIdKegiatan: oldIdKegiatan || idKegiatan,
       kodeKegiatan: header.nomorKomp || "PRD-" + Date.now(),
       namaKegiatan: header.keteranganKegiatan || "Perjalanan Dinas Inspektorat",
       jenisPengajuan: header.jenisPengajuan || "RAMPUNG",
@@ -804,6 +833,7 @@ export async function savePerdinToGoogleSheet(
       kodeMak: header.nomorMak || "524111",
       kodeKomponen: header.nomorKomp || "051",
       itemDetail: header.itemDetail || "001",
+      keteranganItemDetail: header.keteranganItemDetail || "",
       unitKerja: header.unitKerja || "INSPEKTORAT",
       ppkNama: header.ppkNama || "",
       ppkNip: header.ppkNip || "",
@@ -979,12 +1009,14 @@ export async function syncAllRekapToGoogleSheet(
 ): Promise<{ success: boolean; message: string }> {
   const url = customUrl || getGasApiUrl();
 
-  // Filter anti-hantu sebelum simpan ke local dan cloud
-  const validRows = rekapRows.filter((r) => {
-    const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
-    const keg = String(r["Nama Kegiatan"] || "").trim();
-    return nama !== "" || keg !== "";
-  });
+  // Filter anti-hantu & deduplikasi sebelum simpan ke local dan cloud
+  const validRows = deduplicateRekapRows(
+    rekapRows.filter((r) => {
+      const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
+      const keg = String(r["Nama Kegiatan"] || "").trim();
+      return nama !== "" || keg !== "";
+    })
+  );
 
   // Simpan selalu ke localStorage
   if (typeof window !== "undefined") {

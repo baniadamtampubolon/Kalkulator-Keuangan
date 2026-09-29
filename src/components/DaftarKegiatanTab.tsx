@@ -37,7 +37,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
     return [];
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterKategori, setFilterKategori] = useState<"ALL" | "A" | "B">("ALL");
+  const [filterKategori, setFilterKategori] = useState<"ALL" | "A" | "NA">("ALL");
   const [isLoadingCloud, setIsLoadingCloud] = useState<boolean>(false);
 
   // Modal Delete State
@@ -103,14 +103,19 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
       (item.kotaTujuan || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.provinsiTujuan || "").toLowerCase().includes(searchTerm.toLowerCase());
 
+    const isItemNonAsn = item.kategori === "NA" || (item.kategori as string) === "B";
     const matchesKategori =
-      filterKategori === "ALL" ? true : item.kategori === filterKategori;
+      filterKategori === "ALL"
+        ? true
+        : filterKategori === "NA"
+        ? isItemNonAsn
+        : item.kategori === "A";
 
     return matchesSearch && matchesKategori;
   });
 
   const countAsn = kegiatanList.filter((k) => k.kategori === "A").length;
-  const countNonAsn = kegiatanList.filter((k) => k.kategori === "B").length;
+  const countNonAsn = kegiatanList.filter((k) => k.kategori === "NA" || (k.kategori as string) === "B").length;
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
@@ -205,7 +210,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
           </div>
         </div>
 
-        {/* Filter Category Tabs (Semua, ASN [A], Non-ASN [B]) */}
+        {/* Filter Category Tabs (Semua, ASN [A], Non-ASN [NA]) */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/60">
           <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200/80 text-xs">
             <button
@@ -233,20 +238,20 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setFilterKategori("B")}
+              onClick={() => setFilterKategori("NA")}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
-                filterKategori === "B"
+                filterKategori === "NA"
                   ? "bg-white text-amber-900 shadow-2xs font-semibold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-amber-500" />
-              <span>Non-ASN [B] ({countNonAsn})</span>
+              <span>Non-ASN [NA] ({countNonAsn})</span>
             </button>
           </div>
 
           <div className="text-[11px] text-slate-400">
-            Format ID: <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">K-ddmmyy-nokegiatan-A/B</code>
+            Format ID: <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">KEG-YYMM-001-A/NA</code>
           </div>
         </div>
 

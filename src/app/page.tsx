@@ -111,6 +111,7 @@ export default function Home() {
   const [activeUh, setActiveUh] = useState<Record<ActiveUhKey, boolean>>({
     uhBiasa: true,
     uhBiasa60: false,
+    uhBiasa40: false,
     uhHalfday: false,
     uhFullboard: false,
   });
@@ -121,9 +122,9 @@ export default function Home() {
 
   // Header Data State (Clean defaults with standardized ID Kegiatan)
   const [header, setHeader] = useState<HeaderData>({
-    idKegiatan: generateIdKegiatan(todayStr, "01", "A"),
+    idKegiatan: generateIdKegiatan(todayStr, "001", "A"),
     kategoriSpj: "A",
-    noKegiatanUrut: "01",
+    noKegiatanUrut: "001",
     keteranganKegiatan: "",
     keteranganMemo: "",
     provinsiTujuan: "JAWA BARAT",
@@ -136,6 +137,7 @@ export default function Home() {
     detailKomponen: "",
     nomorMak: "",
     itemDetail: "001",
+    keteranganItemDetail: "",
     alatAngkut: "Angkutan Darat",
     tanggalSpd: todayStr,
     tanggalMemo: todayStr,
@@ -177,6 +179,8 @@ export default function Home() {
       biayaUhBiasa: initUhRate,
       hariUhBiasa60: 0,
       biayaUhBiasa60: 0,
+      hariUhBiasa40: 0,
+      biayaUhBiasa40: 0,
       hariUhHalfday: 0,
       biayaUhHalfday: 0,
       hariUhFullboard: 0,
@@ -261,6 +265,13 @@ export default function Home() {
               : Math.max(1, updatedRow.lamaHari || 1);
             updatedRow.hariUhBiasa60 = hari;
             updatedRow.biayaUhBiasa60 = Math.round(hari * (sbm?.uhBiasa || 0) * 0.6);
+          }
+          if (!prevUh.uhBiasa40 && nextUh.uhBiasa40) {
+            const hari = updatedRow.hariUhBiasa40 && updatedRow.hariUhBiasa40 > 0
+              ? updatedRow.hariUhBiasa40
+              : Math.max(1, updatedRow.lamaHari || 1);
+            updatedRow.hariUhBiasa40 = hari;
+            updatedRow.biayaUhBiasa40 = Math.round(hari * (sbm?.uhBiasa || 0) * 0.4);
           }
           if (!prevUh.uhHalfday && nextUh.uhHalfday) {
             const hari = updatedRow.hariUhHalfday && updatedRow.hariUhHalfday > 0
@@ -367,6 +378,9 @@ export default function Home() {
     text: string;
   } | null>(null);
 
+  // Track whether we are editing an existing activity and what its original ID was
+  const [editingOriginalId, setEditingOriginalId] = useState<string | null>(null);
+
   // Derive whether data is currently saved and whether any edits occurred since saving
   const currentSnapshot = JSON.stringify({ header, rows });
   const isSaved = Boolean(savedSnapshot);
@@ -378,6 +392,7 @@ export default function Home() {
     setRows(kegiatan.rows);
     if (kegiatan.activeCols) setActiveCols(kegiatan.activeCols);
     if (kegiatan.activeUh) setActiveUh(kegiatan.activeUh);
+    setEditingOriginalId(kegiatan.idKegiatan);
     setSavedBatchId(kegiatan.idKegiatan);
     setSavedSnapshot(JSON.stringify({ header: kegiatan.header, rows: kegiatan.rows }));
     setActiveTab("input");
@@ -385,6 +400,7 @@ export default function Home() {
 
   // Start fresh kegiatan with clean state and next sequential ID
   const handleCreateNewKegiatan = () => {
+    setEditingOriginalId(null);
     const today = new Date().toISOString().split("T")[0];
     const nextNo = getNextNoKegiatan(today, "A");
     const newId = generateIdKegiatan(today, nextNo, "A");
@@ -412,6 +428,8 @@ export default function Home() {
       biayaUhBiasa: activeUh.uhBiasa ? uhRateBiasa : 0,
       hariUhBiasa60: activeUh.uhBiasa60 ? 1 : 0,
       biayaUhBiasa60: activeUh.uhBiasa60 ? Math.round(uhRateBiasa * 0.6) : 0,
+      hariUhBiasa40: activeUh.uhBiasa40 ? 1 : 0,
+      biayaUhBiasa40: activeUh.uhBiasa40 ? Math.round(uhRateBiasa * 0.4) : 0,
       hariUhHalfday: activeUh.uhHalfday ? 1 : 0,
       biayaUhHalfday: activeUh.uhHalfday ? uhRateHalfday : 0,
       hariUhFullboard: activeUh.uhFullboard ? 1 : 0,
@@ -447,6 +465,8 @@ export default function Home() {
       nomorStMaster: "",
       nomorKomp: "",
       detailKomponen: "",
+      itemDetail: "001",
+      keteranganItemDetail: "",
       tanggalSpd: today,
       tanggalMemo: today,
     }));
@@ -483,29 +503,34 @@ export default function Home() {
       const idKegiatan =
         header.idKegiatan ||
         savedBatchId ||
-        generateIdKegiatan(today, header.noKegiatanUrut || "01", header.kategoriSpj || "A");
+        generateIdKegiatan(today, header.noKegiatanUrut || "001", header.kategoriSpj || "A");
 
       const updatedHeader = { ...header, idKegiatan };
       if (header.idKegiatan !== idKegiatan) {
         setHeader(updatedHeader);
       }
 
+      const oldBatchId = editingOriginalId || savedBatchId || undefined;
+
       // 1. Simpan ke database master kegiatan lokal (Daftar Kegiatan)
-      saveKegiatanRecord({
-        idKegiatan,
-        kategori: (header.kategoriSpj || "A") as "A" | "B",
-        namaKegiatan: header.keteranganKegiatan || "Kegiatan Tanpa Judul",
-        tanggalSpd: header.tanggalSpd || today,
-        kotaTujuan: header.kotaTujuanList?.[0] || "",
-        provinsiTujuan: header.provinsiTujuan || "",
-        jumlahPeserta: validRows.length,
-        grandTotal: validRows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0),
-        header: updatedHeader,
-        rows: validRows,
-        activeCols,
-        activeUh,
-        updatedAt: new Date().toISOString(),
-      });
+      saveKegiatanRecord(
+        {
+          idKegiatan,
+          kategori: (header.kategoriSpj === "NA" || (header.kategoriSpj as string) === "B" ? "NA" : "A") as "A" | "NA" | "B",
+          namaKegiatan: header.keteranganKegiatan || "Kegiatan Tanpa Judul",
+          tanggalSpd: header.tanggalSpd || today,
+          kotaTujuan: header.kotaTujuanList?.[0] || "",
+          provinsiTujuan: header.provinsiTujuan || "",
+          jumlahPeserta: validRows.length,
+          grandTotal: validRows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0),
+          header: updatedHeader,
+          rows: validRows,
+          activeCols,
+          activeUh,
+          updatedAt: new Date().toISOString(),
+        },
+        oldBatchId
+      );
 
       // Perbarui nomor SPD tertinggi ke storage lokal
       const maxSpd = validRows.reduce((max, r) => {
@@ -517,12 +542,13 @@ export default function Home() {
       }
 
       // 2. Simpan / perbarui ke Rekap Perdin lokal terlebih dahulu (instan)
-      const { isUpdate } = saveOrUpdateRekapLocal(updatedHeader, validRows, idKegiatan);
+      const { isUpdate } = saveOrUpdateRekapLocal(updatedHeader, validRows, idKegiatan, oldBatchId);
+      setEditingOriginalId(idKegiatan);
       setSavedBatchId(idKegiatan);
       setSavedSnapshot(JSON.stringify({ header: updatedHeader, rows: validRows }));
 
       // 3. Kirim data transaksi dan baris rekap ke Google Spreadsheet Cloud
-      const sheetRes = await savePerdinToGoogleSheet(updatedHeader, validRows);
+      const sheetRes = await savePerdinToGoogleSheet(updatedHeader, validRows, undefined, oldBatchId);
 
       if (sheetRes.success) {
         setSaveFeedback({

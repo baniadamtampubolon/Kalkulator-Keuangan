@@ -277,7 +277,13 @@ function doPost(e) {
       pruneGhostRows(pesertaSheet);
       pruneGhostRows(rekapSheet);
       deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.idKegiatan);
+      if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
+        deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.oldIdKegiatan);
+      }
       deleteRowsByColumnValue(rekapSheet, 'Nama Kegiatan', header.namaKegiatan);
+      if (header.oldNamaKegiatan && header.oldNamaKegiatan !== header.namaKegiatan) {
+        deleteRowsByColumnValue(rekapSheet, 'Nama Kegiatan', header.oldNamaKegiatan);
+      }
 
       // FILTER ANTI-HANTU: Hanya peserta yang memiliki nama yang disimpan ke database
       const validParticipants = participants.filter(p => {
