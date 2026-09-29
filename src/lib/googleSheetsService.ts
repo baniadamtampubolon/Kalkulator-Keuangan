@@ -582,6 +582,27 @@ export async function fetchKegiatanFromSheet(
       if (item.idKegiatan) localMap.set(item.idKegiatan, item);
     });
 
+    // Helper pencocokan cerdas antara kegiatan di cloud dan lokal (mencocokkan ID persis ATAU Nama Kegiatan)
+    const findMatchingLocal = (cloudId: string, cloudNama: string, cloudTgl: string) => {
+      // 1. Cocokkan ID persis
+      if (cloudId && localMap.has(cloudId)) {
+        return localMap.get(cloudId);
+      }
+
+      // 2. Cocokkan Nama Kegiatan (agar format ID lama seperti K-080926-01-A otomatis bermigrasi ke KEG-2609-01-A)
+      const cleanNama = cloudNama.trim().toLowerCase();
+      if (cleanNama) {
+        const found = localList.find((l) => {
+          const lNama = String(l.namaKegiatan || "").trim().toLowerCase();
+          const lTgl = cleanIsoDate(l.tanggalSpd);
+          return lNama === cleanNama && (!cloudTgl || !lTgl || lTgl === cloudTgl);
+        });
+        if (found) return found;
+      }
+
+      return undefined;
+    };
+
     const parsedList: SavedKegiatan[] = cloudKegiatanList.map((item) => {
       const idKegiatan = String(item.id_kegiatan || "").trim();
       const namaKegiatan = String(item.nama_kegiatan || "Kegiatan Dinas").trim();
@@ -621,11 +642,11 @@ export async function fetchKegiatanFromSheet(
       const jumlahPeserta = matchingRekap.length > 0 ? matchingRekap.length : 1;
 
       // Jika ada di lokal dan memiliki rows peserta, gunakan local snapshot agar tidak kehilangan detail form
-      const existingLocal = localMap.get(idKegiatan);
+      const existingLocal = findMatchingLocal(idKegiatan, namaKegiatan, tanggalSpd);
       if (existingLocal && existingLocal.rows && existingLocal.rows.length > 0) {
         return {
           ...existingLocal,
-          idKegiatan,
+          idKegiatan, // Gunakan ID resmi dari Google Spreadsheet
           kategori,
           namaKegiatan,
           tanggalSpd,
@@ -633,6 +654,13 @@ export async function fetchKegiatanFromSheet(
           provinsiTujuan: provinsiTujuan || existingLocal.provinsiTujuan,
           jumlahPeserta: existingLocal.rows.length,
           grandTotal: grandTotal || existingLocal.grandTotal,
+          header: {
+            ...existingLocal.header,
+            idKegiatan, // Pastikan ID di header juga tersinkronisasi
+            kategoriSpj: kategori,
+            keteranganKegiatan: namaKegiatan,
+            keteranganMemo: namaKegiatan,
+          },
         };
       }
 
@@ -752,15 +780,20 @@ export async function fetchKegiatanFromSheet(
       };
     });
 
-    // Gabungkan kegiatan dari cloud dengan kegiatan lokal agar kegiatan lokal tidak tertimpa
-    const finalKegiatanMap = new Map<string, SavedKegiatan>();
-    parsedList.forEach((k) => finalKegiatanMap.set(k.idKegiatan, k));
-    localList.forEach((localKeg) => {
-      if (!finalKegiatanMap.has(localKeg.idKegiatan)) {
-        finalKegiatanMap.set(localKeg.idKegiatan, localKeg);
-      }
+    // parsedList adalah daftar kegiatan resmi dari Google Spreadsheet yang sudah menyerap detail lokal.
+    // Jika ada kegiatan lokal yang benar-benar baru dan belum pernah disinkronkan ke cloud:
+    const cloudNames = new Set(parsedList.map((p) => String(p.namaKegiatan || "").trim().toLowerCase()));
+    const cloudIds = new Set(parsedList.map((p) => String(p.idKegiatan || "").trim()));
+
+    const trulyNewLocalDrafts = localList.filter((l) => {
+      const lId = String(l.idKegiatan || "").trim();
+      const lNama = String(l.namaKegiatan || "").trim().toLowerCase();
+      if (cloudIds.has(lId)) return false;
+      if (cloudNames.has(lNama)) return false;
+      return true;
     });
-    const mergedKegiatanList = Array.from(finalKegiatanMap.values());
+
+    const mergedKegiatanList = [...parsedList, ...trulyNewLocalDrafts];
 
     // Simpan ke localStorage agar offline / subsequent render cepat
     if (typeof window !== "undefined") {
@@ -771,7 +804,7 @@ export async function fetchKegiatanFromSheet(
     return {
       success: true,
       data: mergedKegiatanList,
-      message: `Berhasil memuat ${mergedKegiatanList.length} paket kegiatan.`,
+      message: `Berhasil memuat ${mergedKegiatanList.length} paket kegiatan dari Google Spreadsheet.`,
     };
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);

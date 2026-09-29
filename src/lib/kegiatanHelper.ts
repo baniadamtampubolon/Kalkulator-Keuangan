@@ -161,7 +161,13 @@ export function saveKegiatanRecord(
 
   const currentList = getSavedKegiatanList();
   const existingIdx = currentList.findIndex(
-    (k) => k.idKegiatan === kegiatan.idKegiatan || (oldIdKegiatan && k.idKegiatan === oldIdKegiatan)
+    (k) =>
+      k.idKegiatan === kegiatan.idKegiatan ||
+      (oldIdKegiatan && k.idKegiatan === oldIdKegiatan) ||
+      (kegiatan.namaKegiatan &&
+        k.namaKegiatan &&
+        k.namaKegiatan.trim().toLowerCase() === kegiatan.namaKegiatan.trim().toLowerCase() &&
+        k.tanggalSpd === kegiatan.tanggalSpd)
   );
 
   let updatedList: SavedKegiatan[];

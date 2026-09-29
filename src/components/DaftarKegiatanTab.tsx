@@ -54,9 +54,22 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
       const res = await fetchKegiatanFromSheet();
       if (res.success && res.data) {
         setKegiatanList(res.data);
+        setNotification({
+          type: "success",
+          message: `Berhasil menyinkronkan ${res.data.length} paket kegiatan dari Google Spreadsheet.`,
+        });
+      } else {
+        setNotification({
+          type: "info",
+          message: res.message || "Gagal menyinkronkan data kegiatan dari cloud.",
+        });
       }
-    } catch {
-      // ignore
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setNotification({
+        type: "info",
+        message: `Gagal sinkronisasi: ${errMsg}`,
+      });
     } finally {
       setIsLoadingCloud(false);
     }
