@@ -5,6 +5,7 @@ import { HeaderData, ParticipantRow } from "@/lib/types";
 import { Printer, Edit3, RotateCcw } from "lucide-react";
 import { parseMakHierarchy } from "@/data/mak_akun";
 import { terbilang } from "@/lib/terbilang";
+import { getDefaultMemoNumber } from "@/lib/calc";
 
 interface MemorandumDocProps {
   header: HeaderData;
@@ -249,7 +250,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
               MEMORANDUM
             </h2>
             <p className="text-xs font-semibold font-sans">
-              Nomor : &nbsp;&nbsp;{header.nomorMemo || "M.xxx/INS/PPK/VIII/2026"}
+              Nomor : &nbsp;&nbsp;{header.nomorMemo || getDefaultMemoNumber(header.tanggalMemo)}
             </p>
           </div>
 

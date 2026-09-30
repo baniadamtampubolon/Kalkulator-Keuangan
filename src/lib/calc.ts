@@ -260,6 +260,108 @@ export function getMonthRoman(dateInput?: string | Date): string {
 }
 
 /**
+ * Format default nomor memorandum: M.xxx/INS/PPK/{ROMAN}/{YEAR}
+ */
+export function getDefaultMemoNumber(dateInput?: string | Date, seqNum: string | number = "xxx"): string {
+  const romanMonth = getMonthRoman(dateInput) || getMonthRoman(new Date()) || "IX";
+  let yearStr = "";
+  if (dateInput) {
+    if (typeof dateInput === "string") {
+      const trimmed = dateInput.trim();
+      const isoMatch = trimmed.match(/^(\d{4})[-/]/);
+      if (isoMatch) yearStr = isoMatch[1];
+      const dmyMatch = trimmed.match(/[-/](\d{4})$/);
+      if (dmyMatch) yearStr = dmyMatch[1];
+    }
+    if (!yearStr) {
+      const d = new Date(dateInput);
+      if (!isNaN(d.getTime())) yearStr = String(d.getFullYear());
+    }
+  }
+  if (!yearStr) {
+    yearStr = String(new Date().getFullYear());
+  }
+  return `M.${seqNum}/INS/PPK/${romanMonth}/${yearStr}`;
+}
+
+export interface MemoParts {
+  isStandard: boolean;
+  prefix: string;
+  seqNumber: string;
+  unit: string;
+  romanMonth: string;
+  year: string;
+  formatted: string;
+}
+
+/**
+ * Mem-parsing string nomor memorandum menjadi komponen-komponennya:
+ * prefix (M.), nomor urut (xxx / 321), unit (/INS/PPK/), bulan romawi (IX), dan tahun (2026).
+ */
+export function parseMemoNumberParts(memoNumber?: string, dateInput?: string | Date): MemoParts {
+  const defaultMonth = getMonthRoman(dateInput) || getMonthRoman(new Date()) || "IX";
+  let defaultYear = "2026";
+  if (dateInput) {
+    const d = new Date(dateInput);
+    if (!isNaN(d.getTime())) defaultYear = String(d.getFullYear());
+  } else {
+    defaultYear = String(new Date().getFullYear());
+  }
+
+  if (!memoNumber || memoNumber.trim() === "") {
+    return {
+      isStandard: true,
+      prefix: "M.",
+      seqNumber: "xxx",
+      unit: "/INS/PPK/",
+      romanMonth: defaultMonth,
+      year: defaultYear,
+      formatted: `M.xxx/INS/PPK/${defaultMonth}/${defaultYear}`,
+    };
+  }
+
+  const trimmed = memoNumber.trim();
+
+  // Pola standard: M.{seq}/INS/PPK/{roman}/{year} atau M.{seq}/.../{roman}/{year}
+  const stdMatch = trimmed.match(/^([A-Za-z]+\.)?\s*([^\/]+)\s*(\/[^\/]+\/[^\/]+\/)([^\/]+)(?:\/(\d{4}))?/i);
+  if (stdMatch) {
+    return {
+      isStandard: true,
+      prefix: stdMatch[1] || "M.",
+      seqNumber: stdMatch[2] ? stdMatch[2].trim() : "xxx",
+      unit: stdMatch[3] || "/INS/PPK/",
+      romanMonth: stdMatch[4] ? stdMatch[4].trim() : defaultMonth,
+      year: stdMatch[5] || defaultYear,
+      formatted: trimmed,
+    };
+  }
+
+  // Pola sederhana M.{seq}
+  const simpleMatch = trimmed.match(/^([A-Za-z]+\.)?\s*([^\/]+)(.*)$/);
+  if (simpleMatch && (simpleMatch[1] || (simpleMatch[3] && simpleMatch[3].includes("/")))) {
+    return {
+      isStandard: true,
+      prefix: simpleMatch[1] || "M.",
+      seqNumber: simpleMatch[2] ? simpleMatch[2].trim() : "xxx",
+      unit: "/INS/PPK/",
+      romanMonth: defaultMonth,
+      year: defaultYear,
+      formatted: trimmed,
+    };
+  }
+
+  return {
+    isStandard: false,
+    prefix: "M.",
+    seqNumber: trimmed,
+    unit: "/INS/PPK/",
+    romanMonth: defaultMonth,
+    year: defaultYear,
+    formatted: trimmed,
+  };
+}
+
+/**
  * Mengubah string nomor memo yang sudah ada agar bulan romawi dan tahunnya
  * otomatis sinkron mengikuti tanggal memo yang dipilih.
  * Contoh: "M.322/INS/PPK/XI/2026" dengan tanggal 2026-08-15 -> "M.322/INS/PPK/VIII/2026"
@@ -282,9 +384,14 @@ export function updateMemoNumberWithDate(memoNumber: string, dateInput?: string 
     if (!isNaN(d.getTime())) yearStr = String(d.getFullYear());
   }
 
-  // Pola 1: /ROMAN/YEAR (e.g. /XI/2026)
+  // Pola 1: /ROMAN/YEAR (e.g. /XI/2026 atau /IX/2026)
   if (/\/([IVXLCDM]+)\/(\d{4})/i.test(memoNumber)) {
     return memoNumber.replace(/\/([IVXLCDM]+)\/(\d{4})/i, `/${romanMonth}/${yearStr || "$2"}`);
+  }
+
+  // Pola 1b: /INS/PPK/.../YEAR (e.g. /INS/PPK/xxx/2026)
+  if (/\/INS\/PPK\/([^\/]+)\/(\d{4})/i.test(memoNumber)) {
+    return memoNumber.replace(/\/INS\/PPK\/([^\/]+)\/(\d{4})/i, `/INS/PPK/${romanMonth}/${yearStr || "$2"}`);
   }
 
   // Pola 2: /ROMAN di akhir string (e.g. /XI)

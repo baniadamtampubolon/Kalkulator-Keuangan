@@ -49,7 +49,7 @@ import {
   NomorMemo,
   SavedKegiatan,
 } from "@/lib/types";
-import { calculateRowTotal, findSbmByProvince, generateNextMemoNumber } from "@/lib/calc";
+import { calculateRowTotal, findSbmByProvince, generateNextMemoNumber, getDefaultMemoNumber } from "@/lib/calc";
 
 import pegawaiRaw from "@/data/pegawai.json";
 import sbmRaw from "@/data/sbm.json";
@@ -164,7 +164,7 @@ export default function Home() {
     alatAngkut: "Angkutan Darat",
     tanggalSpd: todayStr,
     tanggalMemo: todayStr,
-    nomorMemo: "",
+    nomorMemo: getDefaultMemoNumber(todayStr, "xxx"),
     nomorStMaster: "",
     ppkNama: defaultPpk?.nama || "Arif Wibowo, S.H., M.H.",
     ppkNip: defaultPpk?.nip || "19830124200801 1 006",
@@ -510,7 +510,7 @@ export default function Home() {
       noKegiatanUrut: nextNo,
       keteranganKegiatan: "",
       keteranganMemo: "",
-      nomorMemo: "",
+      nomorMemo: getDefaultMemoNumber(today, "xxx"),
       nomorStMaster: "",
       nomorStStaff: "",
       nomorStPejabat: "",

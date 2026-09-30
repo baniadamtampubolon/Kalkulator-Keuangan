@@ -20,7 +20,7 @@ import {
   getNextNoKegiatan,
   getSavedKegiatanList,
 } from "@/lib/kegiatanHelper";
-import { getMonthRoman, updateMemoNumberWithDate } from "@/lib/calc";
+import { getMonthRoman, updateMemoNumberWithDate, getDefaultMemoNumber, parseMemoNumberParts } from "@/lib/calc";
 import { ModalTambahPegawai } from "./ModalTambahPegawai";
 import {
   FileText,
@@ -176,14 +176,21 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
     return [taufikObj, noviObj];
   }, [pegawaiList]);
 
+  // Mode input Nomor Memorandum: standard segmented vs manual free text
+  const [isManualMemoMode, setIsManualMemoMode] = useState<boolean>(false);
+
+  // Parse struktur nomor memorandum aktif
+  const memoParts = React.useMemo(() => {
+    return parseMemoNumberParts(header.nomorMemo, header.tanggalMemo);
+  }, [header.nomorMemo, header.tanggalMemo]);
+
   const handleChange = <K extends keyof HeaderData>(field: K, value: HeaderData[K]) => {
     // Otomatis sinkronkan bulan Romawi dan tahun pada nomor memo saat tanggalMemo berubah
     if (field === "tanggalMemo" && typeof value === "string") {
       setHeader((prev) => {
         const next = { ...prev, [field]: value };
-        if (prev.nomorMemo && prev.nomorMemo.trim() !== "") {
-          next.nomorMemo = updateMemoNumberWithDate(prev.nomorMemo, value);
-        }
+        const currentMemo = prev.nomorMemo || getDefaultMemoNumber(value, "xxx");
+        next.nomorMemo = updateMemoNumberWithDate(currentMemo, value);
         return next;
       });
       return;
@@ -886,18 +893,25 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             </div>
 
             {/* Nomor Memorandum + Ambil Nomor */}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between gap-1">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <label className="font-semibold text-slate-800">
                     Nomor Memorandum
                   </label>
                   <span
                     className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/80 font-semibold"
-                    title={`Bulan Romawi otomatis mengikuti Tanggal Memo: ${currentMemoRomanMonth}/${currentMemoYear}`}
+                    title={`Bulan Romawi (${currentMemoRomanMonth}) dan Tahun (${currentMemoYear}) sinkron otomatis mengikuti Tanggal Memo`}
                   >
                     Bulan {currentMemoRomanMonth}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsManualMemoMode(!isManualMemoMode)}
+                    className="text-[10px] text-blue-600 hover:text-blue-800 hover:underline font-medium ml-1 cursor-pointer"
+                  >
+                    {isManualMemoMode ? "Format Standar" : "Edit Bebas"}
+                  </button>
                 </div>
                 {latestMemoInfo?.lastMemoStr && (
                   <span className="text-[10px] text-slate-500 font-normal truncate max-w-[190px]" title={`Nomor terakhir terdaftar di database master: ${latestMemoInfo.lastMemoStr}`}>
@@ -905,29 +919,90 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   </span>
                 )}
               </div>
-              <div className="flex gap-1.5">
-                <input
-                  type="text"
-                  value={header.nomorMemo}
-                  onChange={(e) => handleChange("nomorMemo", e.target.value)}
-                  placeholder={latestMemoInfo ? `Contoh: M.${latestMemoInfo.maxNum + 1}/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}` : `M.xxx/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}`}
-                  className="input-human flex-1 h-9.5 px-2.5 font-mono text-xs font-semibold"
-                />
-                <button
-                  type="button"
-                  onClick={onGenerateMemoNumber}
-                  className="btn-tactile px-3 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
-                  title={`Generate nomor urut memorandum berikutnya dengan Bulan Romawi (${currentMemoRomanMonth}) mengikuti tanggal memo`}
-                >
-                  <Wand2 className="w-3.5 h-3.5" />
-                  <span>Ambil No</span>
-                </button>
+
+              {isManualMemoMode || !memoParts.isStandard ? (
+                /* Mode Edit Manual / Format Bebas */
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={header.nomorMemo}
+                    onChange={(e) => handleChange("nomorMemo", e.target.value)}
+                    placeholder={`M.xxx/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}`}
+                    className="input-human flex-1 h-9.5 px-2.5 font-mono text-xs font-semibold"
+                  />
+                  <button
+                    type="button"
+                    onClick={onGenerateMemoNumber}
+                    className="btn-tactile px-3 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
+                    title={`Generate nomor urut memorandum berikutnya`}
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    <span>Ambil No</span>
+                  </button>
+                </div>
+              ) : (
+                /* Mode Standar: Segmented Input (M. [ xxx ] /INS/PPK/IX/2026) */
+                <div className="flex gap-1.5 items-stretch">
+                  <div className="flex-1 flex items-stretch h-9.5 rounded-lg border border-slate-300 focus-within:ring-2 focus-within:ring-blue-500/40 focus-within:border-blue-500 overflow-hidden bg-white shadow-2xs transition-all">
+                    {/* Prefix M. */}
+                    <div className="flex items-center px-2.5 bg-slate-100 border-r border-slate-200 select-none text-slate-700 font-mono font-bold text-xs">
+                      M.
+                    </div>
+
+                    {/* Middle: Sequence number input (xxx / 321) */}
+                    <input
+                      type="text"
+                      value={memoParts.seqNumber}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const formatted = `M.${val || "xxx"}/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}`;
+                        handleChange("nomorMemo", formatted);
+                      }}
+                      onBlur={() => {
+                        if (!memoParts.seqNumber || memoParts.seqNumber.trim() === "") {
+                          handleChange("nomorMemo", `M.xxx/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}`);
+                        }
+                      }}
+                      placeholder="xxx"
+                      className="w-16 sm:w-20 px-2 text-center font-mono font-bold text-xs text-blue-600 bg-white focus:outline-none focus:bg-blue-50/30 transition-colors"
+                      title="Ketik nomor urut memorandum (misal: 321 atau xxx)"
+                    />
+
+                    {/* Suffix: /INS/PPK/IX/2026 */}
+                    <div 
+                      className="flex items-center px-2.5 bg-slate-50 border-l border-slate-200 select-none flex-1 truncate"
+                      title={`Bulan Romawi (${currentMemoRomanMonth}) dan Tahun (${currentMemoYear}) sinkron otomatis dari Tanggal Memo`}
+                    >
+                      <span className="font-mono text-xs text-slate-600 font-medium truncate">
+                        /INS/PPK/<strong className="text-blue-700 font-bold">{currentMemoRomanMonth}</strong>/<span className="text-slate-800 font-semibold">{currentMemoYear}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Button Ambil No */}
+                  <button
+                    type="button"
+                    onClick={onGenerateMemoNumber}
+                    className="btn-tactile px-3 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
+                    title={`Ambil nomor urut berikutnya dari database master (Bulan Romawi ${currentMemoRomanMonth})`}
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    <span>Ambil No</span>
+                  </button>
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-400">
+                <span>
+                  Format default: <strong className="font-mono text-slate-600">M.xxx/INS/PPK/{currentMemoRomanMonth}/{currentMemoYear}</strong> (Bulan Romawi otomatis)
+                </span>
+                {latestMemoInfo && (
+                  <span className="text-slate-500">
+                    Saran no: <strong className="font-mono text-blue-600">M.{latestMemoInfo.maxNum + 1}/INS/PPK/{currentMemoRomanMonth}/{currentMemoYear}</strong>
+                  </span>
+                )}
               </div>
-              <span className="text-[10px] text-slate-400">
-                {latestMemoInfo 
-                  ? `Otomatis urutan berikutnya: M.${latestMemoInfo.maxNum + 1}/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear} (Bulan Romawi ${currentMemoRomanMonth})` 
-                  : `Otomatis generate dari register master memorandum (Bulan Romawi ${currentMemoRomanMonth})`}
-              </span>
             </div>
           </div>
 
