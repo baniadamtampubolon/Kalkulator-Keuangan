@@ -31,6 +31,7 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
 
   const sections = [
     { id: "setup-database", title: "Setup Awal Database Cloud", icon: Database, badge: "Penting" },
+    { id: "alur-kerja", title: "Alur Kerja & Siklus SPJ (Start to Finish)", icon: Sparkles, badge: "Penting" },
     { id: "pendahuluan", title: "1. Gambaran Umum & Fitur", icon: BookOpen },
     { id: "header-parameter", title: "2. Parameter & Pejabat", icon: FileText },
     { id: "preset-komponen", title: "3. Preset & Komponen Biaya", icon: Sparkles },
@@ -284,6 +285,91 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                 <span>
                   <strong>Setup Selesai:</strong> Setelah langkah di atas dilakukan sekali, aplikasi akan otomatis mengingat koneksi ini dan Anda langsung dapat menggunakan tombol <em>&quot;Simpan ke Google Sheet & Sinkronkan Rekap&quot;</em> setiap saat!
                 </span>
+              </div>
+            </div>
+          </section>
+
+          {/* SECTION: ALUR KERJA & SIKLUS SPJ (START TO FINISH) */}
+          <section
+            id="alur-kerja"
+            className="rounded-2xl bg-white border-2 border-emerald-500/30 p-6 md:p-8 shadow-xs space-y-5 scroll-mt-24"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Alur Kerja & Siklus Pembuatan SPJ (Dari Awal sampai Selesai)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Panduan siklus lengkap penyelesaian berkas SPJ hingga pembuatan berkas baru
+                  </p>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200">
+                Siklus SPJ
+              </span>
+            </div>
+
+            <div className="space-y-3.5 text-xs text-slate-600 leading-relaxed">
+              <p>
+                Aplikasi ini dirancang dengan siklus bertahap yang jelas agar Anda tidak bingung kapan sebuah tugas SPJ selesai dan bagaimana memulai berkas SPJ baru:
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                {/* Stage 1 */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      1
+                    </span>
+                    <strong className="text-slate-900 font-semibold">Isi Informasi & Komponen Biaya</strong>
+                  </div>
+                  <p className="text-slate-600 text-[11px] pl-8">
+                    Isi narasi kegiatan, pilih provinsi/kota tujuan, nomor ST, dan centang komponen biaya yang diaktifkan (misal: Transport Darat PP, Tiket, Hotel, Uang Harian).
+                  </p>
+                </div>
+
+                {/* Stage 2 */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      2
+                    </span>
+                    <strong className="text-slate-900 font-semibold">Input Peserta & Hitung Otomatis</strong>
+                  </div>
+                  <p className="text-slate-600 text-[11px] pl-8">
+                    Pilih nama pegawai dari master database. Nominal Uang Harian dan rincian biaya akan terhitung secara otomatis.
+                  </p>
+                </div>
+
+                {/* Stage 3 */}
+                <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      3
+                    </span>
+                    <strong className="text-emerald-900 font-semibold">Klik Simpan Data (Finish Milestone)</strong>
+                  </div>
+                  <p className="text-emerald-800 text-[11px] pl-8">
+                    Klik <strong>&quot;Simpan Data&quot;</strong> di bawah tabel. Sistem akan membuka jendela <strong>&quot;SPJ Selesai &amp; Berhasil Disimpan&quot;</strong> yang merangkum total biaya dan 6 dokumen yang siap dicetak.
+                  </p>
+                </div>
+
+                {/* Stage 4 */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      4
+                    </span>
+                    <strong className="text-slate-900 font-semibold">Cetak Dokumen atau Buat SPJ Baru</strong>
+                  </div>
+                  <p className="text-slate-600 text-[11px] pl-8">
+                    Pilih <strong>&quot;Cetak Seluruh Dokumen&quot;</strong> untuk pratinjau/print, atau klik <strong>&quot;➕ Selesai &amp; Buat SPJ Baru&quot;</strong> di navbar/footer untuk mereset form bersih dan auto-increment ID untuk paket berikutnya!
+                  </p>
+                </div>
               </div>
             </div>
           </section>

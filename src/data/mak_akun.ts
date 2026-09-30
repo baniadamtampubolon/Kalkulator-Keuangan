@@ -84,9 +84,9 @@ export function getCustomItemDetails(): ItemDetailItem[] {
 /**
  * Menggabungkan master data item detail bawaan DIPA dengan item detail kustom yang tersimpan di sistem
  */
-export function getAllItemDetails(): ItemDetailItem[] {
-  const custom = getCustomItemDetails();
-  if (custom.length === 0) return LIST_ITEM_DETAIL;
+export function getAllItemDetails(customList?: ItemDetailItem[]): ItemDetailItem[] {
+  const custom = customList !== undefined ? customList : getCustomItemDetails();
+  if (!custom || custom.length === 0) return LIST_ITEM_DETAIL;
 
   const combined = [...custom];
   const seenKodes = new Set(custom.map((c) => c.kode));
@@ -179,10 +179,14 @@ export function getKomponenName(kode: string, customDetail?: string): string {
  * 2. Berdasarkan kombinasi nomorKomp dan nomorMak
  * 3. Jika hanya salah satu yang terisi, mencocokkan yang ada.
  */
-export function getItemDetailsForMak(nomorKomp?: string, nomorMak?: string): ItemDetailItem[] {
+export function getItemDetailsForMak(
+  nomorKomp?: string,
+  nomorMak?: string,
+  customList?: ItemDetailItem[]
+): ItemDetailItem[] {
   const cleanKomp = (nomorKomp || "").trim();
   const cleanMak = (nomorMak || "").trim();
-  const allList = getAllItemDetails();
+  const allList = getAllItemDetails(customList);
 
   if (!cleanKomp && !cleanMak) return allList;
 
@@ -351,6 +355,5 @@ export const OPSI_PERIHAL_MEMORANDUM: string[] = [
   "Permintaan Pembayaran Langsung (LS) Konsumsi",
   "Permintaan Pembayaran Langsung (LS) Honorarium",
   "Permintaan Pembayaran Langsung (LS) Seminar Kit",
-  "Permintaan Pembayaran Lansung (LS) Seminar Kit",
 ];
 

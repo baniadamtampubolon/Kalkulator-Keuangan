@@ -51,8 +51,10 @@ const DEFAULT_HEADERS = {
   PESERTA: [
     'id_peserta', 'id_kegiatan', 'id_pegawai', 'urutan', 'nomor_spd', 'nomor_st_assigned',
     'is_pejabat', 'nama_snapshot', 'nip_snapshot', 'golongan_snapshot', 'jabatan_snapshot',
-    'tujuan_kota', 'tanggal_mulai', 'tanggal_selesai', 'lama_hari', 'hari_uh_biasa', 'biaya_uh_biasa',
-    'hari_uh_60', 'biaya_uh_60', 'hari_uh_halfday', 'biaya_uh_halfday', 'hari_uh_fullboard',
+    'tujuan_kota', 'tujuan_provinsi', 'tanggal_mulai', 'tanggal_selesai', 'lama_hari',
+    'hari_uh_biasa', 'biaya_uh_biasa', 'hari_uh_60', 'biaya_uh_60',
+    'hari_uh_40', 'biaya_uh_40',
+    'hari_uh_halfday', 'biaya_uh_halfday', 'hari_uh_fullboard',
     'biaya_uh_fullboard', 'biaya_tiket', 'biaya_hotel', 'biaya_penginapan_30', 'biaya_trans_darat',
     'biaya_trans_lokal', 'biaya_trans_jakarta_pp', 'biaya_trans_daerah_pp', 'biaya_riil',
     'biaya_meeting', 'biaya_representatif', 'total_biaya', 'tiket_boarding_pass', 'tiket_pergi_no',
@@ -162,7 +164,12 @@ function doGet(e) {
  */
 function doPost(e) {
   const lock = LockService.getScriptLock();
-  lock.tryLock(30000);
+  if (!lock.tryLock(30000)) {
+    return createJsonResponse({
+      status: 'error',
+      message: 'Server sedang sibuk memproses permintaan lain. Silakan coba lagi dalam beberapa detik.'
+    });
+  }
 
   try {
     const payload = JSON.parse(e.postData.contents);
@@ -223,7 +230,7 @@ function doPost(e) {
         makSheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
       }
       return createJsonResponse({
-        status: 'SUCCESS',
+        status: 'success',
         message: 'Master MAK & Item Detail (' + items.length + ' item) berhasil disinkronkan ke MASTER_MAK Google Spreadsheet.'
       });
     }
@@ -273,9 +280,7 @@ function doPost(e) {
       const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
       const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
 
-      // Bersihkan baris hantu dan baris lama sebelum menulis data baru
-      pruneGhostRows(pesertaSheet);
-      pruneGhostRows(rekapSheet);
+      // Bersihkan baris lama sebelum menulis data baru
       deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.idKegiatan);
       if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
         deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.oldIdKegiatan);
@@ -292,10 +297,14 @@ function doPost(e) {
         return nama !== '' || ext !== '';
       });
 
+      // Batch write: Kumpulkan semua baris lalu tulis sekaligus (5-10x lebih cepat)
+      const pesertaBatch = [];
+      const rekapBatch = [];
+
       validParticipants.forEach((p, idx) => {
         const idPeserta = header.idKegiatan + '-' + (idx + 1).toString().padStart(2, '0');
 
-        pesertaSheet.appendRow([
+        pesertaBatch.push([
           idPeserta,
           header.idKegiatan,
           p.pegawaiId || '',
@@ -308,6 +317,7 @@ function doPost(e) {
           p.golongan || '',
           p.jabatan || '',
           p.tujuanKota || '',
+          p.tujuanProvinsi || header.provinsiTujuan || '',
           p.tanggalMulai || '',
           p.tanggalSelesai || '',
           p.lamaHari || 0,
@@ -315,6 +325,8 @@ function doPost(e) {
           p.biayaUhBiasa || 0,
           p.hariUh60 || 0,
           p.biayaUh60 || 0,
+          p.hariUh40 || 0,
+          p.biayaUh40 || 0,
           p.hariUhHalfday || 0,
           p.biayaUhHalfday || 0,
           p.hariUhFullboard || 0,
@@ -354,7 +366,7 @@ function doPost(e) {
           p.spjExtra?.pengembalianKas || 0
         ]);
 
-        rekapSheet.appendRow([
+        rekapBatch.push([
           header.noSpby || '',
           header.jenisPengajuan || 'RAMPUNG',
           header.noSpm || '',
@@ -383,10 +395,10 @@ function doPost(e) {
           p.hotelDetail?.tanggalCheckout || p.tanggalSelesai,
           p.hotelDetail?.jumlahMalam || 1,
           p.hariUhBiasa || 0,
-          p.hariUh60 || 0,
+          p.hariUh40 || p.hariUh60 || 0,
           p.lamaHari || 0,
           p.biayaUhBiasa || 0,
-          p.biayaUh60 || 0,
+          p.biayaUh40 || p.biayaUh60 || 0,
           (p.biayaUhHalfday || 0) + (p.biayaUhFullboard || 0),
           p.biayaHotel || 0,
           p.biayaPenginapan30 || 0,
@@ -407,6 +419,18 @@ function doPost(e) {
           p.spjExtra?.pengembalianKas || 0
         ]);
       });
+
+      // Batch write DB_PESERTA
+      if (pesertaBatch.length > 0) {
+        pesertaSheet.getRange(pesertaSheet.getLastRow() + 1, 1, pesertaBatch.length, pesertaBatch[0].length)
+          .setValues(pesertaBatch);
+      }
+
+      // Batch write REKAP_PERDIN_48KOLOM
+      if (rekapBatch.length > 0) {
+        rekapSheet.getRange(rekapSheet.getLastRow() + 1, 1, rekapBatch.length, rekapBatch[0].length)
+          .setValues(rekapBatch);
+      }
 
       // Pembersihan akhir baris hantu setelah penulisan selesai
       pruneGhostRows(pesertaSheet);
@@ -806,7 +830,7 @@ function deleteRowsByColumnValue(sheet, columnName, value) {
   if (colIndex === -1) return;
 
   for (let i = data.length - 1; i >= 1; i--) {
-    if (data[i][colIndex] === value) {
+    if (String(data[i][colIndex] || '').trim() === String(value || '').trim()) {
       sheet.deleteRow(i + 1);
     }
   }

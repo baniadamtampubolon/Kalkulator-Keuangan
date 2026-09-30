@@ -203,11 +203,11 @@ export function calculateRowTotal(
 
   // 5. Total Sum (Strictly sum only active checked components)
   let total = 0;
-  total += updated.biayaUhBiasa;
-  total += updated.biayaUhBiasa60;
-  total += updated.biayaUhBiasa40 || 0;
-  total += updated.biayaUhHalfday;
-  total += updated.biayaUhFullboard;
+  total += activeUh.uhBiasa ? updated.biayaUhBiasa : 0;
+  total += activeUh.uhBiasa60 ? updated.biayaUhBiasa60 : 0;
+  total += activeUh.uhBiasa40 ? (updated.biayaUhBiasa40 || 0) : 0;
+  total += activeUh.uhHalfday ? updated.biayaUhHalfday : 0;
+  total += activeUh.uhFullboard ? updated.biayaUhFullboard : 0;
 
   total += tiketVal;
   total += dukunganVal;

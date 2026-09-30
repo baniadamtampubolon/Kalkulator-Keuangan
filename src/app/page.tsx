@@ -13,8 +13,12 @@ import { BiayaRiilDoc } from "@/components/documents/BiayaRiilDoc";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
 import { DaftarKegiatanTab } from "@/components/DaftarKegiatanTab";
 import { ModalDatabaseSync } from "@/components/ModalDatabaseSync";
+import { ModalSelesaiSpj } from "@/components/ModalSelesaiSpj";
+import { ModalConfirmNewSpj } from "@/components/ModalConfirmNewSpj";
+import { ClassicSidebar } from "@/components/ClassicSidebar";
 import { ManualBookView } from "@/components/ManualBookView";
 import { Footer } from "@/components/Footer";
+import { ArrowLeft } from "lucide-react";
 import {
   MasterSyncData,
   getCachedMasterData,
@@ -26,6 +30,7 @@ import {
   generateIdKegiatan,
   saveKegiatanRecord,
   getNextNoKegiatan,
+  getSavedKegiatanList,
 } from "@/lib/kegiatanHelper";
 import {
   getLatestRegisteredSpdNumber,
@@ -88,6 +93,24 @@ export default function Home() {
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("input");
   const [isDbModalOpen, setIsDbModalOpen] = useState<boolean>(false);
+  const [isCompletionModalOpen, setIsCompletionModalOpen] = useState<boolean>(false);
+  const [isConfirmNewModalOpen, setIsConfirmNewModalOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [totalKegiatanCount, setTotalKegiatanCount] = useState<number>(0);
+
+  // Safely hydrate saved kegiatan count on client mount
+  useEffect(() => {
+    const updateCount = () => {
+      try {
+        setTotalKegiatanCount(getSavedKegiatanList().length);
+      } catch {
+        // ignore
+      }
+    };
+    updateCount();
+    window.addEventListener("storage", updateCount);
+    return () => window.removeEventListener("storage", updateCount);
+  }, []);
 
 
   // Active Cost Columns State (Default: Transportasi Darat PP only)
@@ -158,7 +181,7 @@ export default function Home() {
 
   // Participant Rows State (Clean initial empty row dengan nomor SPD berlanjut dari database)
   const [rows, setRows] = useState<ParticipantRow[]>(() => {
-    const nextSpd = typeof window !== "undefined" ? formatSpdNumber(getLatestRegisteredSpdNumber() + 1) : "01";
+    const nextSpd = "01";
     const initSbm = findSbmByProvince(sbmRaw as SbmRate[], "JAWA BARAT");
     const initUhRate = initSbm?.uhBiasa || 430000;
     const initialRow: ParticipantRow = {
@@ -489,10 +512,17 @@ export default function Home() {
       keteranganMemo: "",
       nomorMemo: "",
       nomorStMaster: "",
+      nomorStStaff: "",
+      nomorStPejabat: "",
+      useDifferentStPejabat: false,
       nomorKomp: "",
       detailKomponen: "",
+      nomorMak: "",
       itemDetail: "001",
       keteranganItemDetail: "",
+      noSpby: "",
+      noSpm: "00073T",
+      jenisPengajuan: "RAMPUNG",
       tanggalSpd: today,
       tanggalMemo: today,
     }));
@@ -500,6 +530,25 @@ export default function Home() {
     setSavedBatchId(null);
     setSavedSnapshot(null);
     setActiveTab("input");
+  };
+
+  // Safe Request to Create New Kegiatan (Checks for unsaved changes)
+  const handleRequestCreateNew = () => {
+    const hasValidData = rows.some((r) =>
+      Boolean((r.nama && r.nama.trim() !== "") || (r.namaExternal && r.namaExternal.trim() !== ""))
+    );
+    if (hasChanges || (!isSaved && hasValidData)) {
+      setIsConfirmNewModalOpen(true);
+    } else {
+      handleCreateNewKegiatan();
+    }
+  };
+
+  const handlePrintAllFromModal = () => {
+    setActiveTab("kwitansi");
+    setTimeout(() => {
+      window.print();
+    }, 350);
   };
 
   const handleSaveOrUpdateData = async () => {
@@ -557,6 +606,7 @@ export default function Home() {
         },
         oldBatchId
       );
+      setTotalKegiatanCount(getSavedKegiatanList().length);
 
       // Perbarui nomor SPD tertinggi ke storage lokal
       const maxSpd = validRows.reduce((max, r) => {
@@ -589,6 +639,9 @@ export default function Home() {
           text: `Data tersimpan di Rekap Perdin & Daftar Kegiatan lokal. (${sheetRes.message})`,
         });
       }
+
+      // Tampilkan Milestone Modal SPJ Selesai & Berhasil Disimpan
+      setIsCompletionModalOpen(true);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err);
       setSaveFeedback({
@@ -603,146 +656,200 @@ export default function Home() {
   const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Top Navbar */}
-      <Navbar
+    <div className="min-h-screen flex flex-row bg-slate-100/60 dark:bg-slate-950">
+      {/* Classic macOS / Safari-style Sidebar on the Left */}
+      <ClassicSidebar
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen((prev) => !prev)}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onPrint={() => window.print()}
+        onSelectTab={(tab: ActiveTab) => {
+          setActiveTab(tab);
+          if (typeof window !== "undefined" && window.innerWidth < 1024) {
+            setIsSidebarOpen(false);
+          }
+        }}
         onOpenDatabaseSync={() => setIsDbModalOpen(true)}
+        onCreateNewKegiatan={handleRequestCreateNew}
+        currentLoadedId={editingOriginalId || (isSaved ? header.idKegiatan : null)}
+        hasChanges={hasChanges}
+        totalKegiatanCount={totalKegiatanCount}
         participantCount={rows.length}
         totalExpenditure={grandTotal}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 pt-4 space-y-6">
-        {/* Tab 0: Input & Kalkulator */}
-        {activeTab === "input" && (
-          <div className="space-y-6">
-            <HeaderForm
+      {/* Main Workspace (Full width when sidebar is collapsed, or flex-1 alongside) */}
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+        {/* Top Navbar (Main Course Tabs Only) */}
+        <Navbar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onPrint={() => window.print()}
+          onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+          isSidebarOpen={isSidebarOpen}
+          onCreateNewKegiatan={handleRequestCreateNew}
+          currentLoadedId={editingOriginalId || (isSaved ? header.idKegiatan : null)}
+          isSaved={isSaved}
+          hasChanges={hasChanges}
+          participantCount={rows.length}
+          totalExpenditure={grandTotal}
+        />
+
+        {/* Main Content Area */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-4 space-y-6 pb-12">
+          {/* Secondary Management Tabs: Return Bar to Input */}
+          {(activeTab === "kegiatan" || activeTab === "rekap" || activeTab === "panduan") && (
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-2xs backdrop-blur-md no-print animate-fade-in">
+              <button
+                type="button"
+                onClick={() => setActiveTab("input")}
+                className="btn-tactile inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold border border-slate-200 cursor-pointer transition-all"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Kembali ke Input &amp; Kalkulator</span>
+              </button>
+              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <span className="hidden sm:inline">Layar Penuh</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="font-semibold text-slate-700">
+                  {activeTab === "kegiatan"
+                    ? "Daftar Riwayat Kegiatan"
+                    : activeTab === "rekap"
+                    ? "Rekap Perdin (48 Kolom)"
+                    : "Buku Panduan & Tutorial"}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 0: Input & Kalkulator */}
+          {activeTab === "input" && (
+            <div className="space-y-6">
+              <HeaderForm
+                header={header}
+                setHeader={handleSetHeader}
+                sbmList={sbmList}
+                memoList={memoList}
+                pegawaiList={pegawaiList}
+                onAddPegawai={handleAddPegawai}
+                onApplyStToAll={handleApplyStToAll}
+                onGenerateMemoNumber={handleGenerateMemoNumber}
+                onOpenDaftarKegiatan={() => setActiveTab("kegiatan")}
+                onCreateNewKegiatan={handleRequestCreateNew}
+                editingOriginalId={editingOriginalId}
+              />
+
+              <ChecklistFilter
+                activeCols={activeCols}
+                setActiveCols={handleSetActiveCols}
+                activeUh={activeUh}
+                setActiveUh={handleSetActiveUh}
+              />
+
+              <ParticipantGrid
+                rows={rows}
+                setRows={setRows}
+                pegawaiList={pegawaiList}
+                sbmList={sbmList}
+                activeCols={activeCols}
+                activeUh={activeUh}
+                provinsiTujuan={header.provinsiTujuan}
+                header={header}
+                isSaved={isSaved}
+                hasChanges={hasChanges}
+                isSaving={isSaving}
+                saveFeedback={saveFeedback}
+                onSaveOrUpdate={handleSaveOrUpdateData}
+                onClearFeedback={() => setSaveFeedback(null)}
+              />
+            </div>
+          )}
+
+          {/* Tab 1: Kwitansi */}
+          {activeTab === "kwitansi" && (
+            <KwitansiDoc
               header={header}
-              setHeader={handleSetHeader}
-              sbmList={sbmList}
-              memoList={memoList}
-              pegawaiList={pegawaiList}
-              onAddPegawai={handleAddPegawai}
-              onApplyStToAll={handleApplyStToAll}
-              onGenerateMemoNumber={handleGenerateMemoNumber}
-              onOpenDaftarKegiatan={() => setActiveTab("kegiatan")}
-              editingOriginalId={editingOriginalId}
-            />
-
-            <ChecklistFilter
-              activeCols={activeCols}
-              setActiveCols={handleSetActiveCols}
-              activeUh={activeUh}
-              setActiveUh={handleSetActiveUh}
-            />
-
-            <ParticipantGrid
+              setHeader={setHeader}
               rows={rows}
               setRows={setRows}
-              pegawaiList={pegawaiList}
-              sbmList={sbmList}
               activeCols={activeCols}
               activeUh={activeUh}
-              provinsiTujuan={header.provinsiTujuan}
-              header={header}
-              isSaved={isSaved}
-              hasChanges={hasChanges}
-              isSaving={isSaving}
-              saveFeedback={saveFeedback}
-              onSaveOrUpdate={handleSaveOrUpdateData}
-              onClearFeedback={() => setSaveFeedback(null)}
             />
-          </div>
-        )}
+          )}
 
-        {/* Tab 1: Kwitansi */}
-        {activeTab === "kwitansi" && (
-          <KwitansiDoc
-            header={header}
-            setHeader={setHeader}
-            rows={rows}
-            setRows={setRows}
-            activeCols={activeCols}
-            activeUh={activeUh}
-          />
-        )}
+          {/* Tab 2: Memorandum */}
+          {activeTab === "memorandum" && (
+            <MemorandumDoc
+              header={header}
+              setHeader={setHeader}
+              rows={rows}
+              setRows={setRows}
+            />
+          )}
 
-        {/* Tab 2: Memorandum */}
-        {activeTab === "memorandum" && (
-          <MemorandumDoc
-            header={header}
-            setHeader={setHeader}
-            rows={rows}
-            setRows={setRows}
-          />
-        )}
+          {/* Tab 3: Nominatif */}
+          {activeTab === "nominatif" && (
+            <NominatifDoc
+              header={header}
+              setHeader={setHeader}
+              rows={rows}
+              setRows={setRows}
+              activeCols={activeCols}
+              activeUh={activeUh}
+            />
+          )}
 
-        {/* Tab 3: Nominatif */}
-        {activeTab === "nominatif" && (
-          <NominatifDoc
-            header={header}
-            setHeader={setHeader}
-            rows={rows}
-            setRows={setRows}
-            activeCols={activeCols}
-            activeUh={activeUh}
-          />
-        )}
+          {/* Tab 4: Rincian Biaya */}
+          {activeTab === "rincian" && (
+            <RincianBiayaDoc
+              header={header}
+              setHeader={setHeader}
+              rows={rows}
+              setRows={setRows}
+              activeCols={activeCols}
+              activeUh={activeUh}
+            />
+          )}
 
-        {/* Tab 4: Rincian Biaya */}
-        {activeTab === "rincian" && (
-          <RincianBiayaDoc
-            header={header}
-            setHeader={setHeader}
-            rows={rows}
-            setRows={setRows}
-            activeCols={activeCols}
-            activeUh={activeUh}
-          />
-        )}
+          {/* Tab 5: Biaya Riil */}
+          {activeTab === "riil" && (
+            <BiayaRiilDoc
+              header={header}
+              setHeader={setHeader}
+              rows={rows}
+              setRows={setRows}
+              activeCols={activeCols}
+            />
+          )}
 
-        {/* Tab 5: Biaya Riil */}
-        {activeTab === "riil" && (
-          <BiayaRiilDoc
-            header={header}
-            setHeader={setHeader}
-            rows={rows}
-            setRows={setRows}
-            activeCols={activeCols}
-          />
-        )}
+          {/* Tab 6: Rekap Perdin (48-Column SPJ Database & Excel Export) */}
+          {activeTab === "rekap" && (
+            <RekapPerdinTab
+              header={header}
+              rows={rows}
+            />
+          )}
 
-        {/* Tab 6: Rekap Perdin (48-Column SPJ Database & Excel Export) */}
-        {activeTab === "rekap" && (
-          <RekapPerdinTab
-            header={header}
-            rows={rows}
-          />
-        )}
+          {/* Tab: Daftar Kegiatan */}
+          {activeTab === "kegiatan" && (
+            <DaftarKegiatanTab
+              onEditKegiatan={handleEditKegiatan}
+              onCreateNewKegiatan={handleRequestCreateNew}
+              currentLoadedId={savedBatchId || header.idKegiatan}
+            />
+          )}
 
-        {/* Tab: Daftar Kegiatan */}
-        {activeTab === "kegiatan" && (
-          <DaftarKegiatanTab
-            onEditKegiatan={handleEditKegiatan}
-            onCreateNewKegiatan={handleCreateNewKegiatan}
-            currentLoadedId={savedBatchId || header.idKegiatan}
-          />
-        )}
+          {/* Tab 7: Panduan (Manual Book & Tutorial Setup Database) */}
+          {activeTab === "panduan" && (
+            <ManualBookView
+              onOpenDatabaseSync={() => setIsDbModalOpen(true)}
+              onNavigateToTab={(tab) => setActiveTab(tab as ActiveTab)}
+            />
+          )}
+        </main>
 
-        {/* Tab 7: Panduan (Manual Book & Tutorial Setup Database) */}
-        {activeTab === "panduan" && (
-          <ManualBookView
-            onOpenDatabaseSync={() => setIsDbModalOpen(true)}
-            onNavigateToTab={(tab) => setActiveTab(tab as ActiveTab)}
-          />
-        )}
-      </main>
-
-      {/* Minimalist Web Footer */}
-      <Footer />
+        {/* Minimalist Web Footer */}
+        <Footer />
+      </div>
 
       {/* Modal Integrasi Database Google Spreadsheet */}
       <ModalDatabaseSync
@@ -754,6 +861,36 @@ export default function Home() {
         currentPegawaiList={pegawaiList}
         currentSbmList={sbmList}
         currentMemoList={memoList}
+      />
+
+      {/* Milestone Modal: SPJ Selesai & Berhasil Disimpan */}
+      <ModalSelesaiSpj
+        isOpen={isCompletionModalOpen}
+        onClose={() => setIsCompletionModalOpen(false)}
+        header={header}
+        rows={rows}
+        onNavigateToTab={(tab) => setActiveTab(tab)}
+        onPrintAll={handlePrintAllFromModal}
+        onCreateNewKegiatan={() => {
+          setIsCompletionModalOpen(false);
+          handleCreateNewKegiatan();
+        }}
+      />
+
+      {/* Safety Confirmation Modal: Buat SPJ Baru */}
+      <ModalConfirmNewSpj
+        isOpen={isConfirmNewModalOpen}
+        onClose={() => setIsConfirmNewModalOpen(false)}
+        onConfirmNew={() => {
+          setIsConfirmNewModalOpen(false);
+          handleCreateNewKegiatan();
+        }}
+        onSaveAndNew={async () => {
+          setIsConfirmNewModalOpen(false);
+          await handleSaveOrUpdateData();
+          handleCreateNewKegiatan();
+        }}
+        hasUnsavedChanges={hasChanges || (!isSaved && rows.some((r) => Boolean(r.nama && r.nama.trim() !== "")))}
       />
     </div>
   );

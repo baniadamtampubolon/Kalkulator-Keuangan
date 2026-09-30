@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { HeaderData, SbmRate, NomorMemo, Pegawai } from "@/lib/types";
+import React, { useState, useEffect } from "react";
+import { HeaderData, SbmRate, NomorMemo, Pegawai, SavedKegiatan } from "@/lib/types";
 import { getKabkotByProvinsi } from "@/data/kabkot";
 import {
   LIST_NOMOR_MAK,
@@ -10,6 +10,8 @@ import {
   getKomponenName,
   getItemDetailsForMak,
   getItemDetailByKode,
+  getCustomItemDetails,
+  ItemDetailItem,
   saveCustomItemDetail,
   OPSI_PERIHAL_MEMORANDUM,
 } from "@/data/mak_akun";
@@ -46,6 +48,7 @@ interface HeaderFormProps {
   onApplyStToAll: (stNumber: string) => void;
   onGenerateMemoNumber: () => void;
   onOpenDaftarKegiatan?: () => void;
+  onCreateNewKegiatan?: () => void;
   editingOriginalId?: string | null;
 }
 
@@ -59,6 +62,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   onApplyStToAll,
   onGenerateMemoNumber,
   onOpenDaftarKegiatan,
+  onCreateNewKegiatan,
   editingOriginalId,
 }) => {
   const [isModalTambahPegawaiOpen, setIsModalTambahPegawaiOpen] = useState(false);
@@ -71,10 +75,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
       ? isManualKomponenOverride
       : Boolean(header.nomorKomp && !LIST_NOMOR_KOMPONEN.some((k) => k.kode === header.nomorKomp));
 
-  // Daftar item detail sub-kategori MAK yang cocok dengan nomor Komponen & nomor MAK aktif
+  // State for SSR-safe custom item details
+  const [customItems, setCustomItems] = useState<ItemDetailItem[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Daftar item detail sub-kategori MAK yang cocok dengan nomor Komponen & nomor MAK aktif (SSR-safe)
   const availableItemDetails = React.useMemo(() => {
-    return getItemDetailsForMak(header.nomorKomp, header.nomorMak);
-  }, [header.nomorKomp, header.nomorMak]);
+    return getItemDetailsForMak(header.nomorKomp, header.nomorMak, isMounted ? customItems : []);
+  }, [header.nomorKomp, header.nomorMak, isMounted, customItems]);
 
   // Mode input Perihal Memorandum: dropdown preset vs custom textarea (dihitung otomatis tanpa effect)
   const [isManualOverride, setIsManualOverride] = useState<boolean | null>(null);
@@ -236,15 +244,39 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
     handleChange("kotaTujuanList", filtered);
   };
 
-  // Ambil daftar kegiatan tersimpan untuk verifikasi ID & Auto-Increment
-  const savedKegiatanList = getSavedKegiatanList();
-  const nextAvailableNo = getNextNoKegiatan(header.tanggalSpd, header.kategoriSpj || "A", savedKegiatanList);
+  // Ambil daftar kegiatan tersimpan untuk verifikasi ID & Auto-Increment (SSR-safe)
+  const [savedKegiatanList, setSavedKegiatanList] = useState<SavedKegiatan[]>([]);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const updateList = () => {
+      try {
+        setSavedKegiatanList(getSavedKegiatanList());
+        setCustomItems(getCustomItemDetails());
+      } catch {
+        // ignore
+      }
+    };
+    updateList();
+    window.addEventListener("storage", updateList);
+    window.addEventListener("item-detail-updated", updateList);
+    return () => {
+      window.removeEventListener("storage", updateList);
+      window.removeEventListener("item-detail-updated", updateList);
+    };
+  }, [header.idKegiatan, editingOriginalId]);
+
+  const nextAvailableNo = isMounted
+    ? getNextNoKegiatan(header.tanggalSpd, header.kategoriSpj || "A", savedKegiatanList)
+    : (header.noKegiatanUrut || "001");
   const currentId = header.idKegiatan || generateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut || nextAvailableNo, header.kategoriSpj || "A");
 
   // Cek apakah ID bertabrakan dengan kegiatan lain yang sudah tersimpan
-  const conflictingKegiatan = savedKegiatanList.find(
-    (k) => k.idKegiatan === currentId && (!editingOriginalId || k.idKegiatan !== editingOriginalId)
-  );
+  const conflictingKegiatan = isMounted
+    ? savedKegiatanList.find(
+        (k) => k.idKegiatan === currentId && (!editingOriginalId || k.idKegiatan !== editingOriginalId)
+      )
+    : undefined;
   const isEditingCurrent = Boolean(editingOriginalId && editingOriginalId === currentId);
 
   const updateIdKegiatan = (newDate?: string, newUrut?: string, newKategori?: "A" | "NA" | "B") => {
@@ -310,51 +342,87 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           SEKSI 1: INFORMASI & NARASI KEGIATAN
           ------------------------------------------------------------- */}
       <section className="form-card p-4 md:p-5 space-y-3.5">
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+        {/* Top Header Row with Title, Badges, and Clean Action Group */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-xs border border-slate-300/70 shadow-2xs">
+            <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center font-bold text-xs border border-slate-200 shadow-2xs">
               1
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-xs md:text-sm font-bold text-slate-900 tracking-tight">
                   Informasi & Narasi Kegiatan
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
                   Wajib Diisi
                 </span>
+                {editingOriginalId ? (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                    Mengedit: {editingOriginalId}
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                    Draft Baru
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-slate-500 font-normal mt-0.5">
                 Deskripsi resmi untuk Kwitansi, SPD, Daftar Nominatif, dan Nota Dinas
               </p>
             </div>
           </div>
-          <FileText className="w-4 h-4 text-slate-400 hidden sm:block" />
+
+          {/* Action Buttons in Header */}
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+            {onOpenDaftarKegiatan && (
+              <button
+                type="button"
+                onClick={onOpenDaftarKegiatan}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200/90 shadow-2xs cursor-pointer transition-all"
+                title="Buka Daftar Seluruh Kegiatan SPJ Tersimpan"
+              >
+                <FolderKanban className="w-3.5 h-3.5 text-slate-500" />
+                <span>Daftar Kegiatan</span>
+              </button>
+            )}
+
+            {onCreateNewKegiatan && (
+              <button
+                type="button"
+                onClick={onCreateNewKegiatan}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs cursor-pointer transition-all"
+                title="Reset form dan buat berkas SPJ baru"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>SPJ Baru</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Sub-panel Identitas Berkas SPJ & Klasifikasi Kegiatan */}
         <div className="space-y-2">
-          <div className="p-2.5 sm:p-3 bg-slate-50/70 border border-slate-200/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-white border border-slate-200/90 text-slate-600 flex items-center justify-center shrink-0 shadow-2xs">
-                <FolderKanban className="w-3.5 h-3.5 text-slate-500" />
+          <div className="p-2.5 sm:p-3 bg-slate-50/70 border border-slate-200/80 rounded-xl flex flex-col lg:flex-row lg:items-center justify-between gap-3 transition-all">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200/90 text-slate-600 flex items-center justify-center shrink-0 shadow-2xs">
+                <FolderKanban className="w-4 h-4 text-slate-500" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
                     ID Kegiatan
                   </span>
-                  <span className={`px-2 py-0.5 rounded-md font-mono font-bold text-xs border shadow-2xs ${
+                  <span className={`px-2.5 py-0.5 rounded-lg font-mono font-bold text-xs border shadow-2xs ${
                     conflictingKegiatan
                       ? "bg-amber-50 text-amber-900 border-amber-300"
                       : isEditingCurrent
                       ? "bg-blue-50 text-[#0071e3] border-blue-200"
-                      : "bg-white text-slate-800 border-slate-200/90"
+                      : "bg-white text-slate-900 border-slate-200"
                   }`}>
                     {currentId}
                   </span>
                   <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/60 text-slate-600 border border-slate-300/50">
-                    {(header.kategoriSpj || "A") === "A" ? "Kategori A • ASN (PNS/PPPK)" : "Kategori NA • Non-ASN (Eksternal)"}
+                    {(header.kategoriSpj || "A") === "A" ? "Kategori A • ASN" : "Kategori NA • Non-ASN"}
                   </span>
                   {conflictingKegiatan ? (
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
@@ -363,23 +431,23 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     </span>
                   ) : isEditingCurrent ? (
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-[#0071e3] border border-blue-200">
-                      Mode Edit Kegiatan
+                      Mode Edit
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                      ID Baru Tersedia
+                      ID Siap Digunakan
                     </span>
                   )}
                 </div>
-                <p className="text-[10.5px] text-slate-400 mt-0.5">
+                <p className="text-[10.5px] text-slate-400 mt-0.5 truncate">
                   Pengenal berkas SPJ baku untuk integrasi database & rekapitulasi seluruh pelaksana
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0 flex-wrap">
-              {/* Segmented Control Kategori A / NA (macOS Style) */}
+              {/* Segmented Control Kategori A / NA */}
               <div className="inline-flex rounded-lg bg-slate-200/60 p-0.5 text-xs font-medium border border-slate-300/40">
                 <button
                   type="button"
@@ -407,7 +475,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 </button>
               </div>
 
-              {/* No Urut Input with Auto-Increment Button */}
+              {/* No Urut Input with Auto Button */}
               <div className="flex items-center gap-1.5">
                 <div className="flex items-center gap-1.5 bg-white border border-slate-200/90 rounded-lg px-2 py-1 shadow-2xs">
                   <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">No:</span>
@@ -421,32 +489,19 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                       updateIdKegiatan(header.tanggalSpd, val, header.kategoriSpj);
                     }}
                     className="w-9 text-center text-xs font-mono font-bold text-slate-800 focus:outline-hidden"
-                    title="Nomor Urut Kegiatan (bisa diketik manual atau klik tombol Auto)"
+                    title="Nomor Urut Kegiatan"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => updateIdKegiatan(header.tanggalSpd, nextAvailableNo, header.kategoriSpj)}
                   className="btn-tactile inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-[#0071e3] text-[#0071e3] hover:text-white border border-blue-200/80 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-                  title={`Klik untuk otomatis gunakan nomor urut berikutnya yang tersedia (${nextAvailableNo})`}
+                  title={`Gunakan nomor urut berikutnya (${nextAvailableNo})`}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Auto ({nextAvailableNo})</span>
                 </button>
               </div>
-
-              {/* Tombol Lihat Daftar Kegiatan */}
-              {onOpenDaftarKegiatan && (
-                <button
-                  type="button"
-                  onClick={onOpenDaftarKegiatan}
-                  className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-lg shadow-2xs hover:border-slate-300 transition-all cursor-pointer"
-                  title="Buka Daftar Kegiatan Tersimpan"
-                >
-                  <FolderKanban className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Daftar Kegiatan</span>
-                </button>
-              )}
             </div>
           </div>
 
