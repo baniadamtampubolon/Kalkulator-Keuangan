@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ParticipantRow, RiilItem, TicketDetail } from "@/lib/types";
 import { X, Plus, Trash2, Plane, Hotel, DollarSign, FileSpreadsheet } from "lucide-react";
 import { CurrencyInput } from "./CurrencyInput";
@@ -680,11 +680,29 @@ export const ModalRiil: React.FC<ModalRiilProps> = ({ row, isOpen, onClose, onSa
     if (Array.isArray(row.riilItems) && row.riilItems.length > 0) {
       return row.riilItems;
     }
+    if ((row.pengRill || 0) > 0) {
+      return [{ id: "1", uraian: "Pengeluaran Riil", amount: row.pengRill }];
+    }
     return [
       { id: "1", uraian: "Transportasi Darat PP (Taksi / Grab)", amount: 150000 },
       { id: "2", uraian: "Transportasi Lokal Daerah Tujuan", amount: 150000 },
     ];
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      if (Array.isArray(row.riilItems) && row.riilItems.length > 0) {
+        setItems(row.riilItems);
+      } else if ((row.pengRill || 0) > 0) {
+        setItems([{ id: "1", uraian: "Pengeluaran Riil", amount: row.pengRill }]);
+      } else {
+        setItems([
+          { id: "1", uraian: "Transportasi Darat PP (Taksi / Grab)", amount: 150000 },
+          { id: "2", uraian: "Transportasi Lokal Daerah Tujuan", amount: 150000 },
+        ]);
+      }
+    }
+  }, [row.riilItems, row.pengRill, row.id, isOpen]);
 
   if (!isOpen) return null;
 

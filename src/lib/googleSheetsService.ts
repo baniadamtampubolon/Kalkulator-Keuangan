@@ -1,4 +1,4 @@
-import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan } from "./types";
+import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan, RiilItem, TicketDetail } from "./types";
 import { generateIdKegiatan, getSavedKegiatanList } from "./kegiatanHelper";
 import { buildRekapFromSavedKegiatanList, deduplicateRekapRows, isSameRekapRow } from "./rekapHelper";
 import { getMonthRoman } from "./calc";
@@ -495,6 +495,120 @@ function cleanIsoDate(val: unknown, fallback: string = new Date().toISOString().
   return fallback;
 }
 
+function pesertaRowToParticipant(p: Record<string, unknown>, idx: number): ParticipantRow {
+  const namaSnapshot = String(p["nama_snapshot"] || p["nama"] || "").trim();
+  const namaExt = String(p["spj_nama_external"] || p["namaExternal"] || p["NAMA EXTERNAL"] || "").trim();
+  const nama = namaSnapshot || (namaExt ? "" : `Peserta ${idx + 1}`);
+  const isExternal = Boolean(namaExt);
+
+  // Parse riil_items_json
+  let riilItems: RiilItem[] = [];
+  const rawRiil = p["riil_items_json"] || p["riilItems"] || p["riil_items"];
+  if (typeof rawRiil === "string" && rawRiil.trim() !== "") {
+    try {
+      const parsed = JSON.parse(rawRiil);
+      if (Array.isArray(parsed)) {
+        riilItems = parsed.map((it: Record<string, unknown>, itIdx: number) => ({
+          id: String(it.id || itIdx + 1),
+          uraian: String(it.uraian || "Pengeluaran Riil"),
+          amount: Number(it.amount || 0),
+          keterangan: it.keterangan ? String(it.keterangan) : undefined,
+        }));
+      }
+    } catch {
+      riilItems = [];
+    }
+  } else if (Array.isArray(rawRiil)) {
+    riilItems = rawRiil as RiilItem[];
+  }
+
+  const biayaRiil = Number(p["biaya_riil"] || p["pengRill"] || p["Riil ()"] || 0);
+  if (riilItems.length === 0 && biayaRiil > 0) {
+    riilItems = [
+      { id: "1", uraian: "Pengeluaran Riil Lainnya", amount: biayaRiil }
+    ];
+  }
+
+  const tiketDetailPergi: TicketDetail = {
+    noTiket: String(p["tiket_pergi_no"] || ""),
+    kodeBooking: String(p["tiket_pergi_booking"] || ""),
+    maskapai: String(p["tiket_pergi_maskapai"] || ""),
+    harga: Number(p["tiket_pergi_fare"] || 0),
+  };
+
+  const tiketDetailPulang: TicketDetail = {
+    noTiket: String(p["tiket_pulang_no"] || ""),
+    kodeBooking: String(p["tiket_pulang_booking"] || ""),
+    maskapai: String(p["tiket_pulang_maskapai"] || ""),
+    harga: Number(p["tiket_pulang_fare"] || 0),
+  };
+
+  const tglMulai = cleanIsoDate(p["tanggal_mulai"] || p["Tgl Berangkat"]);
+  const tglSelesai = cleanIsoDate(p["tanggal_selesai"] || p["Tgl Kembali"]);
+
+  return {
+    id: String(p["id_peserta"] || idx + 1),
+    kodeNama: String(p["id_pegawai"] || p["kode_nama"] || ""),
+    nama,
+    namaExternal: isExternal ? namaExt : undefined,
+    nip: String(p["nip_snapshot"] || p["nip"] || p["NIP"] || ""),
+    golongan: String(p["golongan_snapshot"] || p["golongan"] || p["Gol"] || ""),
+    jabatan: String(p["jabatan_snapshot"] || p["jabatan"] || p["Jabatan"] || ""),
+    tujuanKota: String(p["tujuan_kota"] || p["Tujuan ke-"] || ""),
+    tujuanProvinsi: String(p["tujuan_provinsi"] || "JAWA BARAT"),
+    tanggalMulai: tglMulai,
+    tanggalSelesai: tglSelesai,
+    lamaHari: Number(p["lama_hari"] || p["Total Hari"] || 1),
+    nomorSt: String(p["nomor_st_assigned"] || p["nomor_st"] || p["No Surat Tugas"] || ""),
+    nomorSpd: String(p["nomor_spd"] || idx + 1).padStart(2, "0"),
+    isPejabat: Boolean(p["is_pejabat"]),
+    hariUhBiasa: Number(p["hari_uh_biasa"] || p["Lama Hari 100%"] || 0),
+    biayaUhBiasa: Number(p["biaya_uh_biasa"] || p["UH 100% ()"] || 0),
+    hariUhBiasa60: Number(p["hari_uh_60"] || 0),
+    biayaUhBiasa60: Number(p["biaya_uh_60"] || 0),
+    hariUhBiasa40: Number(p["hari_uh_40"] || p["Lama Hari 40%"] || 0),
+    biayaUhBiasa40: Number(p["biaya_uh_40"] || p["UH 40% ()"] || 0),
+    hariUhHalfday: Number(p["hari_uh_halfday"] || 0),
+    biayaUhHalfday: Number(p["biaya_uh_halfday"] || 0),
+    hariUhFullboard: Number(p["hari_uh_fullboard"] || 0),
+    biayaUhFullboard: Number(p["biaya_uh_fullboard"] || p["UH Fullboard/Fullday/Halfday/Diklat"] || 0),
+    tiket: Number(p["biaya_tiket"] || p["tiket"] || 0),
+    dukunganTransportasi: 0,
+    transportasiDarat: Number(p["biaya_trans_darat"] || p["Biaya Transport ()"] || 0),
+    transportasiLokal: Number(p["biaya_trans_lokal"] || 0),
+    transportJakartaPp: Number(p["biaya_trans_jakarta_pp"] || p["Transport Jakarta PP"] || 0),
+    transportDaerahPp: Number(p["biaya_trans_daerah_pp"] || p["Transport Daerah PP"] || 0),
+    hotel: Number(p["biaya_hotel"] || p["Biaya Penginapan Biasa (Hotel)"] || 0),
+    penginapan30: Number(p["biaya_penginapan_30"] || p["Penginapan 30%"] || 0),
+    fulldayMeeting: 0,
+    fullboardMeeting: Number(p["biaya_meeting"] || p["Biaya Fullboard/Fullday/Halfday ()"] || 0),
+    representatif: Number(p["biaya_representatif"] || p["Representatif ()"] || 0),
+    belanjaBahan: 0,
+    pengRill: biayaRiil,
+    riilItems,
+    totalJumlah: Number(p["total_biaya"] || p["Total"] || 0),
+    boardingPass:
+      String(p["tiket_boarding_pass"] || "").toUpperCase() === "ADA"
+        ? "ADA"
+        : String(p["tiket_boarding_pass"] || "").toUpperCase() === "TIDAK"
+        ? "TIDAK"
+        : undefined,
+    tiketDetailPergi,
+    tiketDetailPulang,
+    namaHotel: String(p["hotel_nama"] || p["Nama Penginapan"] || ""),
+    checkInHotel: cleanIsoDate(p["hotel_checkin"] || p["Tanggal Check In"]),
+    checkOutHotel: cleanIsoDate(p["hotel_checkout"] || p["Tanggal Check Out"]),
+    malamHotel: Number(p["hotel_malam"] || p["Jumlah Hari Menginap"] || 1),
+    noBillFolio: String(p["hotel_bill_folio"] || ""),
+    noKamar: String(p["hotel_no_kamar"] || ""),
+    sewaKendaraan: Number(p["spj_sewa_kendaraan"] || p["Sewa kendaraan ()"] || 0),
+    taksiBandara: Number(p["spj_taksi_bandara"] || p["Taksi Bandara"] || 0),
+    biayaReschedule: Number(p["spj_biaya_reschedule"] || p["Biaya Reschedule ()"] || 0),
+    kurs: Number(p["spj_kurs_valuta"] || p["Kurs ()"] || 0),
+    pengembalian: Number(p["spj_pengembalian_kas"] || 0),
+  };
+}
+
 function rekapRowToParticipant(rekap: Record<string, unknown>, idx: number): ParticipantRow {
   const namaInternal = String(rekap["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || "").trim();
   const namaExternal = String(rekap["NAMA EXTERNAL"] || "").trim();
@@ -504,6 +618,9 @@ function rekapRowToParticipant(rekap: Record<string, unknown>, idx: number): Par
 
   const tglMulai = cleanIsoDate(rekap["Tgl Berangkat"]);
   const tglSelesai = cleanIsoDate(rekap["Tgl Kembali"]);
+
+  const biayaRiil = Number(rekap["Riil ()"] || 0);
+  const riilItems: RiilItem[] = biayaRiil > 0 ? [{ id: "1", uraian: "Pengeluaran Riil Lainnya", amount: biayaRiil }] : [];
 
   return {
     id: String(idx + 1),
@@ -542,14 +659,14 @@ function rekapRowToParticipant(rekap: Record<string, unknown>, idx: number): Par
     fullboardMeeting: Number(rekap["Biaya Fullboard/Fullday/Halfday ()"] || 0),
     representatif: Number(rekap["Representatif ()"] || 0),
     belanjaBahan: 0,
-    pengRill: Number(rekap["Riil ()"] || 0),
-    riilItems: [],
+    pengRill: biayaRiil,
+    riilItems,
     totalJumlah,
   };
 }
 
 /**
- * Tarik seluruh daftar kegiatan dari tab DB_KEGIATAN & REKAP_PERDIN_48KOLOM di Google Spreadsheet
+ * Tarik seluruh daftar kegiatan dari tab DB_KEGIATAN, DB_PESERTA & REKAP_PERDIN_48KOLOM di Google Spreadsheet
  */
 export async function fetchKegiatanFromSheet(
   customUrl?: string
@@ -560,9 +677,13 @@ export async function fetchKegiatanFromSheet(
   }
 
   try {
-    const [jsonKegiatan, jsonRekap] = await Promise.all([
+    const [jsonKegiatan, jsonRekap, jsonPeserta] = await Promise.all([
       executeGasRequest<Array<Record<string, unknown>>>("GET", { action: "GET_KEGIATAN_LIST" }, url),
       executeGasRequest<Array<Record<string, unknown>>>("GET", { action: "GET_REKAP" }, url).catch(() => ({
+        status: "error" as const,
+        data: [],
+      })),
+      executeGasRequest<Array<Record<string, unknown>>>("GET", { action: "GET_PESERTA" }, url).catch(() => ({
         status: "error" as const,
         data: [],
       })),
@@ -574,6 +695,7 @@ export async function fetchKegiatanFromSheet(
 
     const cloudKegiatanList: Array<Record<string, unknown>> = jsonKegiatan.data;
     const rekapRows: Array<Record<string, unknown>> = Array.isArray(jsonRekap.data) ? jsonRekap.data : [];
+    const pesertaRows: Array<Record<string, unknown>> = Array.isArray(jsonPeserta.data) ? jsonPeserta.data : [];
 
     // Ambil data lokal yang sudah tersimpan untuk merge
     const localList = typeof window !== "undefined" ? getSavedKegiatanList() : [];
@@ -607,6 +729,12 @@ export async function fetchKegiatanFromSheet(
       const idKegiatan = String(item.id_kegiatan || "").trim();
       const namaKegiatan = String(item.nama_kegiatan || "Kegiatan Dinas").trim();
 
+      // Cari baris DB_PESERTA yang cocok dengan id_kegiatan
+      const matchingPeserta = pesertaRows.filter((p) => {
+        const pIdKgt = String(p.id_kegiatan || "").trim();
+        return pIdKgt === idKegiatan || (pIdKgt && pIdKgt === String(item.kode_kegiatan || "").trim());
+      });
+
       // Cari baris rekap yang memiliki nama kegiatan yang sama
       const matchingRekap = rekapRows.filter((r) => {
         const rowKgt = String(r["Nama Kegiatan"] || "").trim();
@@ -619,7 +747,7 @@ export async function fetchKegiatanFromSheet(
       } else if (idKegiatan.endsWith("-A")) {
         kategori = "A";
       } else {
-        const hasExternal = matchingRekap.some((r) => Boolean(r["NAMA EXTERNAL"]));
+        const hasExternal = matchingRekap.some((r) => Boolean(r["NAMA EXTERNAL"])) || matchingPeserta.some((p) => Boolean(p.spj_nama_external || p.namaExternal));
         kategori = hasExternal ? "NA" : "A";
       }
 
@@ -639,34 +767,13 @@ export async function fetchKegiatanFromSheet(
 
       const provinsiTujuan = String(item.provinsi_tujuan_list || item.provinsi_tujuan || "JAWA BARAT");
       const grandTotal = Number(item.grand_total) || 0;
-      const jumlahPeserta = matchingRekap.length > 0 ? matchingRekap.length : 1;
+      const jumlahPeserta = matchingPeserta.length > 0 ? matchingPeserta.length : (matchingRekap.length > 0 ? matchingRekap.length : 1);
 
-      // Jika ada di lokal dan memiliki rows peserta, gunakan local snapshot agar tidak kehilangan detail form
-      const existingLocal = findMatchingLocal(idKegiatan, namaKegiatan, tanggalSpd);
-      if (existingLocal && existingLocal.rows && existingLocal.rows.length > 0) {
-        return {
-          ...existingLocal,
-          idKegiatan, // Gunakan ID resmi dari Google Spreadsheet
-          kategori,
-          namaKegiatan,
-          tanggalSpd,
-          kotaTujuan: kotaTujuan || existingLocal.kotaTujuan,
-          provinsiTujuan: provinsiTujuan || existingLocal.provinsiTujuan,
-          jumlahPeserta: existingLocal.rows.length,
-          grandTotal: grandTotal || existingLocal.grandTotal,
-          header: {
-            ...existingLocal.header,
-            idKegiatan, // Pastikan ID di header juga tersinkronisasi
-            kategoriSpj: kategori,
-            keteranganKegiatan: namaKegiatan,
-            keteranganMemo: namaKegiatan,
-          },
-        };
-      }
-
-      // Reconstruct rows dari tabel rekap jika di lokal belum ada
+      // Reconstruct rows dari DB_PESERTA (yang menyimpan detail riilItems lengkap), atau fallback ke REKAP
       const reconstructedRows: ParticipantRow[] =
-        matchingRekap.length > 0
+        matchingPeserta.length > 0
+          ? matchingPeserta.map((p, idx) => pesertaRowToParticipant(p, idx))
+          : matchingRekap.length > 0
           ? matchingRekap.map((r, idx) => rekapRowToParticipant(r, idx))
           : [
               {
@@ -709,6 +816,45 @@ export async function fetchKegiatanFromSheet(
               },
             ];
 
+      // Jika ada di lokal dan memiliki rows peserta, gabungkan data agar riilItems & detail lokal tidak hilang
+      const existingLocal = findMatchingLocal(idKegiatan, namaKegiatan, tanggalSpd);
+      if (existingLocal && existingLocal.rows && existingLocal.rows.length > 0) {
+        const mergedRows = existingLocal.rows.map((locRow, rIdx) => {
+          const cloudP = reconstructedRows[rIdx];
+          if (cloudP) {
+            return {
+              ...cloudP,
+              ...locRow,
+              riilItems:
+                Array.isArray(locRow.riilItems) && locRow.riilItems.length > 0
+                  ? locRow.riilItems
+                  : cloudP.riilItems,
+            };
+          }
+          return locRow;
+        });
+
+        return {
+          ...existingLocal,
+          idKegiatan, // Gunakan ID resmi dari Google Spreadsheet
+          kategori,
+          namaKegiatan,
+          tanggalSpd,
+          kotaTujuan: kotaTujuan || existingLocal.kotaTujuan,
+          provinsiTujuan: provinsiTujuan || existingLocal.provinsiTujuan,
+          jumlahPeserta: mergedRows.length,
+          grandTotal: grandTotal || existingLocal.grandTotal,
+          rows: mergedRows,
+          header: {
+            ...existingLocal.header,
+            idKegiatan, // Pastikan ID di header juga tersinkronisasi
+            kategoriSpj: kategori,
+            keteranganKegiatan: namaKegiatan,
+            keteranganMemo: namaKegiatan,
+          },
+        };
+      }
+
       // Reconstruct HeaderData
       const reconstructedHeader: HeaderData = {
         idKegiatan,
@@ -744,6 +890,17 @@ export async function fetchKegiatanFromSheet(
         berangkatDari: String(item.berangkat_dari || "Jakarta"),
       };
 
+      const hasRiil = reconstructedRows.some((r) => (r.pengRill || 0) > 0 || (Array.isArray(r.riilItems) && r.riilItems.length > 0));
+      const hasTiket = reconstructedRows.some((r) => (r.tiket || 0) > 0);
+      const hasHotel = reconstructedRows.some((r) => (r.hotel || 0) > 0);
+      const hasPenginapan30 = reconstructedRows.some((r) => (r.penginapan30 || 0) > 0);
+      const hasTransDarat = reconstructedRows.some((r) => (r.transportasiDarat || 0) > 0);
+      const hasTransLokal = reconstructedRows.some((r) => (r.transportasiLokal || 0) > 0);
+      const hasTransJkt = reconstructedRows.some((r) => (r.transportJakartaPp || 0) > 0);
+      const hasTransDaerah = reconstructedRows.some((r) => (r.transportDaerahPp || 0) > 0);
+      const hasMeeting = reconstructedRows.some((r) => (r.fullboardMeeting || 0) > 0 || (r.fulldayMeeting || 0) > 0);
+      const hasRepresentatif = reconstructedRows.some((r) => (r.representatif || 0) > 0);
+
       return {
         idKegiatan,
         kategori,
@@ -756,26 +913,19 @@ export async function fetchKegiatanFromSheet(
         header: reconstructedHeader,
         rows: reconstructedRows,
         activeCols: {
-          tiket: false,
+          tiket: hasTiket,
           dukunganTransportasi: false,
-          transportasiDarat: true,
-          transportasiLokal: false,
-          transportJakartaPp: false,
-          transportDaerahPp: false,
-          pengRill: true,
-          hotel: false,
-          penginapan30: false,
+          transportasiDarat: hasTransDarat,
+          transportasiLokal: hasTransLokal,
+          transportJakartaPp: hasTransJkt,
+          transportDaerahPp: hasTransDaerah,
+          pengRill: hasRiil,
+          hotel: hasHotel,
+          penginapan30: hasPenginapan30,
           fulldayMeeting: false,
-          fullboardMeeting: false,
-          representatif: true,
+          fullboardMeeting: hasMeeting,
+          representatif: hasRepresentatif,
           belanjaBahan: false,
-        },
-        activeUh: {
-          uhBiasa: true,
-          uhBiasa60: false,
-          uhBiasa40: false,
-          uhHalfday: false,
-          uhFullboard: false,
         },
       };
     });
