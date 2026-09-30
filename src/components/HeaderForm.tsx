@@ -893,32 +893,15 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             </div>
 
             {/* Nomor Memorandum + Ambil Nomor */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between gap-1">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <label className="font-semibold text-slate-800">
-                    Nomor Memorandum
-                  </label>
-                  <span
-                    className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/80 font-semibold"
-                    title={`Bulan Romawi (${currentMemoRomanMonth}) dan Tahun (${currentMemoYear}) sinkron otomatis mengikuti Tanggal Memo`}
-                  >
-                    Bulan {currentMemoRomanMonth}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsManualMemoMode(!isManualMemoMode)}
-                    className="text-[10px] text-blue-600 hover:text-blue-800 hover:underline font-medium ml-1 cursor-pointer"
-                  >
-                    {isManualMemoMode ? "Format Standar" : "Edit Bebas"}
-                  </button>
-                </div>
+            <div className="space-y-1">
+              <label className="font-semibold text-slate-800 flex items-center justify-between">
+                <span>Nomor Memorandum</span>
                 {latestMemoInfo?.lastMemoStr && (
-                  <span className="text-[10px] text-slate-500 font-normal truncate max-w-[190px]" title={`Nomor terakhir terdaftar di database master: ${latestMemoInfo.lastMemoStr}`}>
-                    Terakhir: <strong className="font-mono text-slate-700">{latestMemoInfo.lastMemoStr}</strong>
+                  <span className="text-[10px] font-normal text-slate-400 font-mono hidden sm:inline" title={`Nomor terakhir terdaftar di database master: ${latestMemoInfo.lastMemoStr}`}>
+                    Terakhir: {latestMemoInfo.lastMemoStr}
                   </span>
                 )}
-              </div>
+              </label>
 
               {isManualMemoMode || !memoParts.isStandard ? (
                 /* Mode Edit Manual / Format Bebas */
@@ -928,13 +911,13 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     value={header.nomorMemo}
                     onChange={(e) => handleChange("nomorMemo", e.target.value)}
                     placeholder={`M.xxx/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}`}
-                    className="input-human flex-1 h-9.5 px-2.5 font-mono text-xs font-semibold"
+                    className="input-human flex-1 h-9.5 px-3 font-mono text-xs font-semibold"
                   />
                   <button
                     type="button"
                     onClick={onGenerateMemoNumber}
                     className="btn-tactile px-3 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
-                    title={`Generate nomor urut memorandum berikutnya`}
+                    title="Ambil nomor urut berikutnya"
                   >
                     <Wand2 className="w-3.5 h-3.5" />
                     <span>Ambil No</span>
@@ -943,9 +926,9 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               ) : (
                 /* Mode Standar: Segmented Input (M. [ xxx ] /INS/PPK/IX/2026) */
                 <div className="flex gap-1.5 items-stretch">
-                  <div className="flex-1 flex items-stretch h-9.5 rounded-lg border border-slate-300 focus-within:ring-2 focus-within:ring-blue-500/40 focus-within:border-blue-500 overflow-hidden bg-white shadow-2xs transition-all">
+                  <div className="flex-1 flex items-stretch h-9.5 rounded-lg border border-slate-300 focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500 overflow-hidden bg-white shadow-2xs transition-all">
                     {/* Prefix M. */}
-                    <div className="flex items-center px-2.5 bg-slate-100 border-r border-slate-200 select-none text-slate-700 font-mono font-bold text-xs">
+                    <div className="flex items-center px-2.5 bg-slate-50 border-r border-slate-200 select-none text-slate-500 font-mono text-xs font-medium">
                       M.
                     </div>
 
@@ -965,17 +948,17 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                         }
                       }}
                       placeholder="xxx"
-                      className="w-16 sm:w-20 px-2 text-center font-mono font-bold text-xs text-blue-600 bg-white focus:outline-none focus:bg-blue-50/30 transition-colors"
-                      title="Ketik nomor urut memorandum (misal: 321 atau xxx)"
+                      className="w-16 sm:w-20 px-2 text-center font-mono font-semibold text-xs text-blue-600 bg-white focus:outline-none focus:bg-blue-50/20 transition-colors"
+                      title="Ketik nomor urut memorandum (misal: 391 atau xxx)"
                     />
 
                     {/* Suffix: /INS/PPK/IX/2026 */}
                     <div 
-                      className="flex items-center px-2.5 bg-slate-50 border-l border-slate-200 select-none flex-1 truncate"
+                      className="flex items-center px-2.5 bg-slate-50 border-l border-slate-200 select-none flex-1 truncate text-slate-500 font-mono text-xs"
                       title={`Bulan Romawi (${currentMemoRomanMonth}) dan Tahun (${currentMemoYear}) sinkron otomatis dari Tanggal Memo`}
                     >
-                      <span className="font-mono text-xs text-slate-600 font-medium truncate">
-                        /INS/PPK/<strong className="text-blue-700 font-bold">{currentMemoRomanMonth}</strong>/<span className="text-slate-800 font-semibold">{currentMemoYear}</span>
+                      <span className="truncate">
+                        /INS/PPK/<strong className="text-slate-700 font-semibold">{currentMemoRomanMonth}</strong>/{currentMemoYear}
                       </span>
                     </div>
                   </div>
@@ -985,7 +968,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     type="button"
                     onClick={onGenerateMemoNumber}
                     className="btn-tactile px-3 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
-                    title={`Ambil nomor urut berikutnya dari database master (Bulan Romawi ${currentMemoRomanMonth})`}
+                    title="Ambil nomor urut berikutnya dari database master"
                   >
                     <Wand2 className="w-3.5 h-3.5" />
                     <span>Ambil No</span>
@@ -993,16 +976,9 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-400">
-                <span>
-                  Format default: <strong className="font-mono text-slate-600">M.xxx/INS/PPK/{currentMemoRomanMonth}/{currentMemoYear}</strong> (Bulan Romawi otomatis)
-                </span>
-                {latestMemoInfo && (
-                  <span className="text-slate-500">
-                    Saran no: <strong className="font-mono text-blue-600">M.{latestMemoInfo.maxNum + 1}/INS/PPK/{currentMemoRomanMonth}/{currentMemoYear}</strong>
-                  </span>
-                )}
-              </div>
+              <span className="text-[10px] text-slate-400 block truncate">
+                Bulan & tahun otomatis mengikuti tanggal memo
+              </span>
             </div>
           </div>
 
