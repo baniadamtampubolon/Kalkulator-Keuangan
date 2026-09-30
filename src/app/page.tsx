@@ -381,6 +381,32 @@ export default function Home() {
   // Track whether we are editing an existing activity and what its original ID was
   const [editingOriginalId, setEditingOriginalId] = useState<string | null>(null);
 
+  // Sync initial ID Kegiatan with database continuation on client mount and when database updates
+  useEffect(() => {
+    const syncInitialId = () => {
+      setHeader((prev) => {
+        if (!editingOriginalId && !savedBatchId && (!prev.keteranganKegiatan || prev.keteranganKegiatan.trim() === "")) {
+          const tgl = prev.tanggalSpd || new Date().toISOString().split("T")[0];
+          const kat = prev.kategoriSpj || "A";
+          const nextNo = getNextNoKegiatan(tgl, kat);
+          const nextId = generateIdKegiatan(tgl, nextNo, kat);
+          return {
+            ...prev,
+            noKegiatanUrut: nextNo,
+            idKegiatan: nextId,
+          };
+        }
+        return prev;
+      });
+    };
+
+    syncInitialId();
+    window.addEventListener("kegiatan-list-updated", syncInitialId);
+    return () => {
+      window.removeEventListener("kegiatan-list-updated", syncInitialId);
+    };
+  }, [editingOriginalId, savedBatchId]);
+
   // Derive whether data is currently saved and whether any edits occurred since saving
   const currentSnapshot = JSON.stringify({ header, rows });
   const isSaved = Boolean(savedSnapshot);
@@ -603,6 +629,7 @@ export default function Home() {
               onApplyStToAll={handleApplyStToAll}
               onGenerateMemoNumber={handleGenerateMemoNumber}
               onOpenDaftarKegiatan={() => setActiveTab("kegiatan")}
+              editingOriginalId={editingOriginalId}
             />
 
             <ChecklistFilter

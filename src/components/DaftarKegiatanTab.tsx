@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   X,
   RotateCw,
+  Users,
+  User,
 } from "lucide-react";
 
 interface DaftarKegiatanTabProps {
@@ -114,7 +116,10 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
       (item.namaKegiatan || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.idKegiatan || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.kotaTujuan || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.provinsiTujuan || "").toLowerCase().includes(searchTerm.toLowerCase());
+      (item.provinsiTujuan || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.rows || []).some((r) =>
+        (r.nama || r.namaExternal || r.kodeNama || "").toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
     const isItemNonAsn = item.kategori === "NA" || (item.kategori as string) === "B";
     const matchesKategori =
@@ -325,6 +330,15 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
               ) : (
                 filteredList.map((item) => {
                   const isCurrent = currentLoadedId === item.idKegiatan;
+                  const participants = (item.rows || [])
+                    .map((r, idx) => {
+                      const rawName = (r.nama || r.namaExternal || r.kodeNama || "").trim();
+                      const name = rawName || `Peserta ${idx + 1}`;
+                      const details = [r.jabatan, r.golongan ? `Gol. ${r.golongan}` : ""].filter(Boolean).join(" • ");
+                      return { name, details, nip: r.nip };
+                    })
+                    .filter((p) => p.name && p.name !== "—" && p.name !== "-");
+
                   return (
                     <tr
                       key={item.idKegiatan}
@@ -334,7 +348,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                     >
                       {/* KETERANGAN / NAMA KEGIATAN */}
                       <td className="p-3.5 md:px-5 align-middle">
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-slate-900 text-xs md:text-sm">
                               {item.namaKegiatan || "Tanpa Judul Kegiatan"}
@@ -386,12 +400,58 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                               </span>
                             )}
                           </div>
+
+                          {/* Preview Daftar Peserta */}
+                          {participants.length > 0 && (
+                            <div className="pt-1.5 border-t border-slate-100/90 flex flex-wrap items-center gap-1.5">
+                              <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 mr-0.5">
+                                <Users className="w-3.5 h-3.5 text-[#0071e3]" />
+                                <span>Peserta ({participants.length}):</span>
+                              </div>
+                              {participants.slice(0, 5).map((p, pIdx) => (
+                                <span
+                                  key={pIdx}
+                                  className="inline-flex items-center gap-1 text-[11px] font-medium bg-slate-50 hover:bg-blue-50/70 hover:border-blue-200 text-slate-700 hover:text-[#0071e3] px-2 py-0.5 rounded-md border border-slate-200 transition-colors shadow-2xs"
+                                  title={
+                                    p.details || p.nip
+                                      ? `${p.name}${p.details ? `\n${p.details}` : ""}${p.nip ? `\nNIP: ${p.nip}` : ""}`
+                                      : p.name
+                                  }
+                                >
+                                  <User className="w-3 h-3 text-slate-400 shrink-0" />
+                                  <span className="truncate max-w-[140px] md:max-w-[180px]">{p.name}</span>
+                                </span>
+                              ))}
+                              {participants.length > 5 && (
+                                <span
+                                  className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-[#0071e3] border border-blue-200 hover:bg-blue-100 cursor-help transition-colors"
+                                  title={
+                                    `Peserta lainnya:\n` +
+                                    participants
+                                      .slice(5)
+                                      .map((p, i) => `${i + 6}. ${p.name}`)
+                                      .join("\n")
+                                  }
+                                >
+                                  +{participants.length - 5} lainnya
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </td>
 
-                      {/* PESERTA (Matching Blue Pill in Reference) */}
+                      {/* PESERTA (Matching Blue Pill in Reference with Hover Tooltip) */}
                       <td className="p-3.5 text-center align-middle">
-                        <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#e8f0fe] text-[#1967d2] border border-[#c2e7ff]">
+                        <span
+                          className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#e8f0fe] text-[#1967d2] border border-[#c2e7ff] cursor-help"
+                          title={
+                            participants.length > 0
+                              ? `Daftar Lengkap Peserta (${participants.length}):\n` +
+                                participants.map((p, i) => `${i + 1}. ${p.name}${p.details ? ` (${p.details})` : ""}`).join("\n")
+                              : undefined
+                          }
+                        >
                           {item.jumlahPeserta || item.rows?.length || 1} Org
                         </span>
                       </td>

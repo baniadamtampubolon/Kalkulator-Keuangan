@@ -107,12 +107,6 @@ export function getNextNoKegiatan(
   existingList?: SavedKegiatan[]
 ): string {
   const list = Array.isArray(kategori) ? kategori : (existingList || getSavedKegiatanList());
-  const katFilter =
-    typeof kategori === "string"
-      ? kategori === "NA" || kategori === "B"
-        ? "NA"
-        : "A"
-      : undefined;
   const yymm = formatDateToYymm(tanggalStr);
 
   // Cari semua kegiatan yang berada pada periode YYMM yang sama
@@ -122,17 +116,14 @@ export function getNextNoKegiatan(
 
     if (item.idKegiatan.startsWith(`KEG-${yymm}-`)) {
       const parts = item.idKegiatan.split("-");
-      if (parts.length >= 4) {
-        const itemKat = parts[3] === "NA" || parts[3] === "B" ? "NA" : "A";
-        if (!katFilter || itemKat === katFilter) {
-          const num = parseInt(parts[2], 10);
-          if (!isNaN(num)) matchingNumbers.push(num);
-        }
+      if (parts.length >= 3) {
+        const num = parseInt(parts[2], 10);
+        if (!isNaN(num)) matchingNumbers.push(num);
       }
     } else if (item.idKegiatan.startsWith("K-")) {
       // Legacy K-ddmmyy-no-A/B fallback
       const parts = item.idKegiatan.split("-");
-      if (parts.length >= 4) {
+      if (parts.length >= 3) {
         const num = parseInt(parts[2], 10);
         if (!isNaN(num)) matchingNumbers.push(num);
       }
