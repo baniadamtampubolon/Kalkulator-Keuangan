@@ -323,20 +323,35 @@ export function parseMemoNumberParts(memoNumber?: string, dateInput?: string | D
   const trimmed = memoNumber.trim();
 
   // Pola standard: M.{seq}/INS/PPK/{roman}/{year} atau M.{seq}/.../{roman}/{year}
-  const stdMatch = trimmed.match(/^([A-Za-z]+\.)?\s*([^\/]+)\s*(\/[^\/]+\/[^\/]+\/)([^\/]+)(?:\/(\d{4}))?/i);
+  const stdMatch = trimmed.match(/^([A-Za-z]+\.)?\s*([^\/\s]+)\s*(\/\s*[^\/]+\s*\/\s*[^\/]+\s*\/)\s*([^\/\s]+)(?:\s*\/\s*(\d{4}))?/i);
   if (stdMatch) {
     return {
       isStandard: true,
       prefix: stdMatch[1] || "M.",
       seqNumber: stdMatch[2] ? stdMatch[2].trim() : "xxx",
-      unit: stdMatch[3] || "/INS/PPK/",
+      unit: stdMatch[3] ? stdMatch[3].replace(/\s+/g, "") : "/INS/PPK/",
       romanMonth: stdMatch[4] ? stdMatch[4].trim() : defaultMonth,
       year: stdMatch[5] || defaultYear,
       formatted: trimmed,
     };
   }
 
-  // Pola sederhana M.{seq}
+  // Pola angka murni atau M.angka (misal: "402", "M.402", "M. 402")
+  const numOnlyMatch = trimmed.match(/^(?:([A-Za-z]+\.)\s*)?(\d+|xxx)$/i);
+  if (numOnlyMatch) {
+    const seq = numOnlyMatch[2] || "xxx";
+    return {
+      isStandard: true,
+      prefix: numOnlyMatch[1] || "M.",
+      seqNumber: seq,
+      unit: "/INS/PPK/",
+      romanMonth: defaultMonth,
+      year: defaultYear,
+      formatted: `M.${seq}/INS/PPK/${defaultMonth}/${defaultYear}`,
+    };
+  }
+
+  // Pola sederhana M.{seq} dengan suffix
   const simpleMatch = trimmed.match(/^([A-Za-z]+\.)?\s*([^\/]+)(.*)$/);
   if (simpleMatch && (simpleMatch[1] || (simpleMatch[3] && simpleMatch[3].includes("/")))) {
     return {

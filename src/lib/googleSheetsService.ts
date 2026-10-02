@@ -854,8 +854,15 @@ export async function fetchKegiatanFromSheet(
               ketMemo = "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas";
             }
 
-            // Periksa nomor memo: jika kosong, ambil dari master memo
-            let noMemo = String(parsed.header?.nomorMemo || item.nomor_memo || existingLocal?.header?.nomorMemo || "").trim();
+            // Periksa nomor memo: jika kosong, ambil dari peserta atau master memo
+            let noMemo = String(
+              parsed.header?.nomorMemo ||
+              item.nomor_memo ||
+              matchingPeserta[0]?.nomor_memo ||
+              (matchingPeserta[0] as unknown as { nomor_memo?: string })?.nomor_memo ||
+              existingLocal?.header?.nomorMemo ||
+              ""
+            ).trim();
             if ((!noMemo || noMemo.includes("xxx")) && matchingMemo) {
               noMemo = String(matchingMemo.format_lengkap || matchingMemo["No. Memo"] || matchingMemo.noMemo || noMemo);
             }
