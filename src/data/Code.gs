@@ -50,7 +50,7 @@ const DEFAULT_HEADERS = {
     'grand_total', 'status_dokumen', 'payload_json', 'created_at', 'updated_at'
   ],
   PESERTA: [
-    'id_peserta', 'id_kegiatan', 'id_pegawai', 'urutan', 'nomor_spd', 'nomor_st_assigned',
+    'id_peserta', 'id_kegiatan', 'id_pegawai', 'urutan', 'nomor_spd', 'nomor_st_assigned', 'nomor_memo',
     'is_pejabat', 'nama_snapshot', 'nip_snapshot', 'golongan_snapshot', 'jabatan_snapshot',
     'tujuan_kota', 'tujuan_provinsi', 'tanggal_mulai', 'tanggal_selesai', 'lama_hari',
     'hari_uh_biasa', 'biaya_uh_biasa', 'hari_uh_60', 'biaya_uh_60',
@@ -354,6 +354,7 @@ function doPost(e) {
           idx + 1,
           p.nomorSpd || '',
           p.nomorStAssigned || header.nomorStStaff || '',
+          finalNomorMemo,
           p.isPejabat || false,
           p.nama || '',
           p.nip || '',
