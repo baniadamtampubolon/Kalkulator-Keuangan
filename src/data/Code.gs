@@ -241,7 +241,28 @@ function doPost(e) {
       const header = payload.header || {};
       const participants = payload.participants || [];
 
-      // Simpan/Update DB_KEGIATAN dengan Header-Aware Mapping
+      // 1. Simpan / Perbarui nomor memorandum di MASTER_MEMO (9 Kolom Baku)
+      const memoSheet = getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
+      const assignedMemo = upsertMemo(memoSheet, header.nomorMemo, {
+        tanggal: header.tanggalMemo || header.tanggalSpd || '',
+        perihal: header.keteranganMemo || header.perihal || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
+        nominal: header.grandTotal || 0,
+        mak: header.kodeMak || '524111',
+        idKegiatan: header.idKegiatan || ''
+      });
+
+      // 2. Simpan / Perbarui Item Detail DIPA ke MASTER_MAK jika ada
+      if (header.itemDetail && String(header.itemDetail).trim() !== '') {
+        const makSheet = getOrCreateSheet(ss, SHEET_NAMES.MAK, DEFAULT_HEADERS.MAK);
+        upsertMakItem(makSheet, {
+          kodeKomponen: header.kodeKomponen || 'CL.7458.ABR.006.075.EE',
+          kodeMak: header.kodeMak || '524111',
+          kode: header.itemDetail,
+          nama: header.keteranganItemDetail || ''
+        });
+      }
+
+      // 3. Simpan/Update DB_KEGIATAN dengan Header-Aware Mapping
       const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
 
       if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
@@ -252,6 +273,7 @@ function doPost(e) {
       const kotaTujuanListStr = typeof rawKotaTujuan === 'string' ? rawKotaTujuan : JSON.stringify(rawKotaTujuan || []);
 
       const payloadJsonStr = header.payload_json || (payload.fullSnapshot ? JSON.stringify(payload.fullSnapshot) : '');
+      const finalNomorMemo = assignedMemo || header.nomorMemo || '';
 
       const kegiatanData = {
         id_kegiatan: header.idKegiatan || '',
@@ -272,11 +294,11 @@ function doPost(e) {
         nomor_st_staf: header.nomorStStaff || header.nomorStMaster || '',
         nomor_st_pejabat: header.nomorStPejabat || header.nomorStMaster || '',
         use_different_st_pejabat: Boolean(header.useDifferentStPejabat),
-        nomor_memo: header.nomorMemo || '',
+        nomor_memo: finalNomorMemo,
         tanggal_memo: header.tanggalMemo || '',
         tanggal_spd: header.tanggalSpd || '',
         kode_mak: header.kodeMak || '524111',
-        kode_komponen: header.kodeKomponen || '051',
+        kode_komponen: header.kodeKomponen || 'CL.7458.ABR.006.075.EE',
         detail_komponen: header.detailKomponen || '',
         item_detail: header.itemDetail || '001',
         keterangan_item_detail: header.keteranganItemDetail || '',
@@ -457,18 +479,6 @@ function doPost(e) {
       pruneGhostRows(pesertaSheet);
       pruneGhostRows(rekapSheet);
 
-      // Simpan / Perbarui nomor memorandum di MASTER_MEMO (9 Kolom Baku)
-      if (header.nomorMemo && String(header.nomorMemo).trim() !== '') {
-        const memoSheet = getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
-        upsertMemo(memoSheet, header.nomorMemo, {
-          tanggal: header.tanggalMemo || '',
-          perihal: header.keteranganMemo || header.perihal || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
-          nominal: header.grandTotal || 0,
-          mak: header.kodeMak || '',
-          idKegiatan: header.idKegiatan || ''
-        });
-      }
-
       logAction(ss, 'SAVE_PERDIN', header.idKegiatan, 'Berhasil menyimpan transaksi ' + (header.namaKegiatan || ''));
 
       const latestSpd = getLatestSpdNumberFromSheet(ss);
@@ -476,6 +486,7 @@ function doPost(e) {
         status: 'success',
         message: 'Data perjalanan dinas dan 48 kolom rekap berhasil disimpan ke Google Spreadsheet.',
         idKegiatan: header.idKegiatan,
+        assignedNomorMemo: finalNomorMemo,
         latestSpdNumber: latestSpd
       });
     }
@@ -713,69 +724,175 @@ function upsertPegawai(sheet, idPegawai, namaLengkap, nip, rowData) {
  * Helper: Simpan / Perbarui Baris Memorandum di MASTER_MEMO (9 Kolom Baku)
  */
 function upsertMemo(sheet, nomorMemo, info) {
-  if (!sheet) return;
-  const memoStr = String(nomorMemo || '').trim();
-  if (!memoStr) return;
-
-  // Ekstrak angka nomor urut (contoh M.321 -> 321)
-  const match = memoStr.match(/\bM\.?(\d+)/i) || memoStr.match(/(\d+)/);
-  const targetNum = match ? match[1] : '';
-
-  // Ekstrak tahun anggaran (contoh 2026)
-  const yearMatch = memoStr.match(/\/(\d{4})$/);
-  const targetYear = yearMatch ? yearMatch[1] : new Date().getFullYear();
+  if (!sheet) return '';
+  let memoStr = String(nomorMemo || '').trim();
+  const infoIdKgt = String(info.idKegiatan || '').trim();
 
   const lastRow = sheet.getLastRow();
-  if (lastRow >= 2) {
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0] || [];
-    const colTahun = headers.indexOf('tahun_anggaran');
-    const colUrut = headers.indexOf('nomor_urut');
-    const colFormat = headers.indexOf('format_lengkap');
-    const colTgl = headers.indexOf('tanggal_memo');
-    const colPerihal = headers.indexOf('perihal');
-    const colRef = headers.indexOf('id_kegiatan_ref');
-    const colStatus = headers.indexOf('status');
-    const colNominal = headers.indexOf('nominal');
-    const colMak = headers.indexOf('MAK') !== -1 ? headers.indexOf('MAK') : headers.indexOf('mak');
+  const data = lastRow >= 1 ? sheet.getDataRange().getValues() : [];
+  const headers = data[0] || DEFAULT_HEADERS.MEMO;
 
+  const colTahun = headers.indexOf('tahun_anggaran') !== -1 ? headers.indexOf('tahun_anggaran') : 0;
+  const colUrut = headers.indexOf('nomor_urut') !== -1 ? headers.indexOf('nomor_urut') : 1;
+  const colFormat = headers.indexOf('format_lengkap') !== -1 ? headers.indexOf('format_lengkap') : 2;
+  const colTgl = headers.indexOf('tanggal_memo') !== -1 ? headers.indexOf('tanggal_memo') : 3;
+  const colPerihal = headers.indexOf('perihal') !== -1 ? headers.indexOf('perihal') : 4;
+  const colRef = headers.indexOf('id_kegiatan_ref') !== -1 ? headers.indexOf('id_kegiatan_ref') : 5;
+  const colStatus = headers.indexOf('status') !== -1 ? headers.indexOf('status') : 6;
+  const colNominal = headers.indexOf('nominal') !== -1 ? headers.indexOf('nominal') : 7;
+  const colMak = headers.indexOf('MAK') !== -1 ? headers.indexOf('MAK') : (headers.indexOf('mak') !== -1 ? headers.indexOf('mak') : 8);
+
+  // 1. Hitung nomor urut tertinggi di MASTER_MEMO saat ini
+  let maxSeq = 0;
+  for (let i = 1; i < data.length; i++) {
+    const val = data[i][colUrut];
+    if (val !== undefined && val !== null && val !== '') {
+      const num = parseInt(String(val).replace(/\D/g, ''), 10);
+      if (!isNaN(num) && num > maxSeq && num < 2000) {
+        maxSeq = num;
+      }
+    }
+  }
+
+  // 2. Ekstrak nomor dari memoStr (contoh M.390/INS/PPK/IX/2026 -> 390)
+  let targetNum = '';
+  const seqMatch = memoStr.match(/\bM\.?\s*(\d+)/i) || memoStr.match(/^(\d+)/);
+  if (seqMatch) {
+    const parsedVal = parseInt(seqMatch[1], 10);
+    if (!isNaN(parsedVal) && parsedVal < 2000) {
+      targetNum = String(parsedVal);
+    }
+  }
+
+  // Tentukan bulan romawi dan tahun
+  let romanMonth = 'X';
+  let memoYear = '2026';
+  if (info.tanggal) {
+    try {
+      const d = new Date(info.tanggal);
+      if (!isNaN(d.getTime())) {
+        const romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+        romanMonth = romans[d.getMonth()] || 'X';
+        memoYear = String(d.getFullYear());
+      }
+    } catch (e) {}
+  }
+
+  // Jika nomorMemo berisi 'xxx' atau kosong/tidak valid, alokasikan nomor urut berikutnya secara otomatis
+  if (!targetNum || memoStr.toLowerCase().includes('xxx')) {
+    const nextNum = maxSeq > 0 ? maxSeq + 1 : 321;
+    targetNum = String(nextNum);
+    memoStr = 'M.' + targetNum + '/INS/PPK/' + romanMonth + '/' + memoYear;
+  }
+
+  // Ekstrak tahun anggaran
+  let targetYear = memoYear;
+  const yearMatch = memoStr.match(/\/(\d{4})$/);
+  if (yearMatch) {
+    targetYear = yearMatch[1];
+  }
+
+  // 3. Cek apakah baris memo sudah ada di MASTER_MEMO (Cocokkan via id_kegiatan_ref, format_lengkap, atau nomor_urut)
+  if (lastRow >= 2) {
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
+      const rowRef = String(colRef !== -1 ? row[colRef] : row[5] || '').trim();
       const rowFormat = String(colFormat !== -1 ? row[colFormat] : row[2] || '').trim().toLowerCase();
       const rowUrut = String(colUrut !== -1 ? row[colUrut] : row[1] || '').trim();
 
-      if (
-        (rowFormat && rowFormat === memoStr.toLowerCase()) ||
-        (targetNum && rowUrut && rowUrut === targetNum)
-      ) {
-        // Baris terdaftar ditemukan -> Perbarui data
+      const isMatchRef = infoIdKgt && rowRef && rowRef.toLowerCase() === infoIdKgt.toLowerCase();
+      const isMatchFormat = rowFormat && (rowFormat === memoStr.toLowerCase() || (targetNum && rowFormat.startsWith('m.' + targetNum.toLowerCase())));
+      const isMatchUrut = targetNum && rowUrut && rowUrut === targetNum;
+
+      if (isMatchRef || isMatchFormat || isMatchUrut) {
         const rowNum = i + 1;
+        if (colTahun !== -1) sheet.getRange(rowNum, colTahun + 1).setValue(targetYear);
+        if (colUrut !== -1) sheet.getRange(rowNum, colUrut + 1).setValue(Number(targetNum));
         if (colFormat !== -1) sheet.getRange(rowNum, colFormat + 1).setValue(memoStr);
         if (colTgl !== -1 && info.tanggal) sheet.getRange(rowNum, colTgl + 1).setValue(info.tanggal);
         if (colPerihal !== -1 && info.perihal) sheet.getRange(rowNum, colPerihal + 1).setValue(info.perihal);
-        if (colRef !== -1 && info.idKegiatan) sheet.getRange(rowNum, colRef + 1).setValue(info.idKegiatan);
+        if (colRef !== -1 && infoIdKgt) sheet.getRange(rowNum, colRef + 1).setValue(infoIdKgt);
         if (colStatus !== -1) sheet.getRange(rowNum, colStatus + 1).setValue('TERPAKAI');
         if (colNominal !== -1 && info.nominal !== undefined && info.nominal !== null) {
           sheet.getRange(rowNum, colNominal + 1).setValue(info.nominal);
         }
         if (colMak !== -1 && info.mak) sheet.getRange(rowNum, colMak + 1).setValue(info.mak);
+        return memoStr;
+      }
+    }
+  }
+
+  // 4. Jika belum ada di MASTER_MEMO, tambahkan baris baru
+  const newRow = [
+    targetYear,
+    Number(targetNum),
+    memoStr,
+    info.tanggal || '',
+    info.perihal || '',
+    infoIdKgt,
+    'TERPAKAI',
+    info.nominal !== undefined && info.nominal !== null ? info.nominal : '',
+    info.mak || ''
+  ];
+  sheet.appendRow(newRow);
+  return memoStr;
+}
+
+/**
+ * Helper: Simpan / Perbarui Baris Item Detail di MASTER_MAK
+ */
+function upsertMakItem(sheet, item) {
+  if (!sheet || !item || !item.kode) return;
+  const lastRow = sheet.getLastRow();
+  const kodeItem = String(item.kode).trim();
+  const namaItem = String(item.nama || '').trim();
+  const kodeMak = String(item.kodeMak || item.kode_mak || '524111').trim();
+  const kodeKomponen = String(item.kodeKomponen || item.kode_komponen || 'CL.7458.ABR.006.075.EE').trim();
+  const fullLabel = kodeItem + (namaItem ? ' - ' + namaItem : '');
+
+  if (lastRow >= 2) {
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0] || DEFAULT_HEADERS.MAK;
+    const colKode = headers.indexOf('kode_item') !== -1 ? headers.indexOf('kode_item') : 3;
+    const colNama = headers.indexOf('nama_item') !== -1 ? headers.indexOf('nama_item') : 4;
+    const colKomp = headers.indexOf('kode_komponen') !== -1 ? headers.indexOf('kode_komponen') : 0;
+    const colMak = headers.indexOf('kode_mak') !== -1 ? headers.indexOf('kode_mak') : 1;
+    const colFull = headers.indexOf('full_label') !== -1 ? headers.indexOf('full_label') : 5;
+
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][colKode]).trim() === kodeItem) {
+        const r = i + 1;
+        if (colKomp !== -1 && kodeKomponen) sheet.getRange(r, colKomp + 1).setValue(kodeKomponen);
+        if (colMak !== -1 && kodeMak) sheet.getRange(r, colMak + 1).setValue(kodeMak);
+        if (colNama !== -1 && namaItem) sheet.getRange(r, colNama + 1).setValue(namaItem);
+        if (colFull !== -1 && fullLabel) sheet.getRange(r, colFull + 1).setValue(fullLabel);
         return;
       }
     }
   }
 
-  // Jika baris nomor memo belum ada di database, otomatis tambahkan baris baru
   sheet.appendRow([
-    targetYear,
-    targetNum ? Number(targetNum) : '',
-    memoStr,
-    info.tanggal || '',
-    info.perihal || '',
-    info.idKegiatan || '',
-    'TERPAKAI',
-    info.nominal !== undefined && info.nominal !== null ? info.nominal : '',
-    info.mak || ''
+    kodeKomponen,
+    kodeMak,
+    getMakNameByCode(kodeMak),
+    kodeItem,
+    namaItem,
+    fullLabel,
+    kodeMak
   ]);
+}
+
+function getMakNameByCode(code) {
+  const c = String(code || '').trim();
+  if (c === '524111') return 'Belanja Perjalanan Dinas Biasa';
+  if (c === '524113') return 'Belanja Perjalanan Dinas Dalam Kota';
+  if (c === '524114') return 'Belanja Perjalanan Dinas Paket Meeting Dalam Kota';
+  if (c === '524119') return 'Belanja Perjalanan Dinas Paket Meeting Luar Kota';
+  if (c === '522141') return 'Belanja Sewa';
+  if (c === '521211') return 'Belanja Bahan';
+  if (c === '521213') return 'Honor Output Kegiatan';
+  if (c === '521811') return 'Belanja Barang Persediaan Barang Konsumsi';
+  return 'Belanja Perjalanan Dinas';
 }
 
 /**

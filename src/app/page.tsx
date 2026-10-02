@@ -51,6 +51,7 @@ import {
   SavedKegiatan,
 } from "@/lib/types";
 import { calculateRowTotal, findSbmByProvince, generateNextMemoNumber, getDefaultMemoNumber } from "@/lib/calc";
+import { saveCustomItemDetail } from "@/data/mak_akun";
 
 import pegawaiRaw from "@/data/pegawai.json";
 import sbmRaw from "@/data/sbm.json";
@@ -511,21 +512,23 @@ export default function Home() {
     const sbmJakarta = findSbmByProvince(sbmList, header.berangkatDari || "DKI JAKARTA");
     const calculatedInitialRow = calculateRowTotal(initialRow, sbm, activeUh, activeCols, { sbmJakarta });
 
+    const genMemo = generateNextMemoNumber(memoList, undefined, today);
+
     setHeader((prev) => ({
       ...prev,
       idKegiatan: newId,
       kategoriSpj: "A",
       noKegiatanUrut: nextNo,
       keteranganKegiatan: "",
-      keteranganMemo: "",
-      nomorMemo: getDefaultMemoNumber(today, "xxx"),
+      keteranganMemo: "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas",
+      nomorMemo: genMemo.nextMemoNumber,
       nomorStMaster: "",
       nomorStStaff: "",
       nomorStPejabat: "",
       useDifferentStPejabat: false,
-      nomorKomp: "",
-      detailKomponen: "",
-      nomorMak: "",
+      nomorKomp: "CL.7458.ABR.006.075.EE",
+      detailKomponen: "Kunjungan Lapangan terkait Koordinasi Implementasi NEK Pengendalian Emisi GRK",
+      nomorMak: "524111",
       itemDetail: "001",
       keteranganItemDetail: "",
       noSpby: "",
@@ -588,9 +591,24 @@ export default function Home() {
         savedBatchId ||
         generateIdKegiatan(today, header.noKegiatanUrut || "001", header.kategoriSpj || "A");
 
-      const updatedHeader = { ...header, idKegiatan };
-      if (header.idKegiatan !== idKegiatan) {
-        setHeader(updatedHeader);
+      // Auto-assign sequential Nomor Memorandum jika masih kosong atau placeholder 'xxx'
+      let nomorMemoToSave = header.nomorMemo || "";
+      if (!nomorMemoToSave || nomorMemoToSave.includes("xxx") || nomorMemoToSave.includes("...")) {
+        const gen = generateNextMemoNumber(memoList, undefined, header.tanggalMemo || today);
+        nomorMemoToSave = gen.nextMemoNumber;
+      }
+
+      const updatedHeader = { ...header, idKegiatan, nomorMemo: nomorMemoToSave };
+      setHeader(updatedHeader);
+
+      // Simpan custom item detail jika ada uraiannya
+      if (header.itemDetail) {
+        saveCustomItemDetail({
+          kode: header.itemDetail,
+          nama: header.keteranganItemDetail || `Item Detail ${header.itemDetail}`,
+          kodeMak: header.nomorMak || "524111",
+          kodeKomponen: header.nomorKomp || "CL.7458.ABR.006.075.EE",
+        });
       }
 
       const oldBatchId = editingOriginalId || savedBatchId || undefined;

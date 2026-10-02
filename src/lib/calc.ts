@@ -430,12 +430,12 @@ export function generateNextMemoNumber(
       } else {
         const str = m.format_lengkap || m.noMemo || "";
         if (str) {
-          const match = str.match(/\bM\.?(\d+)/i) || str.match(/(\d+)/);
+          const match = str.match(/\bM\.?\s*(\d+)/i) || str.match(/^(\d+)/);
           if (match) numVal = parseInt(match[1], 10);
         }
       }
 
-      if (numVal > 0) {
+      if (numVal > 0 && numVal < 2000) {
         // Cek apakah baris ini sudah dipakai / memiliki perihal / status TERPAKAI
         const isUsed = Boolean(
           (m.status && String(m.status).trim().toUpperCase().includes("TERPAKAI")) ||
@@ -491,12 +491,12 @@ export function generateNextMemoNumber(
     nextSeq = maxUsedNumber + 1;
   }
 
-  // Jika currentMemo sudah terisi dan nilainya >= nextSeq, naikkan 1 (fitur klik berulang)
-  if (currentMemo) {
-    const curMatch = currentMemo.match(/\bM\.?(\d+)/i) || currentMemo.match(/(\d+)/);
+  // Jika currentMemo sudah terisi (bukan placeholder xxx) dan nilainya >= nextSeq, naikkan 1 (fitur klik berulang)
+  if (currentMemo && !currentMemo.toLowerCase().includes("xxx")) {
+    const curMatch = currentMemo.match(/\bM\.?\s*(\d+)/i) || currentMemo.match(/^(\d+)/);
     if (curMatch) {
       const curVal = parseInt(curMatch[1], 10);
-      if (curVal >= nextSeq) {
+      if (curVal >= nextSeq && curVal < 2000) {
         nextSeq = curVal + 1;
       }
     }
