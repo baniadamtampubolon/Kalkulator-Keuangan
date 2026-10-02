@@ -264,6 +264,27 @@ function doPost(e) {
 
       // 3. Simpan/Update DB_KEGIATAN dengan Header-Aware Mapping
       const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
+      const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
+      const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
+
+      // Ambil No SPM manual yang sudah ada di spreadsheet (jika ada) agar tidak tertimpa/terhapus saat simpan
+      let existingManualSpm = '';
+      if (rekapSheet.getLastRow() >= 2) {
+        const rData = rekapSheet.getDataRange().getValues();
+        const rHeaders = rData[0] || DEFAULT_HEADERS.REKAP;
+        const spmCol = rHeaders.indexOf('No SPM') !== -1 ? rHeaders.indexOf('No SPM') : 2;
+        const kegCol = rHeaders.indexOf('Nama Kegiatan') !== -1 ? rHeaders.indexOf('Nama Kegiatan') : 11;
+        for (let i = 1; i < rData.length; i++) {
+          const rowKeg = String(rData[i][kegCol] || '').trim();
+          if (rowKeg && (rowKeg === header.namaKegiatan || (header.oldNamaKegiatan && rowKeg === header.oldNamaKegiatan))) {
+            const val = String(rData[i][spmCol] || '').trim();
+            if (val) {
+              existingManualSpm = val;
+              break;
+            }
+          }
+        }
+      }
 
       if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
         deleteRowsByColumnValue(kegiatanSheet, 'id_kegiatan', header.oldIdKegiatan);
@@ -274,6 +295,7 @@ function doPost(e) {
 
       const payloadJsonStr = header.payload_json || (payload.fullSnapshot ? JSON.stringify(payload.fullSnapshot) : '');
       const finalNomorMemo = assignedMemo || header.nomorMemo || '';
+      const finalNoSpmToUse = header.noSpm || existingManualSpm || '';
 
       const kegiatanData = {
         id_kegiatan: header.idKegiatan || '',
@@ -281,7 +303,7 @@ function doPost(e) {
         nama_kegiatan: header.namaKegiatan || '',
         perihal: header.perihal || header.keteranganMemo || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
         jenis_pengajuan: header.jenisPengajuan || 'RAMPUNG',
-        no_spm: header.noSpm || '',
+        no_spm: finalNoSpmToUse,
         no_spby: header.noSpby || '',
         jenis_perdin: header.jenisPerdin || 'Perdin Luar Kota',
         berangkat_dari: header.berangkatDari || 'Jakarta',
@@ -318,10 +340,6 @@ function doPost(e) {
       };
 
       upsertRowByHeaderObject(kegiatanSheet, 'id_kegiatan', header.idKegiatan, kegiatanData, DEFAULT_HEADERS.KEGIATAN);
-
-      // Simpan Detail DB_PESERTA & REKAP 48 Kolom
-      const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
-      const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
 
       // Bersihkan baris lama sebelum menulis data baru
       deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.idKegiatan);
@@ -413,7 +431,7 @@ function doPost(e) {
         rekapBatch.push([
           header.noSpby || '',
           header.jenisPengajuan || 'RAMPUNG',
-          header.noSpm || '',
+          finalNoSpmToUse,
           '',
           p.spjExtra?.namaExternal ? '' : p.nama,
           p.spjExtra?.namaExternal || '',

@@ -183,7 +183,7 @@ export default function Home() {
     penanggungJawabJabatan: "Inspektur",
     noSpby: "",
     jenisPengajuan: "RAMPUNG",
-    noSpm: "00073T",
+    noSpm: "",
     jenisPerdin: "Perdin Luar Kota",
     berangkatDari: "Jakarta",
   });
@@ -532,7 +532,7 @@ export default function Home() {
       itemDetail: "001",
       keteranganItemDetail: "",
       noSpby: "",
-      noSpm: "00073T",
+      noSpm: "",
       jenisPengajuan: "RAMPUNG",
       tanggalSpd: today,
       tanggalMemo: today,
