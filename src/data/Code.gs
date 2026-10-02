@@ -257,7 +257,7 @@ function doPost(e) {
         id_kegiatan: header.idKegiatan || '',
         kode_kegiatan: header.kodeKegiatan || '',
         nama_kegiatan: header.namaKegiatan || '',
-        perihal: header.perihal || header.keteranganMemo || header.namaKegiatan || '',
+        perihal: header.perihal || header.keteranganMemo || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
         jenis_pengajuan: header.jenisPengajuan || 'RAMPUNG',
         no_spm: header.noSpm || '',
         no_spby: header.noSpby || '',
@@ -462,7 +462,7 @@ function doPost(e) {
         const memoSheet = getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
         upsertMemo(memoSheet, header.nomorMemo, {
           tanggal: header.tanggalMemo || '',
-          perihal: header.keteranganMemo || header.namaKegiatan || '',
+          perihal: header.keteranganMemo || header.perihal || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
           nominal: header.grandTotal || 0,
           mak: header.kodeMak || '',
           idKegiatan: header.idKegiatan || ''
@@ -806,6 +806,14 @@ function sheetToObjects(sheet) {
   const data = sheet.getDataRange().getValues();
   if (data.length < 2) return [];
 
+  let tz = 'Asia/Jakarta';
+  try {
+    const ss = sheet.getParent() || SpreadsheetApp.getActiveSpreadsheet();
+    if (ss && ss.getSpreadsheetTimeZone()) {
+      tz = ss.getSpreadsheetTimeZone();
+    }
+  } catch (e) {}
+
   const headers = data[0];
   const rows = data.slice(1);
 
@@ -813,7 +821,11 @@ function sheetToObjects(sheet) {
     const obj = {};
     headers.forEach((header, index) => {
       const key = header ? String(header).trim() : `_col_${index}`;
-      obj[key] = row[index];
+      let val = row[index];
+      if (val instanceof Date && !isNaN(val.getTime())) {
+        val = Utilities.formatDate(val, tz, 'yyyy-MM-dd');
+      }
+      obj[key] = val;
     });
     return obj;
   });
