@@ -485,13 +485,72 @@ export async function fetchRekapFromSheet(
   }
 }
 
-function cleanIsoDate(val: unknown, fallback: string = new Date().toISOString().split("T")[0]): string {
+export function cleanIsoDate(val: unknown, fallback: string = new Date().toISOString().split("T")[0]): string {
   if (!val) return fallback;
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    return val.toISOString().split("T")[0];
+  }
   const str = String(val).trim();
-  if (str.includes("T")) return str.split("T")[0];
+  if (!str) return fallback;
+
+  // Format ISO: 2026-09-15 or 2026-09-15T00:00:00.000Z
+  if (str.includes("T")) {
+    const part = str.split("T")[0];
+    if (part.match(/^\d{4}-\d{2}-\d{2}$/)) return part;
+  }
   if (str.match(/^\d{4}-\d{2}-\d{2}$/)) return str;
+
+  // Format DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
+  const dmyMatch = str.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/);
+  if (dmyMatch) {
+    const day = dmyMatch[1].padStart(2, "0");
+    const month = dmyMatch[2].padStart(2, "0");
+    const year = dmyMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+
+  // Format YYYY/MM/DD or YYYY.MM.DD
+  const ymdMatch = str.match(/^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$/);
+  if (ymdMatch) {
+    const year = ymdMatch[1];
+    const month = ymdMatch[2].padStart(2, "0");
+    const day = ymdMatch[3].padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  // Format Text Bulan Indonesia: "15 September 2026" / "15 Sep 2026"
+  const indoMonths: Record<string, string> = {
+    jan: "01", januari: "01",
+    feb: "02", februari: "02",
+    mar: "03", maret: "03",
+    apr: "04", april: "04",
+    mei: "05", may: "05",
+    jun: "06", juni: "06",
+    jul: "07", juli: "07",
+    agu: "08", agustus: "08", aug: "08",
+    sep: "09", september: "09",
+    okt: "10", oktober: "10", oct: "10",
+    nov: "11", november: "11",
+    des: "12", desember: "12", dec: "12"
+  };
+  const textMatch = str.match(/^(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})/);
+  if (textMatch) {
+    const day = textMatch[1].padStart(2, "0");
+    const mKey = textMatch[2].toLowerCase();
+    const month = indoMonths[mKey];
+    const year = textMatch[3];
+    if (month) return `${year}-${month}-${day}`;
+  }
+
   const d = new Date(str);
-  if (!isNaN(d.getTime())) return d.toISOString().split("T")[0];
+  if (!isNaN(d.getTime())) {
+    try {
+      return d.toISOString().split("T")[0];
+    } catch {
+      return fallback;
+    }
+  }
+
   return fallback;
 }
 
@@ -729,6 +788,86 @@ export async function fetchKegiatanFromSheet(
       const idKegiatan = String(item.id_kegiatan || "").trim();
       const namaKegiatan = String(item.nama_kegiatan || "Kegiatan Dinas").trim();
 
+      // 1. PRIORITAS UTAMA: Jika baris DB_KEGIATAN memiliki payload_json yang lengkap dan utuh
+      const rawPayload = item.payload_json || item.payloadJson || item.PAYLOAD_JSON;
+      if (rawPayload && typeof rawPayload === "string" && rawPayload.trim().startsWith("{")) {
+        try {
+          const parsed = JSON.parse(rawPayload);
+          if (parsed && (parsed.idKegiatan || parsed.header) && Array.isArray(parsed.rows)) {
+            const cleanTglSpd = cleanIsoDate(parsed.tanggalSpd || parsed.header?.tanggalSpd);
+            const cleanTglMemo = cleanIsoDate(parsed.header?.tanggalMemo || parsed.tanggalSpd || cleanTglSpd);
+
+            const normalizedHeader: HeaderData = {
+              idKegiatan: parsed.idKegiatan || idKegiatan,
+              kategoriSpj: parsed.header?.kategoriSpj || parsed.kategori || "A",
+              noKegiatanUrut: parsed.header?.noKegiatanUrut || idKegiatan.split("-")[2] || "001",
+              keteranganKegiatan: parsed.header?.keteranganKegiatan || parsed.namaKegiatan || namaKegiatan,
+              keteranganMemo: parsed.header?.keteranganMemo || parsed.header?.perihal || String(item.perihal || item.keterangan_memo || ""),
+              provinsiTujuan: parsed.header?.provinsiTujuan || parsed.provinsiTujuan || String(item.provinsi_tujuan || "JAWA BARAT"),
+              kotaTujuanList: Array.isArray(parsed.header?.kotaTujuanList) && parsed.header.kotaTujuanList.length > 0
+                ? parsed.header.kotaTujuanList
+                : [parsed.kotaTujuan || ""],
+              unitKerja: parsed.header?.unitKerja || String(item.unit_kerja || "INSPEKTORAT"),
+              picInisiator: parsed.header?.picInisiator || String(item.ppk_nama || "Arif Wibowo, S.H., M.H."),
+              bendahara: parsed.header?.bendahara || String(item.bendahara_nama || "Raka Panji Wibowo, S.Kom, NIP. 19950408202012 1 001"),
+              petugasVerifikasi: parsed.header?.petugasVerifikasi || String(item.verifikator_nama || "Noviarty Ningsi Sumirat, S.E, NIP. 19811112201001 2 001"),
+              nomorKomp: parsed.header?.nomorKomp || String(item.kode_komponen || ""),
+              detailKomponen: parsed.header?.detailKomponen || String(item.detail_komponen || ""),
+              nomorMak: parsed.header?.nomorMak || String(item.kode_mak || ""),
+              itemDetail: parsed.header?.itemDetail || String(item.item_detail || "001"),
+              keteranganItemDetail: parsed.header?.keteranganItemDetail || String(item.keterangan_item_detail || ""),
+              alatAngkut: parsed.header?.alatAngkut || String(item.alat_angkut || "Angkutan Darat"),
+              tanggalSpd: cleanTglSpd,
+              tanggalMemo: cleanTglMemo,
+              nomorMemo: parsed.header?.nomorMemo || String(item.nomor_memo || ""),
+              nomorStMaster: parsed.header?.nomorStMaster || String(item.nomor_st_master || ""),
+              nomorStStaff: parsed.header?.nomorStStaff || parsed.header?.nomorStMaster || String(item.nomor_st_staf || item.nomor_st_master || ""),
+              nomorStPejabat: parsed.header?.nomorStPejabat || parsed.header?.nomorStMaster || String(item.nomor_st_pejabat || item.nomor_st_master || ""),
+              useDifferentStPejabat: Boolean(parsed.header?.useDifferentStPejabat ?? item.use_different_st_pejabat),
+              ppkNama: parsed.header?.ppkNama || String(item.ppk_nama || "Arif Wibowo, S.H., M.H."),
+              ppkNip: parsed.header?.ppkNip || String(item.ppk_nip || "19830124200801 1 006"),
+              ppkJabatan: parsed.header?.ppkJabatan || "Kepala Bagian Tata Usaha Inspektorat",
+              penanggungJawabNama: parsed.header?.penanggungJawabNama || String(item.penanggung_jawab_nama || "Reni Sutaryo, S.Si., M.Adm.Pemb"),
+              penanggungJawabNip: parsed.header?.penanggungJawabNip || String(item.penanggung_jawab_nip || "19791126200604 2 014"),
+              penanggungJawabJabatan: parsed.header?.penanggungJawabJabatan || String(item.penanggung_jawab_jabatan || "Inspektur"),
+              jenisPengajuan: (parsed.header?.jenisPengajuan || item.jenis_pengajuan || "RAMPUNG") as HeaderData["jenisPengajuan"],
+              noSpm: parsed.header?.noSpm || String(item.no_spm || ""),
+              noSpby: parsed.header?.noSpby || String(item.no_spby || ""),
+              jenisPerdin: (parsed.header?.jenisPerdin || item.jenis_perdin || "Perdin Luar Kota") as HeaderData["jenisPerdin"],
+              berangkatDari: parsed.header?.berangkatDari || String(item.berangkat_dari || "Jakarta"),
+            };
+
+            const normalizedRows: ParticipantRow[] = (parsed.rows as ParticipantRow[]).map((r, rIdx) => ({
+              ...r,
+              id: String(r.id || rIdx + 1),
+              tanggalMulai: cleanIsoDate(r.tanggalMulai, cleanTglSpd),
+              tanggalSelesai: cleanIsoDate(r.tanggalSelesai, cleanTglSpd),
+              checkInHotel: r.checkInHotel ? cleanIsoDate(r.checkInHotel, cleanTglSpd) : undefined,
+              checkOutHotel: r.checkOutHotel ? cleanIsoDate(r.checkOutHotel, cleanTglSpd) : undefined,
+            }));
+
+            return {
+              idKegiatan: parsed.idKegiatan || idKegiatan,
+              kategori: parsed.kategori || normalizedHeader.kategoriSpj || "A",
+              namaKegiatan: parsed.namaKegiatan || namaKegiatan,
+              tanggalSpd: cleanTglSpd,
+              kotaTujuan: parsed.kotaTujuan || (normalizedHeader.kotaTujuanList?.[0] || ""),
+              provinsiTujuan: parsed.provinsiTujuan || normalizedHeader.provinsiTujuan || "JAWA BARAT",
+              jumlahPeserta: normalizedRows.length,
+              grandTotal: parsed.grandTotal || normalizedRows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0),
+              header: normalizedHeader,
+              rows: normalizedRows,
+              activeCols: parsed.activeCols,
+              activeUh: parsed.activeUh,
+              updatedAt: parsed.updatedAt || new Date().toISOString(),
+            };
+          }
+        } catch {
+          // ignore parsing error and proceed to fallback
+        }
+      }
+
+      // 2. FALLBACK RECONSTRUCTION (Jika baris belum memiliki payload_json):
       // Cari baris DB_PESERTA yang cocok dengan id_kegiatan
       const matchingPeserta = pesertaRows.filter((p) => {
         const pIdKgt = String(p.id_kegiatan || "").trim();
@@ -788,7 +927,7 @@ export async function fetchKegiatanFromSheet(
                 tanggalMulai: tanggalSpd,
                 tanggalSelesai: tanggalSpd,
                 lamaHari: 1,
-                nomorSt: String(item.nomor_st_master || ""),
+                nomorSt: String(item.nomor_st_master || item.nomor_st_staf || ""),
                 nomorSpd: "01",
                 hariUhBiasa: 1,
                 biayaUhBiasa: 0,
@@ -850,7 +989,7 @@ export async function fetchKegiatanFromSheet(
             idKegiatan, // Pastikan ID di header juga tersinkronisasi
             kategoriSpj: kategori,
             keteranganKegiatan: namaKegiatan,
-            keteranganMemo: existingLocal.header?.keteranganMemo || String(item.perihal || item.keterangan_memo || item.keteranganMemo || ""),
+            keteranganMemo: existingLocal.header?.keteranganMemo || String(item.perihal || item.keterangan_memo || item.keteranganMemo || namaKegiatan),
           },
         };
       }
@@ -861,32 +1000,36 @@ export async function fetchKegiatanFromSheet(
         kategoriSpj: kategori,
         noKegiatanUrut: idKegiatan.split("-")[2] || "001",
         keteranganKegiatan: namaKegiatan,
-        keteranganMemo: String(item.perihal || item.keterangan_memo || item.keteranganMemo || (existingLocal && existingLocal.header?.keteranganMemo) || ""),
+        keteranganMemo: String(item.perihal || item.keterangan_memo || item.keteranganMemo || (existingLocal && existingLocal.header?.keteranganMemo) || namaKegiatan),
         provinsiTujuan,
         kotaTujuanList: kotaTujuan ? [kotaTujuan] : [""],
-        unitKerja: String(item.unit_kerja || "Inspektorat"),
+        unitKerja: String(item.unit_kerja || "INSPEKTORAT"),
         picInisiator: String(item.ppk_nama || "Arif Wibowo, S.H., M.H."),
         bendahara: String(item.bendahara_nama || "Raka Panji Wibowo, S.Kom, NIP. 19950408202012 1 001"),
         petugasVerifikasi: String(item.verifikator_nama || "Noviarty Ningsi Sumirat, S.E, NIP. 19811112201001 2 001"),
         nomorKomp: String(item.kode_komponen || ""),
+        detailKomponen: String(item.detail_komponen || ""),
         nomorMak: String(item.kode_mak || ""),
         itemDetail: String(item.item_detail || "001"),
         keteranganItemDetail: String(item.keterangan_item_detail || ""),
         alatAngkut: String(item.alat_angkut || "Angkutan Darat"),
         tanggalSpd,
-        tanggalMemo: cleanIsoDate(item.tanggal_memo || item.tanggal_spd),
+        tanggalMemo: cleanIsoDate(item.tanggal_memo || item.tanggal_spd, tanggalSpd),
         nomorMemo: String(item.nomor_memo || ""),
-        nomorStMaster: String(item.nomor_st_master || ""),
+        nomorStMaster: String(item.nomor_st_master || item.nomor_st_staf || ""),
+        nomorStStaff: String(item.nomor_st_staf || item.nomor_st_master || ""),
+        nomorStPejabat: String(item.nomor_st_pejabat || item.nomor_st_master || ""),
+        useDifferentStPejabat: Boolean(item.use_different_st_pejabat),
         ppkNama: String(item.ppk_nama || "Arif Wibowo, S.H., M.H."),
-        ppkNip: String(item.ppk_nip || "19830124200801 1 006"),
+        ppkNip: String(item.ppkNip || item.ppk_nip || "19830124200801 1 006"),
         ppkJabatan: "Kepala Bagian Tata Usaha Inspektorat",
-        penanggungJawabNama: "Reni Sutaryo, S.Si., M.Adm.Pemb",
-        penanggungJawabNip: "19791126200604 2 014",
-        penanggungJawabJabatan: "Inspektur",
-        jenisPengajuan: "RAMPUNG",
+        penanggungJawabNama: String(item.penanggung_jawab_nama || "Reni Sutaryo, S.Si., M.Adm.Pemb"),
+        penanggungJawabNip: String(item.penanggung_jawab_nip || "19791126200604 2 014"),
+        penanggungJawabJabatan: String(item.penanggung_jawab_jabatan || "Inspektur"),
+        jenisPengajuan: (item.jenis_pengajuan || "RAMPUNG") as HeaderData["jenisPengajuan"],
         noSpm: String(item.no_spm || ""),
         noSpby: String(item.no_spby || ""),
-        jenisPerdin: "Perdin Luar Kota",
+        jenisPerdin: (item.jenis_perdin || "Perdin Luar Kota") as HeaderData["jenisPerdin"],
         berangkatDari: String(item.berangkat_dari || "Jakarta"),
       };
 
@@ -900,6 +1043,12 @@ export async function fetchKegiatanFromSheet(
       const hasTransDaerah = reconstructedRows.some((r) => (r.transportDaerahPp || 0) > 0);
       const hasMeeting = reconstructedRows.some((r) => (r.fullboardMeeting || 0) > 0 || (r.fulldayMeeting || 0) > 0);
       const hasRepresentatif = reconstructedRows.some((r) => (r.representatif || 0) > 0);
+
+      const hasUhBiasa = reconstructedRows.some((r) => (r.hariUhBiasa || 0) > 0 || (r.biayaUhBiasa || 0) > 0);
+      const hasUh60 = reconstructedRows.some((r) => (r.hariUhBiasa60 || 0) > 0 || (r.biayaUhBiasa60 || 0) > 0);
+      const hasUh40 = reconstructedRows.some((r) => (r.hariUhBiasa40 || 0) > 0 || (r.biayaUhBiasa40 || 0) > 0);
+      const hasUhHalfday = reconstructedRows.some((r) => (r.hariUhHalfday || 0) > 0 || (r.biayaUhHalfday || 0) > 0);
+      const hasUhFullboard = reconstructedRows.some((r) => (r.hariUhFullboard || 0) > 0 || (r.biayaUhFullboard || 0) > 0);
 
       return {
         idKegiatan,
@@ -926,6 +1075,13 @@ export async function fetchKegiatanFromSheet(
           fullboardMeeting: hasMeeting,
           representatif: hasRepresentatif,
           belanjaBahan: false,
+        },
+        activeUh: {
+          uhBiasa: hasUhBiasa || (!hasUh60 && !hasUh40 && !hasUhHalfday && !hasUhFullboard),
+          uhBiasa60: hasUh60,
+          uhBiasa40: hasUh40,
+          uhHalfday: hasUhHalfday,
+          uhFullboard: hasUhFullboard,
         },
       };
     });
@@ -969,7 +1125,11 @@ export async function savePerdinToGoogleSheet(
   header: HeaderData,
   participants: ParticipantRow[],
   customUrl?: string,
-  oldIdKegiatan?: string
+  oldIdKegiatan?: string,
+  options?: {
+    activeCols?: Record<string, boolean>;
+    activeUh?: Record<string, boolean>;
+  }
 ): Promise<{ success: boolean; message: string; idKegiatan?: string }> {
   const url = customUrl || getGasApiUrl();
 
@@ -986,6 +1146,25 @@ export async function savePerdinToGoogleSheet(
   );
 
   const grandTotal = validParticipants.reduce((sum, p) => sum + (p.totalJumlah || 0), 0);
+
+  const fullSnapshot: SavedKegiatan = {
+    idKegiatan,
+    kategori: (header.kategoriSpj === "NA" || (header.kategoriSpj as string) === "B" ? "NA" : "A") as "A" | "NA" | "B",
+    namaKegiatan: header.keteranganKegiatan || "Kegiatan Dinas",
+    tanggalSpd: header.tanggalSpd || new Date().toISOString().split("T")[0],
+    kotaTujuan: header.kotaTujuanList?.[0] || "",
+    provinsiTujuan: header.provinsiTujuan || "JAWA BARAT",
+    jumlahPeserta: validParticipants.length,
+    grandTotal,
+    header: {
+      ...header,
+      idKegiatan,
+    },
+    rows: validParticipants,
+    activeCols: options?.activeCols,
+    activeUh: options?.activeUh,
+    updatedAt: new Date().toISOString(),
+  };
 
   const payload = {
     action: "SAVE_PERDIN",
@@ -1015,6 +1194,7 @@ export async function savePerdinToGoogleSheet(
       tanggalSpd: header.tanggalSpd || "",
       kodeMak: header.nomorMak || "524111",
       kodeKomponen: header.nomorKomp || "051",
+      detailKomponen: header.detailKomponen || "",
       itemDetail: header.itemDetail || "001",
       keteranganItemDetail: header.keteranganItemDetail || "",
       unitKerja: header.unitKerja || "INSPEKTORAT",
@@ -1023,9 +1203,14 @@ export async function savePerdinToGoogleSheet(
       ppkJabatan: header.ppkJabatan || "",
       bendaharaNama: header.bendahara || "",
       verifikatorNama: header.petugasVerifikasi || "",
+      penanggungJawabNama: header.penanggungJawabNama || "",
+      penanggungJawabNip: header.penanggungJawabNip || "",
+      penanggungJawabJabatan: header.penanggungJawabJabatan || "",
       grandTotal,
       statusDokumen: "FINAL",
+      payload_json: JSON.stringify(fullSnapshot),
     },
+    fullSnapshot,
     participants: validParticipants.map((p) => ({
       pegawaiId: p.kodeNama || "",
       nomorSpd: p.nomorSpd || "01",

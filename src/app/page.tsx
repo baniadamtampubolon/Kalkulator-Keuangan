@@ -23,6 +23,7 @@ import {
   MasterSyncData,
   getCachedMasterData,
   fetchMasterDataFromSheet,
+  fetchKegiatanFromSheet,
   savePerdinToGoogleSheet,
 } from "@/lib/googleSheetsService";
 import { saveOrUpdateRekapLocal } from "@/lib/rekapHelper";
@@ -81,6 +82,13 @@ export default function Home() {
         if (res.data.pegawai && res.data.pegawai.length > 0) setPegawaiList(res.data.pegawai);
         if (res.data.sbm && res.data.sbm.length > 0) setSbmList(res.data.sbm);
         if (res.data.memo && res.data.memo.length > 0) setMemoList(res.data.memo);
+      }
+    });
+
+    // 3. Fetch latest kegiatan list from Google Sheets Cloud for cross-device synchronization
+    fetchKegiatanFromSheet().then((res) => {
+      if (isMounted && res.success && res.data) {
+        setTotalKegiatanCount(res.data.length);
       }
     });
 
@@ -624,7 +632,13 @@ export default function Home() {
       setSavedSnapshot(JSON.stringify({ header: updatedHeader, rows: validRows }));
 
       // 3. Kirim data transaksi dan baris rekap ke Google Spreadsheet Cloud
-      const sheetRes = await savePerdinToGoogleSheet(updatedHeader, validRows, undefined, oldBatchId);
+      const sheetRes = await savePerdinToGoogleSheet(
+        updatedHeader,
+        validRows,
+        undefined,
+        oldBatchId,
+        { activeCols, activeUh }
+      );
 
       if (sheetRes.success) {
         setSaveFeedback({

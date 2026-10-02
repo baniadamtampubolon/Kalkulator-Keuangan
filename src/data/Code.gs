@@ -41,12 +41,13 @@ const DEFAULT_HEADERS = {
     'kode_komponen', 'kode_mak', 'nama_mak', 'kode_item', 'nama_item', 'full_label', 'full_mak'
   ],
   KEGIATAN: [
-    'id_kegiatan', 'kode_kegiatan', 'nama_kegiatan', 'jenis_pengajuan', 'no_spm', 'no_spby',
+    'id_kegiatan', 'kode_kegiatan', 'nama_kegiatan', 'perihal', 'jenis_pengajuan', 'no_spm', 'no_spby',
     'jenis_perdin', 'berangkat_dari', 'provinsi_tujuan', 'kota_tujuan_list', 'tanggal_mulai',
     'tanggal_selesai', 'alat_angkut', 'nomor_st_master', 'nomor_st_staf', 'nomor_st_pejabat',
     'use_different_st_pejabat', 'nomor_memo', 'tanggal_memo', 'tanggal_spd', 'kode_mak',
-    'kode_komponen', 'item_detail', 'unit_kerja', 'ppk_nama', 'ppk_nip', 'bendahara_nama',
-    'verifikator_nama', 'grand_total', 'status_dokumen', 'created_at'
+    'kode_komponen', 'detail_komponen', 'item_detail', 'keterangan_item_detail', 'unit_kerja', 'ppk_nama', 'ppk_nip', 'bendahara_nama',
+    'verifikator_nama', 'penanggung_jawab_nama', 'penanggung_jawab_nip', 'penanggung_jawab_jabatan',
+    'grand_total', 'status_dokumen', 'payload_json', 'created_at', 'updated_at'
   ],
   PESERTA: [
     'id_peserta', 'id_kegiatan', 'id_pegawai', 'urutan', 'nomor_spd', 'nomor_st_assigned',
@@ -240,41 +241,61 @@ function doPost(e) {
       const header = payload.header || {};
       const participants = payload.participants || [];
 
-      // Simpan/Update DB_KEGIATAN
+      // Simpan/Update DB_KEGIATAN dengan Header-Aware Mapping
       const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
-      upsertRowById(kegiatanSheet, 'id_kegiatan', header.idKegiatan, [
-        header.idKegiatan,
-        header.kodeKegiatan || '',
-        header.namaKegiatan || '',
-        header.jenisPengajuan || 'RAMPUNG',
-        header.noSpm || '',
-        header.noSpby || '',
-        header.jenisPerdin || 'Perdin Luar Kota',
-        header.berangkatDari || 'Jakarta',
-        header.provinsiTujuan || '',
-        JSON.stringify(header.kotaTujuanList || []),
-        header.tanggalMulai || '',
-        header.tanggalSelesai || '',
-        header.alatAngkut || 'Angkutan Darat',
-        header.nomorStMaster || '',
-        header.nomorStStaff || '',
-        header.nomorStPejabat || '',
-        header.useDifferentStPejabat || false,
-        header.nomorMemo || '',
-        header.tanggalMemo || '',
-        header.tanggalSpd || '',
-        header.kodeMak || '524111',
-        header.kodeKomponen || '051',
-        header.itemDetail || '001',
-        header.unitKerja || 'INSPEKTORAT',
-        header.ppkNama || '',
-        header.ppkNip || '',
-        header.bendaharaNama || '',
-        header.verifikatorNama || '',
-        header.grandTotal || 0,
-        header.statusDokumen || 'FINAL',
-        new Date()
-      ]);
+
+      if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
+        deleteRowsByColumnValue(kegiatanSheet, 'id_kegiatan', header.oldIdKegiatan);
+      }
+
+      const rawKotaTujuan = header.kotaTujuanList;
+      const kotaTujuanListStr = typeof rawKotaTujuan === 'string' ? rawKotaTujuan : JSON.stringify(rawKotaTujuan || []);
+
+      const payloadJsonStr = header.payload_json || (payload.fullSnapshot ? JSON.stringify(payload.fullSnapshot) : '');
+
+      const kegiatanData = {
+        id_kegiatan: header.idKegiatan || '',
+        kode_kegiatan: header.kodeKegiatan || '',
+        nama_kegiatan: header.namaKegiatan || '',
+        perihal: header.perihal || header.keteranganMemo || header.namaKegiatan || '',
+        jenis_pengajuan: header.jenisPengajuan || 'RAMPUNG',
+        no_spm: header.noSpm || '',
+        no_spby: header.noSpby || '',
+        jenis_perdin: header.jenisPerdin || 'Perdin Luar Kota',
+        berangkat_dari: header.berangkatDari || 'Jakarta',
+        provinsi_tujuan: header.provinsiTujuan || '',
+        kota_tujuan_list: kotaTujuanListStr,
+        tanggal_mulai: header.tanggalMulai || '',
+        tanggal_selesai: header.tanggalSelesai || '',
+        alat_angkut: header.alatAngkut || 'Angkutan Darat',
+        nomor_st_master: header.nomorStMaster || '',
+        nomor_st_staf: header.nomorStStaff || header.nomorStMaster || '',
+        nomor_st_pejabat: header.nomorStPejabat || header.nomorStMaster || '',
+        use_different_st_pejabat: Boolean(header.useDifferentStPejabat),
+        nomor_memo: header.nomorMemo || '',
+        tanggal_memo: header.tanggalMemo || '',
+        tanggal_spd: header.tanggalSpd || '',
+        kode_mak: header.kodeMak || '524111',
+        kode_komponen: header.kodeKomponen || '051',
+        detail_komponen: header.detailKomponen || '',
+        item_detail: header.itemDetail || '001',
+        keterangan_item_detail: header.keteranganItemDetail || '',
+        unit_kerja: header.unitKerja || 'INSPEKTORAT',
+        ppk_nama: header.ppkNama || '',
+        ppk_nip: header.ppkNip || '',
+        bendahara_nama: header.bendaharaNama || '',
+        verifikator_nama: header.verifikatorNama || '',
+        penanggung_jawab_nama: header.penanggungJawabNama || '',
+        penanggung_jawab_nip: header.penanggungJawabNip || '',
+        penanggung_jawab_jabatan: header.penanggungJawabJabatan || '',
+        grand_total: header.grandTotal || 0,
+        status_dokumen: header.statusDokumen || 'FINAL',
+        payload_json: payloadJsonStr,
+        created_at: header.createdAt || new Date(),
+        updated_at: new Date()
+      };
+
+      upsertRowByHeaderObject(kegiatanSheet, 'id_kegiatan', header.idKegiatan, kegiatanData, DEFAULT_HEADERS.KEGIATAN);
 
       // Simpan Detail DB_PESERTA & REKAP 48 Kolom
       const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
@@ -796,6 +817,50 @@ function sheetToObjects(sheet) {
     });
     return obj;
   });
+}
+
+function upsertRowByHeaderObject(sheet, keyColumnName, keyValue, rowObject, defaultHeaders) {
+  if (!sheet) return;
+
+  if (sheet.getLastRow() === 0 && defaultHeaders && defaultHeaders.length > 0) {
+    sheet.appendRow(defaultHeaders);
+  }
+
+  const lastRow = sheet.getLastRow();
+  let headers = [];
+  if (lastRow > 0) {
+    headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0] || [];
+  } else if (defaultHeaders && defaultHeaders.length > 0) {
+    headers = defaultHeaders;
+  }
+
+  // Tambahkan kolom header default yang belum ada di lembar kerja
+  if (defaultHeaders && defaultHeaders.length > 0) {
+    const missingHeaders = defaultHeaders.filter(function(h) { return headers.indexOf(h) === -1; });
+    if (missingHeaders.length > 0) {
+      const startCol = headers.length + 1;
+      sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
+      headers = headers.concat(missingHeaders);
+    }
+  }
+
+  const rowData = headers.map(function(headerKey) {
+    const key = String(headerKey).trim();
+    return rowObject[key] !== undefined && rowObject[key] !== null ? rowObject[key] : '';
+  });
+
+  const keyIndex = headers.indexOf(keyColumnName);
+  if (keyIndex !== -1 && lastRow >= 2) {
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][keyIndex]).trim().toLowerCase() === String(keyValue).trim().toLowerCase()) {
+        sheet.getRange(i + 1, 1, 1, rowData.length).setValues([rowData]);
+        return;
+      }
+    }
+  }
+
+  sheet.appendRow(rowData);
 }
 
 function upsertRowById(sheet, keyColumnName, keyValue, rowData) {
