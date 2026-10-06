@@ -64,6 +64,29 @@ export function getCachedMasterData(): MasterSyncData | null {
   return null;
 }
 
+export const APP_SCHEMA_VERSION = "2026.10.06-v2";
+
+/**
+ * Otomatis periksa versi aplikasi di background saat aplikasi dibuka.
+ * Jika browser user masih menyimpan data/URL dari versi lama yang berpotensi menyebabkan desync,
+ * fungsi ini secara mandiri membersihkan data lama tanpa memerlukan tindakan teknis dari user.
+ */
+export function checkAndAutoMigrateCache(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const savedVersion = localStorage.getItem("perdin_app_version");
+    if (savedVersion !== APP_SCHEMA_VERSION) {
+      // Bersihkan URL kustom lama jika ada agar selalu memakai URL deployment production resmi
+      localStorage.removeItem(STORAGE_KEY_URL);
+      localStorage.removeItem(STORAGE_KEY_MASTER_CACHE);
+      localStorage.removeItem("perdin_latest_spd_number");
+      localStorage.setItem("perdin_app_version", APP_SCHEMA_VERSION);
+    }
+  } catch (err) {
+    console.error("Gagal menjalankan migrasi cache otomatis:", err);
+  }
+}
+
 /**
  * Bersihkan seluruh cache lokal browser (localStorage) dan paksa sinkronisasi ulang data terbaru dari cloud
  */
@@ -76,6 +99,7 @@ export function purgeLocalBrowserCache(): void {
     localStorage.removeItem("perdin_saved_kegiatan_list");
     localStorage.removeItem("perdin_cached_rekap_data");
     localStorage.removeItem("perdin_custom_item_details");
+    localStorage.setItem("perdin_app_version", APP_SCHEMA_VERSION);
   } catch (err) {
     console.error("Gagal membersihkan cache lokal:", err);
   }

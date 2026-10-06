@@ -25,6 +25,7 @@ import {
   fetchMasterDataFromSheet,
   fetchKegiatanFromSheet,
   savePerdinToGoogleSheet,
+  checkAndAutoMigrateCache,
 } from "@/lib/googleSheetsService";
 import { saveOrUpdateRekapLocal } from "@/lib/rekapHelper";
 import {
@@ -66,6 +67,9 @@ export default function Home() {
   // Asynchronous client-side cache hydration & Google Sheets background sync
   useEffect(() => {
     let isMounted = true;
+
+    // 0. Auto-heal: Bersihkan cache usang versi lama secara otomatis tanpa campur tangan user
+    checkAndAutoMigrateCache();
 
     // 1. Hydrate from localStorage cache asynchronously after initial render
     Promise.resolve().then(() => {
