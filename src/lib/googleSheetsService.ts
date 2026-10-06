@@ -445,8 +445,9 @@ export async function fetchRekapFromSheet(
   try {
     const json = await executeGasRequest<Array<Record<string, unknown>>>("GET", { action: "GET_REKAP" }, url);
     if (json.status === "success" && Array.isArray(json.data)) {
-      // Filter anti-hantu: buang baris yang tidak memiliki Nama Pegawai dan Nama Kegiatan
-      const validData = (json.data as Array<Record<string, unknown>>).filter((r) => {
+      // Filter anti-hantu & bersihkan key dari zero-width space
+      const cleanedData = json.data.map(cleanObjectKeys);
+      const validData = cleanedData.filter((r) => {
         const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
         const keg = String(r["Nama Kegiatan"] || "").trim();
         return nama !== "" || keg !== "";
@@ -569,7 +570,21 @@ export function cleanIsoDate(val: unknown, fallback: string = new Date().toISOSt
   return fallback;
 }
 
-function pesertaRowToParticipant(p: Record<string, unknown>, idx: number): ParticipantRow {
+/**
+ * Helper pembersih seluruh key object dari karakter tersembunyi Zero-Width Space (\u200B-\u200D, \uFEFF, \u00A0)
+ */
+export function cleanObjectKeys<T extends Record<string, unknown>>(rawObj: T): T {
+  if (!rawObj || typeof rawObj !== "object") return rawObj;
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(rawObj)) {
+    const cleanKey = key.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "").trim();
+    result[cleanKey] = value;
+  }
+  return result as T;
+}
+
+function pesertaRowToParticipant(rawP: Record<string, unknown>, idx: number): ParticipantRow {
+  const p = cleanObjectKeys(rawP);
   const namaSnapshot = String(p["nama_snapshot"] || p["nama"] || "").trim();
   const namaExt = String(p["spj_nama_external"] || p["namaExternal"] || p["NAMA EXTERNAL"] || "").trim();
   const nama = namaSnapshot || (namaExt ? "" : `Peserta ${idx + 1}`);
@@ -620,6 +635,8 @@ function pesertaRowToParticipant(p: Record<string, unknown>, idx: number): Parti
   const tglMulai = cleanIsoDate(p["tanggal_mulai"] || p["Tgl Berangkat"]);
   const tglSelesai = cleanIsoDate(p["tanggal_selesai"] || p["Tgl Kembali"]);
 
+  const rawSpdVal = p["nomor_spd"] || p["nomorSpd"] || p["No. SPD"] || p["No SPD"] || idx + 1;
+
   return {
     id: String(p["id_peserta"] || idx + 1),
     kodeNama: String(p["id_pegawai"] || p["kode_nama"] || ""),
@@ -634,7 +651,7 @@ function pesertaRowToParticipant(p: Record<string, unknown>, idx: number): Parti
     tanggalSelesai: tglSelesai,
     lamaHari: Number(p["lama_hari"] || p["Total Hari"] || 1),
     nomorSt: String(p["nomor_st_assigned"] || p["nomor_st"] || p["No Surat Tugas"] || ""),
-    nomorSpd: String(p["nomor_spd"] || idx + 1).padStart(2, "0"),
+    nomorSpd: String(rawSpdVal).padStart(2, "0"),
     isPejabat: Boolean(p["is_pejabat"]),
     hariUhBiasa: Number(p["hari_uh_biasa"] || p["Lama Hari 100%"] || 0),
     biayaUhBiasa: Number(p["biaya_uh_biasa"] || p["UH 100% ()"] || 0),
@@ -771,13 +788,13 @@ export async function fetchKegiatanFromSheet(
       return { success: false, message: jsonKegiatan.message || "Data kegiatan tidak valid." };
     }
 
-    const cloudKegiatanList: Array<Record<string, unknown>> = jsonKegiatan.data;
-    const rekapRows: Array<Record<string, unknown>> = Array.isArray(jsonRekap.data) ? jsonRekap.data : [];
-    const pesertaRows: Array<Record<string, unknown>> = Array.isArray(jsonPeserta.data) ? jsonPeserta.data : [];
+    const cloudKegiatanList: Array<Record<string, unknown>> = (jsonKegiatan.data || []).map(cleanObjectKeys);
+    const rekapRows: Array<Record<string, unknown>> = (Array.isArray(jsonRekap.data) ? jsonRekap.data : []).map(cleanObjectKeys);
+    const pesertaRows: Array<Record<string, unknown>> = (Array.isArray(jsonPeserta.data) ? jsonPeserta.data : []).map(cleanObjectKeys);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const memoRows: Array<Record<string, unknown>> =
       jsonMasters.data && Array.isArray((jsonMasters.data as any).memo)
-        ? ((jsonMasters.data as any).memo as Array<Record<string, unknown>>)
+        ? ((jsonMasters.data as any).memo as Array<Record<string, unknown>>).map(cleanObjectKeys)
         : [];
 
     // Ambil data lokal yang sudah tersimpan untuk merge
@@ -1227,13 +1244,15 @@ export async function fetchKegiatanFromSheet(
       if (!isNaN(apiSpd) && apiSpd > maxSpdFound) {
         maxSpdFound = apiSpd;
       }
-      // 2. Dari seluruh baris di DB_PESERTA
+      // 2. Dari seluruh baris di DB_PESERTA (periksa key nomor_spd dan key apapun yang mengandung spd)
       pesertaRows.forEach((p) => {
-        const spd = p.nomor_spd || p.nomorSpd;
-        if (spd) {
-          const parsed = parseSpdNumber(spd as string);
-          if (parsed.num > maxSpdFound && parsed.num < 100000) {
-            maxSpdFound = parsed.num;
+        for (const [k, v] of Object.entries(p)) {
+          const cleanK = k.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "").trim().toLowerCase();
+          if (cleanK === "nomor_spd" || cleanK === "nomorspd" || cleanK === "spd") {
+            const parsed = parseSpdNumber(v as string | number);
+            if (parsed.num > maxSpdFound && parsed.num < 100000) {
+              maxSpdFound = parsed.num;
+            }
           }
         }
       });
@@ -1252,11 +1271,13 @@ export async function fetchKegiatanFromSheet(
       });
       // 4. Dari seluruh baris di rekapRows
       rekapRows.forEach((r) => {
-        const spd = r.nomor_spd || r.nomorSpd || r["No. SPD"] || r["No SPD"];
-        if (spd) {
-          const parsed = parseSpdNumber(spd as string);
-          if (parsed.num > maxSpdFound && parsed.num < 100000) {
-            maxSpdFound = parsed.num;
+        for (const [k, v] of Object.entries(r)) {
+          const cleanK = k.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "").trim().toLowerCase();
+          if (cleanK.includes("spd")) {
+            const parsed = parseSpdNumber(v as string | number);
+            if (parsed.num > maxSpdFound && parsed.num < 100000) {
+              maxSpdFound = parsed.num;
+            }
           }
         }
       });

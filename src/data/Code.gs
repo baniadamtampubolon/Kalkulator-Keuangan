@@ -958,7 +958,10 @@ function sheetToObjects(sheet) {
   return rows.map(row => {
     const obj = {};
     headers.forEach((header, index) => {
-      const key = header ? String(header).trim() : `_col_${index}`;
+      const cleanKey = header
+        ? String(header).replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim()
+        : `_col_${index}`;
+      const key = cleanKey || `_col_${index}`;
       let val = row[index];
       if (val instanceof Date && !isNaN(val.getTime())) {
         val = Utilities.formatDate(val, tz, 'yyyy-MM-dd');
@@ -1064,11 +1067,16 @@ function logAction(ss, action, refId, details) {
 }
 
 /**
- * Ambil nomor SPD tertinggi dari seluruh database (DB_PESERTA & DB_KEGIATAN)
+ * Ambil nomor SPD tertinggi dari seluruh database (DB_PESERTA, DB_KEGIATAN & REKAP_PERDIN_48KOLOM)
  */
 function getLatestSpdNumberFromSheet(ss) {
   try {
     let maxSpd = 0;
+
+    // Helper untuk membersihkan string header dari karakter tak terlihat (Zero-Width Space dsb)
+    function cleanStr(s) {
+      return String(s || '').replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim().toLowerCase();
+    }
 
     // 1. Pindai tab DB_PESERTA
     const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
@@ -1076,7 +1084,19 @@ function getLatestSpdNumberFromSheet(ss) {
     if (lastRowPeserta >= 2) {
       const data = pesertaSheet.getDataRange().getValues();
       const headers = data[0] || [];
-      const spdIdx = headers.indexOf('nomor_spd');
+      let spdIdx = -1;
+      for (let c = 0; c < headers.length; c++) {
+        const hClean = cleanStr(headers[c]);
+        if (hClean === 'nomor_spd' || hClean === 'nomorspd' || hClean === 'spd') {
+          spdIdx = c;
+          break;
+        }
+      }
+      // Fallback ke kolom E (index 4) jika header tidak ditemukan
+      if (spdIdx === -1 && headers.length > 4) {
+        spdIdx = 4;
+      }
+
       if (spdIdx !== -1) {
         for (let i = 1; i < data.length; i++) {
           const val = data[i][spdIdx];
@@ -1084,7 +1104,7 @@ function getLatestSpdNumberFromSheet(ss) {
             const match = String(val).match(/\d+/);
             if (match) {
               const num = parseInt(match[0], 10);
-              if (!isNaN(num) && num > maxSpd && num < 10000) {
+              if (!isNaN(num) && num > maxSpd && num < 100000) {
                 maxSpd = num;
               }
             }
@@ -1099,7 +1119,15 @@ function getLatestSpdNumberFromSheet(ss) {
     if (lastRowKegiatan >= 2) {
       const kData = kegiatanSheet.getDataRange().getValues();
       const kHeaders = kData[0] || [];
-      const jsonIdx = kHeaders.indexOf('payload_json');
+      let jsonIdx = -1;
+      for (let c = 0; c < kHeaders.length; c++) {
+        const hClean = cleanStr(kHeaders[c]);
+        if (hClean === 'payload_json' || hClean === 'payloadjson') {
+          jsonIdx = c;
+          break;
+        }
+      }
+
       if (jsonIdx !== -1) {
         for (let i = 1; i < kData.length; i++) {
           const raw = String(kData[i][jsonIdx] || '');
@@ -1113,7 +1141,7 @@ function getLatestSpdNumberFromSheet(ss) {
                     const m = String(rSpd).match(/\d+/);
                     if (m) {
                       const n = parseInt(m[0], 10);
-                      if (!isNaN(n) && n > maxSpd && n < 10000) {
+                      if (!isNaN(n) && n > maxSpd && n < 100000) {
                         maxSpd = n;
                       }
                     }
@@ -1121,6 +1149,35 @@ function getLatestSpdNumberFromSheet(ss) {
                 }
               }
             } catch (e) {}
+          }
+        }
+      }
+    }
+
+    // 3. Pindai tab REKAP_PERDIN_48KOLOM jika ada
+    const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
+    if (rekapSheet.getLastRow() >= 2) {
+      const rData = rekapSheet.getDataRange().getValues();
+      const rHeaders = rData[0] || [];
+      let rSpdIdx = -1;
+      for (let c = 0; c < rHeaders.length; c++) {
+        const hClean = cleanStr(rHeaders[c]);
+        if (hClean.includes('spd')) {
+          rSpdIdx = c;
+          break;
+        }
+      }
+      if (rSpdIdx !== -1) {
+        for (let i = 1; i < rData.length; i++) {
+          const val = rData[i][rSpdIdx];
+          if (val !== undefined && val !== null && val !== '') {
+            const m = String(val).match(/\d+/);
+            if (m) {
+              const n = parseInt(m[0], 10);
+              if (!isNaN(n) && n > maxSpd && n < 100000) {
+                maxSpd = n;
+              }
+            }
           }
         }
       }
