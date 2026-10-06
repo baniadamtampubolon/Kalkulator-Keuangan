@@ -1218,6 +1218,56 @@ export async function fetchKegiatanFromSheet(
       window.dispatchEvent(new CustomEvent("kegiatan-list-updated", { detail: { updatedList: mergedKegiatanList } }));
     }
 
+    // Pindai nomor SPD tertinggi dari seluruh database cloud (DB_PESERTA, DB_KEGIATAN, REKAP, & API Response)
+    try {
+      let maxSpdFound = 0;
+      // 1. Dari respons langsung endpoint API
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const apiSpd = Number((jsonKegiatan as any).latestSpdNumber || (jsonPeserta as any).latestSpdNumber || (jsonMasters.data as any)?.latestSpdNumber);
+      if (!isNaN(apiSpd) && apiSpd > maxSpdFound) {
+        maxSpdFound = apiSpd;
+      }
+      // 2. Dari seluruh baris di DB_PESERTA
+      pesertaRows.forEach((p) => {
+        const spd = p.nomor_spd || p.nomorSpd;
+        if (spd) {
+          const parsed = parseSpdNumber(spd as string);
+          if (parsed.num > maxSpdFound && parsed.num < 100000) {
+            maxSpdFound = parsed.num;
+          }
+        }
+      });
+      // 3. Dari seluruh baris di mergedKegiatanList
+      mergedKegiatanList.forEach((keg) => {
+        if (keg.rows && Array.isArray(keg.rows)) {
+          keg.rows.forEach((r) => {
+            if (r.nomorSpd) {
+              const parsed = parseSpdNumber(r.nomorSpd);
+              if (parsed.num > maxSpdFound && parsed.num < 100000) {
+                maxSpdFound = parsed.num;
+              }
+            }
+          });
+        }
+      });
+      // 4. Dari seluruh baris di rekapRows
+      rekapRows.forEach((r) => {
+        const spd = r.nomor_spd || r.nomorSpd || r["No. SPD"] || r["No SPD"];
+        if (spd) {
+          const parsed = parseSpdNumber(spd as string);
+          if (parsed.num > maxSpdFound && parsed.num < 100000) {
+            maxSpdFound = parsed.num;
+          }
+        }
+      });
+
+      if (maxSpdFound > 0) {
+        saveLatestRegisteredSpdNumber(maxSpdFound);
+      }
+    } catch {
+      // ignore
+    }
+
     return {
       success: true,
       data: mergedKegiatanList,

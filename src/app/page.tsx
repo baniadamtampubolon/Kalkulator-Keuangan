@@ -188,6 +188,18 @@ export default function Home() {
     berangkatDari: "Jakarta",
   });
 
+  // Save & Update State Tracking (Proses -> Rekap Perdin)
+  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
+  const [savedBatchId, setSavedBatchId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [saveFeedback, setSaveFeedback] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
+
+  // Track whether we are editing an existing activity and what its original ID was
+  const [editingOriginalId, setEditingOriginalId] = useState<string | null>(null);
+
   // Participant Rows State (Clean initial empty row dengan nomor SPD berlanjut dari database)
   const [rows, setRows] = useState<ParticipantRow[]>(() => {
     const nextSpd = "01";
@@ -237,22 +249,40 @@ export default function Home() {
     return [initialRow];
   });
 
-  // Sync initial row nomorSpd with database continuation on client mount
+  // Sync initial row nomorSpd with database continuation on client mount and whenever cloud data arrives
   useEffect(() => {
-    const latest = getLatestRegisteredSpdNumber();
-    if (latest > 0) {
-      setRows((prev) => {
-        if (
-          prev.length === 1 &&
-          (!prev[0].nama || prev[0].nama.trim() === "") &&
-          prev[0].nomorSpd === "01"
-        ) {
-          return [{ ...prev[0], nomorSpd: formatSpdNumber(latest + 1) }];
-        }
-        return prev;
-      });
-    }
-  }, []);
+    const handleSpdSync = () => {
+      const latest = getLatestRegisteredSpdNumber();
+      if (latest > 0) {
+        setRows((prev) => {
+          // Hanya sesuaikan otomatis jika sedang di mode draft baru (belum diisi nama dan belum disimpan)
+          if (
+            !editingOriginalId &&
+            !savedBatchId &&
+            prev.length === 1 &&
+            (!prev[0].nama || prev[0].nama.trim() === "") &&
+            (!prev[0].namaExternal || prev[0].namaExternal.trim() === "")
+          ) {
+            const currentParsed = parseSpdNumber(prev[0].nomorSpd);
+            if (currentParsed.num <= 1 || currentParsed.num <= latest) {
+              return [{ ...prev[0], nomorSpd: formatSpdNumber(latest + 1) }];
+            }
+          }
+          return prev;
+        });
+      }
+    };
+
+    handleSpdSync();
+    window.addEventListener("spd-latest-updated", handleSpdSync);
+    window.addEventListener("kegiatan-list-updated", handleSpdSync);
+    window.addEventListener("storage", handleSpdSync);
+    return () => {
+      window.removeEventListener("spd-latest-updated", handleSpdSync);
+      window.removeEventListener("kegiatan-list-updated", handleSpdSync);
+      window.removeEventListener("storage", handleSpdSync);
+    };
+  }, [editingOriginalId, savedBatchId]);
 
   // Handlers for state updates with synchronized row recalculation
   const handleSetActiveCols: React.Dispatch<React.SetStateAction<Record<ActiveCostKey, boolean>>> = (action) => {
@@ -400,18 +430,6 @@ export default function Home() {
       setMemoList(data.memo);
     }
   };
-
-  // Save & Update State Tracking (Proses -> Rekap Perdin)
-  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
-  const [savedBatchId, setSavedBatchId] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [saveFeedback, setSaveFeedback] = useState<{
-    type: "success" | "error" | "info";
-    text: string;
-  } | null>(null);
-
-  // Track whether we are editing an existing activity and what its original ID was
-  const [editingOriginalId, setEditingOriginalId] = useState<string | null>(null);
 
   // Sync initial ID Kegiatan with database continuation on client mount and when database updates
   useEffect(() => {

@@ -1,5 +1,4 @@
 import { ParticipantRow, SavedKegiatan } from "./types";
-import { getSavedKegiatanList } from "./kegiatanHelper";
 
 export const STORAGE_KEY_LATEST_SPD = "perdin_latest_spd_number";
 
@@ -16,6 +15,7 @@ export interface ParsedSpd {
  * Contoh:
  * - "01" -> { prefix: "", num: 1, padLength: 2, suffix: "", raw: "01" }
  * - "26" -> { prefix: "", num: 26, padLength: 2, suffix: "", raw: "26" }
+ * - "120" -> { prefix: "", num: 120, padLength: 3, suffix: "", raw: "120" }
  * - "025" -> { prefix: "", num: 25, padLength: 3, suffix: "", raw: "025" }
  * - "SPD-05" -> { prefix: "SPD-", num: 5, padLength: 2, suffix: "", raw: "SPD-05" }
  * - "SPD/12/XI/2026" -> { prefix: "SPD/", num: 12, padLength: 2, suffix: "/XI/2026", raw: "..." }
@@ -62,7 +62,7 @@ export function formatSpdNumber(
 }
 
 /**
- * Dapatkan nomor SPD tertinggi yang terdaftar di database lokal (daftar kegiatan tersimpan & storage cache).
+ * Dapatkan nomor SPD tertinggi yang terdaftar di database (daftar kegiatan tersimpan, storage cache, & rekap).
  */
 export function getLatestRegisteredSpdNumber(extraActivities?: SavedKegiatan[]): number {
   if (typeof window === "undefined") return 0;
@@ -84,14 +84,20 @@ export function getLatestRegisteredSpdNumber(extraActivities?: SavedKegiatan[]):
 
   // 2. Pindai seluruh data kegiatan tersimpan (SavedKegiatan)
   try {
-    const savedList = extraActivities || getSavedKegiatanList();
+    let savedList: SavedKegiatan[] | null = extraActivities || null;
+    if (!savedList) {
+      const rawKegiatan = localStorage.getItem("perdin_saved_kegiatan_list");
+      if (rawKegiatan) {
+        savedList = JSON.parse(rawKegiatan);
+      }
+    }
     if (Array.isArray(savedList)) {
       for (const item of savedList) {
         if (item.rows && Array.isArray(item.rows)) {
           for (const row of item.rows) {
             if (row.nomorSpd) {
               const parsed = parseSpdNumber(row.nomorSpd);
-              if (parsed.num > maxSpd) {
+              if (parsed.num > maxSpd && parsed.num < 100000) {
                 maxSpd = parsed.num;
               }
             }
@@ -113,7 +119,7 @@ export function getLatestRegisteredSpdNumber(extraActivities?: SavedKegiatan[]):
           const rawSpd = r.nomor_spd || r.nomorSpd || r["No. SPD"] || r["No SPD"];
           if (rawSpd) {
             const parsed = parseSpdNumber(rawSpd);
-            if (parsed.num > maxSpd) {
+            if (parsed.num > maxSpd && parsed.num < 100000) {
               maxSpd = parsed.num;
             }
           }
@@ -128,24 +134,25 @@ export function getLatestRegisteredSpdNumber(extraActivities?: SavedKegiatan[]):
 }
 
 /**
- * Simpan nomor SPD tertinggi ke localStorage dan picu event agar komponen lain tersinkronisasi.
+ * Simpan nomor SPD tertinggi ke localStorage dan picu event agar seluruh komponen dan tab tersinkronisasi.
  */
-export function saveLatestRegisteredSpdNumber(num: number): void {
-  if (typeof window === "undefined") return;
-  if (!num || isNaN(num) || num <= 0) return;
+export function saveLatestRegisteredSpdNumber(num: number): number {
+  if (typeof window === "undefined") return num || 0;
+  if (!num || isNaN(num) || num <= 0) return 0;
 
   try {
-    const current = getLatestRegisteredSpdNumber();
-    if (num > current) {
-      localStorage.setItem(STORAGE_KEY_LATEST_SPD, String(num));
-      window.dispatchEvent(
-        new CustomEvent("spd-latest-updated", {
-          detail: { latestSpdNumber: num },
-        })
-      );
-    }
+    const storedVal = parseInt(localStorage.getItem(STORAGE_KEY_LATEST_SPD) || "0", 10);
+    const maxVal = Math.max(num, isNaN(storedVal) ? 0 : storedVal);
+    localStorage.setItem(STORAGE_KEY_LATEST_SPD, String(maxVal));
+    window.dispatchEvent(
+      new CustomEvent("spd-latest-updated", {
+        detail: { latestSpdNumber: maxVal },
+      })
+    );
+    return maxVal;
   } catch (err) {
     console.error("Gagal menyimpan latest spd number:", err);
+    return num;
   }
 }
 

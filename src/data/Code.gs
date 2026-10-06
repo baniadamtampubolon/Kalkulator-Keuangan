@@ -133,7 +133,8 @@ function doGet(e) {
       const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
       return createJsonResponse({
         status: 'success',
-        data: sheetToObjects(rekapSheet)
+        data: sheetToObjects(rekapSheet),
+        latestSpdNumber: getLatestSpdNumberFromSheet(ss)
       });
     }
 
@@ -141,7 +142,8 @@ function doGet(e) {
       const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
       return createJsonResponse({
         status: 'success',
-        data: sheetToObjects(kegiatanSheet)
+        data: sheetToObjects(kegiatanSheet),
+        latestSpdNumber: getLatestSpdNumberFromSheet(ss)
       });
     }
 
@@ -1062,32 +1064,68 @@ function logAction(ss, action, refId, details) {
 }
 
 /**
- * Ambil nomor SPD tertinggi dari tab DB_PESERTA
+ * Ambil nomor SPD tertinggi dari seluruh database (DB_PESERTA & DB_KEGIATAN)
  */
 function getLatestSpdNumberFromSheet(ss) {
   try {
-    const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
-    const lastRow = pesertaSheet.getLastRow();
-    if (lastRow <= 1) return 0;
-
-    const data = pesertaSheet.getDataRange().getValues();
-    const headers = data[0];
-    const spdIdx = headers.indexOf('nomor_spd');
-    if (spdIdx === -1) return 0;
-
     let maxSpd = 0;
-    for (let i = 1; i < data.length; i++) {
-      const val = data[i][spdIdx];
-      if (val !== undefined && val !== null && val !== '') {
-        const match = String(val).match(/\d+/);
-        if (match) {
-          const num = parseInt(match[0], 10);
-          if (!isNaN(num) && num > maxSpd) {
-            maxSpd = num;
+
+    // 1. Pindai tab DB_PESERTA
+    const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
+    const lastRowPeserta = pesertaSheet.getLastRow();
+    if (lastRowPeserta >= 2) {
+      const data = pesertaSheet.getDataRange().getValues();
+      const headers = data[0] || [];
+      const spdIdx = headers.indexOf('nomor_spd');
+      if (spdIdx !== -1) {
+        for (let i = 1; i < data.length; i++) {
+          const val = data[i][spdIdx];
+          if (val !== undefined && val !== null && val !== '') {
+            const match = String(val).match(/\d+/);
+            if (match) {
+              const num = parseInt(match[0], 10);
+              if (!isNaN(num) && num > maxSpd && num < 10000) {
+                maxSpd = num;
+              }
+            }
           }
         }
       }
     }
+
+    // 2. Pindai tab DB_KEGIATAN (payload_json) jika ada
+    const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
+    const lastRowKegiatan = kegiatanSheet.getLastRow();
+    if (lastRowKegiatan >= 2) {
+      const kData = kegiatanSheet.getDataRange().getValues();
+      const kHeaders = kData[0] || [];
+      const jsonIdx = kHeaders.indexOf('payload_json');
+      if (jsonIdx !== -1) {
+        for (let i = 1; i < kData.length; i++) {
+          const raw = String(kData[i][jsonIdx] || '');
+          if (raw.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(raw);
+              if (parsed && Array.isArray(parsed.rows)) {
+                for (let j = 0; j < parsed.rows.length; j++) {
+                  const rSpd = parsed.rows[j].nomorSpd;
+                  if (rSpd) {
+                    const m = String(rSpd).match(/\d+/);
+                    if (m) {
+                      const n = parseInt(m[0], 10);
+                      if (!isNaN(n) && n > maxSpd && n < 10000) {
+                        maxSpd = n;
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    }
+
     return maxSpd;
   } catch (err) {
     return 0;
