@@ -16,6 +16,7 @@ import {
 } from "@/lib/spdHelper";
 import { ModalTiket, ModalHotel, ModalRiil, ModalSpjExtra } from "./Modals";
 import { CurrencyInput } from "./CurrencyInput";
+import { EmployeeSearchSelect } from "./EmployeeSearchSelect";
 import {
   Users,
   Plus,
@@ -135,7 +136,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
     } else {
       handleUpdateRow(id, {
         kodeNama: "",
-        nama: "",
+        nama: nama || "",
         nip: "",
         golongan: "",
         jabatan: "",
@@ -453,25 +454,14 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                   {idx + 1}
                 </td>
 
-                {/* Nama Pegawai Dropdown (Sticky) */}
+                {/* Nama Pegawai Searchable Combobox (Sticky) */}
                 <td className="p-2 w-64 min-w-[240px] sticky left-12 bg-white/95 group-hover:bg-slate-50/95 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
-                  <select
+                  <EmployeeSearchSelect
                     value={row.nama}
-                    onChange={(e) => handleSelectPegawai(row.id, e.target.value)}
-                    className="input-glass w-full h-8 px-2 font-semibold text-slate-900 text-xs cursor-pointer"
-                  >
-                    <option value="">-- Pilih Pegawai --</option>
-                    {pegawaiList.map((p) => (
-                      <option key={p.kodeNama} value={p.nama}>
-                        {p.nama}
-                      </option>
-                    ))}
-                  </select>
-                  {row.nip ? (
-                    <span className="block text-[10px] font-mono text-slate-400 pl-1 pt-0.5 whitespace-nowrap">
-                      NIP. {row.nip}
-                    </span>
-                  ) : null}
+                    nip={row.nip}
+                    pegawaiList={pegawaiList}
+                    onSelect={(selectedName) => handleSelectPegawai(row.id, selectedName)}
+                  />
                 </td>
 
                 {/* Gol / Jabatan */}
