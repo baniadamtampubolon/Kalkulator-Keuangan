@@ -86,9 +86,12 @@ export async function executeGasRequest<T = unknown>(
           if (v !== undefined && v !== null) query.set(k, String(v));
         });
         if (targetUrl) query.set("gasUrl", targetUrl);
+        // Cache-buster: paksa browser (terutama Safari) untuk tidak menggunakan response lama
+        query.set("_t", String(Date.now()));
         const res = await fetch(`/api/gas?${query.toString()}`, {
           method: "GET",
           headers: { Accept: "application/json" },
+          cache: "no-store",
         });
         if (res.ok) {
           const json = (await res.json()) as GasApiResponse<T>;
@@ -99,6 +102,7 @@ export async function executeGasRequest<T = unknown>(
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...payloadOrParams, customUrl: targetUrl }),
+          cache: "no-store",
         });
         if (res.ok) {
           const json = (await res.json()) as GasApiResponse<T>;
@@ -120,6 +124,8 @@ export async function executeGasRequest<T = unknown>(
     Object.entries(payloadOrParams).forEach(([k, v]) => {
       if (v !== undefined && v !== null) query.set(k, String(v));
     });
+    // Cache-buster untuk direct fetch
+    query.set("_t", String(Date.now()));
     const qs = query.toString();
     const fetchUrl = qs
       ? (targetUrl.includes("?") ? `${targetUrl}&${qs}` : `${targetUrl}?${qs}`)
@@ -127,6 +133,7 @@ export async function executeGasRequest<T = unknown>(
     const res = await fetch(fetchUrl, {
       method: "GET",
       headers: { Accept: "application/json" },
+      cache: "no-store",
     });
     return (await res.json()) as GasApiResponse<T>;
   } else {
@@ -134,6 +141,7 @@ export async function executeGasRequest<T = unknown>(
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payloadOrParams),
+      cache: "no-store",
     });
     return (await res.json()) as GasApiResponse<T>;
   }

@@ -41,12 +41,23 @@ export async function GET(request: NextRequest) {
     if (!res.ok) {
       return Response.json(
         { status: "error", message: `Google Apps Script returned HTTP ${res.status}: ${res.statusText}` },
-        { status: res.status }
+        {
+          status: res.status,
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+          },
+        }
       );
     }
 
     const data = await res.json();
-    return Response.json(data);
+    return Response.json(data, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        "Pragma": "no-cache",
+      },
+    });
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : String(error);
     return Response.json(
@@ -79,14 +90,25 @@ export async function POST(request: NextRequest) {
     if (!res.ok) {
       return Response.json(
         { status: "error", message: `Google Apps Script returned HTTP ${res.status}: ${res.statusText}` },
-        { status: res.status }
+        {
+          status: res.status,
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+          },
+        }
       );
     }
 
     const text = await res.text();
     try {
       const data = JSON.parse(text);
-      return Response.json(data);
+      return Response.json(data, {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          "Pragma": "no-cache",
+        },
+      });
     } catch {
       return Response.json(
         {
@@ -94,7 +116,13 @@ export async function POST(request: NextRequest) {
           message: "Google Apps Script returned invalid JSON (possibly HTML error or permission issue).",
           raw: text.slice(0, 500),
         },
-        { status: 502 }
+        {
+          status: 502,
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+          },
+        }
       );
     }
   } catch (error: unknown) {
