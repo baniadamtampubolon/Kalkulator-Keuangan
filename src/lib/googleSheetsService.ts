@@ -64,6 +64,23 @@ export function getCachedMasterData(): MasterSyncData | null {
   return null;
 }
 
+/**
+ * Bersihkan seluruh cache lokal browser (localStorage) dan paksa sinkronisasi ulang data terbaru dari cloud
+ */
+export function purgeLocalBrowserCache(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY_URL);
+    localStorage.removeItem(STORAGE_KEY_MASTER_CACHE);
+    localStorage.removeItem("perdin_latest_spd_number");
+    localStorage.removeItem("perdin_saved_kegiatan_list");
+    localStorage.removeItem("perdin_cached_rekap_data");
+    localStorage.removeItem("perdin_custom_item_details");
+  } catch (err) {
+    console.error("Gagal membersihkan cache lokal:", err);
+  }
+}
+
 
 /**
  * Executor terpadu request Google Apps Script:

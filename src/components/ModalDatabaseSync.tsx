@@ -28,6 +28,8 @@ import {
   testGasConnection,
   fetchMasterDataFromSheet,
   fetchRekapFromSheet,
+  fetchKegiatanFromSheet,
+  purgeLocalBrowserCache,
   savePerdinToGoogleSheet,
   MasterSyncData,
 } from "@/lib/googleSheetsService";
@@ -176,12 +178,13 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
       return;
     }
     setIsSyncing(true);
-    setStatusMessage({ type: "info", text: "Menarik data Master (Pegawai, SBM, Memo) & Rekap 48 Kolom dari Google Spreadsheet..." });
+    setStatusMessage({ type: "info", text: "Menarik data Master, Rekap 48 Kolom, & Nomor SPD dari Google Spreadsheet..." });
     
-    // Fetch master data & rekap data in parallel
-    const [resMaster, resRekap] = await Promise.all([
+    // Fetch master data, rekap data, & kegiatan in parallel
+    const [resMaster, resRekap, resKegiatan] = await Promise.all([
       fetchMasterDataFromSheet(url),
       fetchRekapFromSheet(url),
+      fetchKegiatanFromSheet(url),
     ]);
 
     setIsSyncing(false);
@@ -191,13 +194,38 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
         onMasterSyncSuccess(resMaster.data);
       }
       const rekapCount = resRekap.data?.length ?? 0;
+      const kegCount = resKegiatan.data?.length ?? 0;
       const makCountStr = resMaster.data.mak ? `${resMaster.data.mak.length} Item MAK, ` : "";
       setStatusMessage({
         type: "success",
-        text: `Berhasil sinkronisasi seluruh data Cloud! (${resMaster.data.pegawai?.length || 0} Pegawai, ${resMaster.data.sbm?.length || 0} SBM Provinsi, ${makCountStr}${rekapCount} Baris Rekap Perdin).`,
+        text: `Berhasil sinkronisasi seluruh data Cloud! (${resMaster.data.pegawai?.length || 0} Pegawai, ${resMaster.data.sbm?.length || 0} SBM Provinsi, ${makCountStr}${rekapCount} Baris Rekap, ${kegCount} Kegiatan tersinkron).`,
       });
     } else {
-      setStatusMessage({ type: "error", text: resMaster.message || resRekap.message || "Gagal sinkronisasi data." });
+      setStatusMessage({ type: "error", text: resMaster.message || resRekap.message || resKegiatan.message || "Gagal sinkronisasi data." });
+    }
+  };
+
+  const handlePurgeCacheAndReload = async () => {
+    setIsSyncing(true);
+    setStatusMessage({ type: "info", text: "Membersihkan seluruh cache lokal & memuat data terbaru dari cloud..." });
+    purgeLocalBrowserCache();
+    const defaultUrl = getDefaultGasApiUrl();
+    setUrl(defaultUrl);
+    try {
+      await Promise.all([
+        fetchMasterDataFromSheet(defaultUrl),
+        fetchRekapFromSheet(defaultUrl),
+        fetchKegiatanFromSheet(defaultUrl),
+      ]);
+      setStatusMessage({
+        type: "success",
+        text: "Cache lokal berhasil dibersihkan! Memuat ulang halaman...",
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 600);
+    } catch {
+      window.location.reload();
     }
   };
 
@@ -442,6 +470,29 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                 <span>Tarik Data Master & Rekap</span>
               </button>
             </div>
+          </div>
+
+          {/* Purge Cache & Resync Section */}
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-1.5 font-semibold text-xs text-slate-800">
+                <RotateCcw className="w-3.5 h-3.5 text-[#0071e3]" />
+                <span>Pemulihan Data & Reset Cache Browser</span>
+              </div>
+              <p className="text-[10.5px] text-slate-500 leading-relaxed max-w-md">
+                Gunakan ini jika browser masih menampilkan nomor SPD atau data lama. Fitur ini akan menghapus cache lokal (localStorage) dan memuat data segar langsung dari Google Spreadsheet.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handlePurgeCacheAndReload}
+              disabled={isSyncing}
+              className="btn-tactile px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-medium inline-flex items-center gap-1.5 shrink-0 disabled:opacity-50 cursor-pointer shadow-2xs"
+              title="Hapus cache lokal & unduh ulang seluruh data dari cloud"
+            >
+              {isSyncing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 text-slate-500" />}
+              <span>Bersihkan Cache & Sinkron Ulang</span>
+            </button>
           </div>
 
           {/* Quick Info & Guide */}
