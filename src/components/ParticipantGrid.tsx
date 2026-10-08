@@ -270,9 +270,6 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {rows.length} pegawai
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Kelola pelaksana dinas, durasi, moda transportasi, dan komponen pengeluaran
-            </p>
           </div>
         </div>
 

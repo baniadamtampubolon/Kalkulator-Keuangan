@@ -373,9 +373,6 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-                Deskripsi resmi untuk Kwitansi, SPD, Daftar Nominatif, dan Nota Dinas
-              </p>
             </div>
           </div>
 
@@ -447,9 +444,6 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     </span>
                   )}
                 </div>
-                <p className="text-[10.5px] text-slate-400 mt-0.5 truncate">
-                  Pengenal berkas SPJ baku untuk integrasi database & rekapitulasi seluruh pelaksana
-                </p>
               </div>
             </div>
 
@@ -659,9 +653,6 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   Tarif SBM PMK
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-                Menentukan pagu standar biaya masukan (Uang Harian & Pagu Hotel) dan rute kedinasan
-              </p>
             </div>
           </div>
           <MapPin className="w-4 h-4 text-slate-400 hidden sm:block" />
@@ -847,9 +838,6 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   Dasar Hukum SPJ
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-                Register penomoran resmi Surat Tugas dan Memorandum pengajuan pembiayaan dinas
-              </p>
             </div>
           </div>
           <FileCheck2 className="w-4 h-4 text-slate-400 hidden sm:block" />
@@ -1081,9 +1069,6 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   Standar DIPA Terisi Otomatis
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-                Kode akun anggaran DIPA dan jenis pengajuan biaya (dapat disesuaikan jika perlu)
-              </p>
             </div>
           </div>
           <Landmark className="w-4 h-4 text-slate-400 hidden sm:block" />
@@ -1324,9 +1309,6 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   Tanda Tangan Dokumen
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-                Penetapan PPK, Bendahara Pengeluaran, dan Petugas Verifikator Berkas
-              </p>
             </div>
           </div>
 
