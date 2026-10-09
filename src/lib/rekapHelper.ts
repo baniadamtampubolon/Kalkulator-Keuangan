@@ -79,6 +79,7 @@ export function getRowSignature(r: Record<string, unknown>): {
   tgl: string;
   batchId: string;
   idPeserta: string;
+  memo: string;
 } {
   const nip = cleanNip(r["NIP"] || (r as Record<string, unknown>).nip);
   const nama = normalizeStr(
@@ -91,14 +92,36 @@ export function getRowSignature(r: Record<string, unknown>): {
   const kegiatan = normalizeStr(r["Nama Kegiatan"] || (r as Record<string, unknown>).namaKegiatan || "");
   const st = normalizeStr(r["No Surat Tugas"] || (r as Record<string, unknown>).nomorSt || "");
   const tgl = normalizeStr(r["Tgl Berangkat"] || (r as Record<string, unknown>).tanggalMulai || "");
-  const batchId = normalizeStr(r["_spjBatchId"] || (r as Record<string, unknown>).idKegiatan || "");
-  const idPeserta = normalizeStr(r["_idPeserta"] || (r as Record<string, unknown>).id || "");
+  const batchId = normalizeStr(
+    r["_spjBatchId"] ||
+      r["id_kegiatan"] ||
+      r["ID Kegiatan"] ||
+      r["idKegiatan"] ||
+      (r as Record<string, unknown>).idKegiatan ||
+      ""
+  );
+  const idPeserta = normalizeStr(
+    r["_idPeserta"] ||
+      r["id_peserta"] ||
+      r["ID Peserta"] ||
+      (r as Record<string, unknown>).id ||
+      ""
+  );
+  const memo = normalizeStr(
+    r["nomor_memo"] ||
+      r["Nomor Memo"] ||
+      r["No Memo"] ||
+      r["nomorMemo"] ||
+      (r as Record<string, unknown>).nomorMemo ||
+      ""
+  );
 
-  return { nip, nama, kegiatan, st, tgl, batchId, idPeserta };
+  return { nip, nama, kegiatan, st, tgl, batchId, idPeserta, memo };
 }
 
 /**
  * Cek apakah baris A dan baris B merepresentasikan peserta dan kegiatan yang sama (anti-duplikasi)
+ * Menggunakan ID Kegiatan dan Nomor Memorandum sebagai Primary Key utama
  */
 export function isSameRekapRow(
   a: Record<string, unknown>,
@@ -113,43 +136,50 @@ export function isSameRekapRow(
     return true;
   }
 
-  // 2. Batch ID match
+  const isSameNip = sigA.nip !== "" && sigB.nip !== "" && sigA.nip === sigB.nip;
+  const isSameNama = sigA.nama !== "" && sigB.nama !== "" && sigA.nama === sigB.nama;
+  const isSamePerson = isSameNip || isSameNama;
+
+  // 2. PRIMARY KEY 1: ID Kegiatan (batchId) match + Person
+  // Jika ID Kegiatan sama dan peserta sama -> baris yang sama, meskipun judul kegiatan diedit!
   if (sigA.batchId && sigB.batchId && sigA.batchId === sigB.batchId) {
-    if (sigA.nip && sigB.nip && sigA.nip === sigB.nip) return true;
-    if (sigA.nama && sigB.nama && sigA.nama === sigB.nama) return true;
+    if (isSamePerson) return true;
     if (!sigA.nama || !sigB.nama) return true;
   }
 
-  // 3. Nama Kegiatan sama DAN (NIP sama ATAU Nama sama)
+  // 3. PRIMARY KEY 2: Nomor Memorandum (memo) match + Person
+  // Jika Nomor Memorandum sama dan peserta sama -> baris yang sama, meskipun judul kegiatan diedit!
+  if (sigA.memo && sigB.memo && sigA.memo === sigB.memo) {
+    if (isSamePerson) return true;
+    if (!sigA.nama || !sigB.nama) return true;
+  }
+
+  // 4. Nama Kegiatan sama DAN (NIP sama ATAU Nama sama)
   const isSameKegiatan =
     sigA.kegiatan !== "" && sigB.kegiatan !== "" && sigA.kegiatan === sigB.kegiatan;
-  const isSameNip = sigA.nip !== "" && sigB.nip !== "" && sigA.nip === sigB.nip;
-  const isSameNama = sigA.nama !== "" && sigB.nama !== "" && sigA.nama === sigB.nama;
-
-  if (isSameKegiatan && (isSameNip || isSameNama)) {
+  if (isSameKegiatan && isSamePerson) {
     return true;
   }
 
-  // 4. No Surat Tugas sama DAN (NIP sama ATAU Nama sama)
+  // 5. No Surat Tugas sama DAN (NIP sama ATAU Nama sama)
   const isSameSt =
     sigA.st !== "" &&
     sigB.st !== "" &&
     sigA.st !== "-" &&
     sigB.st !== "-" &&
     sigA.st === sigB.st;
-
-  if (isSameSt && (isSameNip || isSameNama)) {
+  if (isSameSt && isSamePerson) {
     return true;
   }
 
-  // 5. Tanggal Berangkat sama DAN (NIP sama ATAU Nama sama) DAN (Kegiatan sama ATAU ST sama)
+  // 6. Tanggal Berangkat sama DAN (NIP sama ATAU Nama sama) DAN (Kegiatan sama ATAU ST sama)
   const isSameTgl = sigA.tgl !== "" && sigB.tgl !== "" && sigA.tgl === sigB.tgl;
-  if (isSameTgl && (isSameNip || isSameNama) && (isSameKegiatan || isSameSt)) {
+  if (isSameTgl && isSamePerson && (isSameKegiatan || isSameSt)) {
     return true;
   }
 
-  // 6. Jika NIP sama & Tanggal sama & Nama sama
-  if (sigA.nip && sigB.nip && sigA.nip === sigB.nip && isSameNama && isSameTgl) {
+  // 7. Jika NIP sama & Tanggal sama & Nama sama
+  if (isSameNip && isSameNama && isSameTgl) {
     return true;
   }
 
@@ -217,10 +247,16 @@ export function formatRowTo48Columns(
   const uhMeeting = (r.biayaUhHalfday || 0) + (r.biayaUhFullboard || 0);
 
   return {
-    // Internal metadata for update tracking
-    _spjBatchId: batchId || "",
+    // Internal metadata for update tracking & primary keys
+    _spjBatchId: batchId || header.idKegiatan || "",
     _spjRowId: r.id,
-    _idPeserta: batchId ? `${batchId}-${String(rowIndex).padStart(2, "0")}` : r.id,
+    _idPeserta: (batchId || header.idKegiatan) ? `${batchId || header.idKegiatan}-${String(rowIndex).padStart(2, "0")}` : r.id,
+    id_kegiatan: batchId || header.idKegiatan || "",
+    idKegiatan: batchId || header.idKegiatan || "",
+    "ID Kegiatan": batchId || header.idKegiatan || "",
+    nomor_memo: header.nomorMemo || "",
+    nomorMemo: header.nomorMemo || "",
+    "Nomor Memo": header.nomorMemo || "",
 
     // 48 Column Standard SPJ Fields
     "No SPBY": header.noSpby || "",
@@ -302,7 +338,15 @@ export function buildRekapFromSavedKegiatanList(): Array<Record<string, unknown>
     if (!keg.idKegiatan || seenBatchIds.has(keg.idKegiatan)) return;
     seenBatchIds.add(keg.idKegiatan);
     if (keg.header && Array.isArray(keg.rows) && keg.rows.length > 0) {
-      const rows = formatRowsTo48Columns(keg.header, keg.rows, keg.idKegiatan);
+      const rows = formatRowsTo48Columns(
+        {
+          ...keg.header,
+          idKegiatan: keg.idKegiatan,
+          keteranganKegiatan: keg.namaKegiatan || keg.header.keteranganKegiatan,
+        },
+        keg.rows,
+        keg.idKegiatan
+      );
       allRows.push(...rows);
     }
   });
@@ -350,7 +394,9 @@ export function saveOrUpdateRekapLocal(
   header: HeaderData,
   rows: ParticipantRow[],
   batchId: string,
-  oldBatchId?: string
+  oldBatchId?: string,
+  oldNamaKegiatan?: string,
+  oldNomorMemo?: string
 ): { updatedRekap: Array<Record<string, unknown>>; isUpdate: boolean; batchId: string } {
   if (typeof window === "undefined") {
     return { updatedRekap: [], isUpdate: false, batchId };
@@ -375,30 +421,57 @@ export function saveOrUpdateRekapLocal(
     existingList = buildRekapFromSavedKegiatanList();
   }
 
-  const stMaster = (header.nomorStStaff || header.nomorStMaster || "").trim();
-  const keg = (header.keteranganKegiatan || "").trim();
+  const curBatch = normalizeStr(batchId || header.idKegiatan || "");
+  const prevBatch = normalizeStr(oldBatchId || "");
+  const curMemo = normalizeStr(header.nomorMemo || "");
+  const prevMemo = normalizeStr(oldNomorMemo || "");
+  const curKeg = normalizeStr(header.keteranganKegiatan || "");
+  const prevKeg = normalizeStr(oldNamaKegiatan || "");
+  const curSt = normalizeStr(header.nomorStStaff || header.nomorStMaster || "");
 
   let firstMatchIndex = -1;
   const filteredList: Array<Record<string, unknown>> = [];
 
   existingList.forEach((item, idx) => {
-    const itemBatch = String(item._spjBatchId || "").trim();
+    const sig = getRowSignature(item);
+    const itemBatch = sig.batchId;
+    const itemMemo = sig.memo;
+    const itemKeg = sig.kegiatan;
+    const itemSt = sig.st;
+
+    // 1. Primary key 1: ID Kegiatan match
     const isMatchingBatch =
-      (itemBatch !== "" && itemBatch === batchId) ||
-      (oldBatchId && itemBatch !== "" && itemBatch === oldBatchId);
+      (itemBatch !== "" && curBatch !== "" && itemBatch === curBatch) ||
+      (itemBatch !== "" && prevBatch !== "" && itemBatch === prevBatch);
 
+    // 2. Primary key 2: Nomor Memo match
+    const isMatchingMemo =
+      (itemMemo !== "" && curMemo !== "" && itemMemo === curMemo) ||
+      (itemMemo !== "" && prevMemo !== "" && itemMemo === prevMemo);
+
+    // 3. Old Activity Title match
+    const isMatchingOldKeg =
+      prevKeg !== "" && itemKeg !== "" && itemKeg === prevKeg;
+
+    // 4. Current Activity Title match (with matching ST or matching participant)
     const isMatchingStKeg =
-      itemBatch === "" &&
-      stMaster !== "" &&
-      keg !== "" &&
-      String(item["No Surat Tugas"] || "").trim() === stMaster &&
-      String(item["Nama Kegiatan"] || "").trim() === keg;
+      curKeg !== "" &&
+      itemKeg !== "" &&
+      itemKeg === curKeg &&
+      ((curSt !== "" && itemSt !== "" && itemSt === curSt) ||
+        newFormattedRows.some((newRow) => isSameRekapRow(item, newRow)));
 
+    // 5. Participant match
     const isMatchingAnyParticipant =
-      itemBatch === "" &&
       newFormattedRows.some((newRow) => isSameRekapRow(item, newRow));
 
-    if (isMatchingBatch || isMatchingStKeg || isMatchingAnyParticipant) {
+    if (
+      isMatchingBatch ||
+      isMatchingMemo ||
+      isMatchingOldKeg ||
+      isMatchingStKeg ||
+      isMatchingAnyParticipant
+    ) {
       if (firstMatchIndex === -1) firstMatchIndex = idx;
     } else {
       filteredList.push(item);

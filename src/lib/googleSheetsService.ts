@@ -496,11 +496,22 @@ export async function fetchRekapFromSheet(
     if (json.status === "success" && Array.isArray(json.data)) {
       // Filter anti-hantu & bersihkan key dari zero-width space
       const cleanedData = json.data.map(cleanObjectKeys);
-      const validData = cleanedData.filter((r) => {
-        const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
-        const keg = String(r["Nama Kegiatan"] || "").trim();
-        return nama !== "" || keg !== "";
-      });
+      const validData = cleanedData
+        .filter((r) => {
+          const nama = String(r["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || r["NAMA EXTERNAL"] || "").trim();
+          const keg = String(r["Nama Kegiatan"] || "").trim();
+          return nama !== "" || keg !== "";
+        })
+        .map((r) => {
+          const idKeg = String(r["id_kegiatan"] || r["ID Kegiatan"] || r["_spjBatchId"] || "").trim();
+          const noMemo = String(r["nomor_memo"] || r["Nomor Memo"] || r["No Memo"] || "").trim();
+          return {
+            ...r,
+            _spjBatchId: idKeg || (r._spjBatchId as string) || "",
+            id_kegiatan: idKeg || (r.id_kegiatan as string) || "",
+            nomor_memo: noMemo || (r.nomor_memo as string) || "",
+          };
+        });
 
       // Gabungkan dengan baris rekap dari daftar kegiatan tersimpan di lokal tanpa duplikasi
       const localRekapRows = buildRekapFromSavedKegiatanList();
@@ -1360,6 +1371,8 @@ export async function savePerdinToGoogleSheet(
   options?: {
     activeCols?: Record<string, boolean>;
     activeUh?: Record<string, boolean>;
+    oldNamaKegiatan?: string;
+    oldNomorMemo?: string;
   }
 ): Promise<{ success: boolean; message: string; idKegiatan?: string }> {
   const url = customUrl || getGasApiUrl();
@@ -1416,6 +1429,8 @@ export async function savePerdinToGoogleSheet(
     header: {
       idKegiatan,
       oldIdKegiatan: oldIdKegiatan || idKegiatan,
+      oldNamaKegiatan: options?.oldNamaKegiatan || "",
+      oldNomorMemo: options?.oldNomorMemo || "",
       kodeKegiatan: header.nomorKomp || "PRD-" + Date.now(),
       namaKegiatan: header.keteranganKegiatan || "Perjalanan Dinas Inspektorat",
       jenisPengajuan: header.jenisPengajuan || "RAMPUNG",
@@ -1683,7 +1698,8 @@ export async function syncAllRekapToGoogleSheet(
 export async function deleteKegiatanFromGoogleSheet(
   idKegiatan: string,
   namaKegiatan?: string,
-  customUrl?: string
+  customUrl?: string,
+  nomorMemo?: string
 ): Promise<{ success: boolean; message: string }> {
   const url = customUrl || getGasApiUrl();
   if (!url) {
@@ -1695,6 +1711,7 @@ export async function deleteKegiatanFromGoogleSheet(
       action: "DELETE_KEGIATAN",
       idKegiatan,
       namaKegiatan: namaKegiatan || "",
+      nomorMemo: nomorMemo || "",
     };
 
     const json = await executeGasRequest("POST", payload, url);

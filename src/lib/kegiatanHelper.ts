@@ -221,7 +221,9 @@ export function getNextNoKegiatan(
  */
 export function saveKegiatanRecord(
   kegiatan: SavedKegiatan,
-  oldIdKegiatan?: string
+  oldIdKegiatan?: string,
+  oldNamaKegiatan?: string,
+  oldNomorMemo?: string
 ): {
   updatedList: SavedKegiatan[];
   isUpdate: boolean;
@@ -233,6 +235,11 @@ export function saveKegiatanRecord(
     (k) =>
       k.idKegiatan === kegiatan.idKegiatan ||
       (oldIdKegiatan && k.idKegiatan === oldIdKegiatan) ||
+      (kegiatan.header?.nomorMemo && k.header?.nomorMemo && k.header.nomorMemo === kegiatan.header.nomorMemo) ||
+      (oldNomorMemo && k.header?.nomorMemo && k.header.nomorMemo === oldNomorMemo) ||
+      (oldNamaKegiatan &&
+        k.namaKegiatan &&
+        k.namaKegiatan.trim().toLowerCase() === oldNamaKegiatan.trim().toLowerCase()) ||
       (kegiatan.namaKegiatan &&
         k.namaKegiatan &&
         k.namaKegiatan.trim().toLowerCase() === kegiatan.namaKegiatan.trim().toLowerCase() &&
@@ -293,12 +300,21 @@ export function deleteKegiatanRecord(idKegiatan: string): {
     // 1. Simpan daftar kegiatan yang baru
     localStorage.setItem(STORAGE_KEY_KEGIATAN, JSON.stringify(updatedList));
 
-    // 2. Bersihkan baris di Rekap Perdin yang memiliki _spjBatchId yang sama
+    // 2. Bersihkan baris di Rekap Perdin berdasarkan idKegiatan, nomorMemo, dan namaKegiatan
     const rekapRaw = localStorage.getItem(STORAGE_KEY_REKAP);
     if (rekapRaw) {
       const rekapList: Array<Record<string, unknown>> = JSON.parse(rekapRaw);
       if (Array.isArray(rekapList)) {
-        const cleanedRekap = rekapList.filter((r) => r._spjBatchId !== idKegiatan);
+        const cleanedRekap = rekapList.filter((r) => {
+          const rBatch = String(r._spjBatchId || r.id_kegiatan || r["ID Kegiatan"] || r.idKegiatan || "").trim();
+          const rMemo = String(r.nomor_memo || r["Nomor Memo"] || r.nomorMemo || "").trim();
+          const rKeg = String(r["Nama Kegiatan"] || r.namaKegiatan || "").trim();
+
+          if (rBatch && rBatch === idKegiatan) return false;
+          if (deleted?.header?.nomorMemo && rMemo && rMemo === deleted.header.nomorMemo) return false;
+          if (deleted?.namaKegiatan && rKeg && rKeg.toLowerCase() === deleted.namaKegiatan.toLowerCase()) return false;
+          return true;
+        });
         localStorage.setItem(STORAGE_KEY_REKAP, JSON.stringify(cleanedRekap));
         window.dispatchEvent(
           new CustomEvent("rekap-perdin-updated", {

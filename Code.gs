@@ -41,18 +41,21 @@ const DEFAULT_HEADERS = {
     'kode_komponen', 'kode_mak', 'nama_mak', 'kode_item', 'nama_item', 'full_label', 'full_mak'
   ],
   KEGIATAN: [
-    'id_kegiatan', 'kode_kegiatan', 'nama_kegiatan', 'jenis_pengajuan', 'no_spm', 'no_spby',
+    'id_kegiatan', 'kode_kegiatan', 'nama_kegiatan', 'perihal', 'jenis_pengajuan', 'no_spm', 'no_spby',
     'jenis_perdin', 'berangkat_dari', 'provinsi_tujuan', 'kota_tujuan_list', 'tanggal_mulai',
     'tanggal_selesai', 'alat_angkut', 'nomor_st_master', 'nomor_st_staf', 'nomor_st_pejabat',
     'use_different_st_pejabat', 'nomor_memo', 'tanggal_memo', 'tanggal_spd', 'kode_mak',
-    'kode_komponen', 'item_detail', 'unit_kerja', 'ppk_nama', 'ppk_nip', 'bendahara_nama',
-    'verifikator_nama', 'grand_total', 'status_dokumen', 'created_at'
+    'kode_komponen', 'detail_komponen', 'item_detail', 'keterangan_item_detail', 'unit_kerja', 'ppk_nama', 'ppk_nip', 'bendahara_nama',
+    'verifikator_nama', 'penanggung_jawab_nama', 'penanggung_jawab_nip', 'penanggung_jawab_jabatan',
+    'grand_total', 'status_dokumen', 'payload_json', 'created_at', 'updated_at'
   ],
   PESERTA: [
-    'id_peserta', 'id_kegiatan', 'id_pegawai', 'urutan', 'nomor_spd', 'nomor_st_assigned',
+    'id_peserta', 'id_kegiatan', 'id_pegawai', 'urutan', 'nomor_spd', 'nomor_st_assigned', 'nomor_memo',
     'is_pejabat', 'nama_snapshot', 'nip_snapshot', 'golongan_snapshot', 'jabatan_snapshot',
-    'tujuan_kota', 'tanggal_mulai', 'tanggal_selesai', 'lama_hari', 'hari_uh_biasa', 'biaya_uh_biasa',
-    'hari_uh_60', 'biaya_uh_60', 'hari_uh_halfday', 'biaya_uh_halfday', 'hari_uh_fullboard',
+    'tujuan_kota', 'tujuan_provinsi', 'tanggal_mulai', 'tanggal_selesai', 'lama_hari',
+    'hari_uh_biasa', 'biaya_uh_biasa', 'hari_uh_60', 'biaya_uh_60',
+    'hari_uh_40', 'biaya_uh_40',
+    'hari_uh_halfday', 'biaya_uh_halfday', 'hari_uh_fullboard',
     'biaya_uh_fullboard', 'biaya_tiket', 'biaya_hotel', 'biaya_penginapan_30', 'biaya_trans_darat',
     'biaya_trans_lokal', 'biaya_trans_jakarta_pp', 'biaya_trans_daerah_pp', 'biaya_riil',
     'biaya_meeting', 'biaya_representatif', 'total_biaya', 'tiket_boarding_pass', 'tiket_pergi_no',
@@ -73,7 +76,8 @@ const DEFAULT_HEADERS = {
     'Kurs ()', 'Riil ()', 'Harga Fare Tiket Pergi ()', 'Harga FareTiket Pulang ()',
     'Transport Jakarta PP', 'Transport Daerah PP', 'Biaya Transport ()', 'Sewa kendaraan ()',
     'Representatif ()', 'Taksi Bandara', 'Biaya Reschedule ()', 'Total',
-    'Nilai Nominal di Daftar Nominatif', 'PENGEMBALIAN'
+    'Nilai Nominal di Daftar Nominatif', 'PENGEMBALIAN',
+    'id_kegiatan', 'nomor_memo'
   ]
 };
 
@@ -130,7 +134,8 @@ function doGet(e) {
       const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
       return createJsonResponse({
         status: 'success',
-        data: sheetToObjects(rekapSheet)
+        data: sheetToObjects(rekapSheet),
+        latestSpdNumber: getLatestSpdNumberFromSheet(ss)
       });
     }
 
@@ -138,7 +143,8 @@ function doGet(e) {
       const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
       return createJsonResponse({
         status: 'success',
-        data: sheetToObjects(kegiatanSheet)
+        data: sheetToObjects(kegiatanSheet),
+        latestSpdNumber: getLatestSpdNumberFromSheet(ss)
       });
     }
 
@@ -162,7 +168,12 @@ function doGet(e) {
  */
 function doPost(e) {
   const lock = LockService.getScriptLock();
-  lock.tryLock(30000);
+  if (!lock.tryLock(30000)) {
+    return createJsonResponse({
+      status: 'error',
+      message: 'Server sedang sibuk memproses permintaan lain. Silakan coba lagi dalam beberapa detik.'
+    });
+  }
 
   try {
     const payload = JSON.parse(e.postData.contents);
@@ -223,7 +234,7 @@ function doPost(e) {
         makSheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
       }
       return createJsonResponse({
-        status: 'SUCCESS',
+        status: 'success',
         message: 'Master MAK & Item Detail (' + items.length + ' item) berhasil disinkronkan ke MASTER_MAK Google Spreadsheet.'
       });
     }
@@ -233,51 +244,138 @@ function doPost(e) {
       const header = payload.header || {};
       const participants = payload.participants || [];
 
-      // Simpan/Update DB_KEGIATAN
-      const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
-      upsertRowById(kegiatanSheet, 'id_kegiatan', header.idKegiatan, [
-        header.idKegiatan,
-        header.kodeKegiatan || '',
-        header.namaKegiatan || '',
-        header.jenisPengajuan || 'RAMPUNG',
-        header.noSpm || '',
-        header.noSpby || '',
-        header.jenisPerdin || 'Perdin Luar Kota',
-        header.berangkatDari || 'Jakarta',
-        header.provinsiTujuan || '',
-        JSON.stringify(header.kotaTujuanList || []),
-        header.tanggalMulai || '',
-        header.tanggalSelesai || '',
-        header.alatAngkut || 'Angkutan Darat',
-        header.nomorStMaster || '',
-        header.nomorStStaff || '',
-        header.nomorStPejabat || '',
-        header.useDifferentStPejabat || false,
-        header.nomorMemo || '',
-        header.tanggalMemo || '',
-        header.tanggalSpd || '',
-        header.kodeMak || '524111',
-        header.kodeKomponen || '051',
-        header.itemDetail || '001',
-        header.unitKerja || 'INSPEKTORAT',
-        header.ppkNama || '',
-        header.ppkNip || '',
-        header.bendaharaNama || '',
-        header.verifikatorNama || '',
-        header.grandTotal || 0,
-        header.statusDokumen || 'FINAL',
-        new Date()
-      ]);
+      // 1. Simpan / Perbarui nomor memorandum di MASTER_MEMO (9 Kolom Baku)
+      const memoSheet = getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
+      const assignedMemo = upsertMemo(memoSheet, header.nomorMemo, {
+        tanggal: header.tanggalMemo || header.tanggalSpd || '',
+        perihal: header.keteranganMemo || header.perihal || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
+        nominal: header.grandTotal || 0,
+        mak: header.kodeMak || '524111',
+        idKegiatan: header.idKegiatan || ''
+      });
 
-      // Simpan Detail DB_PESERTA & REKAP 48 Kolom
+      // 2. Simpan / Perbarui Item Detail DIPA ke MASTER_MAK jika ada
+      if (header.itemDetail && String(header.itemDetail).trim() !== '') {
+        const makSheet = getOrCreateSheet(ss, SHEET_NAMES.MAK, DEFAULT_HEADERS.MAK);
+        upsertMakItem(makSheet, {
+          kodeKomponen: header.kodeKomponen || 'CL.7458.ABR.006.075.EE',
+          kodeMak: header.kodeMak || '524111',
+          kode: header.itemDetail,
+          nama: header.keteranganItemDetail || ''
+        });
+      }
+
+      // 3. Simpan/Update DB_KEGIATAN dengan Header-Aware Mapping
+      const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
       const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
       const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
 
-      // Bersihkan baris hantu dan baris lama sebelum menulis data baru
-      pruneGhostRows(pesertaSheet);
-      pruneGhostRows(rekapSheet);
+      // Ambil No SPM manual yang sudah ada di spreadsheet (jika ada) agar tidak tertimpa/terhapus saat simpan
+      let existingManualSpm = '';
+      if (rekapSheet.getLastRow() >= 2) {
+        const rData = rekapSheet.getDataRange().getValues();
+        const rHeaders = rData[0] || DEFAULT_HEADERS.REKAP;
+        const spmCol = rHeaders.indexOf('No SPM') !== -1 ? rHeaders.indexOf('No SPM') : 2;
+        const kegCol = rHeaders.indexOf('Nama Kegiatan') !== -1 ? rHeaders.indexOf('Nama Kegiatan') : 11;
+        for (let i = 1; i < rData.length; i++) {
+          const rowKeg = String(rData[i][kegCol] || '').trim();
+          if (rowKeg && (rowKeg === header.namaKegiatan || (header.oldNamaKegiatan && rowKeg === header.oldNamaKegiatan))) {
+            const val = String(rData[i][spmCol] || '').trim();
+            if (val) {
+              existingManualSpm = val;
+              break;
+            }
+          }
+        }
+      }
+
+      if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
+        deleteRowsByColumnValue(kegiatanSheet, 'id_kegiatan', header.oldIdKegiatan);
+      }
+
+      const rawKotaTujuan = header.kotaTujuanList;
+      const kotaTujuanListStr = typeof rawKotaTujuan === 'string' ? rawKotaTujuan : JSON.stringify(rawKotaTujuan || []);
+
+      const payloadJsonStr = header.payload_json || (payload.fullSnapshot ? JSON.stringify(payload.fullSnapshot) : '');
+      const finalNomorMemo = assignedMemo || header.nomorMemo || '';
+      const finalNoSpmToUse = header.noSpm || existingManualSpm || '';
+
+      const kegiatanData = {
+        id_kegiatan: header.idKegiatan || '',
+        kode_kegiatan: header.kodeKegiatan || '',
+        nama_kegiatan: header.namaKegiatan || '',
+        perihal: header.perihal || header.keteranganMemo || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
+        jenis_pengajuan: header.jenisPengajuan || 'RAMPUNG',
+        no_spm: finalNoSpmToUse,
+        no_spby: header.noSpby || '',
+        jenis_perdin: header.jenisPerdin || 'Perdin Luar Kota',
+        berangkat_dari: header.berangkatDari || 'Jakarta',
+        provinsi_tujuan: header.provinsiTujuan || '',
+        kota_tujuan_list: kotaTujuanListStr,
+        tanggal_mulai: header.tanggalMulai || '',
+        tanggal_selesai: header.tanggalSelesai || '',
+        alat_angkut: header.alatAngkut || 'Angkutan Darat',
+        nomor_st_master: header.nomorStMaster || '',
+        nomor_st_staf: header.nomorStStaff || header.nomorStMaster || '',
+        nomor_st_pejabat: header.nomorStPejabat || header.nomorStMaster || '',
+        use_different_st_pejabat: Boolean(header.useDifferentStPejabat),
+        nomor_memo: finalNomorMemo,
+        tanggal_memo: header.tanggalMemo || '',
+        tanggal_spd: header.tanggalSpd || '',
+        kode_mak: header.kodeMak || '524111',
+        kode_komponen: header.kodeKomponen || 'CL.7458.ABR.006.075.EE',
+        detail_komponen: header.detailKomponen || '',
+        item_detail: header.itemDetail || '001',
+        keterangan_item_detail: header.keteranganItemDetail || '',
+        unit_kerja: header.unitKerja || 'INSPEKTORAT',
+        ppk_nama: header.ppkNama || '',
+        ppk_nip: header.ppkNip || '',
+        bendahara_nama: header.bendaharaNama || '',
+        verifikator_nama: header.verifikatorNama || '',
+        penanggung_jawab_nama: header.penanggungJawabNama || '',
+        penanggung_jawab_nip: header.penanggungJawabNip || '',
+        penanggung_jawab_jabatan: header.penanggungJawabJabatan || '',
+        grand_total: header.grandTotal || 0,
+        status_dokumen: header.statusDokumen || 'FINAL',
+        payload_json: payloadJsonStr,
+        created_at: header.createdAt || new Date(),
+        updated_at: new Date()
+      };
+
+      // Cari data kegiatan sebelumnya di DB_KEGIATAN jika ini adalah update/edit
+      let prevNamaFromDb = (header.oldNamaKegiatan || '').trim();
+      let prevMemoFromDb = (header.oldNomorMemo || '').trim();
+      const targetSearchId = (header.oldIdKegiatan || header.idKegiatan || '').trim();
+
+      if (kegiatanSheet.getLastRow() >= 2 && targetSearchId) {
+        const kegData = kegiatanSheet.getDataRange().getValues();
+        const kegHeaders = kegData[0] || [];
+        const colKegId = kegHeaders.indexOf('id_kegiatan');
+        const colKegNama = kegHeaders.indexOf('nama_kegiatan');
+        const colKegMemo = kegHeaders.indexOf('nomor_memo');
+
+        if (colKegId !== -1) {
+          for (let k = 1; k < kegData.length; k++) {
+            if (String(kegData[k][colKegId] || '').trim().toLowerCase() === targetSearchId.toLowerCase()) {
+              if (!prevNamaFromDb && colKegNama !== -1) {
+                prevNamaFromDb = String(kegData[k][colKegNama] || '').trim();
+              }
+              if (!prevMemoFromDb && colKegMemo !== -1) {
+                prevMemoFromDb = String(kegData[k][colKegMemo] || '').trim();
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      upsertRowByHeaderObject(kegiatanSheet, 'id_kegiatan', header.idKegiatan, kegiatanData, DEFAULT_HEADERS.KEGIATAN);
+
+      // Bersihkan baris lama di DB_PESERTA sebelum menulis data baru
       deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.idKegiatan);
-      deleteRowsByColumnValue(rekapSheet, 'Nama Kegiatan', header.namaKegiatan);
+      if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
+        deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.oldIdKegiatan);
+      }
 
       // FILTER ANTI-HANTU: Hanya peserta yang memiliki nama yang disimpan ke database
       const validParticipants = participants.filter(p => {
@@ -286,22 +384,41 @@ function doPost(e) {
         return nama !== '' || ext !== '';
       });
 
+      // Bersihkan baris lama di REKAP_PERDIN_48KOLOM berdasarkan ID Kegiatan, Nomor Memo, dan Judul Kegiatan
+      deleteRekapRowsByKeys(rekapSheet, {
+        idKegiatan: header.idKegiatan,
+        oldIdKegiatan: header.oldIdKegiatan,
+        nomorMemo: finalNomorMemo,
+        oldNomorMemo: prevMemoFromDb || header.oldNomorMemo,
+        namaKegiatan: header.namaKegiatan,
+        oldNamaKegiatan: prevNamaFromDb || header.oldNamaKegiatan,
+        participantNames: validParticipants.map(function(p) {
+          return String(p.nama || p.spjExtra?.namaExternal || p.namaExternal || '').trim();
+        })
+      });
+
+      // Batch write: Kumpulkan semua baris lalu tulis sekaligus (5-10x lebih cepat)
+      const pesertaBatch = [];
+      const rekapBatch = [];
+
       validParticipants.forEach((p, idx) => {
         const idPeserta = header.idKegiatan + '-' + (idx + 1).toString().padStart(2, '0');
 
-        pesertaSheet.appendRow([
+        pesertaBatch.push([
           idPeserta,
           header.idKegiatan,
           p.pegawaiId || '',
           idx + 1,
           p.nomorSpd || '',
           p.nomorStAssigned || header.nomorStStaff || '',
+          finalNomorMemo,
           p.isPejabat || false,
           p.nama || '',
           p.nip || '',
           p.golongan || '',
           p.jabatan || '',
           p.tujuanKota || '',
+          p.tujuanProvinsi || header.provinsiTujuan || '',
           p.tanggalMulai || '',
           p.tanggalSelesai || '',
           p.lamaHari || 0,
@@ -309,6 +426,8 @@ function doPost(e) {
           p.biayaUhBiasa || 0,
           p.hariUh60 || 0,
           p.biayaUh60 || 0,
+          p.hariUh40 || 0,
+          p.biayaUh40 || 0,
           p.hariUhHalfday || 0,
           p.biayaUhHalfday || 0,
           p.hariUhFullboard || 0,
@@ -348,10 +467,10 @@ function doPost(e) {
           p.spjExtra?.pengembalianKas || 0
         ]);
 
-        rekapSheet.appendRow([
+        rekapBatch.push([
           header.noSpby || '',
           header.jenisPengajuan || 'RAMPUNG',
-          header.noSpm || '',
+          finalNoSpmToUse,
           '',
           p.spjExtra?.namaExternal ? '' : p.nama,
           p.spjExtra?.namaExternal || '',
@@ -377,10 +496,10 @@ function doPost(e) {
           p.hotelDetail?.tanggalCheckout || p.tanggalSelesai,
           p.hotelDetail?.jumlahMalam || 1,
           p.hariUhBiasa || 0,
-          p.hariUh60 || 0,
+          p.hariUh40 || p.hariUh60 || 0,
           p.lamaHari || 0,
           p.biayaUhBiasa || 0,
-          p.biayaUh60 || 0,
+          p.biayaUh40 || p.biayaUh60 || 0,
           (p.biayaUhHalfday || 0) + (p.biayaUhFullboard || 0),
           p.biayaHotel || 0,
           p.biayaPenginapan30 || 0,
@@ -398,25 +517,37 @@ function doPost(e) {
           p.spjExtra?.biayaReschedule || 0,
           p.totalBiaya || 0,
           p.totalBiaya || 0,
-          p.spjExtra?.pengembalianKas || 0
+          p.spjExtra?.pengembalianKas || 0,
+          header.idKegiatan || '',
+          finalNomorMemo || ''
         ]);
       });
+
+      // Batch write DB_PESERTA
+      if (pesertaBatch.length > 0) {
+        pesertaSheet.getRange(pesertaSheet.getLastRow() + 1, 1, pesertaBatch.length, pesertaBatch[0].length)
+          .setValues(pesertaBatch);
+      }
+
+      // Batch write REKAP_PERDIN_48KOLOM
+      if (rekapBatch.length > 0) {
+        const rekapCols = rekapSheet.getLastColumn();
+        const adjustedBatch = rekapBatch.map(function(row) {
+          if (row.length === rekapCols) return row;
+          if (row.length < rekapCols) {
+            const copy = row.slice();
+            while (copy.length < rekapCols) copy.push('');
+            return copy;
+          }
+          return row.slice(0, rekapCols);
+        });
+        rekapSheet.getRange(rekapSheet.getLastRow() + 1, 1, adjustedBatch.length, rekapCols)
+          .setValues(adjustedBatch);
+      }
 
       // Pembersihan akhir baris hantu setelah penulisan selesai
       pruneGhostRows(pesertaSheet);
       pruneGhostRows(rekapSheet);
-
-      // Simpan / Perbarui nomor memorandum di MASTER_MEMO (9 Kolom Baku)
-      if (header.nomorMemo && String(header.nomorMemo).trim() !== '') {
-        const memoSheet = getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
-        upsertMemo(memoSheet, header.nomorMemo, {
-          tanggal: header.tanggalMemo || '',
-          perihal: header.keteranganMemo || header.namaKegiatan || '',
-          nominal: header.grandTotal || 0,
-          mak: header.kodeMak || '',
-          idKegiatan: header.idKegiatan || ''
-        });
-      }
 
       logAction(ss, 'SAVE_PERDIN', header.idKegiatan, 'Berhasil menyimpan transaksi ' + (header.namaKegiatan || ''));
 
@@ -425,6 +556,7 @@ function doPost(e) {
         status: 'success',
         message: 'Data perjalanan dinas dan 48 kolom rekap berhasil disimpan ke Google Spreadsheet.',
         idKegiatan: header.idKegiatan,
+        assignedNomorMemo: finalNomorMemo,
         latestSpdNumber: latestSpd
       });
     }
@@ -454,18 +586,39 @@ function doPost(e) {
           const rowArray = headers.map(h => (rowObj[h] !== undefined && rowObj[h] !== null ? rowObj[h] : ''));
           const namaPegawai = (rowObj['NAMA PEGAWAI INTERNAL INSPEKTORAT'] || rowObj['NAMA EXTERNAL'] || '').toString().trim();
           const namaKegiatan = (rowObj['Nama Kegiatan'] || '').toString().trim();
+          const idKegiatan = (rowObj['id_kegiatan'] || rowObj['ID Kegiatan'] || rowObj['_spjBatchId'] || '').toString().trim();
+          const nomorMemo = (rowObj['nomor_memo'] || rowObj['Nomor Memo'] || '').toString().trim();
 
           let updated = false;
           if (rekapSheet.getLastRow() >= 2) {
             const data = rekapSheet.getDataRange().getValues();
             const colPegawai = headers.indexOf('NAMA PEGAWAI INTERNAL INSPEKTORAT');
+            const colPegawaiExt = headers.indexOf('NAMA EXTERNAL');
             const colKegiatan = headers.indexOf('Nama Kegiatan');
+            const colIdKeg = headers.indexOf('id_kegiatan') !== -1 ? headers.indexOf('id_kegiatan') : headers.indexOf('ID Kegiatan');
+            const colMemo = headers.indexOf('nomor_memo') !== -1 ? headers.indexOf('nomor_memo') : headers.indexOf('Nomor Memo');
 
             for (let i = 1; i < data.length; i++) {
-              if (
-                colKegiatan !== -1 && String(data[i][colKegiatan]).trim() === namaKegiatan &&
-                colPegawai !== -1 && String(data[i][colPegawai]).trim() === namaPegawai
-              ) {
+              const curPeg = (
+                (colPegawai !== -1 ? String(data[i][colPegawai] || '').trim() : '') ||
+                (colPegawaiExt !== -1 ? String(data[i][colPegawaiExt] || '').trim() : '')
+              );
+              const curKeg = colKegiatan !== -1 ? String(data[i][colKegiatan] || '').trim() : '';
+              const curIdKeg = colIdKeg !== -1 ? String(data[i][colIdKeg] || '').trim() : '';
+              const curMemo = colMemo !== -1 ? String(data[i][colMemo] || '').trim() : '';
+
+              const isSamePerson = namaPegawai !== '' && curPeg.toLowerCase() === namaPegawai.toLowerCase();
+
+              // Match by primary key 1: ID Kegiatan + Pegawai
+              const isMatchById = idKegiatan !== '' && curIdKeg !== '' && curIdKeg.toLowerCase() === idKegiatan.toLowerCase() && isSamePerson;
+
+              // Match by primary key 2: Nomor Memo + Pegawai
+              const isMatchByMemo = nomorMemo !== '' && curMemo !== '' && curMemo.toLowerCase() === nomorMemo.toLowerCase() && isSamePerson;
+
+              // Match by Nama Kegiatan + Pegawai
+              const isMatchByKeg = namaKegiatan !== '' && curKeg !== '' && curKeg.toLowerCase() === namaKegiatan.toLowerCase() && isSamePerson;
+
+              if (isMatchById || isMatchByMemo || isMatchByKeg) {
                 rekapSheet.getRange(i + 1, 1, 1, rowArray.length).setValues([rowArray]);
                 updated = true;
                 break;
@@ -489,6 +642,7 @@ function doPost(e) {
     if (action === 'DELETE_KEGIATAN') {
       const idKegiatan = (payload.idKegiatan || '').trim();
       const namaKegiatan = (payload.namaKegiatan || '').trim();
+      const nomorMemo = (payload.nomorMemo || '').trim();
 
       if (!idKegiatan && !namaKegiatan) {
         return createJsonResponse({ status: 'error', message: 'ID Kegiatan atau Nama Kegiatan wajib disertakan.' });
@@ -501,6 +655,13 @@ function doPost(e) {
       if (idKegiatan) {
         deleteRowsByColumnValue(kegiatanSheet, 'id_kegiatan', idKegiatan);
         deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', idKegiatan);
+        deleteRowsByColumnValue(rekapSheet, 'id_kegiatan', idKegiatan);
+        deleteRowsByColumnValue(rekapSheet, 'ID Kegiatan', idKegiatan);
+      }
+
+      if (nomorMemo) {
+        deleteRowsByColumnValue(rekapSheet, 'nomor_memo', nomorMemo);
+        deleteRowsByColumnValue(rekapSheet, 'Nomor Memo', nomorMemo);
       }
 
       if (namaKegiatan) {
@@ -662,69 +823,175 @@ function upsertPegawai(sheet, idPegawai, namaLengkap, nip, rowData) {
  * Helper: Simpan / Perbarui Baris Memorandum di MASTER_MEMO (9 Kolom Baku)
  */
 function upsertMemo(sheet, nomorMemo, info) {
-  if (!sheet) return;
-  const memoStr = String(nomorMemo || '').trim();
-  if (!memoStr) return;
-
-  // Ekstrak angka nomor urut (contoh M.321 -> 321)
-  const match = memoStr.match(/\bM\.?(\d+)/i) || memoStr.match(/(\d+)/);
-  const targetNum = match ? match[1] : '';
-
-  // Ekstrak tahun anggaran (contoh 2026)
-  const yearMatch = memoStr.match(/\/(\d{4})$/);
-  const targetYear = yearMatch ? yearMatch[1] : new Date().getFullYear();
+  if (!sheet) return '';
+  let memoStr = String(nomorMemo || '').trim();
+  const infoIdKgt = String(info.idKegiatan || '').trim();
 
   const lastRow = sheet.getLastRow();
-  if (lastRow >= 2) {
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0] || [];
-    const colTahun = headers.indexOf('tahun_anggaran');
-    const colUrut = headers.indexOf('nomor_urut');
-    const colFormat = headers.indexOf('format_lengkap');
-    const colTgl = headers.indexOf('tanggal_memo');
-    const colPerihal = headers.indexOf('perihal');
-    const colRef = headers.indexOf('id_kegiatan_ref');
-    const colStatus = headers.indexOf('status');
-    const colNominal = headers.indexOf('nominal');
-    const colMak = headers.indexOf('MAK') !== -1 ? headers.indexOf('MAK') : headers.indexOf('mak');
+  const data = lastRow >= 1 ? sheet.getDataRange().getValues() : [];
+  const headers = data[0] || DEFAULT_HEADERS.MEMO;
 
+  const colTahun = headers.indexOf('tahun_anggaran') !== -1 ? headers.indexOf('tahun_anggaran') : 0;
+  const colUrut = headers.indexOf('nomor_urut') !== -1 ? headers.indexOf('nomor_urut') : 1;
+  const colFormat = headers.indexOf('format_lengkap') !== -1 ? headers.indexOf('format_lengkap') : 2;
+  const colTgl = headers.indexOf('tanggal_memo') !== -1 ? headers.indexOf('tanggal_memo') : 3;
+  const colPerihal = headers.indexOf('perihal') !== -1 ? headers.indexOf('perihal') : 4;
+  const colRef = headers.indexOf('id_kegiatan_ref') !== -1 ? headers.indexOf('id_kegiatan_ref') : 5;
+  const colStatus = headers.indexOf('status') !== -1 ? headers.indexOf('status') : 6;
+  const colNominal = headers.indexOf('nominal') !== -1 ? headers.indexOf('nominal') : 7;
+  const colMak = headers.indexOf('MAK') !== -1 ? headers.indexOf('MAK') : (headers.indexOf('mak') !== -1 ? headers.indexOf('mak') : 8);
+
+  // 1. Hitung nomor urut tertinggi di MASTER_MEMO saat ini
+  let maxSeq = 0;
+  for (let i = 1; i < data.length; i++) {
+    const val = data[i][colUrut];
+    if (val !== undefined && val !== null && val !== '') {
+      const num = parseInt(String(val).replace(/\D/g, ''), 10);
+      if (!isNaN(num) && num > maxSeq && num < 2000) {
+        maxSeq = num;
+      }
+    }
+  }
+
+  // 2. Ekstrak nomor dari memoStr (contoh M.390/INS/PPK/IX/2026 -> 390)
+  let targetNum = '';
+  const seqMatch = memoStr.match(/\bM\.?\s*(\d+)/i) || memoStr.match(/^(\d+)/);
+  if (seqMatch) {
+    const parsedVal = parseInt(seqMatch[1], 10);
+    if (!isNaN(parsedVal) && parsedVal < 2000) {
+      targetNum = String(parsedVal);
+    }
+  }
+
+  // Tentukan bulan romawi dan tahun
+  let romanMonth = 'X';
+  let memoYear = '2026';
+  if (info.tanggal) {
+    try {
+      const d = new Date(info.tanggal);
+      if (!isNaN(d.getTime())) {
+        const romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+        romanMonth = romans[d.getMonth()] || 'X';
+        memoYear = String(d.getFullYear());
+      }
+    } catch (e) {}
+  }
+
+  // Jika nomorMemo berisi 'xxx' atau kosong/tidak valid, alokasikan nomor urut berikutnya secara otomatis
+  if (!targetNum || memoStr.toLowerCase().includes('xxx')) {
+    const nextNum = maxSeq > 0 ? maxSeq + 1 : 321;
+    targetNum = String(nextNum);
+    memoStr = 'M.' + targetNum + '/INS/PPK/' + romanMonth + '/' + memoYear;
+  }
+
+  // Ekstrak tahun anggaran
+  let targetYear = memoYear;
+  const yearMatch = memoStr.match(/\/(\d{4})$/);
+  if (yearMatch) {
+    targetYear = yearMatch[1];
+  }
+
+  // 3. Cek apakah baris memo sudah ada di MASTER_MEMO (Cocokkan via id_kegiatan_ref, format_lengkap, atau nomor_urut)
+  if (lastRow >= 2) {
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
+      const rowRef = String(colRef !== -1 ? row[colRef] : row[5] || '').trim();
       const rowFormat = String(colFormat !== -1 ? row[colFormat] : row[2] || '').trim().toLowerCase();
       const rowUrut = String(colUrut !== -1 ? row[colUrut] : row[1] || '').trim();
 
-      if (
-        (rowFormat && rowFormat === memoStr.toLowerCase()) ||
-        (targetNum && rowUrut && rowUrut === targetNum)
-      ) {
-        // Baris terdaftar ditemukan -> Perbarui data
+      const isMatchRef = infoIdKgt && rowRef && rowRef.toLowerCase() === infoIdKgt.toLowerCase();
+      const isMatchFormat = rowFormat && (rowFormat === memoStr.toLowerCase() || (targetNum && rowFormat.startsWith('m.' + targetNum.toLowerCase())));
+      const isMatchUrut = targetNum && rowUrut && rowUrut === targetNum;
+
+      if (isMatchRef || isMatchFormat || isMatchUrut) {
         const rowNum = i + 1;
+        if (colTahun !== -1) sheet.getRange(rowNum, colTahun + 1).setValue(targetYear);
+        if (colUrut !== -1) sheet.getRange(rowNum, colUrut + 1).setValue(Number(targetNum));
         if (colFormat !== -1) sheet.getRange(rowNum, colFormat + 1).setValue(memoStr);
         if (colTgl !== -1 && info.tanggal) sheet.getRange(rowNum, colTgl + 1).setValue(info.tanggal);
         if (colPerihal !== -1 && info.perihal) sheet.getRange(rowNum, colPerihal + 1).setValue(info.perihal);
-        if (colRef !== -1 && info.idKegiatan) sheet.getRange(rowNum, colRef + 1).setValue(info.idKegiatan);
+        if (colRef !== -1 && infoIdKgt) sheet.getRange(rowNum, colRef + 1).setValue(infoIdKgt);
         if (colStatus !== -1) sheet.getRange(rowNum, colStatus + 1).setValue('TERPAKAI');
         if (colNominal !== -1 && info.nominal !== undefined && info.nominal !== null) {
           sheet.getRange(rowNum, colNominal + 1).setValue(info.nominal);
         }
         if (colMak !== -1 && info.mak) sheet.getRange(rowNum, colMak + 1).setValue(info.mak);
+        return memoStr;
+      }
+    }
+  }
+
+  // 4. Jika belum ada di MASTER_MEMO, tambahkan baris baru
+  const newRow = [
+    targetYear,
+    Number(targetNum),
+    memoStr,
+    info.tanggal || '',
+    info.perihal || '',
+    infoIdKgt,
+    'TERPAKAI',
+    info.nominal !== undefined && info.nominal !== null ? info.nominal : '',
+    info.mak || ''
+  ];
+  sheet.appendRow(newRow);
+  return memoStr;
+}
+
+/**
+ * Helper: Simpan / Perbarui Baris Item Detail di MASTER_MAK
+ */
+function upsertMakItem(sheet, item) {
+  if (!sheet || !item || !item.kode) return;
+  const lastRow = sheet.getLastRow();
+  const kodeItem = String(item.kode).trim();
+  const namaItem = String(item.nama || '').trim();
+  const kodeMak = String(item.kodeMak || item.kode_mak || '524111').trim();
+  const kodeKomponen = String(item.kodeKomponen || item.kode_komponen || 'CL.7458.ABR.006.075.EE').trim();
+  const fullLabel = kodeItem + (namaItem ? ' - ' + namaItem : '');
+
+  if (lastRow >= 2) {
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0] || DEFAULT_HEADERS.MAK;
+    const colKode = headers.indexOf('kode_item') !== -1 ? headers.indexOf('kode_item') : 3;
+    const colNama = headers.indexOf('nama_item') !== -1 ? headers.indexOf('nama_item') : 4;
+    const colKomp = headers.indexOf('kode_komponen') !== -1 ? headers.indexOf('kode_komponen') : 0;
+    const colMak = headers.indexOf('kode_mak') !== -1 ? headers.indexOf('kode_mak') : 1;
+    const colFull = headers.indexOf('full_label') !== -1 ? headers.indexOf('full_label') : 5;
+
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][colKode]).trim() === kodeItem) {
+        const r = i + 1;
+        if (colKomp !== -1 && kodeKomponen) sheet.getRange(r, colKomp + 1).setValue(kodeKomponen);
+        if (colMak !== -1 && kodeMak) sheet.getRange(r, colMak + 1).setValue(kodeMak);
+        if (colNama !== -1 && namaItem) sheet.getRange(r, colNama + 1).setValue(namaItem);
+        if (colFull !== -1 && fullLabel) sheet.getRange(r, colFull + 1).setValue(fullLabel);
         return;
       }
     }
   }
 
-  // Jika baris nomor memo belum ada di database, otomatis tambahkan baris baru
   sheet.appendRow([
-    targetYear,
-    targetNum ? Number(targetNum) : '',
-    memoStr,
-    info.tanggal || '',
-    info.perihal || '',
-    info.idKegiatan || '',
-    'TERPAKAI',
-    info.nominal !== undefined && info.nominal !== null ? info.nominal : '',
-    info.mak || ''
+    kodeKomponen,
+    kodeMak,
+    getMakNameByCode(kodeMak),
+    kodeItem,
+    namaItem,
+    fullLabel,
+    kodeMak
   ]);
+}
+
+function getMakNameByCode(code) {
+  const c = String(code || '').trim();
+  if (c === '524111') return 'Belanja Perjalanan Dinas Biasa';
+  if (c === '524113') return 'Belanja Perjalanan Dinas Dalam Kota';
+  if (c === '524114') return 'Belanja Perjalanan Dinas Paket Meeting Dalam Kota';
+  if (c === '524119') return 'Belanja Perjalanan Dinas Paket Meeting Luar Kota';
+  if (c === '522141') return 'Belanja Sewa';
+  if (c === '521211') return 'Belanja Bahan';
+  if (c === '521213') return 'Honor Output Kegiatan';
+  if (c === '521811') return 'Belanja Barang Persediaan Barang Konsumsi';
+  return 'Belanja Perjalanan Dinas';
 }
 
 /**
@@ -739,6 +1006,16 @@ function getOrCreateSheet(ss, sheetName, defaultHeaders) {
     }
   } else if (sheet.getLastRow() === 0 && defaultHeaders && defaultHeaders.length > 0) {
     sheet.appendRow(defaultHeaders);
+  } else if (defaultHeaders && defaultHeaders.length > 0 && sheet.getLastRow() >= 1) {
+    // Pastikan header baru yang belum ada di row 1 ditambahkan!
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0] || [];
+    const missingHeaders = defaultHeaders.filter(function(h) {
+      return h !== '' && headers.indexOf(h) === -1;
+    });
+    if (missingHeaders.length > 0) {
+      const startCol = headers.length + 1;
+      sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
+    }
   }
   return sheet;
 }
@@ -755,17 +1032,76 @@ function sheetToObjects(sheet) {
   const data = sheet.getDataRange().getValues();
   if (data.length < 2) return [];
 
+  let tz = 'Asia/Jakarta';
+  try {
+    const ss = sheet.getParent() || SpreadsheetApp.getActiveSpreadsheet();
+    if (ss && ss.getSpreadsheetTimeZone()) {
+      tz = ss.getSpreadsheetTimeZone();
+    }
+  } catch (e) {}
+
   const headers = data[0];
   const rows = data.slice(1);
 
   return rows.map(row => {
     const obj = {};
     headers.forEach((header, index) => {
-      const key = header ? String(header).trim() : `_col_${index}`;
-      obj[key] = row[index];
+      const cleanKey = header
+        ? String(header).replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim()
+        : `_col_${index}`;
+      const key = cleanKey || `_col_${index}`;
+      let val = row[index];
+      if (val instanceof Date && !isNaN(val.getTime())) {
+        val = Utilities.formatDate(val, tz, 'yyyy-MM-dd');
+      }
+      obj[key] = val;
     });
     return obj;
   });
+}
+
+function upsertRowByHeaderObject(sheet, keyColumnName, keyValue, rowObject, defaultHeaders) {
+  if (!sheet) return;
+
+  if (sheet.getLastRow() === 0 && defaultHeaders && defaultHeaders.length > 0) {
+    sheet.appendRow(defaultHeaders);
+  }
+
+  const lastRow = sheet.getLastRow();
+  let headers = [];
+  if (lastRow > 0) {
+    headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0] || [];
+  } else if (defaultHeaders && defaultHeaders.length > 0) {
+    headers = defaultHeaders;
+  }
+
+  // Tambahkan kolom header default yang belum ada di lembar kerja
+  if (defaultHeaders && defaultHeaders.length > 0) {
+    const missingHeaders = defaultHeaders.filter(function(h) { return headers.indexOf(h) === -1; });
+    if (missingHeaders.length > 0) {
+      const startCol = headers.length + 1;
+      sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
+      headers = headers.concat(missingHeaders);
+    }
+  }
+
+  const rowData = headers.map(function(headerKey) {
+    const key = String(headerKey).trim();
+    return rowObject[key] !== undefined && rowObject[key] !== null ? rowObject[key] : '';
+  });
+
+  const keyIndex = headers.indexOf(keyColumnName);
+  if (keyIndex !== -1 && lastRow >= 2) {
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][keyIndex]).trim().toLowerCase() === String(keyValue).trim().toLowerCase()) {
+        sheet.getRange(i + 1, 1, 1, rowData.length).setValues([rowData]);
+        return;
+      }
+    }
+  }
+
+  sheet.appendRow(rowData);
 }
 
 function upsertRowById(sheet, keyColumnName, keyValue, rowData) {
@@ -800,7 +1136,83 @@ function deleteRowsByColumnValue(sheet, columnName, value) {
   if (colIndex === -1) return;
 
   for (let i = data.length - 1; i >= 1; i--) {
-    if (data[i][colIndex] === value) {
+    if (String(data[i][colIndex] || '').trim() === String(value || '').trim()) {
+      sheet.deleteRow(i + 1);
+    }
+  }
+}
+
+/**
+ * Helper: Hapus seluruh baris lama di REKAP_PERDIN_48KOLOM berdasarkan ID Kegiatan, Nomor Memo, dan Judul Kegiatan
+ */
+function deleteRekapRowsByKeys(sheet, criteria) {
+  if (!sheet || sheet.getLastRow() < 2) return;
+
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0] || [];
+
+  const colIdKeg = headers.indexOf('id_kegiatan') !== -1 ? headers.indexOf('id_kegiatan') : headers.indexOf('ID Kegiatan');
+  const colMemo = headers.indexOf('nomor_memo') !== -1 ? headers.indexOf('nomor_memo') : headers.indexOf('Nomor Memo');
+  const colKegiatan = headers.indexOf('Nama Kegiatan');
+  const colPegawaiInt = headers.indexOf('NAMA PEGAWAI INTERNAL INSPEKTORAT');
+  const colPegawaiExt = headers.indexOf('NAMA EXTERNAL');
+
+  const curId = criteria.idKegiatan ? String(criteria.idKegiatan).trim().toLowerCase() : '';
+  const oldId = criteria.oldIdKegiatan ? String(criteria.oldIdKegiatan).trim().toLowerCase() : '';
+  const curMemo = criteria.nomorMemo ? String(criteria.nomorMemo).trim().toLowerCase() : '';
+  const oldMemo = criteria.oldNomorMemo ? String(criteria.oldNomorMemo).trim().toLowerCase() : '';
+  const curKeg = criteria.namaKegiatan ? String(criteria.namaKegiatan).trim().toLowerCase() : '';
+  const oldKeg = criteria.oldNamaKegiatan ? String(criteria.oldNamaKegiatan).trim().toLowerCase() : '';
+  const participantNames = (criteria.participantNames || []).map(function(n) { return String(n).trim().toLowerCase(); }).filter(Boolean);
+
+  for (let i = data.length - 1; i >= 1; i--) {
+    const row = data[i];
+    const rowId = colIdKeg !== -1 ? String(row[colIdKeg] || '').trim().toLowerCase() : '';
+    const rowMemo = colMemo !== -1 ? String(row[colMemo] || '').trim().toLowerCase() : '';
+    const rowKeg = colKegiatan !== -1 ? String(row[colKegiatan] || '').trim().toLowerCase() : '';
+    const rowName = (
+      (colPegawaiInt !== -1 ? String(row[colPegawaiInt] || '').trim() : '') ||
+      (colPegawaiExt !== -1 ? String(row[colPegawaiExt] || '').trim() : '')
+    ).toLowerCase();
+
+    let shouldDelete = false;
+
+    // 1. Primary key 1: ID Kegiatan match
+    if (rowId !== '') {
+      if ((curId && rowId === curId) || (oldId && rowId === oldId)) {
+        shouldDelete = true;
+      }
+    }
+
+    // 2. Primary key 2: Nomor Memo match
+    if (!shouldDelete && rowMemo !== '') {
+      if ((curMemo && rowMemo === curMemo) || (oldMemo && rowMemo === oldMemo)) {
+        shouldDelete = true;
+      }
+    }
+
+    // 3. Nama Kegiatan match (Judul Lama atau Judul Baru)
+    if (!shouldDelete && rowKeg !== '') {
+      if (oldKeg && rowKeg === oldKeg) {
+        shouldDelete = true;
+      } else if (curKeg && rowKeg === curKeg) {
+        shouldDelete = true;
+      }
+    }
+
+    // 4. Participant match when old title or memo was altered
+    if (!shouldDelete && participantNames.length > 0 && rowName !== '') {
+      const isParticipantMatch = participantNames.indexOf(rowName) !== -1;
+      if (isParticipantMatch) {
+        if (oldKeg && (rowKeg === oldKeg || rowKeg.indexOf(oldKeg) !== -1 || oldKeg.indexOf(rowKeg) !== -1)) {
+          shouldDelete = true;
+        } else if (oldMemo && rowMemo === oldMemo) {
+          shouldDelete = true;
+        }
+      }
+    }
+
+    if (shouldDelete) {
       sheet.deleteRow(i + 1);
     }
   }
@@ -819,32 +1231,122 @@ function logAction(ss, action, refId, details) {
 }
 
 /**
- * Ambil nomor SPD tertinggi dari tab DB_PESERTA
+ * Ambil nomor SPD tertinggi dari seluruh database (DB_PESERTA, DB_KEGIATAN & REKAP_PERDIN_48KOLOM)
  */
 function getLatestSpdNumberFromSheet(ss) {
   try {
-    const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
-    const lastRow = pesertaSheet.getLastRow();
-    if (lastRow <= 1) return 0;
-
-    const data = pesertaSheet.getDataRange().getValues();
-    const headers = data[0];
-    const spdIdx = headers.indexOf('nomor_spd');
-    if (spdIdx === -1) return 0;
-
     let maxSpd = 0;
-    for (let i = 1; i < data.length; i++) {
-      const val = data[i][spdIdx];
-      if (val !== undefined && val !== null && val !== '') {
-        const match = String(val).match(/\d+/);
-        if (match) {
-          const num = parseInt(match[0], 10);
-          if (!isNaN(num) && num > maxSpd) {
-            maxSpd = num;
+
+    // Helper untuk membersihkan string header dari karakter tak terlihat (Zero-Width Space dsb)
+    function cleanStr(s) {
+      return String(s || '').replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim().toLowerCase();
+    }
+
+    // 1. Pindai tab DB_PESERTA
+    const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
+    const lastRowPeserta = pesertaSheet.getLastRow();
+    if (lastRowPeserta >= 2) {
+      const data = pesertaSheet.getDataRange().getValues();
+      const headers = data[0] || [];
+      let spdIdx = -1;
+      for (let c = 0; c < headers.length; c++) {
+        const hClean = cleanStr(headers[c]);
+        if (hClean === 'nomor_spd' || hClean === 'nomorspd' || hClean === 'spd') {
+          spdIdx = c;
+          break;
+        }
+      }
+      // Fallback ke kolom E (index 4) jika header tidak ditemukan
+      if (spdIdx === -1 && headers.length > 4) {
+        spdIdx = 4;
+      }
+
+      if (spdIdx !== -1) {
+        for (let i = 1; i < data.length; i++) {
+          const val = data[i][spdIdx];
+          if (val !== undefined && val !== null && val !== '') {
+            const match = String(val).match(/\d+/);
+            if (match) {
+              const num = parseInt(match[0], 10);
+              if (!isNaN(num) && num > maxSpd && num < 100000) {
+                maxSpd = num;
+              }
+            }
           }
         }
       }
     }
+
+    // 2. Pindai tab DB_KEGIATAN (payload_json) jika ada
+    const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
+    const lastRowKegiatan = kegiatanSheet.getLastRow();
+    if (lastRowKegiatan >= 2) {
+      const kData = kegiatanSheet.getDataRange().getValues();
+      const kHeaders = kData[0] || [];
+      let jsonIdx = -1;
+      for (let c = 0; c < kHeaders.length; c++) {
+        const hClean = cleanStr(kHeaders[c]);
+        if (hClean === 'payload_json' || hClean === 'payloadjson') {
+          jsonIdx = c;
+          break;
+        }
+      }
+
+      if (jsonIdx !== -1) {
+        for (let i = 1; i < kData.length; i++) {
+          const raw = String(kData[i][jsonIdx] || '');
+          if (raw.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(raw);
+              if (parsed && Array.isArray(parsed.rows)) {
+                for (let j = 0; j < parsed.rows.length; j++) {
+                  const rSpd = parsed.rows[j].nomorSpd;
+                  if (rSpd) {
+                    const m = String(rSpd).match(/\d+/);
+                    if (m) {
+                      const n = parseInt(m[0], 10);
+                      if (!isNaN(n) && n > maxSpd && n < 100000) {
+                        maxSpd = n;
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    }
+
+    // 3. Pindai tab REKAP_PERDIN_48KOLOM jika ada
+    const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
+    if (rekapSheet.getLastRow() >= 2) {
+      const rData = rekapSheet.getDataRange().getValues();
+      const rHeaders = rData[0] || [];
+      let rSpdIdx = -1;
+      for (let c = 0; c < rHeaders.length; c++) {
+        const hClean = cleanStr(rHeaders[c]);
+        if (hClean.includes('spd')) {
+          rSpdIdx = c;
+          break;
+        }
+      }
+      if (rSpdIdx !== -1) {
+        for (let i = 1; i < rData.length; i++) {
+          const val = rData[i][rSpdIdx];
+          if (val !== undefined && val !== null && val !== '') {
+            const m = String(val).match(/\d+/);
+            if (m) {
+              const n = parseInt(m[0], 10);
+              if (!isNaN(n) && n > maxSpd && n < 100000) {
+                maxSpd = n;
+              }
+            }
+          }
+        }
+      }
+    }
+
     return maxSpd;
   } catch (err) {
     return 0;

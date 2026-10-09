@@ -201,8 +201,10 @@ export default function Home() {
     text: string;
   } | null>(null);
 
-  // Track whether we are editing an existing activity and what its original ID was
+  // Track whether we are editing an existing activity and what its original ID, title, and memo were
   const [editingOriginalId, setEditingOriginalId] = useState<string | null>(null);
+  const [editingOriginalTitle, setEditingOriginalTitle] = useState<string | null>(null);
+  const [editingOriginalMemo, setEditingOriginalMemo] = useState<string | null>(null);
 
   // Participant Rows State (Clean initial empty row dengan nomor SPD berlanjut dari database)
   const [rows, setRows] = useState<ParticipantRow[]>(() => {
@@ -473,6 +475,8 @@ export default function Home() {
     if (kegiatan.activeCols) setActiveCols(kegiatan.activeCols);
     if (kegiatan.activeUh) setActiveUh(kegiatan.activeUh);
     setEditingOriginalId(kegiatan.idKegiatan);
+    setEditingOriginalTitle(kegiatan.namaKegiatan || kegiatan.header?.keteranganKegiatan || null);
+    setEditingOriginalMemo(kegiatan.header?.nomorMemo || null);
     setSavedBatchId(kegiatan.idKegiatan);
     setSavedSnapshot(JSON.stringify({ header: kegiatan.header, rows: kegiatan.rows }));
     setActiveTab("input");
@@ -481,6 +485,8 @@ export default function Home() {
   // Start fresh kegiatan with clean state and next sequential ID
   const handleCreateNewKegiatan = () => {
     setEditingOriginalId(null);
+    setEditingOriginalTitle(null);
+    setEditingOriginalMemo(null);
     const today = new Date().toISOString().split("T")[0];
     const nextNo = getNextNoKegiatan(today, "A");
     const newId = generateIdKegiatan(today, nextNo, "A");
@@ -634,6 +640,8 @@ export default function Home() {
       }
 
       const oldBatchId = editingOriginalId || savedBatchId || undefined;
+      const oldNama = editingOriginalTitle || undefined;
+      const oldMemo = editingOriginalMemo || undefined;
 
       // 1. Simpan ke database master kegiatan lokal (Daftar Kegiatan)
       saveKegiatanRecord(
@@ -652,7 +660,9 @@ export default function Home() {
           activeUh,
           updatedAt: new Date().toISOString(),
         },
-        oldBatchId
+        oldBatchId,
+        oldNama,
+        oldMemo
       );
       setTotalKegiatanCount(getSavedKegiatanList().length);
 
@@ -666,8 +676,17 @@ export default function Home() {
       }
 
       // 2. Simpan / perbarui ke Rekap Perdin lokal terlebih dahulu (instan)
-      const { isUpdate } = saveOrUpdateRekapLocal(updatedHeader, validRows, idKegiatan, oldBatchId);
+      const { isUpdate } = saveOrUpdateRekapLocal(
+        updatedHeader,
+        validRows,
+        idKegiatan,
+        oldBatchId,
+        oldNama,
+        oldMemo
+      );
       setEditingOriginalId(idKegiatan);
+      setEditingOriginalTitle(updatedHeader.keteranganKegiatan || null);
+      setEditingOriginalMemo(updatedHeader.nomorMemo || null);
       setSavedBatchId(idKegiatan);
       setSavedSnapshot(JSON.stringify({ header: updatedHeader, rows: validRows }));
 
@@ -677,7 +696,12 @@ export default function Home() {
         validRows,
         undefined,
         oldBatchId,
-        { activeCols, activeUh }
+        {
+          activeCols,
+          activeUh,
+          oldNamaKegiatan: oldNama,
+          oldNomorMemo: oldMemo,
+        }
       );
 
       if (sheetRes.success) {

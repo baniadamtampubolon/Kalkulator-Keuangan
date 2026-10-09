@@ -197,7 +197,12 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
 
     // 2. Hapus dari Google Spreadsheet Cloud
     try {
-      const cloudRes = await deleteKegiatanFromGoogleSheet(target.idKegiatan, target.namaKegiatan);
+      const cloudRes = await deleteKegiatanFromGoogleSheet(
+        target.idKegiatan,
+        target.namaKegiatan,
+        undefined,
+        target.header?.nomorMemo
+      );
       setNotification({
         type: "success",
         message: cloudRes.success
