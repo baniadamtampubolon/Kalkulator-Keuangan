@@ -83,7 +83,84 @@ export function detectKategoriFromRows(rows: ParticipantRow[]): "A" | "NA" {
 }
 
 /**
- * Ambil daftar kegiatan tersimpan dari localStorage
+ * Urutkan daftar kegiatan berdasarkan kegiatan yang terbaru:
+ * 1. Prioritaskan ID Kegiatan (KEG-YYMM-XXX) karena penomoran paket kegiatan selalu bertambah seiring kegiatan baru dibuat
+ * 2. Tanggal kegiatan (tanggalSpd) terbaru
+ * 3. Waktu update / create terbaru
+ * 4. Nomor SPD tertinggi
+ */
+export function sortKegiatanByNewest(list: SavedKegiatan[]): SavedKegiatan[] {
+  if (!Array.isArray(list)) return [];
+
+  const parseIdScore = (id?: string): number => {
+    if (!id) return 0;
+    // Format standar: KEG-YYMM-XXX-A/NA (contoh: KEG-2610-002-A -> 202610002)
+    const match = id.match(/KEG-(\d{2})(\d{2})-(\d+)/i);
+    if (match) {
+      const yy = parseInt(match[1], 10);
+      const mm = parseInt(match[2], 10);
+      const seq = parseInt(match[3], 10);
+      return (2000 + yy) * 1000000 + mm * 10000 + seq;
+    }
+    // Format legacy: K-ddmmyy-no-A/B
+    const legMatch = id.match(/K-(\d{2})(\d{2})(\d{2})-(\d+)/i);
+    if (legMatch) {
+      const mm = parseInt(legMatch[2], 10);
+      const yy = parseInt(legMatch[3], 10);
+      const seq = parseInt(legMatch[4], 10);
+      return (2000 + yy) * 1000000 + mm * 10000 + seq;
+    }
+    return 0;
+  };
+
+  const getMaxSpd = (item: SavedKegiatan): number => {
+    let max = 0;
+    (item.rows || []).forEach((r) => {
+      const num = parseInt(String(r.nomorSpd || "").replace(/\D/g, ""), 10);
+      if (!isNaN(num) && num > max) max = num;
+    });
+    return max;
+  };
+
+  return [...list].sort((a, b) => {
+    // 1. Bandingkan ID Score (Nomor urut paket kegiatan yang lebih tinggi / baru dibuat)
+    const scoreA = parseIdScore(a.idKegiatan);
+    const scoreB = parseIdScore(b.idKegiatan);
+    if (scoreA !== scoreB && scoreA > 0 && scoreB > 0) {
+      return scoreB - scoreA;
+    }
+
+    // 2. Bandingkan tanggal kegiatan / Tanggal SPD
+    const dateA = a.tanggalSpd ? new Date(a.tanggalSpd).getTime() : 0;
+    const dateB = b.tanggalSpd ? new Date(b.tanggalSpd).getTime() : 0;
+    const vDateA = !isNaN(dateA) ? dateA : 0;
+    const vDateB = !isNaN(dateB) ? dateB : 0;
+    if (vDateA !== vDateB) {
+      return vDateB - vDateA;
+    }
+
+    // 3. Bandingkan timestamp update/create
+    const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+    const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+    const vTimeA = !isNaN(timeA) ? timeA : 0;
+    const vTimeB = !isNaN(timeB) ? timeB : 0;
+    if (vTimeA !== vTimeB && vTimeA > 0 && vTimeB > 0) {
+      return vTimeB - vTimeA;
+    }
+
+    // 4. Bandingkan nomor SPD tertinggi
+    const spdA = getMaxSpd(a);
+    const spdB = getMaxSpd(b);
+    if (spdA !== spdB && spdA > 0 && spdB > 0) {
+      return spdB - spdA;
+    }
+
+    return (b.idKegiatan || "").localeCompare(a.idKegiatan || "");
+  });
+}
+
+/**
+ * Ambil daftar kegiatan tersimpan dari localStorage (selalu terurut dari yang terbaru)
  */
 export function getSavedKegiatanList(): SavedKegiatan[] {
   if (typeof window === "undefined") return [];
@@ -91,7 +168,8 @@ export function getSavedKegiatanList(): SavedKegiatan[] {
     const raw = localStorage.getItem(STORAGE_KEY_KEGIATAN);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const list = Array.isArray(parsed) ? parsed : [];
+    return sortKegiatanByNewest(list);
   } catch (err) {
     console.error("Gagal membaca daftar kegiatan dari storage:", err);
     return [];
@@ -181,6 +259,8 @@ export function saveKegiatanRecord(
     recordToSave.createdAt = timestamp;
     updatedList = [recordToSave, ...currentList];
   }
+
+  updatedList = sortKegiatanByNewest(updatedList);
 
   try {
     localStorage.setItem(STORAGE_KEY_KEGIATAN, JSON.stringify(updatedList));

@@ -1,5 +1,5 @@
 import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan, RiilItem, TicketDetail } from "./types";
-import { generateIdKegiatan, getSavedKegiatanList } from "./kegiatanHelper";
+import { generateIdKegiatan, getSavedKegiatanList, sortKegiatanByNewest } from "./kegiatanHelper";
 import { buildRekapFromSavedKegiatanList, deduplicateRekapRows, isSameRekapRow } from "./rekapHelper";
 import { getMonthRoman } from "./calc";
 import { parseSpdNumber, saveLatestRegisteredSpdNumber } from "./spdHelper";
@@ -1276,7 +1276,7 @@ export async function fetchKegiatanFromSheet(
       return true;
     });
 
-    const mergedKegiatanList = [...parsedList, ...trulyNewLocalDrafts];
+    const mergedKegiatanList = sortKegiatanByNewest([...parsedList, ...trulyNewLocalDrafts]);
 
     // Simpan ke localStorage agar offline / subsequent render cepat
     if (typeof window !== "undefined") {

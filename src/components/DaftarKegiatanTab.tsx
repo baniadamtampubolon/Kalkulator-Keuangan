@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { SavedKegiatan } from "@/lib/types";
 import {
   getSavedKegiatanList,
   deleteKegiatanRecord,
+  sortKegiatanByNewest,
 } from "@/lib/kegiatanHelper";
 import { fetchKegiatanFromSheet, deleteKegiatanFromGoogleSheet } from "@/lib/googleSheetsService";
 import {
@@ -29,6 +30,7 @@ import {
   Layers,
   Edit3,
   Trash2,
+  ArrowDownWideNarrow,
 } from "lucide-react";
 
 interface DaftarKegiatanTabProps {
@@ -54,6 +56,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterKategori, setFilterKategori] = useState<"ALL" | "A" | "NA">("ALL");
+  const [sortBy, setSortBy] = useState<"NEWEST" | "DATE_DESC" | "OLDEST" | "NAME_AZ">("NEWEST");
   const [isLoadingCloud, setIsLoadingCloud] = useState<boolean>(false);
 
   // Modal Delete State
@@ -69,7 +72,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
     try {
       const res = await fetchKegiatanFromSheet();
       if (res.success && res.data) {
-        setKegiatanList(res.data);
+        setKegiatanList(sortKegiatanByNewest(res.data));
         setNotification({
           type: "success",
           message: `Berhasil menyinkronkan ${res.data.length} paket kegiatan dari Google Spreadsheet.`,
@@ -99,7 +102,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
       .then((res) => {
         if (isMounted) {
           if (res.success && res.data) {
-            setKegiatanList(res.data);
+            setKegiatanList(sortKegiatanByNewest(res.data));
           }
           setIsLoadingCloud(false);
         }
@@ -110,7 +113,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
 
     const handleUpdate = () => {
       const updated = getSavedKegiatanList();
-      if (isMounted) setKegiatanList(updated);
+      if (isMounted) setKegiatanList(sortKegiatanByNewest(updated));
     };
 
     window.addEventListener("kegiatan-list-updated", handleUpdate);
@@ -135,31 +138,49 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
     });
   };
 
-  // Filter activities
-  const filteredList = kegiatanList.filter((item) => {
-    const term = searchTerm.toLowerCase();
-    const matchesSearch =
-      (item.namaKegiatan || "").toLowerCase().includes(term) ||
-      (item.idKegiatan || "").toLowerCase().includes(term) ||
-      (item.kotaTujuan || "").toLowerCase().includes(term) ||
-      (item.provinsiTujuan || "").toLowerCase().includes(term) ||
-      (item.header?.nomorStMaster || "").toLowerCase().includes(term) ||
-      (item.header?.nomorMemo || "").toLowerCase().includes(term) ||
-      (item.header?.nomorMak || "").toLowerCase().includes(term) ||
-      (item.rows || []).some((r) =>
-        (r.nama || r.namaExternal || r.kodeNama || r.nip || "").toLowerCase().includes(term)
-      );
+  // Filter & Sort activities (Default: selalu terurut dari kegiatan paling baru)
+  const filteredList = useMemo(() => {
+    const list = kegiatanList.filter((item) => {
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+        (item.namaKegiatan || "").toLowerCase().includes(term) ||
+        (item.idKegiatan || "").toLowerCase().includes(term) ||
+        (item.kotaTujuan || "").toLowerCase().includes(term) ||
+        (item.provinsiTujuan || "").toLowerCase().includes(term) ||
+        (item.header?.nomorStMaster || "").toLowerCase().includes(term) ||
+        (item.header?.nomorMemo || "").toLowerCase().includes(term) ||
+        (item.header?.nomorMak || "").toLowerCase().includes(term) ||
+        (item.rows || []).some((r) =>
+          (r.nama || r.namaExternal || r.kodeNama || r.nip || "").toLowerCase().includes(term)
+        );
 
-    const isItemNonAsn = item.kategori === "NA" || (item.kategori as string) === "B";
-    const matchesKategori =
-      filterKategori === "ALL"
-        ? true
-        : filterKategori === "NA"
-        ? isItemNonAsn
-        : item.kategori === "A";
+      const isItemNonAsn = item.kategori === "NA" || (item.kategori as string) === "B";
+      const matchesKategori =
+        filterKategori === "ALL"
+          ? true
+          : filterKategori === "NA"
+          ? isItemNonAsn
+          : item.kategori === "A";
 
-    return matchesSearch && matchesKategori;
-  });
+      return matchesSearch && matchesKategori;
+    });
+
+    if (sortBy === "NEWEST") {
+      return sortKegiatanByNewest(list);
+    } else if (sortBy === "DATE_DESC") {
+      return [...list].sort((a, b) => {
+        const dA = a.tanggalSpd ? new Date(a.tanggalSpd).getTime() : 0;
+        const dB = b.tanggalSpd ? new Date(b.tanggalSpd).getTime() : 0;
+        return dB - dA;
+      });
+    } else if (sortBy === "OLDEST") {
+      return [...sortKegiatanByNewest(list)].reverse();
+    } else if (sortBy === "NAME_AZ") {
+      return [...list].sort((a, b) => (a.namaKegiatan || "").localeCompare(b.namaKegiatan || ""));
+    }
+
+    return sortKegiatanByNewest(list);
+  }, [kegiatanList, searchTerm, filterKategori, sortBy]);
 
   const countAsn = kegiatanList.filter((k) => k.kategori === "A").length;
   const countNonAsn = kegiatanList.filter((k) => k.kategori === "NA" || (k.kategori as string) === "B").length;
@@ -384,8 +405,29 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
             </button>
           </div>
 
-          <div className="text-[11px] text-slate-400 font-mono">
-            Format Standar: <span className="text-slate-700 font-bold">KEG-YYMM-001-A</span>
+          {/* Right: Sort Selector & Format info */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-[11px] text-slate-500 font-medium inline-flex items-center gap-1">
+                <ArrowDownWideNarrow className="w-3.5 h-3.5 text-slate-400" />
+                <span>Urutkan:</span>
+              </span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as "NEWEST" | "DATE_DESC" | "OLDEST" | "NAME_AZ")}
+                className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl px-2.5 py-1 text-xs font-semibold text-slate-700 cursor-pointer shadow-2xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                title="Pilih urutan daftar kegiatan"
+              >
+                <option value="NEWEST">⚡ Terbaru (Default)</option>
+                <option value="DATE_DESC">📅 Tanggal Pelaksanaan Terbaru</option>
+                <option value="OLDEST">⏳ Terlama Dahulu</option>
+                <option value="NAME_AZ">🔤 Nama Kegiatan (A - Z)</option>
+              </select>
+            </div>
+
+            <div className="hidden md:block text-[11px] text-slate-400 font-mono border-l border-slate-200 pl-3">
+              Format: <span className="text-slate-700 font-bold">KEG-YYMM-001-A</span>
+            </div>
           </div>
         </div>
 
