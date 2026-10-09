@@ -1588,5 +1588,125 @@
     "kodeKomponen": "CL.7458.ABR.006.077.GG",
     "subKomponen": "077.GG",
     "fullMak": "CL.7458.ABR.006.077.GG.524114"
+  },
+  {
+    "kode": "075AA1",
+    "nama": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "fullLabel": "075AA1. Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "CL.7459.ABR.006.075.AA.524119"
+  },
+  {
+    "kode": "075AA2",
+    "nama": "Pengeluaran Riil",
+    "fullLabel": "075AA2. Pengeluaran Riil",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "CL.7459.ABR.006.075.AA.524119"
+  },
+  {
+    "kode": "075AA3",
+    "nama": "Biaya Penginapan/Hotel",
+    "fullLabel": "075AA3. Biaya Penginapan/Hotel",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "CL.7459.ABR.006.075.AA.524119"
+  },
+  {
+    "kode": "075AA4",
+    "nama": "Uang Harian",
+    "fullLabel": "075AA4. Uang Harian",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "CL.7459.ABR.006.075.AA.524119"
+  },
+  {
+    "kode": "075AA5",
+    "nama": "Uang Representatif",
+    "fullLabel": "075AA5. Uang Representatif",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "CL.7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "CL.7459.ABR.006.075.AA.524119"
+  },
+  {
+    "kode": "075AA6",
+    "nama": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "fullLabel": "075AA6. Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "7459.ABR.006.075.AA.524119"
+  },
+  {
+    "kode": "075AA7",
+    "nama": "Pengeluaran Riil",
+    "fullLabel": "075AA7. Pengeluaran Riil",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "7459.ABR.006.075.AA.524119"
+  },
+  {
+    "kode": "075AA8",
+    "nama": "Biaya Penginapan/Hotel",
+    "fullLabel": "075AA8. Biaya Penginapan/Hotel",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "7459.ABR.006.075.AA.524119"
+  },
+  {
+    "kode": "075AA9",
+    "nama": "Uang Harian",
+    "fullLabel": "075AA9. Uang Harian",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "7459.ABR.006.075.AA.524119"
+  },
+  {
+    "kode": "075AA10",
+    "nama": "Uang Representatif",
+    "fullLabel": "075AA10. Uang Representatif",
+    "kodeMak": "524119",
+    "namaMak": "Belanja Perjalanan Dinas Paket Meeting Luar Kota",
+    "kodeKomponen": "7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "7459.ABR.006.075.AA.524119"
+  },
+  {
+    "kode": "075AA11",
+    "nama": "Perjalanan Dinas Biasa Terkait Sistem Informasi Manajemen Internal Terintegrasi",
+    "fullLabel": "075AA11. Perjalanan Dinas Biasa Terkait Sistem Informasi Manajemen Internal Terintegrasi",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "CL.7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "CL.7459.ABR.006.075.AA.524111"
+  },
+  {
+    "kode": "075AA12",
+    "nama": "Perjalanan Dinas Dalam Kota Terkait Sistem Informasi Manajemen Internal Terintegrasi",
+    "fullLabel": "075AA12. Perjalanan Dinas Dalam Kota Terkait Sistem Informasi Manajemen Internal Terintegrasi",
+    "kodeMak": "524113",
+    "namaMak": "Belanja Perjalanan Dinas Dalam Kota",
+    "kodeKomponen": "CL.7459.ABR.006.075.AA",
+    "subKomponen": "075.AA",
+    "fullMak": "CL.7459.ABR.006.075.AA.524113"
   }
 ]

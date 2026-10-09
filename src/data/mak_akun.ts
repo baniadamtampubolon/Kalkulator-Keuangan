@@ -49,6 +49,8 @@ export const LIST_NOMOR_KOMPONEN: KomponenItem[] = [
   { kode: "CL.7458.ABR.006.076.FF", nama: "Pendampingan Pascabencana Alam" },
   { kode: "CL.7458.ABR.006.077.GG", nama: "Koordinasi Kebijakan Pengendalian Emisi GRK" },
   { kode: "CL.7459.ABR.006.071.CC", nama: "Monev Direktif Presiden KSPEAN" },
+  { kode: "CL.7459.ABR.006.075.AA", nama: "Sistem Informasi Manajemen Internal Terintegrasi" },
+  { kode: "7459.ABR.006.075.AA", nama: "Sistem Informasi Manajemen Internal Terintegrasi" },
 ];
 
 export interface ItemDetailItem {
@@ -260,6 +262,8 @@ const SUB_KOMP_DICT: Record<string, string> = {
   "072.BB": "Monev Implementasi MRPN LS Bidang Pangan Terkait Makan Bergizi Gratis",
   "073.CC": "MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT PENGELOLAAN PERSAMPAHAN",
   "074.DD": "MONEV IMPLEMENTASI MRPN LS BIDANG PANGAN TERKAIT EKOSISTEM PANGAN HAJI",
+  "075.AA": "TERLAKSANANYA SISTEM INFORMASI MANAJEMEN INTERNAL TERINTEGRASI",
+  "AA": "TERLAKSANANYA SISTEM INFORMASI MANAJEMEN INTERNAL TERINTEGRASI",
   "075.EE": "Koordinasi Implementasi NEK  Pengendalian Emisi GRK",
   "076.AN": "Monev MRPN Pendampingan Percepatan Rehabilitasi dan Rekonstruksi Pascabencana Alam di Provinsi Aceh, Provinsi Sumatera Utara, dan Provinsi Sumatera Barat",
   "076.FF": "Pendampingan Percepatan Rehabilitasi dan Rekonstruksi Pascabencana Alam",
@@ -308,7 +312,7 @@ export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string, cus
   let kegOutputUraian =
     "Rekomendasi Kebijakan Program Prioritas Nasional Bidang Tata Niaga dan Distribusi Pangan";
   if (kegOutputCode.includes("7459")) {
-    kegOutputUraian = "Rekomendasi Kebijakan Program Prioritas Bidang Usaha Pangan dan Pertanian";
+    kegOutputUraian = "Rekomendasi Kebijakan Program Prioritas Nasional Bidang Usaha Pangan dan Pertanian";
   } else if (kegOutputCode.includes("EBA") || kegOutputCode.includes("962")) {
     kegOutputUraian = "Layanan Dukungan Manajemen Internal Kemenko Pangan";
   } else if (kegOutputCode.includes("EBD") || kegOutputCode.includes("Z24")) {
@@ -319,6 +323,9 @@ export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string, cus
   let defaultKompUraian = KOMP_DICT[rawKompNum] || `Monev dan Koordinasi Bidang ${rawKompNum}`;
   if (kegOutputCode.includes("7459") && rawKompNum === "071") {
     defaultKompUraian = "Percepatan Pengawasan Swasembada Pangan, Energi, dan Air Nasional";
+  }
+  if (kegOutputCode.includes("7459") && rawKompNum === "075") {
+    defaultKompUraian = "Sistem Informasi Manajemen Internal Terintegrasi";
   }
   // Baris Komponen (3 digit, misal 071) mengambil uraian makro dari kamus database
   const komponenUraian = defaultKompUraian;
