@@ -15,7 +15,7 @@ import {
   PanelLeft,
 } from "lucide-react";
 
-export type ActiveTab = "input" | "kegiatan" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "rekap" | "panduan";
+export type ActiveTab = "input" | "kegiatan" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "spd" | "rekap" | "panduan";
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -44,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   participantCount,
   totalExpenditure,
 }) => {
-  // Main Course Tabs only (Input, Kwitansi, Memo, Nominatif, Rincian, Riil)
+  // Main Course Tabs only (Input, Kwitansi, Memo, Nominatif, Rincian, Riil, SPPD Depan)
   const mainTabs = [
     { id: "input", label: "Input & Kalkulator", icon: Calculator },
     { id: "kwitansi", label: "1. Kwitansi", icon: Receipt },
@@ -52,6 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: "nominatif", label: "3. Nominatif", icon: FileSpreadsheet },
     { id: "rincian", label: "4. Rincian Biaya", icon: ListOrdered },
     { id: "riil", label: "5. Biaya Riil", icon: FileCheck },
+    { id: "spd", label: "6. SPPD Depan", icon: FileText },
   ];
 
   return (

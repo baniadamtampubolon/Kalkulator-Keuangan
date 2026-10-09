@@ -64,6 +64,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
     { id: "nominatif", label: "3. Daftar Nominatif", icon: FileSpreadsheet },
     { id: "rincian", label: "4. Rincian Biaya 7 Kolom", icon: ListOrdered },
     { id: "riil", label: "5. Daftar Pengeluaran Riil", icon: FileCheck },
+    { id: "spd", label: "6. SPPD Depan", icon: FileText },
   ];
 
   // Archive & Management (Tab Groups style)

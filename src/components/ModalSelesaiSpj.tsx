@@ -66,6 +66,7 @@ export const ModalSelesaiSpj: React.FC<ModalSelesaiSpjProps> = ({
     { id: "nominatif", label: "Daftar Nominatif", icon: FileSpreadsheet, desc: "Tabel rekapitulasi peserta" },
     { id: "rincian", label: "Rincian Biaya", icon: ListOrdered, desc: "Perhitungan detail per personil" },
     { id: "riil", label: "Pengeluaran Riil", icon: FileCheck, desc: "Pernyataan biaya riil tanpa bukti" },
+    { id: "spd", label: "SPPD Depan", icon: FileText, desc: "Surat Perjalanan Dinas lembar depan resmi" },
     { id: "rekap", label: "Rekap Perdin (48 Kolom)", icon: FileSpreadsheet, desc: "Database lengkap & ekspor Excel" },
   ];
 

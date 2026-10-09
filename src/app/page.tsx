@@ -10,6 +10,7 @@ import { MemorandumDoc } from "@/components/documents/MemorandumDoc";
 import { NominatifDoc } from "@/components/documents/NominatifDoc";
 import { RincianBiayaDoc } from "@/components/documents/RincianBiayaDoc";
 import { BiayaRiilDoc } from "@/components/documents/BiayaRiilDoc";
+import { SppdDepanDoc } from "@/components/documents/SppdDepanDoc";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
 import { DaftarKegiatanTab } from "@/components/DaftarKegiatanTab";
 import { ModalDatabaseSync } from "@/components/ModalDatabaseSync";
@@ -899,7 +900,18 @@ export default function Home() {
             />
           )}
 
-          {/* Tab 6: Rekap Perdin (48-Column SPJ Database & Excel Export) */}
+          {/* Tab 6: SPPD Depan */}
+          {activeTab === "spd" && (
+            <SppdDepanDoc
+              header={header}
+              setHeader={setHeader}
+              rows={rows}
+              setRows={setRows}
+              pegawaiList={pegawaiList}
+            />
+          )}
+
+          {/* Rekap Perdin (48-Column SPJ Database & Excel Export) */}
           {activeTab === "rekap" && (
             <RekapPerdinTab
               header={header}
