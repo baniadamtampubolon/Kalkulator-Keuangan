@@ -238,8 +238,21 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
           }
 
           // Tujuan formatting
-          const kotaTujuan = r.tujuanKota || (header.kotaTujuanList || [])[0] || "";
-          const provTujuan = r.tujuanProvinsi || header.provinsiTujuan || "";
+          const isMultiProv = Boolean(header.isMultiProvinsi && header.provinsiTujuan2);
+          const kotaTujuan = r.tujuanKota || (() => {
+            if (isMultiProv) {
+              const k1 = (header.kotaTujuanList || []).filter(Boolean).join(", ");
+              const k2 = (header.kotaTujuanList2 || []).filter(Boolean).join(", ");
+              if (k1 && k2) {
+                return `${k1} (${header.provinsiTujuan}) dan ${k2} (${header.provinsiTujuan2})`;
+              }
+              return `${k1 || header.provinsiTujuan} dan ${k2 || header.provinsiTujuan2}`;
+            }
+            return (header.kotaTujuanList || [])[0] || "";
+          })();
+          const provTujuan = isMultiProv
+            ? `${header.provinsiTujuan} & ${header.provinsiTujuan2}`
+            : (r.tujuanProvinsi || header.provinsiTujuan || "");
 
           // PPK data from input
           const ppkNama = header.ppkNama || "Arif Wibowo, S.H., M.H.";
@@ -474,8 +487,14 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                         suppressContentEditableWarning
                       >
                         b. &nbsp;
-                        {kotaTujuan ? `${kotaTujuan}` : ""}
-                        {kotaTujuan && provTujuan ? ` , ${provTujuan}` : provTujuan ? `${provTujuan}` : "-"}
+                        {isMultiProv ? (
+                          kotaTujuan
+                        ) : (
+                          <>
+                            {kotaTujuan ? `${kotaTujuan}` : ""}
+                            {kotaTujuan && provTujuan ? ` , ${provTujuan}` : provTujuan ? `${provTujuan}` : "-"}
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>

@@ -35,7 +35,20 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
     });
   };
 
-  const kotaTujuanText = (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
+  const kotaTujuanText = (() => {
+    if (header.isMultiProvinsi && header.provinsiTujuan2) {
+      const k1 = (header.kotaTujuanList || []).filter(Boolean).join(", ");
+      const k2 = (header.kotaTujuanList2 || []).filter(Boolean).join(", ");
+      if (k1 && k2) {
+        return `${k1} (${header.provinsiTujuan}) dan ${k2} (${header.provinsiTujuan2})`;
+      }
+      return `${k1 || header.provinsiTujuan} dan ${k2 || header.provinsiTujuan2}`;
+    }
+    return (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
+  })();
+  const lokasiTujuanFull = header.isMultiProvinsi && header.provinsiTujuan2
+    ? kotaTujuanText
+    : `${kotaTujuanText}, ${header.provinsiTujuan}`;
 
   // Calculate Column Totals across rows (sum each component safely)
   const totalUhBiasa = rows.reduce((acc, r) => acc + (r.biayaUhBiasa || 0), 0);
@@ -110,8 +123,8 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
   const subtitleText = header.keteranganKegiatan
     ? header.keteranganKegiatan.toLowerCase().includes("tanggal")
       ? header.keteranganKegiatan
-      : `${header.keteranganKegiatan} PADA TANGGAL ${formatDateIndo(rows[0]?.tanggalMulai || header.tanggalSpd)} DI ${kotaTujuanText}, ${header.provinsiTujuan}`
-    : `DAFTAR NOMINATIF PERJALANAN DINAS DI ${kotaTujuanText}, ${header.provinsiTujuan}`;
+      : `${header.keteranganKegiatan} PADA TANGGAL ${formatDateIndo(rows[0]?.tanggalMulai || header.tanggalSpd)} DI ${lokasiTujuanFull}`
+    : `DAFTAR NOMINATIF PERJALANAN DINAS DI ${lokasiTujuanFull}`;
 
   const handleResetCanvas = () => {
     setRenderKey((prev) => prev + 1);
@@ -321,8 +334,8 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
 
                 const tujuanDisplay =
                   row.tujuanKota
-                    ? `${row.tujuanKota}, ${row.tujuanProvinsi || header.provinsiTujuan}`
-                    : `${kotaTujuanText}, ${header.provinsiTujuan}`;
+                    ? (header.isMultiProvinsi ? row.tujuanKota : `${row.tujuanKota}, ${row.tujuanProvinsi || header.provinsiTujuan}`)
+                    : lokasiTujuanFull;
 
                 return (
                   <tr key={row.id} className="border-b border-black text-black">

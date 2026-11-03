@@ -295,15 +295,20 @@ export default function Home() {
   const handleSetActiveCols: React.Dispatch<React.SetStateAction<Record<ActiveCostKey, boolean>>> = (action) => {
     setActiveCols((prevCols) => {
       const nextCols = typeof action === "function" ? action(prevCols) : action;
-      const sbm = findSbmByProvince(sbmList, header.provinsiTujuan);
+      const isMultiProv = Boolean(header.isMultiProvinsi && header.provinsiTujuan2);
+      const sbm = isMultiProv ? undefined : findSbmByProvince(sbmList, header.provinsiTujuan);
       const sbmJakarta = findSbmByProvince(sbmList, header.berangkatDari || "DKI JAKARTA");
       const isActivatingTransportJkt = !prevCols.transportJakartaPp && nextCols.transportJakartaPp;
       const isActivatingTransportDaerah = !prevCols.transportDaerahPp && nextCols.transportDaerahPp;
-      const forceRecalcTransport = isActivatingTransportJkt || isActivatingTransportDaerah;
+      const forceRecalcTransport = !isMultiProv && (isActivatingTransportJkt || isActivatingTransportDaerah);
 
       setRows((prevRows) =>
         prevRows.map((r) =>
-          calculateRowTotal(r, sbm, activeUh, nextCols, { sbmJakarta, forceRecalcTransport })
+          calculateRowTotal(r, sbm, activeUh, nextCols, {
+            sbmJakarta,
+            forceRecalcTransport,
+            isMultiProvinsi: isMultiProv,
+          })
         )
       );
       return nextCols;
@@ -313,51 +318,66 @@ export default function Home() {
   const handleSetActiveUh: React.Dispatch<React.SetStateAction<Record<ActiveUhKey, boolean>>> = (action) => {
     setActiveUh((prevUh) => {
       const nextUh = typeof action === "function" ? action(prevUh) : action;
-      const sbm = findSbmByProvince(sbmList, header.provinsiTujuan);
+      const isMultiProv = Boolean(header.isMultiProvinsi && header.provinsiTujuan2);
+      const sbm = isMultiProv ? undefined : findSbmByProvince(sbmList, header.provinsiTujuan);
       const sbmJakarta = findSbmByProvince(sbmList, header.berangkatDari || "DKI JAKARTA");
 
       setRows((prevRows) =>
         prevRows.map((r) => {
           const updatedRow = { ...r };
 
-          // If a UH option is newly turned on, initialize its days to 1 (or lamaHari) and calculate its fee
+          // If a UH option is newly turned on, initialize its days to 1 (or lamaHari)
+          // Catatan: Jika 2 provinsi dalam 1 ST, tidak menghitung otomatis dari SBM
           if (!prevUh.uhBiasa && nextUh.uhBiasa) {
             const hari = updatedRow.hariUhBiasa && updatedRow.hariUhBiasa > 0
               ? updatedRow.hariUhBiasa
               : Math.max(1, updatedRow.lamaHari || 1);
             updatedRow.hariUhBiasa = hari;
-            updatedRow.biayaUhBiasa = hari * (sbm?.uhBiasa || 0);
+            if (!isMultiProv) {
+              updatedRow.biayaUhBiasa = hari * (sbm?.uhBiasa || 0);
+            }
           }
           if (!prevUh.uhBiasa60 && nextUh.uhBiasa60) {
             const hari = updatedRow.hariUhBiasa60 && updatedRow.hariUhBiasa60 > 0
               ? updatedRow.hariUhBiasa60
               : Math.max(1, updatedRow.lamaHari || 1);
             updatedRow.hariUhBiasa60 = hari;
-            updatedRow.biayaUhBiasa60 = Math.round(hari * (sbm?.uhBiasa || 0) * 0.6);
+            if (!isMultiProv) {
+              updatedRow.biayaUhBiasa60 = Math.round(hari * (sbm?.uhBiasa || 0) * 0.6);
+            }
           }
           if (!prevUh.uhBiasa40 && nextUh.uhBiasa40) {
             const hari = updatedRow.hariUhBiasa40 && updatedRow.hariUhBiasa40 > 0
               ? updatedRow.hariUhBiasa40
               : Math.max(1, updatedRow.lamaHari || 1);
             updatedRow.hariUhBiasa40 = hari;
-            updatedRow.biayaUhBiasa40 = Math.round(hari * (sbm?.uhBiasa || 0) * 0.4);
+            if (!isMultiProv) {
+              updatedRow.biayaUhBiasa40 = Math.round(hari * (sbm?.uhBiasa || 0) * 0.4);
+            }
           }
           if (!prevUh.uhHalfday && nextUh.uhHalfday) {
             const hari = updatedRow.hariUhHalfday && updatedRow.hariUhHalfday > 0
               ? updatedRow.hariUhHalfday
               : Math.max(1, updatedRow.lamaHari || 1);
             updatedRow.hariUhHalfday = hari;
-            updatedRow.biayaUhHalfday = hari * (sbm?.uhHalfday || 0);
+            if (!isMultiProv) {
+              updatedRow.biayaUhHalfday = hari * (sbm?.uhHalfday || 0);
+            }
           }
           if (!prevUh.uhFullboard && nextUh.uhFullboard) {
             const hari = updatedRow.hariUhFullboard && updatedRow.hariUhFullboard > 0
               ? updatedRow.hariUhFullboard
               : Math.max(1, updatedRow.lamaHari || 1);
             updatedRow.hariUhFullboard = hari;
-            updatedRow.biayaUhFullboard = hari * (sbm?.uhFullboard || 0);
+            if (!isMultiProv) {
+              updatedRow.biayaUhFullboard = hari * (sbm?.uhFullboard || 0);
+            }
           }
 
-          return calculateRowTotal(updatedRow, sbm, nextUh, activeCols, { sbmJakarta });
+          return calculateRowTotal(updatedRow, sbm, nextUh, activeCols, {
+            sbmJakarta,
+            isMultiProvinsi: isMultiProv,
+          });
         })
       );
       return nextUh;
@@ -367,21 +387,27 @@ export default function Home() {
   const handleSetHeader: React.Dispatch<React.SetStateAction<HeaderData>> = (action) => {
     setHeader((prevHeader) => {
       const nextHeader = typeof action === "function" ? action(prevHeader) : action;
-      if (
-        nextHeader.provinsiTujuan !== prevHeader.provinsiTujuan ||
-        nextHeader.berangkatDari !== prevHeader.berangkatDari
-      ) {
-        const sbm = findSbmByProvince(sbmList, nextHeader.provinsiTujuan);
-        const sbmJakarta = findSbmByProvince(sbmList, nextHeader.berangkatDari || "DKI JAKARTA");
-        setRows((prevRows) =>
-          prevRows.map((r) =>
-            calculateRowTotal(r, sbm, activeUh, activeCols, {
-              forceRecalcUh: true,
-              forceRecalcTransport: true,
-              sbmJakarta,
-            })
-          )
-        );
+      const isMultiProv = Boolean(nextHeader.isMultiProvinsi && nextHeader.provinsiTujuan2);
+
+      // Hanya jalankan auto-recalc SBM jika BUKAN mode 2 provinsi
+      if (!isMultiProv) {
+        if (
+          nextHeader.provinsiTujuan !== prevHeader.provinsiTujuan ||
+          nextHeader.berangkatDari !== prevHeader.berangkatDari
+        ) {
+          const sbm = findSbmByProvince(sbmList, nextHeader.provinsiTujuan);
+          const sbmJakarta = findSbmByProvince(sbmList, nextHeader.berangkatDari || "DKI JAKARTA");
+          setRows((prevRows) =>
+            prevRows.map((r) =>
+              calculateRowTotal(r, sbm, activeUh, activeCols, {
+                forceRecalcUh: true,
+                forceRecalcTransport: true,
+                sbmJakarta,
+                isMultiProvinsi: false,
+              })
+            )
+          );
+        }
       }
       return nextHeader;
     });
@@ -651,8 +677,12 @@ export default function Home() {
           kategori: (header.kategoriSpj === "NA" || (header.kategoriSpj as string) === "B" ? "NA" : "A") as "A" | "NA" | "B",
           namaKegiatan: header.keteranganKegiatan || "Kegiatan Tanpa Judul",
           tanggalSpd: header.tanggalSpd || today,
-          kotaTujuan: header.kotaTujuanList?.[0] || "",
-          provinsiTujuan: header.provinsiTujuan || "",
+          kotaTujuan: updatedHeader.isMultiProvinsi
+            ? [...(updatedHeader.kotaTujuanList || []), ...(updatedHeader.kotaTujuanList2 || [])].filter(Boolean).join(", ")
+            : updatedHeader.kotaTujuanList?.[0] || "",
+          provinsiTujuan: updatedHeader.isMultiProvinsi && updatedHeader.provinsiTujuan2
+            ? `${updatedHeader.provinsiTujuan} & ${updatedHeader.provinsiTujuan2}`
+            : updatedHeader.provinsiTujuan || "",
           jumlahPeserta: validRows.length,
           grandTotal: validRows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0),
           header: updatedHeader,

@@ -143,6 +143,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   }, [header.tanggalMemo]);
 
   const availableKabkot = getKabkotByProvinsi(header.provinsiTujuan);
+  const availableKabkot2 = getKabkotByProvinsi(header.provinsiTujuan2 || "BANTEN");
 
   // Opsi Petugas Verifikasi khusus: Hanya Taufik Prasetyo & Noviarty Ningsi Sumirat (Noviati)
   const verifikatorOptions = React.useMemo(() => {
@@ -249,6 +250,25 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
     if (current.length <= 1) return;
     const filtered = current.filter((_, idx) => idx !== index);
     handleChange("kotaTujuanList", filtered);
+  };
+
+  // Dynamic Kota handlers untuk Provinsi ke-2 (Multi-Provinsi)
+  const handleKota2Change = (index: number, val: string) => {
+    const updated = [...(header.kotaTujuanList2 || [""])];
+    updated[index] = val;
+    handleChange("kotaTujuanList2", updated);
+  };
+
+  const handleAddKota2 = () => {
+    const current = header.kotaTujuanList2 || [""];
+    handleChange("kotaTujuanList2", [...current, ""]);
+  };
+
+  const handleRemoveKota2 = (index: number) => {
+    const current = header.kotaTujuanList2 || [""];
+    if (current.length <= 1) return;
+    const filtered = current.filter((_, idx) => idx !== index);
+    handleChange("kotaTujuanList2", filtered);
   };
 
   // Ambil daftar kegiatan tersimpan untuk verifikasi ID & Auto-Increment (SSR-safe)
@@ -662,14 +682,47 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
             {/* Kolom Kiri: Provinsi & Kota Tujuan */}
             <div className="space-y-3 p-3.5 bg-white rounded-xl border border-slate-200/80">
-              <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block border-b border-slate-100 pb-1">
-                Lokasi Tujuan (Target Dinas)
-              </span>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                  Lokasi Tujuan (Target Dinas)
+                </span>
+                <label className="flex items-center gap-1.5 cursor-pointer select-none text-[11px] font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(header.isMultiProvinsi)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      handleChange("isMultiProvinsi", checked);
+                      if (checked) {
+                        if (!header.provinsiTujuan2) {
+                          handleChange("provinsiTujuan2", "BANTEN");
+                        }
+                        if (!header.kotaTujuanList2 || header.kotaTujuanList2.length === 0) {
+                          handleChange("kotaTujuanList2", [""]);
+                        }
+                      }
+                    }}
+                    className="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <span className={header.isMultiProvinsi ? "text-blue-600 font-bold" : "text-slate-600"}>
+                    2 Provinsi (Multi-Provinsi)
+                  </span>
+                </label>
+              </div>
 
-              {/* Provinsi Tujuan SBM */}
+              {header.isMultiProvinsi && (
+                <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200/80 text-amber-900 text-[11px] leading-relaxed flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <strong>Perdin Lintas 2 Provinsi Aktif:</strong> Tarif SBM tidak diinput otomatis. Anda dapat mengisi nominal Uang Harian & Transportasi secara langsung pada tabel rincian peserta.
+                  </div>
+                </div>
+              )}
+
+              {/* Provinsi Tujuan ke-1 */}
               <div className="space-y-1">
                 <label className="font-semibold text-slate-800 flex items-center gap-1">
-                  <span>Provinsi Tujuan (SBM)</span>
+                  <span>{header.isMultiProvinsi ? "1. Provinsi Tujuan Pertama" : "Provinsi Tujuan (SBM)"}</span>
                   <span className="text-red-500 font-bold">*</span>
                 </label>
                 <select
@@ -685,7 +738,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 </select>
               </div>
 
-              {/* Kota / Kabupaten Tujuan */}
+              {/* Kota / Kabupaten Tujuan Pertama */}
               <div className="space-y-1.5 pt-1">
                 <div className="flex items-center justify-between">
                   <label className="font-semibold text-slate-800 flex items-center gap-1">
@@ -754,6 +807,99 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Blok Provinsi Tujuan ke-2 (Hanya tampil jika Mode 2 Provinsi aktif) */}
+              {header.isMultiProvinsi && (
+                <div className="pt-3 border-t border-slate-200/80 space-y-3">
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-800 flex items-center gap-1">
+                      <span>2. Provinsi Tujuan Kedua</span>
+                      <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    <select
+                      value={header.provinsiTujuan2 || "BANTEN"}
+                      onChange={(e) => handleChange("provinsiTujuan2", e.target.value)}
+                      className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 cursor-pointer"
+                    >
+                      {sbmList.map((sbm) => (
+                        <option key={sbm.provinsi} value={sbm.provinsi}>
+                          {sbm.provinsi}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Kota / Kabupaten Tujuan Kedua */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <label className="font-semibold text-slate-800 flex items-center gap-1">
+                        <span>Kota / Kabupaten di {header.provinsiTujuan2 || "BANTEN"}</span>
+                        <span className="text-red-500 font-bold">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleAddKota2}
+                        className="btn-tactile flex items-center gap-1 text-[11px] font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-lg border border-slate-300 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Tambah Kota</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {(header.kotaTujuanList2 || [""]).map((kota, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <select
+                            value={kota}
+                            onChange={(e) => handleKota2Change(idx, e.target.value)}
+                            className="input-human flex-1 h-9 px-2.5 font-medium cursor-pointer"
+                          >
+                            <option value="">-- Pilih Kota/Kabupaten --</option>
+                            {availableKabkot2.map((k) => (
+                              <option key={k} value={k}>
+                                {k}
+                              </option>
+                            ))}
+                          </select>
+
+                          {(header.kotaTujuanList2 || []).length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveKota2(idx)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 border border-transparent hover:border-slate-300 cursor-pointer transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {availableKabkot2.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <span className="text-[10px] text-slate-400 font-medium">Pilihan cepat:</span>
+                        {availableKabkot2.slice(0, 5).map((k) => (
+                          <button
+                            key={k}
+                            type="button"
+                            onClick={() => {
+                              const list = header.kotaTujuanList2 || [""];
+                              if (!list[0]) {
+                                handleKota2Change(0, k);
+                              } else if (!list.includes(k)) {
+                                handleChange("kotaTujuanList2", [...list, k]);
+                              }
+                            }}
+                            className="btn-tactile text-[10px] px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-medium cursor-pointer"
+                          >
+                            + {k}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Kolom Kanan: Parameter Perjalanan */}

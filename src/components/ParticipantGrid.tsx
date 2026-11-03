@@ -31,6 +31,7 @@ import {
   CheckCircle2,
   RefreshCw,
   AlertCircle,
+  AlertTriangle,
   X,
   ArrowDownNarrowWide,
   ListOrdered,
@@ -69,8 +70,36 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
   onSaveOrUpdate,
   onClearFeedback,
 }) => {
-  const currentSbm = findSbmByProvince(sbmList, provinsiTujuan);
+  const isMultiProv = Boolean(header.isMultiProvinsi && header.provinsiTujuan2);
+  const currentSbm = isMultiProv ? undefined : findSbmByProvince(sbmList, provinsiTujuan);
   const sbmJakarta = findSbmByProvince(sbmList, header.berangkatDari || "DKI JAKARTA");
+
+  // Opsi Tujuan Kota / Multi-Provinsi untuk dropdown tabel peserta
+  const availableTujuanOptions = React.useMemo(() => {
+    if (isMultiProv) {
+      const list1 = (header.kotaTujuanList || []).filter(Boolean);
+      const list2 = (header.kotaTujuanList2 || []).filter(Boolean);
+      const prov1 = header.provinsiTujuan;
+      const prov2 = header.provinsiTujuan2 || "";
+      const opts: string[] = [];
+
+      if (list1.length > 0 && list2.length > 0) {
+        opts.push(`${list1.join(", ")} & ${list2.join(", ")}`);
+        opts.push(`${list1.join(", ")} (${prov1}) & ${list2.join(", ")} (${prov2})`);
+      }
+      list1.forEach((k) => opts.push(`${k} (${prov1})`));
+      list2.forEach((k) => opts.push(`${k} (${prov2})`));
+
+      if (opts.length === 0) {
+        opts.push(`${prov1} & ${prov2}`);
+      }
+      return Array.from(new Set(opts));
+    }
+
+    const list = (header.kotaTujuanList || []).filter(Boolean);
+    if (list.length > 0) return list;
+    return [header.provinsiTujuan];
+  }, [header.isMultiProvinsi, header.provinsiTujuan, header.provinsiTujuan2, header.kotaTujuanList, header.kotaTujuanList2, isMultiProv]);
 
   // Modal States
   const [modalTiketRow, setModalTiketRow] = useState<ParticipantRow | null>(null);
@@ -106,6 +135,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
           sbmJakarta,
           skipAutoTransport: options?.skipAutoTransport,
           isCustomNominal: options?.isCustomNominal,
+          isMultiProvinsi: isMultiProv,
         });
       })
     );
@@ -154,6 +184,13 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       ? getNextSpdNumber(lastRow.nomorSpd)
       : formatSpdNumber(getLatestRegisteredSpdNumber() + 1);
 
+    const defaultTujuanKota = isMultiProv
+      ? availableTujuanOptions[0] || ""
+      : (header.kotaTujuanList?.[0] || "");
+    const defaultTujuanProv = isMultiProv
+      ? `${header.provinsiTujuan} & ${header.provinsiTujuan2}`
+      : provinsiTujuan;
+
     const newRow: ParticipantRow = {
       id: newId,
       kodeNama: "",
@@ -161,23 +198,23 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       nip: "",
       golongan: "",
       jabatan: "",
-      tujuanKota: "",
-      tujuanProvinsi: provinsiTujuan,
+      tujuanKota: defaultTujuanKota,
+      tujuanProvinsi: defaultTujuanProv,
       tanggalMulai: new Date().toISOString().split("T")[0],
       tanggalSelesai: new Date().toISOString().split("T")[0],
       lamaHari: 1,
       nomorSt: "",
       nomorSpd: nextSpd,
       hariUhBiasa: activeUh.uhBiasa ? (lastRow?.hariUhBiasa ?? 1) : 0,
-      biayaUhBiasa: activeUh.uhBiasa ? (lastRow?.hariUhBiasa ?? 1) * (currentSbm?.uhBiasa || 0) : 0,
+      biayaUhBiasa: isMultiProv ? (lastRow?.biayaUhBiasa ?? 0) : (activeUh.uhBiasa ? (lastRow?.hariUhBiasa ?? 1) * (currentSbm?.uhBiasa || 0) : 0),
       hariUhBiasa60: activeUh.uhBiasa60 ? (lastRow?.hariUhBiasa60 ?? 1) : 0,
-      biayaUhBiasa60: activeUh.uhBiasa60 ? Math.round((lastRow?.hariUhBiasa60 ?? 1) * (currentSbm?.uhBiasa || 0) * 0.6) : 0,
+      biayaUhBiasa60: isMultiProv ? (lastRow?.biayaUhBiasa60 ?? 0) : (activeUh.uhBiasa60 ? Math.round((lastRow?.hariUhBiasa60 ?? 1) * (currentSbm?.uhBiasa || 0) * 0.6) : 0),
       hariUhBiasa40: activeUh.uhBiasa40 ? (lastRow?.hariUhBiasa40 ?? 1) : 0,
-      biayaUhBiasa40: activeUh.uhBiasa40 ? Math.round((lastRow?.hariUhBiasa40 ?? 1) * (currentSbm?.uhBiasa || 0) * 0.4) : 0,
+      biayaUhBiasa40: isMultiProv ? (lastRow?.biayaUhBiasa40 ?? 0) : (activeUh.uhBiasa40 ? Math.round((lastRow?.hariUhBiasa40 ?? 1) * (currentSbm?.uhBiasa || 0) * 0.4) : 0),
       hariUhHalfday: activeUh.uhHalfday ? (lastRow?.hariUhHalfday ?? 1) : 0,
-      biayaUhHalfday: activeUh.uhHalfday ? (lastRow?.hariUhHalfday ?? 1) * (currentSbm?.uhHalfday || 0) : 0,
+      biayaUhHalfday: isMultiProv ? (lastRow?.biayaUhHalfday ?? 0) : (activeUh.uhHalfday ? (lastRow?.hariUhHalfday ?? 1) * (currentSbm?.uhHalfday || 0) : 0),
       hariUhFullboard: activeUh.uhFullboard ? (lastRow?.hariUhFullboard ?? 1) : 0,
-      biayaUhFullboard: activeUh.uhFullboard ? (lastRow?.hariUhFullboard ?? 1) * (currentSbm?.uhFullboard || 0) : 0,
+      biayaUhFullboard: isMultiProv ? (lastRow?.biayaUhFullboard ?? 0) : (activeUh.uhFullboard ? (lastRow?.hariUhFullboard ?? 1) * (currentSbm?.uhFullboard || 0) : 0),
       tiket: 0,
       dukunganTransportasi: 0,
       transportasiDarat: 0,
@@ -195,7 +232,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       totalJumlah: 0,
     };
 
-    setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols, { sbmJakarta })]);
+    setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols, { sbmJakarta, isMultiProvinsi: isMultiProv })]);
   };
 
   const handleDuplicateLastRow = () => {
@@ -216,7 +253,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       jabatan: "",
       isPejabat: false,
     };
-    setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols, { sbmJakarta })]);
+    setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols, { sbmJakarta, isMultiProvinsi: isMultiProv })]);
   };
 
   const handleSequenceSpdNumbers = (customStart?: string | number) => {
@@ -360,6 +397,15 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
         </div>
       </div>
 
+      {isMultiProv && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-900 text-xs shadow-2xs">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+          <span>
+            <strong>Mode Penugasan Lintas 2 Provinsi Aktif ({header.provinsiTujuan} & {header.provinsiTujuan2}):</strong> Sesuai instruksi, tarif SBM tidak diinput otomatis. Anda dapat menentukan dan menginput nominal Uang Harian & Biaya Transportasi secara mandiri pada masing-masing kolom peserta.
+          </span>
+        </div>
+      )}
+
       {/* Process Table Container with Smooth Horizontal Scroll & Sticky Columns */}
       <div className="overflow-x-auto rounded-xl border border-slate-200/70 bg-white/60 shadow-2xs">
         <table className="w-full text-left text-xs border-collapse min-w-max">
@@ -421,9 +467,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 </th>
               )}
               {activeCols.transportDaerahPp && (
-                <th className="p-2.5 w-36 min-w-[140px] text-right" title={`Transport Taksi Daerah Tujuan Pulang-Pergi (2x Tarif SBM Taksi Bandara ${provinsiTujuan || ""})`}>
+                <th className="p-2.5 w-36 min-w-[140px] text-right" title={isMultiProv ? "Transport Taksi Daerah (Multi-Provinsi: Input Manual)" : `Transport Taksi Daerah Tujuan Pulang-Pergi (2x Tarif SBM Taksi Bandara ${provinsiTujuan || ""})`}>
                   <div>Daerah PP (Rp)</div>
-                  <div className="text-[9.5px] font-normal text-blue-600 font-mono">2x SBM Daerah</div>
+                  <div className="text-[9.5px] font-normal text-emerald-600 font-mono">
+                    {isMultiProv ? "Manual" : "2x SBM Daerah"}
+                  </div>
                 </th>
               )}
               {activeCols.hotel && <th className="p-2.5 w-28 min-w-[110px] text-center">Hotel</th>}
@@ -586,18 +634,17 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 {/* Kota Tujuan */}
                 <td className="p-2 w-36 min-w-[135px]">
                   <select
-                    value={row.tujuanKota || header.kotaTujuanList?.[0] || ""}
+                    value={row.tujuanKota || availableTujuanOptions[0] || ""}
                     onChange={(e) => handleUpdateRow(row.id, { tujuanKota: e.target.value })}
                     className="input-glass w-full h-8 px-2 text-xs font-medium cursor-pointer"
                   >
-                    {(header.kotaTujuanList || []).filter(Boolean).length > 0 ? (
-                      (header.kotaTujuanList || []).filter(Boolean).map((k) => (
-                        <option key={k} value={k}>
-                          {k}
-                        </option>
-                      ))
-                    ) : (
-                      <option value={header.provinsiTujuan}>{header.provinsiTujuan}</option>
+                    {availableTujuanOptions.map((k, idx) => (
+                      <option key={`${k}-${idx}`} value={k}>
+                        {k}
+                      </option>
+                    ))}
+                    {row.tujuanKota && !availableTujuanOptions.includes(row.tujuanKota) && (
+                      <option value={row.tujuanKota}>{row.tujuanKota}</option>
                     )}
                   </select>
                 </td>
@@ -641,7 +688,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                             const rate = currentSbm?.uhBiasa || 0;
                             handleUpdateRow(row.id, {
                               hariUhBiasa: newHari,
-                              biayaUhBiasa: newHari * rate,
+                              biayaUhBiasa: isMultiProv ? (row.biayaUhBiasa || 0) : newHari * rate,
                             });
                           }}
                           className="w-8 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
@@ -676,7 +723,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                             const rate = currentSbm?.uhBiasa || 0;
                             handleUpdateRow(row.id, {
                               hariUhBiasa60: newHari,
-                              biayaUhBiasa60: Math.round(newHari * rate * 0.6),
+                              biayaUhBiasa60: isMultiProv ? (row.biayaUhBiasa60 || 0) : Math.round(newHari * rate * 0.6),
                             });
                           }}
                           className="w-8 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
@@ -711,7 +758,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                             const rate = currentSbm?.uhBiasa || 0;
                             handleUpdateRow(row.id, {
                               hariUhBiasa40: newHari,
-                              biayaUhBiasa40: Math.round(newHari * rate * 0.4),
+                              biayaUhBiasa40: isMultiProv ? (row.biayaUhBiasa40 || 0) : Math.round(newHari * rate * 0.4),
                             });
                           }}
                           className="w-8 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
@@ -746,7 +793,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                             const rate = currentSbm?.uhHalfday || 0;
                             handleUpdateRow(row.id, {
                               hariUhHalfday: newHari,
-                              biayaUhHalfday: newHari * rate,
+                              biayaUhHalfday: isMultiProv ? (row.biayaUhHalfday || 0) : newHari * rate,
                             });
                           }}
                           className="w-8 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
@@ -781,7 +828,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                             const rate = currentSbm?.uhFullboard || 0;
                             handleUpdateRow(row.id, {
                               hariUhFullboard: newHari,
-                              biayaUhFullboard: newHari * rate,
+                              biayaUhFullboard: isMultiProv ? (row.biayaUhFullboard || 0) : newHari * rate,
                             });
                           }}
                           className="w-8 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"

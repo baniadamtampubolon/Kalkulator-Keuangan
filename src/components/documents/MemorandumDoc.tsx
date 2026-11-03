@@ -35,7 +35,20 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
 
   const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
   const tanggalMemo = formatDateIndo(header.tanggalMemo || new Date().toISOString());
-  const kotaTujuanText = (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
+  const kotaTujuanText = (() => {
+    if (header.isMultiProvinsi && header.provinsiTujuan2) {
+      const k1 = (header.kotaTujuanList || []).filter(Boolean).join(", ");
+      const k2 = (header.kotaTujuanList2 || []).filter(Boolean).join(", ");
+      if (k1 && k2) {
+        return `${k1} (${header.provinsiTujuan}) dan ${k2} (${header.provinsiTujuan2})`;
+      }
+      return `${k1 || header.provinsiTujuan} dan ${k2 || header.provinsiTujuan2}`;
+    }
+    return (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
+  })();
+  const lokasiTujuanFull = header.isMultiProvinsi && header.provinsiTujuan2
+    ? kotaTujuanText
+    : `${kotaTujuanText}, ${header.provinsiTujuan}`;
   const tahunAnggaran = header.tanggalSpd ? new Date(header.tanggalSpd).getFullYear() : new Date().getFullYear();
 
   const fullMakCode = (() => {
@@ -102,8 +115,8 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
   const uraianKegiatanMemo = rawKegiatan
     ? sudahAdaTanggal
       ? rawKegiatan
-      : `${rawKegiatan} pada Tanggal ${formattedDateMulai} di ${kotaTujuanText}, ${header.provinsiTujuan}`
-    : `kegiatan perjalanan dinas pada Tanggal ${formattedDateMulai} di ${kotaTujuanText}, ${header.provinsiTujuan}`;
+      : `${rawKegiatan} pada Tanggal ${formattedDateMulai} di ${lokasiTujuanFull}`
+    : `kegiatan perjalanan dinas pada Tanggal ${formattedDateMulai} di ${lokasiTujuanFull}`;
 
   const prefixSehubungan = uraianKegiatanMemo.toLowerCase().startsWith("sehubungan dengan")
     ? ""

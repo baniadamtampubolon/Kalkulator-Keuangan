@@ -39,7 +39,17 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
     });
   };
 
-  const kotaTujuanText = (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
+  const kotaTujuanText = (() => {
+    if (header.isMultiProvinsi && header.provinsiTujuan2) {
+      const k1 = (header.kotaTujuanList || []).filter(Boolean).join(", ");
+      const k2 = (header.kotaTujuanList2 || []).filter(Boolean).join(", ");
+      if (k1 && k2) {
+        return `${k1} (${header.provinsiTujuan}) dan ${k2} (${header.provinsiTujuan2})`;
+      }
+      return `${k1 || header.provinsiTujuan} dan ${k2 || header.provinsiTujuan2}`;
+    }
+    return (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan;
+  })();
   const tahunAnggaran = header.tanggalSpd ? new Date(header.tanggalSpd).getFullYear() : new Date().getFullYear();
 
   // Filter rows to render
@@ -176,11 +186,15 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
       <div className="space-y-8">
         {displayedRows.map((activeRow, index) => {
           const tanggalCetak = formatDateIndo(activeRow.tanggalMulai || header.tanggalSpd || new Date().toISOString());
+          const lokasiTujuanRow = header.isMultiProvinsi && header.provinsiTujuan2
+            ? (activeRow.tujuanKota || kotaTujuanText)
+            : `${activeRow.tujuanKota || kotaTujuanText}, ${header.provinsiTujuan}`;
+
           const uraianPembayaran = header.keteranganKegiatan
             ? header.keteranganKegiatan.toLowerCase().includes("tanggal")
               ? header.keteranganKegiatan
-              : `${header.keteranganKegiatan}, pada Tanggal ${formatDateIndo(activeRow.tanggalMulai)} di ${activeRow.tujuanKota || kotaTujuanText}, ${header.provinsiTujuan}`
-            : `Perjalanan Dinas dalam rangka penugasan di ${activeRow.tujuanKota || kotaTujuanText}, ${header.provinsiTujuan}`;
+              : `${header.keteranganKegiatan}, pada Tanggal ${formatDateIndo(activeRow.tanggalMulai)} di ${lokasiTujuanRow}`
+            : `Perjalanan Dinas dalam rangka penugasan di ${lokasiTujuanRow}`;
 
           return (
             <div

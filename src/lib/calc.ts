@@ -33,9 +33,11 @@ export function calculateRowTotal(
     skipAutoTransport?: boolean;
     sbmJakarta?: SbmRate;
     isCustomNominal?: boolean;
+    isMultiProvinsi?: boolean;
   }
 ): ParticipantRow {
   const updated = { ...row };
+  const isMultiProv = Boolean(options?.isMultiProvinsi);
 
   // 1. Lama Hari (Durasi Perjalanan Dinas Kalender)
   const newLamaHari = calculateLamaHari(row.tanggalMulai, row.tanggalSelesai);
@@ -43,15 +45,17 @@ export function calculateRowTotal(
   updated.lamaHari = newLamaHari;
 
   // 2. Uang Harian (Mandiri & Fleksibel: Durasi dinas vs Hari UH riil & Editable Nominal)
-  const uhRateBiasa = sbm?.uhBiasa || 0;
-  const uhRateHalfday = sbm?.uhHalfday || 0;
-  const uhRateFullboard = sbm?.uhFullboard || 0;
+  // Catatan: Jika mode 2 provinsi aktif, SBM tidak diinput otomatis (user bebas mengisi nominal mandiri)
+  const uhRateBiasa = isMultiProv ? 0 : (sbm?.uhBiasa || 0);
+  const uhRateHalfday = isMultiProv ? 0 : (sbm?.uhHalfday || 0);
+  const uhRateFullboard = isMultiProv ? 0 : (sbm?.uhFullboard || 0);
 
   const shouldCalculateBiaya = (
     currentBiaya: number | undefined | null,
     hari: number,
     rate: number
   ) => {
+    if (isMultiProv) return false;
     if (currentBiaya === undefined || currentBiaya === null) return true;
     if (isDurationChanged) return true;
     if (options?.forceRecalcUh) return true;
@@ -132,7 +136,7 @@ export function calculateRowTotal(
     updated.hotel = 0;
   }
 
-  if (activeCols.penginapan30 && sbm && updated.malamHotel) {
+  if (activeCols.penginapan30 && sbm && updated.malamHotel && !isMultiProv) {
     const hotelSbm =
       row.golongan.startsWith("IV")
         ? sbm.hotelEselon3Gol4
@@ -170,11 +174,13 @@ export function calculateRowTotal(
   }
 
   // Taksi Daerah PP (Tujuan: Tarif SBM Provinsi Tujuan x 2 untuk Pulang-Pergi)
-  const taksiDaerahRate = sbm?.taksiBandara || 0;
+  // Catatan: Jika 2 provinsi dalam 1 ST, tidak diinput otomatis (diisi manual)
+  const taksiDaerahRate = isMultiProv ? 0 : (sbm?.taksiBandara || 0);
   const tarifDaerahPp = taksiDaerahRate * 2;
 
   if (activeCols.transportDaerahPp) {
     if (
+      !isMultiProv &&
       !options?.skipAutoTransport &&
       (updated.transportDaerahPp === undefined ||
         updated.transportDaerahPp === 0 ||

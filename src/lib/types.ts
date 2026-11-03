@@ -153,8 +153,11 @@ export interface ParticipantRow {
 export interface HeaderData {
   keteranganKegiatan: string;
   keteranganMemo: string;
+  isMultiProvinsi?: boolean;
   provinsiTujuan: string;
   kotaTujuanList: string[]; // Dynamic 1 or more destination cities
+  provinsiTujuan2?: string;
+  kotaTujuanList2?: string[]; // Dynamic 1 or more destination cities (Provinsi ke-2)
   unitKerja: string;
   picInisiator: string;
   bendahara: string;

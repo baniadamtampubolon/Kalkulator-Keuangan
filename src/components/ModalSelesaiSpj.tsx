@@ -47,7 +47,9 @@ export const ModalSelesaiSpj: React.FC<ModalSelesaiSpjProps> = ({
     (r) => Boolean((r.nama && r.nama.trim() !== "") || (r.namaExternal && r.namaExternal.trim() !== ""))
   );
   const totalBiaya = validRows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
-  const kotaTujuan = (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan || "Indonesia";
+  const kotaTujuan = header.isMultiProvinsi && header.provinsiTujuan2
+    ? `${(header.kotaTujuanList || []).filter(Boolean).join(", ")} (${header.provinsiTujuan}) & ${(header.kotaTujuanList2 || []).filter(Boolean).join(", ")} (${header.provinsiTujuan2})`
+    : (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan || "Indonesia";
 
   const formatDateIndo = (dStr: string) => {
     if (!dStr) return "";
