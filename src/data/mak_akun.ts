@@ -34,8 +34,26 @@ export const LIST_NOMOR_MAK: MakAkunItem[] = [
   { kode: "521111", nama: "Belanja Keperluan Perkantoran", kategori: "Operasional" },
 ];
 
-// Daftar Kode Komponen resmi dari docs/KODE MAK AKUN.xlsx
+// Daftar Kode Komponen resmi dari docs/KODE MAK AKUN.xlsx & DIPA Inspektorat TA 2026
 export const LIST_NOMOR_KOMPONEN: KomponenItem[] = [
+  // =========================================================================
+  // PROGRAM WA - INSPEKTORAT (Dukungan Manajemen Internal Kemenko Pangan)
+  // =========================================================================
+  { kode: "WA.7457.EBD.Z28.051.0A", nama: "Layanan Audit Kinerja (Deputi Setmenko) - Assurance" },
+  { kode: "WA.7457.EBD.Z28.051.0B", nama: "Layanan Audit Internal Perkantoran Sama II - Assurance" },
+  { kode: "WA.7457.EBD.Z28.052.0A", nama: "Layanan Audit Internal Perkantoran Sama - Consulting" },
+  { kode: "WA.7457.EBD.Z29.051.0A", nama: "Layanan Audit Internal Dalam Kota - Assurance" },
+  { kode: "WA.7457.EBD.Z29.051.0B", nama: "Layanan Audit Internal Dalam Kota II - Assurance" },
+  { kode: "WA.7457.EBD.Z29.052.0A", nama: "Penyusunan PKPT & Sosialisasi SPIP/Anti Korupsi - Consulting" },
+  { kode: "WA.7457.EBD.Z30.051.0A", nama: "Layanan Reviu Lap. Keuangan / Kinerja - Assurance" },
+  { kode: "WA.7457.EBD.Z30.051.0B", nama: "Pemantauan Prioritas Nasional / Tindak Lanjut - Assurance" },
+  { kode: "WA.7457.EBD.Z30.052.0A", nama: "Assistensi Dokumen Perencanaan (Deputi Setmenko) - Consulting" },
+  { kode: "WA.7457.EBD.Z30.052.0H", nama: "Pengelolaan Ketatausahaan Inspektorat - Consulting" },
+  { kode: "WA.7457.EBD.Z30.052.AP", nama: "Alokasi Perjadin Pimpinan Inspektorat" },
+
+  // =========================================================================
+  // PROGRAM CL - TATA NIAGA & DISTRIBUSI PANGAN
+  // =========================================================================
   { kode: "CL.7458.ABR.006.051.0A", nama: "Koordinasi dan Evaluasi Kebijakan Tata Niaga" },
   { kode: "CL.7458.ABR.006.051.0B", nama: "Pelaksanaan Koordinasi Tata Niaga" },
   { kode: "CL.7458.ABR.006.051.0C", nama: "Penyelesaian Tunggakan TA 2025" },
@@ -237,6 +255,10 @@ export interface MakHierarchyDetail {
 }
 
 const KOMP_DICT: Record<string, string> = {
+  // Komponen Standar Inspektorat (WA.7457)
+  "WA.051": "Assurance",
+  "WA.052": "Consulting",
+  // Komponen Standar Tata Niaga & Distribusi Pangan (CL.7458)
   "051": "Sinkronisasi kebijakan Bidang Koordinasi Tata Niaga dan Distribusi Pangan",
   "052": "Sinkronisasi Kebijakan Bidang Ketersediaan dan Pangan Berkelanjutan",
   "053": "Koordinasi Pelaksanaan Kebijakan Tata Niaga",
@@ -252,6 +274,38 @@ const KOMP_DICT: Record<string, string> = {
 };
 
 const SUB_KOMP_DICT: Record<string, string> = {
+  // =========================================================================
+  // PROGRAM WA - INSPEKTORAT (WA.7457.EBD)
+  // =========================================================================
+  // RO Z28: Layanan Audit Internal dalam Perkantoran yang Sama
+  "Z28.051.0A": "Layanan Audit Kinerja (Deputi Setmenko)",
+  "Z28.051.0B": "Layanan Audit Internal dalam Perkantoran yang Sama II",
+  "Z28.052.0A": "Layanan Audit Internal dalam Perkantoran yang Sama",
+
+  // RO Z29: Layanan Audit Internal dalam Kota
+  "Z29.051.0A": "Layanan Audit Internal dalam Kota",
+  "Z29.051.0B": "Layanan Audit Internal dalam Kota II",
+  "Z29.052.0A": "Penyusunan PKPT Inspektorat dan Sosialisasi Anti Korupsi/Kode Etik/MR SPIP/Conflict of Interest/Bimtek Penerapan MR",
+
+  // RO Z30: Layanan Audit Internal Luar Provinsi
+  "Z30.051.0A": "Layanan Reviu Laporan Keuangan/ Laporan Kinerja",
+  "Z30.051.0B": "Pemantauan Kegiatan prioritas Nasional/Tindak Lanjut Hasil Audit, Reviu,Evaluasi/ Capaian Anggaran",
+  "Z30.052.0A": "Assistensi Penyusunan dan Reviu Dokumen Perencaaan, Pengukuran dan Pelaporan Kinerja (Deputi Setmenko)",
+  "Z30.052.0H": "Pengelolaan Ketatausahaan Inspektorat",
+  "Z30.052.AP": "Alokasi Perjadin Pimpinan",
+
+  // Fallbacks untuk Inspektorat
+  "WA.051.0A": "Layanan Audit Internal",
+  "WA.051.0B": "Pemantauan Kegiatan prioritas Nasional/Tindak Lanjut",
+  "WA.052.0A": "Assistensi Dokumen Perencanaan dan Konsultasi Internal",
+  "WA.052.0H": "Pengelolaan Ketatausahaan Inspektorat",
+  "WA.052.AP": "Alokasi Perjadin Pimpinan",
+  "052.AP": "Alokasi Perjadin Pimpinan",
+  "052.0H": "Pengelolaan Ketatausahaan Inspektorat",
+
+  // =========================================================================
+  // PROGRAM CL - TATA NIAGA & DISTRIBUSI PANGAN (CL.7458 / CL.7459)
+  // =========================================================================
   "051.0A": "Koordinasi dan Evaluasi Kebijakan Bidang Koordinasi Tata Niaga dan DistribusiPangan",
   "051.0B": "Pelaksanaan",
   "051.0C": "Penyelesaian Tunggakan TA 2025",
@@ -308,10 +362,20 @@ export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string, cus
     subKomponenCode = tokens[tokens.length - 1];
   }
 
-  // Determine descriptions
+  const isWA = cleanKomp.includes("WA") || cleanKomp.includes("7457") || kegOutputCode.includes("7457");
+
+  // Determine descriptions for Baris 1 (Kegiatan & Output / RO)
   let kegOutputUraian =
     "Rekomendasi Kebijakan Program Prioritas Nasional Bidang Tata Niaga dan Distribusi Pangan";
-  if (kegOutputCode.includes("7459")) {
+  if (kegOutputCode.includes("Z28")) {
+    kegOutputUraian = "Layanan Audit Internal dalam Perkantoran yang Sama";
+  } else if (kegOutputCode.includes("Z29")) {
+    kegOutputUraian = "Layanan Audit Internal dalam Kota";
+  } else if (kegOutputCode.includes("Z30")) {
+    kegOutputUraian = "Layanan Audit Internal Luar Provinsi";
+  } else if (kegOutputCode.includes("7457")) {
+    kegOutputUraian = "Dukungan Manajemen Internal Kementerian Koordinator Bidang Pangan";
+  } else if (kegOutputCode.includes("7459")) {
     kegOutputUraian = "Rekomendasi Kebijakan Program Prioritas Nasional Bidang Usaha Pangan dan Pertanian";
   } else if (kegOutputCode.includes("EBA") || kegOutputCode.includes("962")) {
     kegOutputUraian = "Layanan Dukungan Manajemen Internal Kemenko Pangan";
@@ -319,23 +383,38 @@ export function parseMakHierarchy(nomorKompRaw: string, nomorMakRaw: string, cus
     kegOutputUraian = "Layanan Umum dan Tata Usaha Kemenko Pangan";
   }
 
+  // Determine descriptions for Baris 2 (Komponen)
   const rawKompNum = komponenCode.replace(/\.$/, "");
-  let defaultKompUraian = KOMP_DICT[rawKompNum] || `Monev dan Koordinasi Bidang ${rawKompNum}`;
-  if (kegOutputCode.includes("7459") && rawKompNum === "071") {
+  let defaultKompUraian = "";
+  if (isWA) {
+    if (rawKompNum === "051") defaultKompUraian = "Assurance";
+    else if (rawKompNum === "052") defaultKompUraian = "Consulting";
+    else defaultKompUraian = "Pengawasan Internal";
+  } else if (kegOutputCode.includes("7459") && rawKompNum === "071") {
     defaultKompUraian = "Percepatan Pengawasan Swasembada Pangan, Energi, dan Air Nasional";
-  }
-  if (kegOutputCode.includes("7459") && rawKompNum === "075") {
+  } else if (kegOutputCode.includes("7459") && rawKompNum === "075") {
     defaultKompUraian = "Sistem Informasi Manajemen Internal Terintegrasi";
+  } else {
+    defaultKompUraian = KOMP_DICT[rawKompNum] || `Monev dan Koordinasi Bidang ${rawKompNum}`;
   }
-  // Baris Komponen (3 digit, misal 071) mengambil uraian makro dari kamus database
   const komponenUraian = defaultKompUraian;
 
-  // Baris Sub-Komponen (2 karakter, misal CC/CA) mengambil deskripsi spesifik dari custom detail yang diinput user
+  // Determine descriptions for Baris 3 (Sub Komponen)
+  const roCode = tokens.length >= 3 ? tokens[2] : "";
+  const subKeyWithRo = `${roCode}.${rawKompNum}.${subKomponenCode}`;
   const subKeyWithKomp = `${rawKompNum}.${subKomponenCode}`;
-  const subKomponenUraian =
-    customDetail?.trim() ||
+
+  const officialSubUraian =
+    SUB_KOMP_DICT[subKeyWithRo] ||
+    (isWA ? SUB_KOMP_DICT[`WA.${subKeyWithKomp}`] : undefined) ||
     SUB_KOMP_DICT[subKeyWithKomp] ||
-    SUB_KOMP_DICT[subKomponenCode] ||
+    SUB_KOMP_DICT[subKomponenCode];
+
+  const isPresetDropdownName = LIST_NOMOR_KOMPONEN.some((k) => k.nama === customDetail);
+  const subKomponenUraian =
+    (!isPresetDropdownName && customDetail?.trim()) ||
+    officialSubUraian ||
+    customDetail?.trim() ||
     defaultKompUraian;
 
   return {

@@ -1708,5 +1708,435 @@
     "kodeKomponen": "CL.7459.ABR.006.075.AA",
     "subKomponen": "075.AA",
     "fullMak": "CL.7459.ABR.006.075.AA.524113"
+  },
+  {
+    "kode": "004530",
+    "nama": "ATK dan Computer Supplies 7 kali rapat",
+    "fullLabel": "004530. ATK dan Computer Supplies 7 kali rapat",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z28.051.0A.521211"
+  },
+  {
+    "kode": "004531",
+    "nama": "Snack Rapat Biasa D.K.I. JAKARTA",
+    "fullLabel": "004531. Snack Rapat Biasa D.K.I. JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z28.051.0A.521211"
+  },
+  {
+    "kode": "004532",
+    "nama": "Makan Rapat Biasa D.K.I. JAKARTA",
+    "fullLabel": "004532. Makan Rapat Biasa D.K.I. JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z28.051.0A.521211"
+  },
+  {
+    "kode": "004533",
+    "nama": "Konsumsi Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "004533. Konsumsi Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z28.051.0A.521211"
+  },
+  {
+    "kode": "004535",
+    "nama": "Honorarium Narasumber Eselon II",
+    "fullLabel": "004535. Honorarium Narasumber Eselon II",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z28.051.0A.522151"
+  },
+  {
+    "kode": "004534",
+    "nama": "Pengelolaan Data Audit (aplikasi data hasil audit  e-audit TL, Penyusunan PKA, LHA)",
+    "fullLabel": "004534. Pengelolaan Data Audit (aplikasi data hasil audit  e-audit TL, Penyusunan PKA, LHA)",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z28.051.0A.522191"
+  },
+  {
+    "kode": "004536",
+    "nama": "ATK dan Computer Supplies",
+    "fullLabel": "004536. ATK dan Computer Supplies",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z28.051.0B.521211"
+  },
+  {
+    "kode": "004537",
+    "nama": "Snack Rapat Biasa D.K.I. JAKARTA",
+    "fullLabel": "004537. Snack Rapat Biasa D.K.I. JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z28.051.0B.521211"
+  },
+  {
+    "kode": "004538",
+    "nama": "Makan Rapat Biasa D.K.I. JAKARTA",
+    "fullLabel": "004538. Makan Rapat Biasa D.K.I. JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z28.051.0B.521211"
+  },
+  {
+    "kode": "004539",
+    "nama": "Seminar Kit",
+    "fullLabel": "004539. Seminar Kit",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z28.051.0B.521211"
+  },
+  {
+    "kode": "004540",
+    "nama": "Honorarium Narasumber Eselon II",
+    "fullLabel": "004540. Honorarium Narasumber Eselon II",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z28.051.0B.522151"
+  },
+  {
+    "kode": "004789",
+    "nama": "Biaya Diklat Biaya Diklat Pengawasan",
+    "fullLabel": "004789. Biaya Diklat Biaya Diklat Pengawasan",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z28.051.0B.522191"
+  },
+  {
+    "kode": "004788",
+    "nama": "Perjalanan Dinas Reviu ke Daerah",
+    "fullLabel": "004788. Perjalanan Dinas Reviu ke Daerah",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "WA.7457.EBD.Z28.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z28.051.0B.524111"
+  },
+  {
+    "kode": "004545",
+    "nama": "ATK dan Computer Supplies",
+    "fullLabel": "004545. ATK dan Computer Supplies",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z28.052.0A",
+    "subKomponen": "052.0A",
+    "fullMak": "WA.7457.EBD.Z28.052.0A.521211"
+  },
+  {
+    "kode": "004546",
+    "nama": "Konsumsi Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "004546. Konsumsi Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z28.052.0A",
+    "subKomponen": "052.0A",
+    "fullMak": "WA.7457.EBD.Z28.052.0A.521211"
+  },
+  {
+    "kode": "004548",
+    "nama": "Honorarium Narasumber  Eselon II",
+    "fullLabel": "004548. Honorarium Narasumber  Eselon II",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "WA.7457.EBD.Z28.052.0A",
+    "subKomponen": "052.0A",
+    "fullMak": "WA.7457.EBD.Z28.052.0A.522151"
+  },
+  {
+    "kode": "004549",
+    "nama": "ATK dan Computer Supplies",
+    "fullLabel": "004549. ATK dan Computer Supplies",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z29.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z29.051.0A.521211"
+  },
+  {
+    "kode": "004550",
+    "nama": "Snack Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "004550. Snack Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z29.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z29.051.0A.521211"
+  },
+  {
+    "kode": "004552",
+    "nama": "Honorarium Narasumber (Pejabat Eselon II)",
+    "fullLabel": "004552. Honorarium Narasumber (Pejabat Eselon II)",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "WA.7457.EBD.Z29.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z29.051.0A.522151"
+  },
+  {
+    "kode": "004553",
+    "nama": "ATK dan Computer Supplies",
+    "fullLabel": "004553. ATK dan Computer Supplies",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z29.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z29.051.0B.521211"
+  },
+  {
+    "kode": "011483",
+    "nama": "Makan Rapat Biasa D.K.I. JAKARTA",
+    "fullLabel": "011483. Makan Rapat Biasa D.K.I. JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z29.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z29.051.0B.521211"
+  },
+  {
+    "kode": "004864",
+    "nama": "Perjalanan Dinas Reviu ke Daerah",
+    "fullLabel": "004864. Perjalanan Dinas Reviu ke Daerah",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "WA.7457.EBD.Z29.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z29.051.0B.524111"
+  },
+  {
+    "kode": "003699",
+    "nama": "Uang Harian Perjalanan Dinas Dalam Kota Lebih dari 8 Jam (D.K.I.  Jakarta)",
+    "fullLabel": "003699. Uang Harian Perjalanan Dinas Dalam Kota Lebih dari 8 Jam (D.K.I.  Jakarta)",
+    "kodeMak": "524113",
+    "namaMak": "Belanja Perjalanan Dinas Dalam Kota",
+    "kodeKomponen": "WA.7457.EBD.Z29.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z29.051.0B.524113"
+  },
+  {
+    "kode": "003700",
+    "nama": "Satuan Biaya Transport Kegiatan Dalam Kabupaten/Kota Pergi Pulang (PP)",
+    "fullLabel": "003700. Satuan Biaya Transport Kegiatan Dalam Kabupaten/Kota Pergi Pulang (PP)",
+    "kodeMak": "524113",
+    "namaMak": "Belanja Perjalanan Dinas Dalam Kota",
+    "kodeKomponen": "WA.7457.EBD.Z29.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z29.051.0B.524113"
+  },
+  {
+    "kode": "004559",
+    "nama": "Konsumsi Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "004559. Konsumsi Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z29.052.0A",
+    "subKomponen": "052.0A",
+    "fullMak": "WA.7457.EBD.Z29.052.0A.521211"
+  },
+  {
+    "kode": "004561",
+    "nama": "Honorarium Narasumber Eselon II",
+    "fullLabel": "004561. Honorarium Narasumber Eselon II",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "WA.7457.EBD.Z29.052.0A",
+    "subKomponen": "052.0A",
+    "fullMak": "WA.7457.EBD.Z29.052.0A.522151"
+  },
+  {
+    "kode": "004865",
+    "nama": "Perjalanan Dinas Biasa",
+    "fullLabel": "004865. Perjalanan Dinas Biasa",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "WA.7457.EBD.Z29.052.0A",
+    "subKomponen": "052.0A",
+    "fullMak": "WA.7457.EBD.Z29.052.0A.524111"
+  },
+  {
+    "kode": "004562",
+    "nama": "Seminar Kit",
+    "fullLabel": "004562. Seminar Kit",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z30.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z30.051.0A.521211"
+  },
+  {
+    "kode": "004563",
+    "nama": "Snack Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "004563. Snack Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z30.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z30.051.0A.521211"
+  },
+  {
+    "kode": "004564",
+    "nama": "Makan Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "004564. Makan Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z30.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z30.051.0A.521211"
+  },
+  {
+    "kode": "004565",
+    "nama": "Sewa Kendaraan Roda 4 (DIY)",
+    "fullLabel": "004565. Sewa Kendaraan Roda 4 (DIY)",
+    "kodeMak": "522141",
+    "namaMak": "Belanja Sewa",
+    "kodeKomponen": "WA.7457.EBD.Z30.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z30.051.0A.522141"
+  },
+  {
+    "kode": "004568",
+    "nama": "Honorarium Narasumber Eselon II",
+    "fullLabel": "004568. Honorarium Narasumber Eselon II",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "WA.7457.EBD.Z30.051.0A",
+    "subKomponen": "051.0A",
+    "fullMak": "WA.7457.EBD.Z30.051.0A.522151"
+  },
+  {
+    "kode": "004569",
+    "nama": "Konsumsi Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "004569. Konsumsi Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z30.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z30.051.0B.521211"
+  },
+  {
+    "kode": "004795",
+    "nama": "Kunjungan ke Daerah",
+    "fullLabel": "004795. Kunjungan ke Daerah",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "WA.7457.EBD.Z30.051.0B",
+    "subKomponen": "051.0B",
+    "fullMak": "WA.7457.EBD.Z30.051.0B.524111"
+  },
+  {
+    "kode": "004649",
+    "nama": "Konsumsi Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "004649. Konsumsi Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z30.052.0A",
+    "subKomponen": "052.0A",
+    "fullMak": "WA.7457.EBD.Z30.052.0A.521211"
+  },
+  {
+    "kode": "004651",
+    "nama": "Honorarium Narasumber Eselon II",
+    "fullLabel": "004651. Honorarium Narasumber Eselon II",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "WA.7457.EBD.Z30.052.0A",
+    "subKomponen": "052.0A",
+    "fullMak": "WA.7457.EBD.Z30.052.0A.522151"
+  },
+  {
+    "kode": "004657",
+    "nama": "Snack Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "004657. Snack Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z30.052.0H",
+    "subKomponen": "052.0H",
+    "fullMak": "WA.7457.EBD.Z30.052.0H.521211"
+  },
+  {
+    "kode": "004658",
+    "nama": "Makan Rapat Biasa D.K.I.  JAKARTA",
+    "fullLabel": "004658. Makan Rapat Biasa D.K.I.  JAKARTA",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z30.052.0H",
+    "subKomponen": "052.0H",
+    "fullMak": "WA.7457.EBD.Z30.052.0H.521211"
+  },
+  {
+    "kode": "004660",
+    "nama": "Penggandaan",
+    "fullLabel": "004660. Penggandaan",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z30.052.0H",
+    "subKomponen": "052.0H",
+    "fullMak": "WA.7457.EBD.Z30.052.0H.521211"
+  },
+  {
+    "kode": "004669",
+    "nama": "ATK",
+    "fullLabel": "004669. ATK",
+    "kodeMak": "521211",
+    "namaMak": "Belanja Bahan",
+    "kodeKomponen": "WA.7457.EBD.Z30.052.0H",
+    "subKomponen": "052.0H",
+    "fullMak": "WA.7457.EBD.Z30.052.0H.521211"
+  },
+  {
+    "kode": "004661",
+    "nama": "Honorarium Narasumber  Eselon II",
+    "fullLabel": "004661. Honorarium Narasumber  Eselon II",
+    "kodeMak": "522151",
+    "namaMak": "Belanja Jasa Profesi",
+    "kodeKomponen": "WA.7457.EBD.Z30.052.0H",
+    "subKomponen": "052.0H",
+    "fullMak": "WA.7457.EBD.Z30.052.0H.522151"
+  },
+  {
+    "kode": "013349",
+    "nama": "Jasa Pengelolaan Prasarana dan Sarana Gedung Kantor Secara Terpadu - Section 8",
+    "fullLabel": "013349. Jasa Pengelolaan Prasarana dan Sarana Gedung Kantor Secara Terpadu - Section 8",
+    "kodeMak": "522191",
+    "namaMak": "Belanja Jasa Lainnya",
+    "kodeKomponen": "WA.7457.EBD.Z30.052.AP",
+    "subKomponen": "052.AP",
+    "fullMak": "WA.7457.EBD.Z30.052.AP.522191"
+  },
+  {
+    "kode": "004796",
+    "nama": "Kunjungan Koordinasi ke Daerah",
+    "fullLabel": "004796. Kunjungan Koordinasi ke Daerah",
+    "kodeMak": "524111",
+    "namaMak": "Belanja Perjalanan Dinas Biasa",
+    "kodeKomponen": "WA.7457.EBD.Z30.052.AP",
+    "subKomponen": "052.AP",
+    "fullMak": "WA.7457.EBD.Z30.052.AP.524111"
   }
 ]

@@ -558,7 +558,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                   >
                     {(() => {
                       const komp = (header.nomorKomp || "7458.ABR.006.051.0A")
-                        .replace(/^CL\./, "")
+                        .replace(/^(CL|WA)\./, "")
                         .replace(/^MAK\./, "")
                         .trim();
                       const mak = (header.nomorMak || "524111").trim();
