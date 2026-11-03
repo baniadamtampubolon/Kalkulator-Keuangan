@@ -1201,7 +1201,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
               </h3>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Semua perubahan, penambahan item, dan pengeditan angka yang pernah Anda lakukan akan diganti kembali dengan data murni dari file <code>Laporan_Realisasi_16 Segmen.xlsx</code>.
+              Semua perubahan, penambahan item, dan pengeditan angka yang pernah Anda lakukan akan diganti kembali dengan data murni baseline anggaran Inspektorat (16 Segmen).
             </p>
             <div className="flex justify-end gap-2 pt-2">
               <button
