@@ -13,6 +13,7 @@ import { BiayaRiilDoc } from "@/components/documents/BiayaRiilDoc";
 import { SppdDepanDoc } from "@/components/documents/SppdDepanDoc";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
 import { DaftarKegiatanTab } from "@/components/DaftarKegiatanTab";
+import { MonitoringAnggaranTab } from "@/components/MonitoringAnggaranTab";
 import { ModalDatabaseSync } from "@/components/ModalDatabaseSync";
 import { ModalSelesaiSpj } from "@/components/ModalSelesaiSpj";
 import { ModalConfirmNewSpj } from "@/components/ModalConfirmNewSpj";
@@ -806,7 +807,7 @@ export default function Home() {
         {/* Main Content Area */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-4 space-y-6 pb-12">
           {/* Secondary Management Tabs: Return Bar to Input */}
-          {(activeTab === "kegiatan" || activeTab === "rekap" || activeTab === "panduan") && (
+          {(activeTab === "kegiatan" || activeTab === "rekap" || activeTab === "panduan" || activeTab === "monitoring") && (
             <div className="flex items-center justify-between p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-2xs backdrop-blur-md no-print animate-fade-in">
               <button
                 type="button"
@@ -824,6 +825,8 @@ export default function Home() {
                     ? "Daftar Riwayat Kegiatan"
                     : activeTab === "rekap"
                     ? "Rekap Perdin (48 Kolom)"
+                    : activeTab === "monitoring"
+                    ? "Monitoring Anggaran (16 Segmen)"
                     : "Buku Panduan & Tutorial"}
                 </span>
               </div>
@@ -948,6 +951,9 @@ export default function Home() {
               rows={rows}
             />
           )}
+
+          {/* Monitoring Anggaran (SAKTI 16 Segmen Realization Report) */}
+          {activeTab === "monitoring" && <MonitoringAnggaranTab />}
 
           {/* Tab: Daftar Kegiatan */}
           {activeTab === "kegiatan" && (

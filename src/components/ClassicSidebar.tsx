@@ -22,6 +22,7 @@ import {
   Layers,
   CheckCircle2,
   FolderClosed,
+  TrendingUp,
 } from "lucide-react";
 
 interface ClassicSidebarProps {
@@ -71,6 +72,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
   const mgmtTabs = [
     { id: "kegiatan", label: "Daftar Riwayat Kegiatan", icon: FolderKanban, count: totalKegiatanCount },
     { id: "rekap", label: "Rekap Perdin (48 Kolom)", icon: FileSpreadsheet },
+    { id: "monitoring", label: "Monitoring Anggaran", icon: TrendingUp },
   ];
 
   return (

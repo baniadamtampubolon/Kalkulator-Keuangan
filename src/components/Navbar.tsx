@@ -15,7 +15,7 @@ import {
   PanelLeft,
 } from "lucide-react";
 
-export type ActiveTab = "input" | "kegiatan" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "spd" | "rekap" | "panduan";
+export type ActiveTab = "input" | "kegiatan" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "spd" | "rekap" | "panduan" | "monitoring";
 
 interface NavbarProps {
   activeTab: ActiveTab;
