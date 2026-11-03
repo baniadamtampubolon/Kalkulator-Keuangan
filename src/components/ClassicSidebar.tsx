@@ -11,17 +11,11 @@ import {
   ListOrdered,
   FileCheck,
   FolderKanban,
-  BookOpen,
-  Database,
   PanelLeftClose,
   Plus,
-  Sparkles,
   Cloud,
   Bookmark,
-  BookmarkCheck,
   Layers,
-  CheckCircle2,
-  FolderClosed,
   TrendingUp,
 } from "lucide-react";
 

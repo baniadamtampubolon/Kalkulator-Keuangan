@@ -20,7 +20,6 @@ import { fetchRekapFromSheet, syncAllRekapToGoogleSheet } from "@/lib/googleShee
 import {
   STANDARD_REKAP_HEADERS,
   formatRowsTo48Columns,
-  STORAGE_KEY_REKAP,
   getCompleteRekapData,
 } from "@/lib/rekapHelper";
 import { ModalRekapRowEditor } from "./ModalRekapRowEditor";

@@ -65,6 +65,12 @@ export default function Home() {
   const [pegawaiList, setPegawaiList] = useState<Pegawai[]>(pegawaiRaw as Pegawai[]);
   const [sbmList, setSbmList] = useState<SbmRate[]>(sbmRaw as SbmRate[]);
   const [memoList, setMemoList] = useState<NomorMemo[]>(memoRaw as NomorMemo[]);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("input");
+  const [isDbModalOpen, setIsDbModalOpen] = useState<boolean>(false);
+  const [isCompletionModalOpen, setIsCompletionModalOpen] = useState<boolean>(false);
+  const [isConfirmNewModalOpen, setIsConfirmNewModalOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [totalKegiatanCount, setTotalKegiatanCount] = useState<number>(0);
 
   // Asynchronous client-side cache hydration & Google Sheets background sync
   useEffect(() => {
@@ -103,15 +109,6 @@ export default function Home() {
       isMounted = false;
     };
   }, []);
-
-
-
-  const [activeTab, setActiveTab] = useState<ActiveTab>("input");
-  const [isDbModalOpen, setIsDbModalOpen] = useState<boolean>(false);
-  const [isCompletionModalOpen, setIsCompletionModalOpen] = useState<boolean>(false);
-  const [isConfirmNewModalOpen, setIsConfirmNewModalOpen] = useState<boolean>(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-  const [totalKegiatanCount, setTotalKegiatanCount] = useState<number>(0);
 
   // Safely hydrate saved kegiatan count on client mount
   useEffect(() => {

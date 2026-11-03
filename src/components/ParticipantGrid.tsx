@@ -106,11 +106,12 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
   const [modalHotelRow, setModalHotelRow] = useState<ParticipantRow | null>(null);
   const [modalRiilRow, setModalRiilRow] = useState<ParticipantRow | null>(null);
   const [modalSpjRow, setModalSpjRow] = useState<ParticipantRow | null>(null);
-  const [latestSpdDb, setLatestSpdDb] = useState<number>(0);
+  const [latestSpdDb, setLatestSpdDb] = useState<number>(() =>
+    typeof window !== "undefined" ? getLatestRegisteredSpdNumber() : 0
+  );
 
   // Pantau sinkronisasi nomor SPD terakhir dari database lokal / cloud
   useEffect(() => {
-    setLatestSpdDb(getLatestRegisteredSpdNumber());
     const handleSpdUpdate = () => {
       setLatestSpdDb(getLatestRegisteredSpdNumber());
     };

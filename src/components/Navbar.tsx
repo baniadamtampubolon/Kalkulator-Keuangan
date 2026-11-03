@@ -39,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   isSidebarOpen = false,
   onCreateNewKegiatan,
   currentLoadedId,
-  isSaved = false,
+  isSaved: _isSaved = false,
   hasChanges = false,
   participantCount,
   totalExpenditure,
