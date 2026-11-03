@@ -67,6 +67,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 }) => {
   const [isModalTambahPegawaiOpen, setIsModalTambahPegawaiOpen] = useState(false);
   const [isCustomItemDetail, setIsCustomItemDetail] = useState(false);
+  const [isCustomAlatAngkut, setIsCustomAlatAngkut] = useState(false);
 
   // Mode input Nomor Komponen: dropdown preset vs custom form inputs
   const [isManualKomponenOverride, setIsManualKomponenOverride] = useState<boolean | null>(null);
@@ -926,18 +927,100 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
                 {/* Moda Transportasi */}
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-800">
-                    Alat Angkutan
-                  </label>
-                  <select
-                    value={header.alatAngkut || "Angkutan Darat"}
-                    onChange={(e) => handleChange("alatAngkut", e.target.value)}
-                    className="input-human w-full h-9.5 px-2.5 font-medium cursor-pointer"
-                  >
-                    <option value="Angkutan Darat">Angkutan Darat (Mobil/Kereta/Bus)</option>
-                    <option value="Pesawat Udara">Pesawat Udara</option>
-                    <option value="Angkutan Laut">Angkutan Laut / Kapal</option>
-                  </select>
+                  <div className="flex items-center justify-between">
+                    <label className="font-semibold text-slate-800">
+                      Alat Angkutan
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomAlatAngkut(!isCustomAlatAngkut)}
+                      className="text-[10px] text-[#0071e3] hover:text-[#0077ed] font-medium cursor-pointer transition-colors"
+                    >
+                      {isCustomAlatAngkut ? "Pilih Preset" : "Ketik Kustom"}
+                    </button>
+                  </div>
+
+                  {isCustomAlatAngkut ? (
+                    <input
+                      type="text"
+                      value={header.alatAngkut || ""}
+                      onChange={(e) => handleChange("alatAngkut", e.target.value)}
+                      placeholder="Contoh: Pesawat Udara & Kereta Api"
+                      className="input-human w-full h-9.5 px-3 font-medium text-xs"
+                    />
+                  ) : (
+                    <select
+                      value={header.alatAngkut || "Angkutan Darat"}
+                      onChange={(e) => {
+                        if (e.target.value === "__CUSTOM__") {
+                          setIsCustomAlatAngkut(true);
+                        } else {
+                          handleChange("alatAngkut", e.target.value);
+                        }
+                      }}
+                      className="input-human w-full h-9.5 px-2.5 font-medium cursor-pointer"
+                    >
+                      <option value="Angkutan Darat">Angkutan Darat (Mobil/Bus)</option>
+                      <option value="Kereta Api">Kereta Api</option>
+                      <option value="Pesawat Udara">Pesawat Udara</option>
+                      <option value="Angkutan Laut">Angkutan Laut / Kapal</option>
+                      <option value="Pesawat Udara & Kereta Api">Pesawat Udara & Kereta Api</option>
+                      <option value="Pesawat Udara & Angkutan Darat">Pesawat Udara & Angkutan Darat</option>
+                      <option value="Pesawat Udara & Angkutan Laut">Pesawat Udara & Angkutan Laut</option>
+                      <option value="Kereta Api & Angkutan Darat">Kereta Api & Angkutan Darat</option>
+                      {header.alatAngkut && ![
+                        "Angkutan Darat",
+                        "Kereta Api",
+                        "Pesawat Udara",
+                        "Angkutan Laut",
+                        "Pesawat Udara & Kereta Api",
+                        "Pesawat Udara & Angkutan Darat",
+                        "Pesawat Udara & Angkutan Laut",
+                        "Kereta Api & Angkutan Darat",
+                      ].includes(header.alatAngkut) && (
+                        <option value={header.alatAngkut}>{header.alatAngkut}</option>
+                      )}
+                      <option value="__CUSTOM__">✏️ Ketik Kustom / Kombinasi Bebas...</option>
+                    </select>
+                  )}
+
+                  {/* Kombinasi Cepat Multi-Moda */}
+                  <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                    <span className="text-[10px] text-slate-400 font-medium">Kombinasi cepat:</span>
+                    {[
+                      { key: "Pesawat Udara", label: "✈️ Pesawat" },
+                      { key: "Kereta Api", label: "🚆 Kereta" },
+                      { key: "Angkutan Darat", label: "🚗 Darat" },
+                      { key: "Angkutan Laut", label: "🚢 Kapal" },
+                    ].map((m) => {
+                      const isActive = (header.alatAngkut || "").includes(m.key);
+                      return (
+                        <button
+                          key={m.key}
+                          type="button"
+                          onClick={() => {
+                            const current = header.alatAngkut || "";
+                            const parts = current.split("&").map((s) => s.trim()).filter(Boolean);
+                            let updated: string[];
+                            if (parts.includes(m.key)) {
+                              updated = parts.filter((p) => p !== m.key);
+                            } else {
+                              updated = [...parts, m.key];
+                            }
+                            const res = updated.length > 0 ? updated.join(" & ") : "Angkutan Darat";
+                            handleChange("alatAngkut", res);
+                          }}
+                          className={`btn-tactile text-[10px] px-1.5 py-0.5 rounded border transition-all cursor-pointer ${
+                            isActive
+                              ? "bg-blue-100 text-blue-900 border-blue-300 font-bold"
+                              : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 font-medium"
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 

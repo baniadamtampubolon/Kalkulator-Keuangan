@@ -65,6 +65,7 @@ export interface TicketDetail {
   tujuan?: string;
   tanggal?: string;
   harga?: number;
+  moda?: string;
 }
 
 export interface ParticipantRow {
@@ -103,9 +104,11 @@ export interface ParticipantRow {
   transportJakartaPp: number;
   transportDaerahPp: number;
   
-  // Tiket Rincian SPJ Pergi & Pulang
+  // Tiket Rincian SPJ Pergi & Pulang (Mendukung Multi-Leg Transit & Multi-Moda)
   tiketDetailPergi?: TicketDetail;
   tiketDetailPulang?: TicketDetail;
+  tiketPergiList?: TicketDetail[];
+  tiketPulangList?: TicketDetail[];
   boardingPass?: "ADA" | "TIDAK";
 
   // Hotel & Penginapan Rincian SPJ

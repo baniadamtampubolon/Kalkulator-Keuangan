@@ -1200,11 +1200,13 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
           row={modalTiketRow}
           isOpen={true}
           onClose={() => setModalTiketRow(null)}
-          onSave={(total, pergi, pulang, boardingPass) => {
+          onSave={(total, pergi, pulang, boardingPass, pergiList, pulangList) => {
             handleUpdateRow(modalTiketRow.id, {
               tiket: total,
               tiketDetailPergi: pergi,
               tiketDetailPulang: pulang,
+              tiketPergiList: pergiList,
+              tiketPulangList: pulangList,
               boardingPass: boardingPass,
             });
             setModalTiketRow(null);

@@ -215,30 +215,43 @@ export function formatRowTo48Columns(
   batchId?: string,
   rowIndex: number = 1
 ): Record<string, unknown> {
-  const noTiket =
-    r.tiketDetailPergi?.noTiket || r.tiketDetailPulang?.noTiket
-      ? `Berangkat : ${r.tiketDetailPergi?.noTiket || "-"}\nPulang : ${r.tiketDetailPulang?.noTiket || "-"}`
-      : "";
+  const pergiLegs = r.tiketPergiList && r.tiketPergiList.length > 0 ? r.tiketPergiList : (r.tiketDetailPergi ? [r.tiketDetailPergi] : []);
+  const pulangLegs = r.tiketPulangList && r.tiketPulangList.length > 0 ? r.tiketPulangList : (r.tiketDetailPulang ? [r.tiketDetailPulang] : []);
 
-  const maskapai =
-    r.tiketDetailPergi?.maskapai || r.tiketDetailPulang?.maskapai
-      ? `Berangkat : ${r.tiketDetailPergi?.maskapai || "-"}\nPulang : ${r.tiketDetailPulang?.maskapai || "-"}`
-      : "";
+  const noTiket = (() => {
+    const pStr = pergiLegs.map((t) => t.noTiket).filter(Boolean).join(" / ");
+    const rStr = pulangLegs.map((t) => t.noTiket).filter(Boolean).join(" / ");
+    if (pStr || rStr) {
+      return `Berangkat : ${pStr || "-"}\nPulang : ${rStr || "-"}`;
+    }
+    return "";
+  })();
 
-  const kodeBooking =
-    r.tiketDetailPergi?.kodeBooking || r.tiketDetailPulang?.kodeBooking
-      ? `Berangkat : ${r.tiketDetailPergi?.kodeBooking || "-"}\nPulang : ${r.tiketDetailPulang?.kodeBooking || "-"}`
-      : "";
+  const maskapai = (() => {
+    const pStr = pergiLegs.map((t) => t.maskapai).filter(Boolean).join(" + ");
+    const rStr = pulangLegs.map((t) => t.maskapai).filter(Boolean).join(" + ");
+    if (pStr || rStr) {
+      return `Berangkat : ${pStr || "-"}\nPulang : ${rStr || "-"}`;
+    }
+    return "";
+  })();
 
-  const farePergi =
-    r.tiketDetailPergi?.harga !== undefined
-      ? r.tiketDetailPergi.harga
-      : r.tiket ? Math.round(r.tiket / 2) : 0;
+  const kodeBooking = (() => {
+    const pStr = pergiLegs.map((t) => t.kodeBooking).filter(Boolean).join(" / ");
+    const rStr = pulangLegs.map((t) => t.kodeBooking).filter(Boolean).join(" / ");
+    if (pStr || rStr) {
+      return `Berangkat : ${pStr || "-"}\nPulang : ${rStr || "-"}`;
+    }
+    return "";
+  })();
 
-  const farePulang =
-    r.tiketDetailPulang?.harga !== undefined
-      ? r.tiketDetailPulang.harga
-      : r.tiket ? Math.round(r.tiket / 2) : 0;
+  const farePergi = pergiLegs.length > 0
+    ? pergiLegs.reduce((acc, t) => acc + (Number(t.harga) || 0), 0)
+    : (r.tiket ? Math.round(r.tiket / 2) : 0);
+
+  const farePulang = pulangLegs.length > 0
+    ? pulangLegs.reduce((acc, t) => acc + (Number(t.harga) || 0), 0)
+    : (r.tiket ? Math.round(r.tiket / 2) : 0);
 
   const biayaTransport =
     (r.transportasiDarat || 0) + (r.transportasiLokal || 0) + (r.dukunganTransportasi || 0);

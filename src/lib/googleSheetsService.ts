@@ -1508,14 +1508,30 @@ export async function savePerdinToGoogleSheet(
       totalBiaya: p.totalJumlah || 0,
       ticketDetail: {
         boardingPassStatus: p.boardingPass || (p.tiket > 0 ? "ADA" : ""),
-        pergiNoTiket: p.tiketDetailPergi?.noTiket || "",
-        pergiKodeBooking: p.tiketDetailPergi?.kodeBooking || "",
-        pergiMaskapai: p.tiketDetailPergi?.maskapai || "",
-        pergiHargaFare: p.tiketDetailPergi?.harga || 0,
-        pulangNoTiket: p.tiketDetailPulang?.noTiket || "",
-        pulangKodeBooking: p.tiketDetailPulang?.kodeBooking || "",
-        pulangMaskapai: p.tiketDetailPulang?.maskapai || "",
-        pulangHargaFare: p.tiketDetailPulang?.harga || 0,
+        pergiNoTiket: p.tiketPergiList && p.tiketPergiList.length > 0
+          ? p.tiketPergiList.map((t) => t.noTiket).filter(Boolean).join(" / ")
+          : p.tiketDetailPergi?.noTiket || "",
+        pergiKodeBooking: p.tiketPergiList && p.tiketPergiList.length > 0
+          ? p.tiketPergiList.map((t) => t.kodeBooking).filter(Boolean).join(" / ")
+          : p.tiketDetailPergi?.kodeBooking || "",
+        pergiMaskapai: p.tiketPergiList && p.tiketPergiList.length > 0
+          ? p.tiketPergiList.map((t) => t.maskapai).filter(Boolean).join(" + ")
+          : p.tiketDetailPergi?.maskapai || "",
+        pergiHargaFare: p.tiketPergiList && p.tiketPergiList.length > 0
+          ? p.tiketPergiList.reduce((sum, t) => sum + (Number(t.harga) || 0), 0)
+          : p.tiketDetailPergi?.harga || 0,
+        pulangNoTiket: p.tiketPulangList && p.tiketPulangList.length > 0
+          ? p.tiketPulangList.map((t) => t.noTiket).filter(Boolean).join(" / ")
+          : p.tiketDetailPulang?.noTiket || "",
+        pulangKodeBooking: p.tiketPulangList && p.tiketPulangList.length > 0
+          ? p.tiketPulangList.map((t) => t.kodeBooking).filter(Boolean).join(" / ")
+          : p.tiketDetailPulang?.kodeBooking || "",
+        pulangMaskapai: p.tiketPulangList && p.tiketPulangList.length > 0
+          ? p.tiketPulangList.map((t) => t.maskapai).filter(Boolean).join(" + ")
+          : p.tiketDetailPulang?.maskapai || "",
+        pulangHargaFare: p.tiketPulangList && p.tiketPulangList.length > 0
+          ? p.tiketPulangList.reduce((sum, t) => sum + (Number(t.harga) || 0), 0)
+          : p.tiketDetailPulang?.harga || 0,
       },
       hotelDetail: {
         namaHotel: p.namaHotel || "",
