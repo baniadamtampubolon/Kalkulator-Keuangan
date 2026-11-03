@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import {
   ParticipantRow,
   Pegawai,
@@ -106,22 +106,19 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
   const [modalHotelRow, setModalHotelRow] = useState<ParticipantRow | null>(null);
   const [modalRiilRow, setModalRiilRow] = useState<ParticipantRow | null>(null);
   const [modalSpjRow, setModalSpjRow] = useState<ParticipantRow | null>(null);
-  const [latestSpdDb, setLatestSpdDb] = useState<number>(() =>
-    typeof window !== "undefined" ? getLatestRegisteredSpdNumber() : 0
+  // Pantau sinkronisasi nomor SPD terakhir dari database lokal / cloud secara SSR-safe
+  const latestSpdDb = useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener("spd-latest-updated", onStoreChange);
+      window.addEventListener("storage", onStoreChange);
+      return () => {
+        window.removeEventListener("spd-latest-updated", onStoreChange);
+        window.removeEventListener("storage", onStoreChange);
+      };
+    },
+    () => getLatestRegisteredSpdNumber(),
+    () => 0
   );
-
-  // Pantau sinkronisasi nomor SPD terakhir dari database lokal / cloud
-  useEffect(() => {
-    const handleSpdUpdate = () => {
-      setLatestSpdDb(getLatestRegisteredSpdNumber());
-    };
-    window.addEventListener("spd-latest-updated", handleSpdUpdate);
-    window.addEventListener("storage", handleSpdUpdate);
-    return () => {
-      window.removeEventListener("spd-latest-updated", handleSpdUpdate);
-      window.removeEventListener("storage", handleSpdUpdate);
-    };
-  }, []);
 
   const handleUpdateRow = (
     id: string,
