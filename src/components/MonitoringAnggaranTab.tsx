@@ -42,6 +42,7 @@ import {
 export const MonitoringAnggaranTab: React.FC = () => {
   const [data, setData] = useState<AnggaranData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState<"all" | "WA" | "CL">("all");
   const [selectedFilter, setSelectedFilter] = useState<"all" | "524" | "521" | "522">("all");
 
   // Track expanded rows (Set of row IDs).
@@ -123,11 +124,18 @@ export const MonitoringAnggaranTab: React.FC = () => {
     showToast("Semua rincian item ditutup (tampil s.d. Nomor MAK).");
   };
 
-  // Grand total row
+  // Grand total row or Active Program summary row
   const totalRow = useMemo(() => {
     if (!data) return null;
-    return data.rows.find((r) => r.type === "total") || null;
-  }, [data]);
+    if (selectedProgram === "all") {
+      return data.rows.find((r) => r.type === "total") || null;
+    }
+    return (
+      data.rows.find((r) => r.type === "program" && r.kode === selectedProgram) ||
+      data.rows.find((r) => r.type === "total") ||
+      null
+    );
+  }, [data, selectedProgram]);
 
   // Compute children count map
   const childrenMap = useMemo(() => {
@@ -155,6 +163,24 @@ export const MonitoringAnggaranTab: React.FC = () => {
     if (!data) return [];
 
     let rows = data.rows;
+
+    // Filter by Program (WA vs CL)
+    if (selectedProgram !== "all") {
+      const allowedProgIds = new Set<string>();
+      rows.forEach((r) => {
+        let curr: AnggaranRow | undefined = r;
+        while (curr) {
+          if (curr.type === "program" && curr.kode === selectedProgram) {
+            allowedProgIds.add(r.id);
+            break;
+          }
+          if (!curr.parentId) break;
+          curr = rowMap.get(curr.parentId);
+        }
+        if (r.type === "total") allowedProgIds.add(r.id);
+      });
+      rows = rows.filter((r) => allowedProgIds.has(r.id));
+    }
 
     // Apply quick filter on Akun codes
     if (selectedFilter !== "all") {
@@ -238,7 +264,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
       }
       return true;
     });
-  }, [data, selectedFilter, searchQuery, expandedIds, rowMap]);
+  }, [data, selectedProgram, selectedFilter, searchQuery, expandedIds, rowMap]);
 
   // Open Edit Modal
   const handleOpenEdit = (row: AnggaranRow) => {
@@ -531,7 +557,11 @@ export const MonitoringAnggaranTab: React.FC = () => {
                 {formatRupiah(totalRow.pagu)}
               </p>
               <span className="text-[10px] text-blue-500 font-medium mt-0.5 block">
-                DIPA TA 2026 Kemenko Pangan
+                {selectedProgram === "WA"
+                  ? "Program WA (Dukungan Manajemen - Inspektorat)"
+                  : selectedProgram === "CL"
+                  ? "Program CL (Tata Niaga & Distribusi Pangan)"
+                  : "DIPA TA 2026 Kemenko Pangan (WA + CL)"}
               </span>
             </div>
 
@@ -544,7 +574,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
                 {formatRupiah(totalRow.realLalu)}
               </p>
               <span className="text-[10px] text-slate-400 font-medium mt-0.5 block">
-                Realisasi s.d. Bulan Agustus
+                Realisasi s.d. Bulan Lalu
               </span>
             </div>
 
@@ -597,6 +627,75 @@ export const MonitoringAnggaranTab: React.FC = () => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Program Selector Tabs (WA vs CL vs All) */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-2 shadow-xs flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3">
+          Filter Program:
+        </span>
+        <button
+          type="button"
+          onClick={() => setSelectedProgram("all")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            selectedProgram === "all"
+              ? "bg-[#0071e3] text-white shadow-xs"
+              : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+          }`}
+        >
+          <span>Semua Program (Gabungan Satker)</span>
+          <span
+            className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
+              selectedProgram === "all"
+                ? "bg-white/20 text-white"
+                : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+            }`}
+          >
+            Rp 10,86 M
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedProgram("WA")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            selectedProgram === "WA"
+              ? "bg-[#0071e3] text-white shadow-xs"
+              : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+          }`}
+        >
+          <span>Program WA — Inspektorat (Files 7, 9, 10)</span>
+          <span
+            className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
+              selectedProgram === "WA"
+                ? "bg-white/20 text-white"
+                : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+            }`}
+          >
+            Rp 1,17 M
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedProgram("CL")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            selectedProgram === "CL"
+              ? "bg-[#0071e3] text-white shadow-xs"
+              : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+          }`}
+        >
+          <span>Program CL — Tata Niaga &amp; Pangan (File 6)</span>
+          <span
+            className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
+              selectedProgram === "CL"
+                ? "bg-white/20 text-white"
+                : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+            }`}
+          >
+            Rp 9,69 M
+          </span>
+        </button>
       </div>
 
       {/* Action Bar & Quick Filter Controls */}

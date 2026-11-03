@@ -45,10 +45,10 @@ export interface AnggaranData {
   rows: AnggaranRow[];
 }
 
-const STORAGE_KEY = "kalkulator_monitoring_anggaran_v2";
+const STORAGE_KEY = "kalkulator_monitoring_anggaran_v3";
 
 /**
- * Return deep clone of initial data extracted from anggaran-lengkap files (7), (9), (10)
+ * Return deep clone of initial data extracted from anggaran-lengkap files (6), (7), (9), (10)
  */
 export function getDefaultAnggaranData(): AnggaranData {
   return JSON.parse(JSON.stringify(initialDataJson)) as AnggaranData;
@@ -126,8 +126,9 @@ export function loadAnggaranData(): AnggaranData {
   }
 
   try {
-    // Purge old v1 cache if still present
+    // Purge old v1 & v2 cache if still present
     localStorage.removeItem("kalkulator_monitoring_anggaran_v1");
+    localStorage.removeItem("kalkulator_monitoring_anggaran_v2");
 
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
