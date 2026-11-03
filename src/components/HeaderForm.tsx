@@ -1338,8 +1338,8 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 onChange={(e) => handlePpkChange(e.target.value)}
                 className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 cursor-pointer"
               >
-                {pegawaiList.map((p) => (
-                  <option key={p.kodeNama} value={p.nama}>
+                {pegawaiList.map((p, idx) => (
+                  <option key={`ppk-${p.nip || p.kodeNama || p.nama}-${idx}`} value={p.nama}>
                     {p.nama} ({p.jabatan})
                   </option>
                 ))}
@@ -1377,8 +1377,8 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 onChange={(e) => handlePenanggungJawabChange(e.target.value)}
                 className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 cursor-pointer"
               >
-                {pegawaiList.map((p) => (
-                  <option key={p.kodeNama} value={p.nama}>
+                {pegawaiList.map((p, idx) => (
+                  <option key={`pj-${p.nip || p.kodeNama || p.nama}-${idx}`} value={p.nama}>
                     {p.nama} ({p.jabatan})
                   </option>
                 ))}

@@ -92,6 +92,23 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
   const perihalText = header.keteranganMemo || header.keteranganKegiatan || "Permohonan Dana Perjalanan Dinas";
   const judulKegiatan = header.keteranganKegiatan || header.keteranganMemo || "Kegiatan Perjalanan Dinas";
 
+  // Format narasi alinea pembuka Memorandum agar tidak menduplikasi tanggal & lokasi jika sudah diketik user
+  const formattedDateMulai = formatDateIndo(rows[0]?.tanggalMulai || header.tanggalSpd);
+  const rawKegiatan = (header.keteranganKegiatan || "").trim();
+  const sudahAdaTanggal = rawKegiatan
+    ? /tanggal|tgl\b|\b\d{1,2}\s+(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember)\s+\d{4}/i.test(rawKegiatan)
+    : false;
+
+  const uraianKegiatanMemo = rawKegiatan
+    ? sudahAdaTanggal
+      ? rawKegiatan
+      : `${rawKegiatan} pada Tanggal ${formattedDateMulai} di ${kotaTujuanText}, ${header.provinsiTujuan}`
+    : `kegiatan perjalanan dinas pada Tanggal ${formattedDateMulai} di ${kotaTujuanText}, ${header.provinsiTujuan}`;
+
+  const prefixSehubungan = uraianKegiatanMemo.toLowerCase().startsWith("sehubungan dengan")
+    ? ""
+    : "Sehubungan dengan ";
+
   const handleResetCanvas = () => {
     setRenderKey((prev) => prev + 1);
   };
@@ -289,7 +306,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
           {/* Body Narrative */}
           <div className="space-y-4 text-justify text-xs md:text-[12px] leading-relaxed pt-2">
             <p>
-              Sehubungan dengan {header.keteranganKegiatan || "kegiatan perjalanan dinas"} pada Tanggal {formatDateIndo(rows[0]?.tanggalMulai || header.tanggalSpd)} di {kotaTujuanText}, {header.provinsiTujuan} dengan ini kami mengajukan permohonan dana sebesar{" "}
+              {prefixSehubungan}{uraianKegiatanMemo} dengan ini kami mengajukan permohonan dana sebesar{" "}
               <strong>Rp{grandTotal.toLocaleString("id-ID")}</strong> yang dibebankan pada APBN satuan kerja Kementerian Koordinator Bidang Pangan tahun anggaran {tahunAnggaran} dengan MAK.{fullMakCode.replace(/^MAK\./, "")}
             </p>
 

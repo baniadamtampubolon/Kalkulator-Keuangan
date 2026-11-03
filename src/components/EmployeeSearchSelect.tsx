@@ -276,7 +276,7 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
 
                   return (
                     <div
-                      key={p.kodeNama || p.nama || index}
+                      key={`emp-${p.nip || p.kodeNama || p.nama}-${index}`}
                       onClick={() => {
                         onSelect(p.nama);
                         handleClose();
