@@ -58,7 +58,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
 }) => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
-    setMounted(true);
+    Promise.resolve().then(() => setMounted(true));
   }, []);
 
   const isPengadaan = spjType !== "PERDIN";

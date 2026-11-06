@@ -7,7 +7,6 @@ import {
   extractMemoSeqNumber,
   getCustomMemoList,
   saveCustomMemo,
-  deleteCustomMemo,
   mergeAndSortMemoList,
   exportMemoListToExcel,
 } from "@/lib/memoHelper";
@@ -22,19 +21,15 @@ import {
   Copy,
   Check,
   ExternalLink,
-  FileText,
-  Filter,
   CheckCircle2,
   Clock,
   Calendar,
   Edit3,
-  Trash2,
   Table,
   LayoutGrid,
   X,
   BookmarkCheck,
   ArrowRight,
-  TrendingUp,
   Coins,
 } from "lucide-react";
 
@@ -94,18 +89,8 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
     idKegiatanRef: "",
   });
 
-  // Modal Delete State
-  const [deleteTarget, setDeleteTarget] = useState<NomorMemo | null>(null);
-
   // Hydrate custom memos & saved kegiatan
   useEffect(() => {
-    try {
-      setCustomList(getCustomMemoList());
-      setSavedKegiatanList(getSavedKegiatanList());
-    } catch {
-      // ignore
-    }
-
     const handleUpdate = () => {
       try {
         setCustomList(getCustomMemoList());
@@ -115,6 +100,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
       }
     };
 
+    handleUpdate();
     window.addEventListener("memo-list-updated", handleUpdate);
     window.addEventListener("kegiatan-list-updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
@@ -371,17 +357,6 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
     saveCustomMemo(newMemoEntry);
     setIsModalOpen(false);
     setToastMessage(`Nomor memorandum ${formatLengkap} berhasil disimpan!`);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
-  // Handle Delete Target Confirm
-  const handleConfirmDelete = () => {
-    if (!deleteTarget) return;
-    const seq = extractMemoSeqNumber(deleteTarget);
-    const format = deleteTarget.format_lengkap || deleteTarget.noMemo || `M.${seq}`;
-    deleteCustomMemo(format);
-    setDeleteTarget(null);
-    setToastMessage(`Nomor memorandum ${format} dihapus dari daftar kustom lokal.`);
     setTimeout(() => setToastMessage(null), 3000);
   };
 

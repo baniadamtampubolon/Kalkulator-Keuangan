@@ -939,7 +939,8 @@ export const ModalRiil: React.FC<ModalRiilProps> = ({ row, isOpen, onClose, onSa
   });
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+    Promise.resolve().then(() => {
       if (Array.isArray(row.riilItems) && row.riilItems.length > 0) {
         setItems(row.riilItems);
       } else if ((row.pengRill || 0) > 0) {
@@ -950,7 +951,7 @@ export const ModalRiil: React.FC<ModalRiilProps> = ({ row, isOpen, onClose, onSa
           { id: "2", uraian: "Transportasi Lokal Daerah Tujuan", amount: 150000 },
         ]);
       }
-    }
+    });
   }, [row.riilItems, row.pengRill, row.id, isOpen]);
 
   if (!isOpen) return null;

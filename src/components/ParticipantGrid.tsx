@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useSyncExternalStore } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import {
   ParticipantRow,
   Pegawai,
@@ -99,7 +99,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
     const list = (header.kotaTujuanList || []).filter(Boolean);
     if (list.length > 0) return list;
     return [header.provinsiTujuan];
-  }, [header.isMultiProvinsi, header.provinsiTujuan, header.provinsiTujuan2, header.kotaTujuanList, header.kotaTujuanList2, isMultiProv]);
+  }, [header.provinsiTujuan, header.provinsiTujuan2, header.kotaTujuanList, header.kotaTujuanList2, isMultiProv]);
 
   // Modal States
   const [modalTiketRow, setModalTiketRow] = useState<ParticipantRow | null>(null);

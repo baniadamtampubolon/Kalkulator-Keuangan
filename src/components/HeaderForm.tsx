@@ -23,7 +23,6 @@ import {
 import { getMonthRoman, updateMemoNumberWithDate, getDefaultMemoNumber, parseMemoNumberParts } from "@/lib/calc";
 import { ModalTambahPegawai } from "./ModalTambahPegawai";
 import {
-  FileText,
   MapPin,
   Landmark,
   FileCheck2,
@@ -69,7 +68,6 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   editingOriginalId,
 }) => {
   const [isModalTambahPegawaiOpen, setIsModalTambahPegawaiOpen] = useState(false);
-  const [isCustomItemDetail, setIsCustomItemDetail] = useState(false);
   const [isCustomAlatAngkut, setIsCustomAlatAngkut] = useState(false);
 
   // Mode input Nomor Komponen: dropdown preset vs custom form inputs
@@ -182,7 +180,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   }, [pegawaiList]);
 
   // Mode input Nomor Memorandum: standard segmented vs manual free text
-  const [isManualMemoMode, setIsManualMemoMode] = useState<boolean>(false);
+  const isManualMemoMode = false;
 
   // Parse struktur nomor memorandum aktif
   const memoParts = React.useMemo(() => {
@@ -279,8 +277,8 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   const [savedKegiatanList, setSavedKegiatanList] = useState<SavedKegiatan[]>([]);
 
   useEffect(() => {
-    setIsMounted(true);
     const updateList = () => {
+      setIsMounted(true);
       try {
         setSavedKegiatanList(getSavedKegiatanList());
         setCustomItems(getCustomItemDetails());

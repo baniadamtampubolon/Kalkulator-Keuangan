@@ -1,4 +1,4 @@
-import { PengadaanItemRow, PengadaanTaxConfig, SpjDocType } from "./types";
+import { Pegawai, PengadaanItemRow, PengadaanTaxConfig, SpjDocType } from "./types";
 
 export interface SpjTypeMetadata {
   id: SpjDocType;
@@ -15,6 +15,25 @@ export interface SpjTypeMetadata {
   colJumlahLabel: string;
   defaultSatuan: string;
   satuanOptions: string[];
+}
+
+export interface PengadaanScenarioPreset {
+  id: string;
+  label: string;
+  description: string;
+  items: PengadaanItemRow[];
+  ppnMode: PengadaanTaxConfig["ppnMode"];
+  pphType: PengadaanTaxConfig["pphType"];
+}
+
+export function formatPegawaiBankRekening(pegawai?: Pegawai): string {
+  if (!pegawai) return "";
+  const rek = (pegawai.nomorRekening || "").trim();
+  if (!rek || rek.length < 5) return "";
+  const bank = (pegawai.namaBank || "").trim();
+  const isRealBankName = bank && isNaN(Number(bank));
+  if (isRealBankName) return `${bank} - ${rek}`;
+  return rek;
 }
 
 export const SPJ_TYPE_LIST: SpjTypeMetadata[] = [
@@ -223,10 +242,226 @@ export function getDefaultPengadaanItems(type: SpjDocType): PengadaanItemRow[] {
   return [];
 }
 
+export function getPengadaanScenarioPresets(type: SpjDocType): PengadaanScenarioPreset[] {
+  if (type === "KONSUMSI") {
+    return [
+      {
+        id: "kons-lengkap",
+        label: "Paket Rapat Lengkap (Makan + Snack)",
+        description: "Makan Siang Rp 53.000 + Snack Rp 28.000 • PPN Include (11/111) + PPh 23 (2%)",
+        items: getDefaultPengadaanItems("KONSUMSI"),
+        ppnMode: "INCLUDE_11_111",
+        pphType: "PPH23_2",
+      },
+      {
+        id: "kons-snack",
+        label: "Snack Rapat Saja",
+        description: "1 Item Snack Rapat Rp 28.000/Pak • PPN Include + PPh 23 (2%)",
+        items: [
+          {
+            id: "kons-1",
+            no: 1,
+            uraian: "Snack Rapat Koordinasi",
+            hargaSatuan: 28000,
+            jumlah: 40,
+            satuan: "Pak",
+            subTotal: 28000 * 40,
+            ppnJenis: "INCLUDE",
+          },
+        ],
+        ppnMode: "INCLUDE_11_111",
+        pphType: "PPH23_2",
+      },
+      {
+        id: "kons-non-ppn",
+        label: "Konsumsi < Rp 2 Juta (Bebas PPN)",
+        description: "Tanpa potongan PPN (di bawah Rp 2 Juta) • Tetap potong PPh 23 (2%)",
+        items: [
+          {
+            id: "kons-1",
+            no: 1,
+            uraian: "Makan Siang Rapat",
+            hargaSatuan: 53000,
+            jumlah: 20,
+            satuan: "Pak",
+            subTotal: 53000 * 20,
+            ppnJenis: "NONE",
+          },
+          {
+            id: "kons-2",
+            no: 2,
+            uraian: "Snack Rapat",
+            hargaSatuan: 28000,
+            jumlah: 20,
+            satuan: "Pak",
+            subTotal: 28000 * 20,
+            ppnJenis: "NONE",
+          },
+        ],
+        ppnMode: "NONE",
+        pphType: "PPH23_2",
+      },
+    ];
+  }
+
+  if (type === "ATK") {
+    return [
+      {
+        id: "atk-rutin",
+        label: "Paket ATK Rutin Kantor (5 Item)",
+        description: "Kertas A4, Amplop, Pulpen, Sticky Note, Tissue • PPN Include + PPh 22 (1,5%)",
+        items: getDefaultPengadaanItems("ATK"),
+        ppnMode: "INCLUDE_11_111",
+        pphType: "PPH22_1_5",
+      },
+      {
+        id: "atk-semkit",
+        label: "Paket Seminar Kit Kegiatan",
+        description: "Tas Seminar, Blocknote, Pulpen, ID Card • PPN Include + PPh 22 (1,5%)",
+        items: [
+          {
+            id: "atk-1",
+            no: 1,
+            uraian: "Goodie Bag / Tas Seminar Kit",
+            hargaSatuan: 45000,
+            jumlah: 50,
+            satuan: "Pcs",
+            subTotal: 45000 * 50,
+            ppnJenis: "INCLUDE",
+          },
+          {
+            id: "atk-2",
+            no: 2,
+            uraian: "Blocknote + Pulpen Seminar",
+            hargaSatuan: 25000,
+            jumlah: 50,
+            satuan: "Set",
+            subTotal: 25000 * 50,
+            ppnJenis: "INCLUDE",
+          },
+          {
+            id: "atk-3",
+            no: 3,
+            uraian: "Name Tag / Tali Lanyard Peserta",
+            hargaSatuan: 15000,
+            jumlah: 50,
+            satuan: "Pcs",
+            subTotal: 15000 * 50,
+            ppnJenis: "INCLUDE",
+          },
+        ],
+        ppnMode: "INCLUDE_11_111",
+        pphType: "PPH22_1_5",
+      },
+      {
+        id: "atk-kecil",
+        label: "Belanja ATK < Rp 2 Juta (Tanpa Pajak)",
+        description: "Pembelian ATK nominal kecil di bawah batas pungut PPN & PPh 22",
+        items: [
+          {
+            id: "atk-1",
+            no: 1,
+            uraian: "Kertas HVS A4 80 gr",
+            hargaSatuan: 60000,
+            jumlah: 10,
+            satuan: "Rim",
+            subTotal: 60000 * 10,
+            ppnJenis: "NONE",
+          },
+          {
+            id: "atk-2",
+            no: 2,
+            uraian: "Ordner / Map Dokumen",
+            hargaSatuan: 35000,
+            jumlah: 10,
+            satuan: "Buah",
+            subTotal: 35000 * 10,
+            ppnJenis: "NONE",
+          },
+        ],
+        ppnMode: "NONE",
+        pphType: "NONE",
+      },
+    ];
+  }
+
+  if (type === "SEWA") {
+    return [
+      {
+        id: "sewa-npwp",
+        label: "Sewa Harian Non-PKP + NPWP (PPh 2%)",
+        description: "Sewa Kendaraan Rp 1.300.000/hari • Tanpa PPN + Potong PPh 23 (2%)",
+        items: getDefaultPengadaanItems("SEWA"),
+        ppnMode: "NONE",
+        pphType: "PPH23_2",
+      },
+      {
+        id: "sewa-pkp",
+        label: "Sewa Vendor PKP (PPN Include + PPh 2%)",
+        description: "Vendor PKP • PPN Include (11/111) + Potong PPh 23 (2% dari DPP)",
+        items: [
+          {
+            id: "sewa-1",
+            no: 1,
+            uraian: "Sewa Kendaraan Operasional Roda 4",
+            hargaSatuan: 1300000,
+            jumlah: 2,
+            satuan: "Hari",
+            subTotal: 1300000 * 2,
+            ppnJenis: "INCLUDE",
+          },
+        ],
+        ppnMode: "INCLUDE_11_111",
+        pphType: "PPH23_2",
+      },
+      {
+        id: "sewa-non-npwp",
+        label: "Sewa Tanpa NPWP (PPh 23 4%)",
+        description: "Tarif PPh 23 lebih tinggi 100% (4%) untuk penyedia tanpa NPWP",
+        items: getDefaultPengadaanItems("SEWA"),
+        ppnMode: "NONE",
+        pphType: "PPH23_4",
+      },
+    ];
+  }
+
+  // DIKLAT
+  return [
+    {
+      id: "diklat-pnbp",
+      label: "PNBP Diklat Instansi Pemerintah (Bebas Pajak)",
+      description: "Biaya Kontribusi / PNBP Diklat Instansi Pembina • Tanpa PPN & PPh",
+      items: getDefaultPengadaanItems("DIKLAT"),
+      ppnMode: "NONE",
+      pphType: "NONE",
+    },
+    {
+      id: "diklat-swasta",
+      label: "Pelatihan Lembaga Swasta (PPN + PPh 23 2%)",
+      description: "Jasa Pelatihan / Bimtek Swasta • PPN Include (11/111) + PPh 23 (2%)",
+      items: [
+        {
+          id: "diklat-1",
+          no: 1,
+          uraian: "Biaya Pelatihan / Sertifikasi Teknis",
+          hargaSatuan: 5335000,
+          jumlah: 1,
+          satuan: "Kali",
+          subTotal: 5335000,
+          ppnJenis: "INCLUDE",
+        },
+      ],
+      ppnMode: "INCLUDE_11_111",
+      pphType: "PPH23_2",
+    },
+  ];
+}
+
 export function getDefaultPengadaanTax(
   type: SpjDocType,
   defaultPenerimaNama = "Reni Sutaryo, S.Si., M.Adm.Pemb",
-  defaultPenerimaNip = "19791126200604 2 014"
+  defaultPenerimaNip = "19791126200604 2 014",
+  defaultRekeningTransfer = ""
 ): PengadaanTaxConfig {
   if (type === "KONSUMSI") {
     return {
@@ -237,7 +472,7 @@ export function getDefaultPengadaanTax(
       penerimaNip: defaultPenerimaNip,
       penerimaJabatan: "Penanggung Jawab Kegiatan",
       isPenerimaCustom: false,
-      rekeningTransfer: "",
+      rekeningTransfer: defaultRekeningTransfer,
     };
   }
 
@@ -250,7 +485,7 @@ export function getDefaultPengadaanTax(
       penerimaNip: defaultPenerimaNip,
       penerimaJabatan: "Penanggung Jawab Kegiatan",
       isPenerimaCustom: false,
-      rekeningTransfer: "",
+      rekeningTransfer: defaultRekeningTransfer,
     };
   }
 
@@ -263,7 +498,7 @@ export function getDefaultPengadaanTax(
       penerimaNip: defaultPenerimaNip,
       penerimaJabatan: "Penanggung Jawab Kegiatan",
       isPenerimaCustom: false,
-      rekeningTransfer: "",
+      rekeningTransfer: defaultRekeningTransfer,
     };
   }
 
@@ -276,7 +511,7 @@ export function getDefaultPengadaanTax(
     penerimaNip: defaultPenerimaNip,
     penerimaJabatan: "Penanggung Jawab Kegiatan",
     isPenerimaCustom: false,
-    rekeningTransfer: "",
+    rekeningTransfer: defaultRekeningTransfer,
   };
 }
 

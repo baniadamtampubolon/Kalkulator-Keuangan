@@ -17,26 +17,18 @@ import { CurrencyInput } from "./CurrencyInput";
 import {
   TrendingUp,
   Search,
-  Filter,
   ChevronDown,
   ChevronRight,
   Edit2,
   Trash2,
   Plus,
   RotateCcw,
-  Download,
   Printer,
   CheckCircle2,
   AlertTriangle,
-  FolderOpen,
-  Folder,
-  Layers,
   Calendar,
   X,
   FileSpreadsheet,
-  PieChart,
-  Lock,
-  ArrowUpDown,
 } from "lucide-react";
 
 export const MonitoringAnggaranTab: React.FC = () => {
@@ -71,19 +63,21 @@ export const MonitoringAnggaranTab: React.FC = () => {
 
   // Load data on mount
   useEffect(() => {
-    const loaded = loadAnggaranData();
-    setData(loaded);
+    Promise.resolve().then(() => {
+      const loaded = loadAnggaranData();
+      setData(loaded);
 
-    // Initialize expanded set: expand all levels < 7 (Program up to Subkomponen)
-    // Keep Level 7 (Akun items) collapsed by default
-    const defaultExpanded = new Set<string>();
-    loaded.rows.forEach((r) => {
-      if (r.level < 7) {
-        defaultExpanded.add(r.id);
-      }
+      // Initialize expanded set: expand all levels < 7 (Program up to Subkomponen)
+      // Keep Level 7 (Akun items) collapsed by default
+      const defaultExpanded = new Set<string>();
+      loaded.rows.forEach((r) => {
+        if (r.level < 7) {
+          defaultExpanded.add(r.id);
+        }
+      });
+      setExpandedIds(defaultExpanded);
+      setFormPeriode(loaded.meta.periode);
     });
-    setExpandedIds(defaultExpanded);
-    setFormPeriode(loaded.meta.periode);
   }, []);
 
   const showToast = (msg: string) => {
@@ -815,7 +809,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
 
                 // Level-specific styles and badges
                 let rowBg = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors";
-                let fontStyle = "text-slate-800 dark:text-slate-200";
+                const fontStyle = "text-slate-800 dark:text-slate-200";
                 let badgeColor = "";
 
                 if (row.type === "total") {

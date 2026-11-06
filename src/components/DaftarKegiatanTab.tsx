@@ -21,14 +21,8 @@ import {
   RotateCw,
   Users,
   User,
-  FileText,
-  Landmark,
   Coins,
-  ArrowRight,
-  TrendingUp,
   Briefcase,
-  Sparkles,
-  Layers,
   Edit3,
   Trash2,
   ArrowDownWideNarrow,
@@ -48,11 +42,13 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
   const [kegiatanList, setKegiatanList] = useState<SavedKegiatan[]>([]);
 
   useEffect(() => {
-    try {
-      setKegiatanList(getSavedKegiatanList());
-    } catch {
-      // ignore
-    }
+    Promise.resolve().then(() => {
+      try {
+        setKegiatanList(getSavedKegiatanList());
+      } catch {
+        // ignore
+      }
+    });
   }, []);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -304,7 +300,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
               SPJ Sedang Dibuka
             </span>
             <div className="p-1.5 rounded-lg bg-slate-100 text-slate-600">
-              <Sparkles className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
@@ -624,7 +620,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
 
                           {isCurrent && (
                             <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
-                              <Sparkles className="w-3 h-3 text-blue-600" />
+                              <CheckCircle2 className="w-3 h-3 text-blue-600" />
                               Sedang Dibuka
                             </span>
                           )}
@@ -684,7 +680,11 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                       </span>
                       <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
                         <Users className="w-3 h-3 text-slate-500" />
-                        <span>{item.jumlahPeserta || participants.length || 1} Orang</span>
+                        <span>
+                          {item.header?.spjType && item.header.spjType !== "PERDIN"
+                            ? `${item.header.pengadaanItems?.length || item.jumlahPeserta || 1} Item`
+                            : `${item.jumlahPeserta || participants.length || 1} Orang`}
+                        </span>
                       </span>
                     </div>
 

@@ -20,7 +20,6 @@ import {
   MapPin,
   Calendar,
   Users,
-  Coins,
 } from "lucide-react";
 
 interface ModalSelesaiSpjProps {

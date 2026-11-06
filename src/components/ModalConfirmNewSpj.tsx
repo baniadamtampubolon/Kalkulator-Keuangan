@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, Plus, CloudUpload, X, RotateCcw } from "lucide-react";
+import { AlertTriangle, Plus, CloudUpload, X } from "lucide-react";
 
 interface ModalConfirmNewSpjProps {
   isOpen: boolean;

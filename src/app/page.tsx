@@ -66,6 +66,7 @@ import {
   getDefaultPengadaanItems,
   getDefaultPengadaanTax,
   calculatePengadaanTotals,
+  formatPegawaiBankRekening,
 } from "@/lib/pengadaanHelper";
 import { saveCustomItemDetail } from "@/data/mak_akun";
 
@@ -508,7 +509,11 @@ export default function Home() {
 
   // Edit kegiatan from Daftar Kegiatan
   const handleEditKegiatan = (kegiatan: SavedKegiatan) => {
-    setHeader(kegiatan.header);
+    const normalizedHeader: HeaderData = {
+      ...kegiatan.header,
+      spjType: kegiatan.header.spjType || "PERDIN",
+    };
+    setHeader(normalizedHeader);
     setRows(kegiatan.rows);
     if (kegiatan.activeCols) setActiveCols(kegiatan.activeCols);
     if (kegiatan.activeUh) setActiveUh(kegiatan.activeUh);
@@ -516,7 +521,7 @@ export default function Home() {
     setEditingOriginalTitle(kegiatan.namaKegiatan || kegiatan.header?.keteranganKegiatan || null);
     setEditingOriginalMemo(kegiatan.header?.nomorMemo || null);
     setSavedBatchId(kegiatan.idKegiatan);
-    setSavedSnapshot(JSON.stringify({ header: kegiatan.header, rows: kegiatan.rows }));
+    setSavedSnapshot(JSON.stringify({ header: normalizedHeader, rows: kegiatan.rows }));
     setActiveTab("input");
   };
 
@@ -544,6 +549,12 @@ export default function Home() {
         };
       }
 
+      const defaultPenerima = prev.penanggungJawabNama || "Reni Sutaryo, S.Si., M.Adm.Pemb";
+      const foundPegawai = pegawaiList.find(
+        (p) => p.nama.toLowerCase() === defaultPenerima.toLowerCase()
+      );
+      const defaultRek = formatPegawaiBankRekening(foundPegawai);
+
       return {
         ...prev,
         spjType: nextType,
@@ -557,8 +568,9 @@ export default function Home() {
         pengadaanItems: getDefaultPengadaanItems(nextType),
         pengadaanTax: getDefaultPengadaanTax(
           nextType,
-          prev.penanggungJawabNama || "Reni Sutaryo, S.Si., M.Adm.Pemb",
-          prev.penanggungJawabNip || "19791126200604 2 014"
+          defaultPenerima,
+          prev.penanggungJawabNip || foundPegawai?.nip || "19791126200604 2 014",
+          defaultRek
         ),
       };
     });
@@ -1084,12 +1096,18 @@ export default function Home() {
               totalKegiatanCount={totalKegiatanCount}
               memoCount={memoList.length}
               pegawaiCount={pegawaiList.length}
-              onSelectSpjToWork={(type) => {
+              sbmCount={sbmList.length}
+              onSelectSpjToWork={(type, createNew) => {
                 handleSwitchSpjType(type);
-                setActiveTab("input");
+                if (createNew) {
+                  handleRequestCreateNew();
+                } else {
+                  setActiveTab("input");
+                }
               }}
               onContinueCurrentWork={() => setActiveTab("input")}
               onNavigateTab={(tab) => setActiveTab(tab)}
+              onOpenDbModal={() => setIsDbModalOpen(true)}
             />
           )}
 

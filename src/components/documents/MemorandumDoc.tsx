@@ -78,12 +78,19 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
     ? bendaharaRaw.substring(bendaharaRaw.indexOf("NIP")).trim()
     : "NIP 199504082020121001";
 
-  const penanggungJawabRaw = header.penanggungJawabNama || "Reni Sutaryo";
+  const isRecipientInternalAsn = isPengadaan && !header.pengadaanTax?.isPenerimaCustom;
+  const penanggungJawabRaw =
+    (isRecipientInternalAsn && header.pengadaanTax?.penerimaNama) ||
+    header.penanggungJawabNama ||
+    "Reni Sutaryo";
   const penanggungJawabNama = penanggungJawabRaw.split(",")[0].trim() || "Reni Sutaryo";
-  const penanggungJawabNip = header.penanggungJawabNip
-    ? (header.penanggungJawabNip.startsWith("NIP")
-        ? header.penanggungJawabNip
-        : `NIP ${header.penanggungJawabNip}`)
+  const rawPjNip =
+    (isRecipientInternalAsn && header.pengadaanTax?.penerimaNip) ||
+    header.penanggungJawabNip;
+  const penanggungJawabNip = rawPjNip
+    ? (rawPjNip.startsWith("NIP")
+        ? rawPjNip
+        : `NIP ${rawPjNip}`)
     : "NIP 19791126 200604 2 014";
 
   const ppkNama = header.ppkNama || "Arif Wibowo, SH, MH";

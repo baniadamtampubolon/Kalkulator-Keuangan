@@ -851,10 +851,10 @@ export async function fetchKegiatanFromSheet(
     const cloudKegiatanList: Array<Record<string, unknown>> = (jsonKegiatan.data || []).map(cleanObjectKeys);
     const rekapRows: Array<Record<string, unknown>> = (Array.isArray(jsonRekap.data) ? jsonRekap.data : []).map(cleanObjectKeys);
     const pesertaRows: Array<Record<string, unknown>> = (Array.isArray(jsonPeserta.data) ? jsonPeserta.data : []).map(cleanObjectKeys);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawMasterMemo = (jsonMasters.data as unknown as Record<string, unknown> | undefined)?.memo;
     const memoRows: Array<Record<string, unknown>> =
-      jsonMasters.data && Array.isArray((jsonMasters.data as any).memo)
-        ? ((jsonMasters.data as any).memo as Array<Record<string, unknown>>).map(cleanObjectKeys)
+      Array.isArray(rawMasterMemo)
+        ? (rawMasterMemo as Array<Record<string, unknown>>).map(cleanObjectKeys)
         : [];
 
     // Ambil data lokal yang sudah tersimpan untuk merge
@@ -966,6 +966,7 @@ export async function fetchKegiatanFromSheet(
             const stStaff = String(parsed.header?.nomorStStaff || stMaster || existingLocal?.header?.nomorStStaff || "").trim();
 
             const normalizedHeader: HeaderData = {
+              spjType: parsed.header?.spjType || existingLocal?.header?.spjType || "PERDIN",
               idKegiatan: parsed.idKegiatan || idKegiatan,
               kategoriSpj: parsed.header?.kategoriSpj || parsed.kategori || "A",
               noKegiatanUrut: parsed.header?.noKegiatanUrut || idKegiatan.split("-")[2] || "001",
@@ -975,6 +976,9 @@ export async function fetchKegiatanFromSheet(
               kotaTujuanList: Array.isArray(parsed.header?.kotaTujuanList) && parsed.header.kotaTujuanList.length > 0
                 ? parsed.header.kotaTujuanList
                 : [parsed.kotaTujuan || ""],
+              isMultiProvinsi: Boolean(parsed.header?.isMultiProvinsi ?? existingLocal?.header?.isMultiProvinsi),
+              provinsiTujuan2: parsed.header?.provinsiTujuan2 || existingLocal?.header?.provinsiTujuan2,
+              kotaTujuanList2: parsed.header?.kotaTujuanList2 || existingLocal?.header?.kotaTujuanList2,
               unitKerja: parsed.header?.unitKerja || String(item.unit_kerja || "INSPEKTORAT"),
               picInisiator: parsed.header?.picInisiator || String(item.ppk_nama || "Arif Wibowo, S.H., M.H."),
               bendahara: parsed.header?.bendahara || String(item.bendahara_nama || "Raka Panji Wibowo, S.Kom, NIP. 19950408202012 1 001"),
@@ -1003,6 +1007,8 @@ export async function fetchKegiatanFromSheet(
               noSpby: parsed.header?.noSpby || String(item.no_spby || ""),
               jenisPerdin: (parsed.header?.jenisPerdin || item.jenis_perdin || "Perdin Luar Kota") as HeaderData["jenisPerdin"],
               berangkatDari: parsed.header?.berangkatDari || String(item.berangkat_dari || "Jakarta"),
+              pengadaanItems: parsed.header?.pengadaanItems || existingLocal?.header?.pengadaanItems,
+              pengadaanTax: parsed.header?.pengadaanTax || existingLocal?.header?.pengadaanTax,
             };
 
             const normalizedRows: ParticipantRow[] = (parsed.rows as ParticipantRow[]).map((r, rIdx) => ({
@@ -1021,7 +1027,10 @@ export async function fetchKegiatanFromSheet(
               tanggalSpd: cleanTglSpd,
               kotaTujuan: parsed.kotaTujuan || (normalizedHeader.kotaTujuanList?.[0] || ""),
               provinsiTujuan: parsed.provinsiTujuan || normalizedHeader.provinsiTujuan || "JAWA BARAT",
-              jumlahPeserta: normalizedRows.length,
+              jumlahPeserta:
+                normalizedHeader.spjType && normalizedHeader.spjType !== "PERDIN"
+                  ? normalizedHeader.pengadaanItems?.length || parsed.jumlahPeserta || normalizedRows.length
+                  : normalizedRows.length,
               grandTotal: parsed.grandTotal || normalizedRows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0),
               header: normalizedHeader,
               rows: normalizedRows,
@@ -1129,10 +1138,11 @@ export async function fetchKegiatanFromSheet(
 
       let itemDetailCode = String(item.item_detail || existingLocal?.header?.itemDetail || "").trim();
       if (!itemDetailCode || itemDetailCode === "001") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (matchingPeserta[0] && (matchingPeserta[0] as any).item_detail && (matchingPeserta[0] as any).item_detail !== "001") {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          itemDetailCode = String((matchingPeserta[0] as any).item_detail).trim();
+        const firstPesertaItemDetail = matchingPeserta[0]
+          ? String((matchingPeserta[0] as Record<string, unknown>).item_detail || "").trim()
+          : "";
+        if (firstPesertaItemDetail && firstPesertaItemDetail !== "001") {
+          itemDetailCode = firstPesertaItemDetail;
         }
       }
       if (!itemDetailCode) itemDetailCode = "001";
@@ -1182,8 +1192,21 @@ export async function fetchKegiatanFromSheet(
         keteranganMemo = "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas";
       }
 
+      const inferredSpjType: HeaderData["spjType"] =
+        existingLocal?.header?.spjType ||
+        (kotaTujuan === "Konsumsi" || keteranganMemo.toLowerCase().includes("konsumsi")
+          ? "KONSUMSI"
+          : kotaTujuan === "Semkit & ATK" || keteranganMemo.toLowerCase().includes("atk")
+          ? "ATK"
+          : kotaTujuan === "Sewa Mobil" || keteranganMemo.toLowerCase().includes("sewa kendaraan")
+          ? "SEWA"
+          : kotaTujuan === "Diklat" || keteranganMemo.toLowerCase().includes("diklat")
+          ? "DIKLAT"
+          : "PERDIN");
+
       // Reconstruct HeaderData
       const reconstructedHeader: HeaderData = {
+        spjType: inferredSpjType,
         idKegiatan,
         kategoriSpj: kategori,
         noKegiatanUrut: idKegiatan.split("-")[2] || "001",
@@ -1191,6 +1214,9 @@ export async function fetchKegiatanFromSheet(
         keteranganMemo,
         provinsiTujuan,
         kotaTujuanList: kotaTujuan ? [kotaTujuan] : [""],
+        isMultiProvinsi: existingLocal?.header?.isMultiProvinsi,
+        provinsiTujuan2: existingLocal?.header?.provinsiTujuan2,
+        kotaTujuanList2: existingLocal?.header?.kotaTujuanList2,
         unitKerja: String(item.unit_kerja || "INSPEKTORAT"),
         picInisiator: String(item.ppk_nama || "Arif Wibowo, S.H., M.H."),
         bendahara: String(item.bendahara_nama || "Raka Panji Wibowo, S.Kom, NIP. 19950408202012 1 001"),
@@ -1219,6 +1245,8 @@ export async function fetchKegiatanFromSheet(
         noSpby: String(item.no_spby || ""),
         jenisPerdin: (item.jenis_perdin || "Perdin Luar Kota") as HeaderData["jenisPerdin"],
         berangkatDari: String(item.berangkat_dari || "Jakarta"),
+        pengadaanItems: existingLocal?.header?.pengadaanItems,
+        pengadaanTax: existingLocal?.header?.pengadaanTax,
       };
 
       const hasRiil = reconstructedRows.some((r) => (r.pengRill || 0) > 0 || (Array.isArray(r.riilItems) && r.riilItems.length > 0));
@@ -1626,7 +1654,9 @@ export async function savePerdinToGoogleSheet(
   try {
     const json = await executeGasRequest("POST", payload, url);
     if (json.status === "success") {
-      const cloudSpd = Number((json as any).latestSpdNumber || (json.data as any)?.latestSpdNumber);
+      const jsonObj = json as unknown as Record<string, unknown>;
+      const jsonDataObj = (json.data as unknown as Record<string, unknown> | undefined);
+      const cloudSpd = Number(jsonObj.latestSpdNumber || jsonDataObj?.latestSpdNumber);
       if (!isNaN(cloudSpd) && cloudSpd > 0) {
         saveLatestRegisteredSpdNumber(cloudSpd);
       }

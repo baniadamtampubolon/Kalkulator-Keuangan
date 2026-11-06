@@ -11,7 +11,6 @@ import {
   FileCheck,
   Printer,
   Plus,
-  Sparkles,
   PanelLeft,
   Home as HomeIcon,
 } from "lucide-react";
@@ -43,7 +42,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   isSidebarOpen = false,
   onCreateNewKegiatan,
   currentLoadedId,
-  isSaved: _isSaved = false,
   hasChanges = false,
   participantCount,
   totalExpenditure,
@@ -139,8 +137,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {currentLoadedId}
                   </span>
                 ) : (
-                  <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                    <Sparkles className="w-2.5 h-2.5" />
+                  <span className="hidden md:inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                     Draft Baru
                   </span>
                 )}
