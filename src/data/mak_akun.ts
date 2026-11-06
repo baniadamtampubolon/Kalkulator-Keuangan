@@ -441,5 +441,6 @@ export const OPSI_PERIHAL_MEMORANDUM: string[] = [
   "Permintaan Pembayaran Langsung (LS) Konsumsi",
   "Permintaan Pembayaran Langsung (LS) Honorarium",
   "Permintaan Pembayaran Langsung (LS) Seminar Kit",
+  "Permintaan Pembayaran Langsung (LS) Biaya Diklat",
 ];
 

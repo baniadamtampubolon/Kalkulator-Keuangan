@@ -6,6 +6,7 @@ import { Printer, Edit3, RotateCcw } from "lucide-react";
 import { parseMakHierarchy } from "@/data/mak_akun";
 import { terbilang } from "@/lib/terbilang";
 import { getDefaultMemoNumber } from "@/lib/calc";
+import { calculatePengadaanTotals, getSpjTypeMeta } from "@/lib/pengadaanHelper";
 
 interface MemorandumDocProps {
   header: HeaderData;
@@ -33,7 +34,14 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
     });
   };
 
-  const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
+  const isPengadaan = Boolean(header.spjType && header.spjType !== "PERDIN");
+  const spjMeta = getSpjTypeMeta(header.spjType);
+  const pengadaanCalc = calculatePengadaanTotals(header.pengadaanItems || [], header.pengadaanTax);
+
+  const grandTotal = isPengadaan
+    ? pengadaanCalc.subTotalBruto
+    : rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
+  const netTransferTotal = isPengadaan ? pengadaanCalc.jumlahBersihRounded : grandTotal;
   const tanggalMemo = formatDateIndo(header.tanggalMemo || new Date().toISOString());
   const kotaTujuanText = (() => {
     if (header.isMultiProvinsi && header.provinsiTujuan2) {
@@ -102,8 +110,16 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
       : "NIP 19811112201001 2 001";
   }
 
-  const perihalText = header.keteranganMemo || header.keteranganKegiatan || "Permohonan Dana Perjalanan Dinas";
-  const judulKegiatan = header.keteranganKegiatan || header.keteranganMemo || "Kegiatan Perjalanan Dinas";
+  const perihalText =
+    header.keteranganMemo ||
+    spjMeta.defaultPerihalMemo ||
+    header.keteranganKegiatan ||
+    "Permohonan Dana Perjalanan Dinas";
+  const judulKegiatan =
+    header.keteranganKegiatan ||
+    spjMeta.defaultUraianKegiatan ||
+    header.keteranganMemo ||
+    "Kegiatan Perjalanan Dinas";
 
   // Format narasi alinea pembuka Memorandum agar tidak menduplikasi tanggal & lokasi jika sudah diketik user
   const formattedDateMulai = formatDateIndo(rows[0]?.tanggalMulai || header.tanggalSpd);
@@ -112,7 +128,13 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
     ? /tanggal|tgl\b|\b\d{1,2}\s+(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember)\s+\d{4}/i.test(rawKegiatan)
     : false;
 
-  const uraianKegiatanMemo = rawKegiatan
+  const uraianKegiatanMemo = isPengadaan
+    ? rawKegiatan
+      ? sudahAdaTanggal
+        ? rawKegiatan
+        : `${rawKegiatan} pada Tanggal ${formattedDateMulai}`
+      : `${spjMeta.defaultUraianKegiatan || "pelaksanaan kegiatan"} pada Tanggal ${formattedDateMulai}`
+    : rawKegiatan
     ? sudahAdaTanggal
       ? rawKegiatan
       : `${rawKegiatan} pada Tanggal ${formattedDateMulai} di ${lokasiTujuanFull}`
@@ -305,7 +327,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
               <span className="col-span-2">Lampiran</span>
               <span className="col-span-1 text-center">:</span>
               <div className="col-span-9 space-y-0.5">
-                <p>1. Surat Tugas</p>
+                <p>{isPengadaan ? "1. Kuitansi / Bukti Pembelian" : "1. Surat Tugas"}</p>
                 <p>2. Daftar Nominatif</p>
               </div>
             </div>
@@ -668,31 +690,58 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
-                  <tr key={r.id} className="border-b border-black">
-                    <td 
+                {isPengadaan ? (
+                  <tr className="border-b border-black">
+                    <td
                       contentEditable={true}
                       suppressContentEditableWarning={true}
                       className="border-r border-black p-2 text-left font-medium uppercase cursor-text hover:bg-blue-50/40"
                     >
-                      {r.nama || "-"}
+                      {header.pengadaanTax?.penerimaNama || header.penanggungJawabNama || "-"}
                     </td>
-                    <td 
+                    <td
                       contentEditable={true}
                       suppressContentEditableWarning={true}
                       className="border-r border-black p-2 text-center min-w-[150px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
                       title="Klik langsung untuk memasukkan Rekening / Keterangan Transfer"
                     >
+                      {header.pengadaanTax?.rekeningTransfer || ""}
                     </td>
-                    <td 
+                    <td
                       contentEditable={true}
                       suppressContentEditableWarning={true}
                       className="p-2 text-right font-bold font-sans cursor-text hover:bg-blue-50/40"
                     >
-                      Rp{(r.totalJumlah || 0).toLocaleString("id-ID")}
+                      Rp{netTransferTotal.toLocaleString("id-ID")}
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  rows.map((r) => (
+                    <tr key={r.id} className="border-b border-black">
+                      <td
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
+                        className="border-r border-black p-2 text-left font-medium uppercase cursor-text hover:bg-blue-50/40"
+                      >
+                        {r.nama || "-"}
+                      </td>
+                      <td
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
+                        className="border-r border-black p-2 text-center min-w-[150px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
+                        title="Klik langsung untuk memasukkan Rekening / Keterangan Transfer"
+                      >
+                      </td>
+                      <td
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
+                        className="p-2 text-right font-bold font-sans cursor-text hover:bg-blue-50/40"
+                      >
+                        Rp{(r.totalJumlah || 0).toLocaleString("id-ID")}
+                      </td>
+                    </tr>
+                  ))
+                )}
 
                 {/* Baris Total */}
                 <tr className="border-b border-black font-bold">
@@ -700,21 +749,23 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                     Total
                   </td>
                   <td className="p-2 text-right font-bold font-sans">
-                    Rp{grandTotal.toLocaleString("id-ID")}
+                    Rp{netTransferTotal.toLocaleString("id-ID")}
                   </td>
                 </tr>
 
                 {/* Footer Baris ST */}
-                <tr className="border-b border-black">
-                  <td 
-                    colSpan={3} 
-                    contentEditable={true}
-                    suppressContentEditableWarning={true}
-                    className="p-2 text-left text-xs font-normal cursor-text hover:bg-blue-50/40"
-                  >
-                    ST: {header.nomorStMaster || rows[0]?.nomorSt || header.nomorStStaff || "-"}
-                  </td>
-                </tr>
+                {!isPengadaan && (
+                  <tr className="border-b border-black">
+                    <td
+                      colSpan={3}
+                      contentEditable={true}
+                      suppressContentEditableWarning={true}
+                      className="p-2 text-left text-xs font-normal cursor-text hover:bg-blue-50/40"
+                    >
+                      ST: {header.nomorStMaster || rows[0]?.nomorSt || header.nomorStStaff || "-"}
+                    </td>
+                  </tr>
+                )}
 
                 {/* Footer Baris Perihal */}
                 <tr>

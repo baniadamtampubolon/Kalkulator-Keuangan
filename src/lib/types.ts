@@ -153,7 +153,35 @@ export interface ParticipantRow {
   totalJumlah: number;
 }
 
+export type SpjDocType = "PERDIN" | "KONSUMSI" | "ATK" | "SEWA" | "DIKLAT";
+
+export interface PengadaanItemRow {
+  id: string;
+  no: number;
+  uraian: string;
+  hargaSatuan: number;
+  jumlah: number;
+  satuan: string; // e.g., "Pak", "pax", "Rim", "Dus", "Lusin", "Pack", "Hari", "Kali"
+  subTotal: number; // hargaSatuan * jumlah
+  ppnJenis: "INCLUDE" | "NONE";
+}
+
+export interface PengadaanTaxConfig {
+  ppnMode: "INCLUDE_11_111" | "MANUAL" | "NONE";
+  ppnManualValue: number;
+  pphType: "PPH22_1_5" | "PPH23_2" | "PPH23_4" | "NONE";
+  penerimaNama: string;
+  penerimaNip: string;
+  penerimaJabatan?: string;
+  isPenerimaCustom: boolean;
+  rekeningTransfer?: string;
+}
+
 export interface HeaderData {
+  spjType?: SpjDocType;
+  pengadaanItems?: PengadaanItemRow[];
+  pengadaanTax?: PengadaanTaxConfig;
+
   keteranganKegiatan: string;
   keteranganMemo: string;
   isMultiProvinsi?: boolean;

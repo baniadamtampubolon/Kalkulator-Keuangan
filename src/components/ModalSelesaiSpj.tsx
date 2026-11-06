@@ -3,6 +3,7 @@
 import React from "react";
 import { HeaderData, ParticipantRow } from "@/lib/types";
 import { ActiveTab } from "./Navbar";
+import { calculatePengadaanTotals, getSpjTypeMeta } from "@/lib/pengadaanHelper";
 import {
   CheckCircle2,
   Printer,
@@ -43,11 +44,19 @@ export const ModalSelesaiSpj: React.FC<ModalSelesaiSpjProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const isPengadaan = Boolean(header.spjType && header.spjType !== "PERDIN");
+  const spjMeta = getSpjTypeMeta(header.spjType);
+  const pengadaanCalc = calculatePengadaanTotals(header.pengadaanItems || [], header.pengadaanTax);
+
   const validRows = rows.filter(
     (r) => Boolean((r.nama && r.nama.trim() !== "") || (r.namaExternal && r.namaExternal.trim() !== ""))
   );
-  const totalBiaya = validRows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
-  const kotaTujuan = header.isMultiProvinsi && header.provinsiTujuan2
+  const totalBiaya = isPengadaan
+    ? pengadaanCalc.subTotalBruto
+    : validRows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
+  const kotaTujuan = isPengadaan
+    ? spjMeta.label
+    : header.isMultiProvinsi && header.provinsiTujuan2
     ? `${(header.kotaTujuanList || []).filter(Boolean).join(", ")} (${header.provinsiTujuan}) & ${(header.kotaTujuanList2 || []).filter(Boolean).join(", ")} (${header.provinsiTujuan2})`
     : (header.kotaTujuanList || []).filter(Boolean).join(", ") || header.provinsiTujuan || "Indonesia";
 
@@ -62,15 +71,22 @@ export const ModalSelesaiSpj: React.FC<ModalSelesaiSpjProps> = ({
     });
   };
 
-  const documentItems = [
-    { id: "kwitansi", label: "Kwitansi Pembayaran", icon: Receipt, desc: "Format rangkap 3 resmi" },
-    { id: "memorandum", label: "Memorandum Permohonan", icon: FileText, desc: "Nota dinas pembebanan anggaran" },
-    { id: "nominatif", label: "Daftar Nominatif", icon: FileSpreadsheet, desc: "Tabel rekapitulasi peserta" },
-    { id: "rincian", label: "Rincian Biaya", icon: ListOrdered, desc: "Perhitungan detail per personil" },
-    { id: "riil", label: "Pengeluaran Riil", icon: FileCheck, desc: "Pernyataan biaya riil tanpa bukti" },
-    { id: "spd", label: "SPPD Depan", icon: FileText, desc: "Surat Perjalanan Dinas lembar depan resmi" },
-    { id: "rekap", label: "Rekap Perdin (48 Kolom)", icon: FileSpreadsheet, desc: "Database lengkap & ekspor Excel" },
-  ];
+  const documentItems = isPengadaan
+    ? [
+        { id: "kwitansi", label: "Kuitansi SPJ", icon: Receipt, desc: `Format resmi ${spjMeta.shortLabel}` },
+        { id: "memorandum", label: "Memorandum (3 Halaman)", icon: FileText, desc: "Nota dinas & lampiran anggaran" },
+        { id: "nominatif", label: "Daftar Nominatif", icon: FileSpreadsheet, desc: "Tabel item, PPN, PPh & bersih" },
+        { id: "daftar-memo", label: "Daftar Memorandum", icon: FolderKanban, desc: "Buku kendali nomor memorandum" },
+      ]
+    : [
+        { id: "kwitansi", label: "Kwitansi Pembayaran", icon: Receipt, desc: "Format rangkap 3 resmi" },
+        { id: "memorandum", label: "Memorandum Permohonan", icon: FileText, desc: "Nota dinas pembebanan anggaran" },
+        { id: "nominatif", label: "Daftar Nominatif", icon: FileSpreadsheet, desc: "Tabel rekapitulasi peserta" },
+        { id: "rincian", label: "Rincian Biaya", icon: ListOrdered, desc: "Perhitungan detail per personil" },
+        { id: "riil", label: "Pengeluaran Riil", icon: FileCheck, desc: "Pernyataan biaya riil tanpa bukti" },
+        { id: "spd", label: "SPPD Depan", icon: FileText, desc: "Surat Perjalanan Dinas lembar depan resmi" },
+        { id: "rekap", label: "Rekap Perdin (48 Kolom)", icon: FileSpreadsheet, desc: "Database lengkap & ekspor Excel" },
+      ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in no-print overflow-y-auto">

@@ -7,6 +7,7 @@ import {
   deleteKegiatanRecord,
   sortKegiatanByNewest,
 } from "@/lib/kegiatanHelper";
+import { getSpjTypeMeta } from "@/lib/pengadaanHelper";
 import { fetchKegiatanFromSheet, deleteKegiatanFromGoogleSheet } from "@/lib/googleSheetsService";
 import {
   Search,
@@ -543,6 +544,18 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                         <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-white border border-slate-300/80 text-slate-900 shadow-2xs">
                           {item.idKegiatan}
                         </span>
+
+                        {/* Jenis SPJ Badge */}
+                        {(() => {
+                          const meta = getSpjTypeMeta(item.header?.spjType);
+                          return (
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${meta.badgeColor}`}
+                            >
+                              {meta.shortLabel}
+                            </span>
+                          );
+                        })()}
 
                         {/* Kategori Badge */}
                         <span

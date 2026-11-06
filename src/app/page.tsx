@@ -11,6 +11,9 @@ import { NominatifDoc } from "@/components/documents/NominatifDoc";
 import { RincianBiayaDoc } from "@/components/documents/RincianBiayaDoc";
 import { BiayaRiilDoc } from "@/components/documents/BiayaRiilDoc";
 import { SppdDepanDoc } from "@/components/documents/SppdDepanDoc";
+import { KuitansiPengadaanDoc } from "@/components/documents/KuitansiPengadaanDoc";
+import { NominatifPengadaanDoc } from "@/components/documents/NominatifPengadaanDoc";
+import { PengadaanSpjForm } from "@/components/PengadaanSpjForm";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
 import { DaftarKegiatanTab } from "@/components/DaftarKegiatanTab";
 import { MonitoringAnggaranTab } from "@/components/MonitoringAnggaranTab";
@@ -53,8 +56,16 @@ import {
   SbmRate,
   NomorMemo,
   SavedKegiatan,
+  SpjDocType,
 } from "@/lib/types";
 import { calculateRowTotal, findSbmByProvince, generateNextMemoNumber, getDefaultMemoNumber } from "@/lib/calc";
+import {
+  SPJ_TYPE_LIST,
+  getSpjTypeMeta,
+  getDefaultPengadaanItems,
+  getDefaultPengadaanTax,
+  calculatePengadaanTotals,
+} from "@/lib/pengadaanHelper";
 import { saveCustomItemDetail } from "@/data/mak_akun";
 
 import pegawaiRaw from "@/data/pegawai.json";
@@ -508,6 +519,54 @@ export default function Home() {
     setActiveTab("input");
   };
 
+  // Switch between Perjalanan Dinas (PERDIN) and the 4 Pengadaan SPJ types (KONSUMSI, ATK, SEWA, DIKLAT)
+  const handleSwitchSpjType = (nextType: SpjDocType) => {
+    const meta = getSpjTypeMeta(nextType);
+    const allDefaultUraians = SPJ_TYPE_LIST.map((t) => t.defaultUraianKegiatan).filter(Boolean);
+
+    setHeader((prev) => {
+      const currentType = prev.spjType || "PERDIN";
+      if (currentType === nextType) return prev;
+
+      const isCurrentUraianDefault =
+        !prev.keteranganKegiatan ||
+        prev.keteranganKegiatan.trim() === "" ||
+        allDefaultUraians.includes(prev.keteranganKegiatan.trim());
+
+      if (nextType === "PERDIN") {
+        return {
+          ...prev,
+          spjType: "PERDIN",
+          nomorMak: prev.nomorMak || "524111",
+          keteranganMemo: "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas",
+          keteranganKegiatan: isCurrentUraianDefault ? "" : prev.keteranganKegiatan,
+        };
+      }
+
+      return {
+        ...prev,
+        spjType: nextType,
+        nomorKomp: prev.nomorKomp || meta.defaultKomp,
+        detailKomponen: prev.detailKomponen || meta.defaultDetailKomp,
+        nomorMak: meta.defaultMak,
+        keteranganMemo: meta.defaultPerihalMemo,
+        keteranganKegiatan: isCurrentUraianDefault
+          ? meta.defaultUraianKegiatan
+          : prev.keteranganKegiatan,
+        pengadaanItems: getDefaultPengadaanItems(nextType),
+        pengadaanTax: getDefaultPengadaanTax(
+          nextType,
+          prev.penanggungJawabNama || "Reni Sutaryo, S.Si., M.Adm.Pemb",
+          prev.penanggungJawabNip || "19791126200604 2 014"
+        ),
+      };
+    });
+
+    if (nextType !== "PERDIN" && (activeTab === "rincian" || activeTab === "riil" || activeTab === "spd")) {
+      setActiveTab("input");
+    }
+  };
+
   // Start fresh kegiatan with clean state and next sequential ID
   const handleCreateNewKegiatan = () => {
     setEditingOriginalId(null);
@@ -567,22 +626,28 @@ export default function Home() {
     const calculatedInitialRow = calculateRowTotal(initialRow, sbm, activeUh, activeCols, { sbmJakarta });
 
     const genMemo = generateNextMemoNumber(memoList, undefined, today);
+    const currentType = header.spjType || "PERDIN";
+    const meta = getSpjTypeMeta(currentType);
 
     setHeader((prev) => ({
       ...prev,
+      spjType: currentType,
       idKegiatan: newId,
       kategoriSpj: "A",
       noKegiatanUrut: nextNo,
-      keteranganKegiatan: "",
-      keteranganMemo: "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas",
+      keteranganKegiatan: currentType === "PERDIN" ? "" : meta.defaultUraianKegiatan,
+      keteranganMemo: meta.defaultPerihalMemo,
       nomorMemo: genMemo.nextMemoNumber,
       nomorStMaster: "",
       nomorStStaff: "",
       nomorStPejabat: "",
       useDifferentStPejabat: false,
-      nomorKomp: "CL.7458.ABR.006.075.EE",
-      detailKomponen: "Kunjungan Lapangan terkait Koordinasi Implementasi NEK Pengendalian Emisi GRK",
-      nomorMak: "524111",
+      nomorKomp: currentType === "PERDIN" ? "CL.7458.ABR.006.075.EE" : meta.defaultKomp,
+      detailKomponen:
+        currentType === "PERDIN"
+          ? "Kunjungan Lapangan terkait Koordinasi Implementasi NEK Pengendalian Emisi GRK"
+          : meta.defaultDetailKomp,
+      nomorMak: meta.defaultMak,
       itemDetail: "001",
       keteranganItemDetail: "",
       noSpby: "",
@@ -590,6 +655,15 @@ export default function Home() {
       jenisPengajuan: "RAMPUNG",
       tanggalSpd: today,
       tanggalMemo: today,
+      pengadaanItems: currentType === "PERDIN" ? undefined : getDefaultPengadaanItems(currentType),
+      pengadaanTax:
+        currentType === "PERDIN"
+          ? undefined
+          : getDefaultPengadaanTax(
+              currentType,
+              prev.penanggungJawabNama || "Reni Sutaryo, S.Si., M.Adm.Pemb",
+              prev.penanggungJawabNip || "19791126200604 2 014"
+            ),
     }));
     setRows([calculatedInitialRow]);
     setSavedBatchId(null);
@@ -599,9 +673,12 @@ export default function Home() {
 
   // Safe Request to Create New Kegiatan (Checks for unsaved changes)
   const handleRequestCreateNew = () => {
-    const hasValidData = rows.some((r) =>
-      Boolean((r.nama && r.nama.trim() !== "") || (r.namaExternal && r.namaExternal.trim() !== ""))
-    );
+    const isPengadaan = Boolean(header.spjType && header.spjType !== "PERDIN");
+    const hasValidData = isPengadaan
+      ? Boolean(header.keteranganKegiatan && header.keteranganKegiatan.trim() !== "")
+      : rows.some((r) =>
+          Boolean((r.nama && r.nama.trim() !== "") || (r.namaExternal && r.namaExternal.trim() !== ""))
+        );
     if (hasChanges || (!isSaved && hasValidData)) {
       setIsConfirmNewModalOpen(true);
     } else {
@@ -617,6 +694,181 @@ export default function Home() {
   };
 
   const handleSaveOrUpdateData = async () => {
+    const currentSpjType = header.spjType || "PERDIN";
+    const isPengadaan = currentSpjType !== "PERDIN";
+    const spjMeta = getSpjTypeMeta(currentSpjType);
+
+    if (isPengadaan) {
+      const items =
+        header.pengadaanItems && header.pengadaanItems.length > 0
+          ? header.pengadaanItems
+          : getDefaultPengadaanItems(currentSpjType);
+      const tax =
+        header.pengadaanTax ||
+        getDefaultPengadaanTax(
+          currentSpjType,
+          header.penanggungJawabNama || "Reni Sutaryo, S.Si., M.Adm.Pemb",
+          header.penanggungJawabNip || "19791126200604 2 014"
+        );
+      const calc = calculatePengadaanTotals(items, tax);
+
+      if (items.length === 0 || calc.subTotalBruto <= 0) {
+        setSaveFeedback({
+          type: "error",
+          text: `Gagal menyimpan: Silakan isi minimal 1 item rincian ${spjMeta.shortLabel} dengan nominal di atas Rp 0.`,
+        });
+        return;
+      }
+
+      setIsSaving(true);
+      try {
+        const today = header.tanggalSpd || new Date().toISOString().split("T")[0];
+        const idKegiatan =
+          header.idKegiatan ||
+          savedBatchId ||
+          generateIdKegiatan(today, header.noKegiatanUrut || "001", header.kategoriSpj || "A");
+
+        let nomorMemoToSave = header.nomorMemo || "";
+        if (!nomorMemoToSave || nomorMemoToSave.includes("xxx") || nomorMemoToSave.includes("...")) {
+          const gen = generateNextMemoNumber(memoList, undefined, header.tanggalMemo || today);
+          nomorMemoToSave = gen.nextMemoNumber;
+        }
+
+        const updatedHeader: HeaderData = {
+          ...header,
+          spjType: currentSpjType,
+          idKegiatan,
+          nomorMemo: nomorMemoToSave,
+          keteranganKegiatan: header.keteranganKegiatan || spjMeta.defaultUraianKegiatan,
+          keteranganMemo: header.keteranganMemo || spjMeta.defaultPerihalMemo,
+          pengadaanItems: items,
+          pengadaanTax: tax,
+        };
+        setHeader(updatedHeader);
+
+        // Create a representative ParticipantRow so Rekap & Cloud Sync store the total & recipient
+        const syntheticRow: ParticipantRow = {
+          id: "1",
+          kodeNama: spjMeta.shortLabel,
+          nama: tax.penerimaNama || header.penanggungJawabNama || "Penanggung Jawab Kegiatan",
+          nip: tax.penerimaNip || header.penanggungJawabNip || "",
+          golongan: "",
+          jabatan: tax.penerimaJabatan?.replace(/,\s*$/, "") || "Penanggung Jawab Kegiatan",
+          tujuanKota: spjMeta.shortLabel,
+          tujuanProvinsi: "DKI JAKARTA",
+          tanggalMulai: today,
+          tanggalSelesai: today,
+          lamaHari: 1,
+          nomorSt: "-",
+          nomorSpd: "-",
+          hariUhBiasa: 0,
+          biayaUhBiasa: 0,
+          hariUhBiasa60: 0,
+          biayaUhBiasa60: 0,
+          hariUhBiasa40: 0,
+          biayaUhBiasa40: 0,
+          hariUhHalfday: 0,
+          biayaUhHalfday: 0,
+          hariUhFullboard: 0,
+          biayaUhFullboard: 0,
+          tiket: 0,
+          dukunganTransportasi: 0,
+          transportasiDarat: 0,
+          transportasiLokal: 0,
+          transportJakartaPp: 0,
+          transportDaerahPp: 0,
+          hotel: 0,
+          penginapan30: 0,
+          fulldayMeeting: 0,
+          fullboardMeeting: 0,
+          representatif: 0,
+          belanjaBahan: calc.subTotalBruto,
+          pengRill: 0,
+          riilItems: [],
+          totalJumlah: calc.subTotalBruto,
+        };
+
+        const oldBatchId = editingOriginalId || savedBatchId || undefined;
+        const oldNama = editingOriginalTitle || undefined;
+        const oldMemo = editingOriginalMemo || undefined;
+
+        saveKegiatanRecord(
+          {
+            idKegiatan,
+            kategori: "A",
+            namaKegiatan: updatedHeader.keteranganKegiatan || spjMeta.label,
+            tanggalSpd: today,
+            kotaTujuan: spjMeta.shortLabel,
+            provinsiTujuan: "DKI JAKARTA",
+            jumlahPeserta: items.length,
+            grandTotal: calc.subTotalBruto,
+            header: updatedHeader,
+            rows: [syntheticRow],
+            activeCols,
+            activeUh,
+            updatedAt: new Date().toISOString(),
+          },
+          oldBatchId,
+          oldNama,
+          oldMemo
+        );
+        setTotalKegiatanCount(getSavedKegiatanList().length);
+
+        const { isUpdate } = saveOrUpdateRekapLocal(
+          updatedHeader,
+          [syntheticRow],
+          idKegiatan,
+          oldBatchId,
+          oldNama,
+          oldMemo
+        );
+
+        setEditingOriginalId(idKegiatan);
+        setEditingOriginalTitle(updatedHeader.keteranganKegiatan || null);
+        setEditingOriginalMemo(updatedHeader.nomorMemo || null);
+        setSavedBatchId(idKegiatan);
+        setSavedSnapshot(JSON.stringify({ header: updatedHeader, rows }));
+
+        const sheetRes = await savePerdinToGoogleSheet(
+          updatedHeader,
+          [syntheticRow],
+          undefined,
+          oldBatchId,
+          {
+            activeCols,
+            activeUh,
+            oldNamaKegiatan: oldNama,
+            oldNomorMemo: oldMemo,
+          }
+        );
+
+        if (sheetRes.success) {
+          setSaveFeedback({
+            type: "success",
+            text: isUpdate
+              ? `Data ${spjMeta.label} berhasil diperbarui & tersinkron ke Google Spreadsheet!`
+              : `Data ${spjMeta.label} berhasil disimpan & tersinkron ke Google Spreadsheet!`,
+          });
+        } else {
+          setSaveFeedback({
+            type: "info",
+            text: `Data ${spjMeta.label} tersimpan di Daftar Kegiatan lokal. (${sheetRes.message})`,
+          });
+        }
+
+        setIsCompletionModalOpen(true);
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        setSaveFeedback({
+          type: "error",
+          text: `Gagal menyimpan data: ${errMsg}`,
+        });
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
+
     if (rows.length === 0) {
       setSaveFeedback({
         type: "error",
@@ -761,7 +1013,20 @@ export default function Home() {
     }
   };
 
-  const grandTotal = rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
+  const currentSpjType: SpjDocType = header.spjType || "PERDIN";
+  const isPengadaan = currentSpjType !== "PERDIN";
+  const pengadaanItemsActive =
+    header.pengadaanItems && header.pengadaanItems.length > 0
+      ? header.pengadaanItems
+      : isPengadaan
+      ? getDefaultPengadaanItems(currentSpjType)
+      : [];
+  const pengadaanCalcActive = calculatePengadaanTotals(pengadaanItemsActive, header.pengadaanTax);
+
+  const grandTotal = isPengadaan
+    ? pengadaanCalcActive.subTotalBruto
+    : rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
+  const activeCount = isPengadaan ? pengadaanItemsActive.length : rows.length;
 
   return (
     <div className="min-h-screen flex flex-row bg-slate-100/60 dark:bg-slate-950">
@@ -782,8 +1047,10 @@ export default function Home() {
         hasChanges={hasChanges}
         totalKegiatanCount={totalKegiatanCount}
         memoCount={memoList.length}
-        participantCount={rows.length}
+        participantCount={activeCount}
         totalExpenditure={grandTotal}
+        spjType={currentSpjType}
+        onSelectSpjType={handleSwitchSpjType}
       />
 
       {/* Main Workspace (Full width when sidebar is collapsed, or flex-1 alongside) */}
@@ -799,12 +1066,51 @@ export default function Home() {
           currentLoadedId={editingOriginalId || (isSaved ? header.idKegiatan : null)}
           isSaved={isSaved}
           hasChanges={hasChanges}
-          participantCount={rows.length}
+          participantCount={activeCount}
           totalExpenditure={grandTotal}
+          spjType={currentSpjType}
         />
 
         {/* Main Content Area */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-4 space-y-6 pb-12">
+          {/* Primary Document Type Selector (Pilih Jenis SPJ yang Ingin Dikerjakan) */}
+          {activeTab !== "kegiatan" &&
+            activeTab !== "rekap" &&
+            activeTab !== "panduan" &&
+            activeTab !== "monitoring" &&
+            activeTab !== "daftar-memo" && (
+              <div className="no-print bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xs font-bold text-slate-800 whitespace-nowrap">
+                    Pilih Jenis Dokumen SPJ:
+                  </span>
+                  <span className="hidden xl:inline text-[11px] text-slate-500">
+                    Pilih jenis kegiatan SPJ yang ingin Anda kerjakan
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {SPJ_TYPE_LIST.map((item) => {
+                    const isSelected = currentSpjType === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleSwitchSpjType(item.id)}
+                        className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                          isSelected
+                            ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                            : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/90"
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
           {/* Secondary Management Tabs: Return Bar to Input */}
           {(activeTab === "kegiatan" || activeTab === "rekap" || activeTab === "panduan" || activeTab === "monitoring" || activeTab === "daftar-memo") && (
             <div className="flex items-center justify-between p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-2xs backdrop-blur-md no-print animate-fade-in">
@@ -835,60 +1141,83 @@ export default function Home() {
           )}
 
           {/* Tab 0: Input & Kalkulator */}
-          {activeTab === "input" && (
-            <div className="space-y-6">
-              <HeaderForm
+          {activeTab === "input" &&
+            (isPengadaan ? (
+              <PengadaanSpjForm
                 header={header}
                 setHeader={handleSetHeader}
-                sbmList={sbmList}
                 memoList={memoList}
                 pegawaiList={pegawaiList}
-                onAddPegawai={handleAddPegawai}
-                onApplyStToAll={handleApplyStToAll}
                 onGenerateMemoNumber={handleGenerateMemoNumber}
                 onOpenDaftarKegiatan={() => setActiveTab("kegiatan")}
                 onOpenDaftarMemo={() => setActiveTab("daftar-memo")}
                 onCreateNewKegiatan={handleRequestCreateNew}
                 editingOriginalId={editingOriginalId}
-              />
-
-              <ChecklistFilter
-                activeCols={activeCols}
-                setActiveCols={handleSetActiveCols}
-                activeUh={activeUh}
-                setActiveUh={handleSetActiveUh}
-              />
-
-              <ParticipantGrid
-                rows={rows}
-                setRows={setRows}
-                pegawaiList={pegawaiList}
-                sbmList={sbmList}
-                activeCols={activeCols}
-                activeUh={activeUh}
-                provinsiTujuan={header.provinsiTujuan}
-                header={header}
                 isSaved={isSaved}
                 hasChanges={hasChanges}
                 isSaving={isSaving}
                 saveFeedback={saveFeedback}
                 onSaveOrUpdate={handleSaveOrUpdateData}
                 onClearFeedback={() => setSaveFeedback(null)}
+                onNavigateTab={(tab) => setActiveTab(tab)}
               />
-            </div>
-          )}
+            ) : (
+              <div className="space-y-6">
+                <HeaderForm
+                  header={header}
+                  setHeader={handleSetHeader}
+                  sbmList={sbmList}
+                  memoList={memoList}
+                  pegawaiList={pegawaiList}
+                  onAddPegawai={handleAddPegawai}
+                  onApplyStToAll={handleApplyStToAll}
+                  onGenerateMemoNumber={handleGenerateMemoNumber}
+                  onOpenDaftarKegiatan={() => setActiveTab("kegiatan")}
+                  onOpenDaftarMemo={() => setActiveTab("daftar-memo")}
+                  onCreateNewKegiatan={handleRequestCreateNew}
+                  editingOriginalId={editingOriginalId}
+                />
+
+                <ChecklistFilter
+                  activeCols={activeCols}
+                  setActiveCols={handleSetActiveCols}
+                  activeUh={activeUh}
+                  setActiveUh={handleSetActiveUh}
+                />
+
+                <ParticipantGrid
+                  rows={rows}
+                  setRows={setRows}
+                  pegawaiList={pegawaiList}
+                  sbmList={sbmList}
+                  activeCols={activeCols}
+                  activeUh={activeUh}
+                  provinsiTujuan={header.provinsiTujuan}
+                  header={header}
+                  isSaved={isSaved}
+                  hasChanges={hasChanges}
+                  isSaving={isSaving}
+                  saveFeedback={saveFeedback}
+                  onSaveOrUpdate={handleSaveOrUpdateData}
+                  onClearFeedback={() => setSaveFeedback(null)}
+                />
+              </div>
+            ))}
 
           {/* Tab 1: Kwitansi */}
-          {activeTab === "kwitansi" && (
-            <KwitansiDoc
-              header={header}
-              setHeader={setHeader}
-              rows={rows}
-              setRows={setRows}
-              activeCols={activeCols}
-              activeUh={activeUh}
-            />
-          )}
+          {activeTab === "kwitansi" &&
+            (isPengadaan ? (
+              <KuitansiPengadaanDoc header={header} />
+            ) : (
+              <KwitansiDoc
+                header={header}
+                setHeader={setHeader}
+                rows={rows}
+                setRows={setRows}
+                activeCols={activeCols}
+                activeUh={activeUh}
+              />
+            ))}
 
           {/* Tab 2: Memorandum */}
           {activeTab === "memorandum" && (
@@ -901,16 +1230,19 @@ export default function Home() {
           )}
 
           {/* Tab 3: Nominatif */}
-          {activeTab === "nominatif" && (
-            <NominatifDoc
-              header={header}
-              setHeader={setHeader}
-              rows={rows}
-              setRows={setRows}
-              activeCols={activeCols}
-              activeUh={activeUh}
-            />
-          )}
+          {activeTab === "nominatif" &&
+            (isPengadaan ? (
+              <NominatifPengadaanDoc header={header} />
+            ) : (
+              <NominatifDoc
+                header={header}
+                setHeader={setHeader}
+                rows={rows}
+                setRows={setRows}
+                activeCols={activeCols}
+                activeUh={activeUh}
+              />
+            ))}
 
           {/* Tab 4: Rincian Biaya */}
           {activeTab === "rincian" && (

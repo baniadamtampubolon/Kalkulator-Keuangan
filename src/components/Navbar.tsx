@@ -14,6 +14,8 @@ import {
   Sparkles,
   PanelLeft,
 } from "lucide-react";
+import { SpjDocType } from "@/lib/types";
+import { getSpjTypeMeta } from "@/lib/pengadaanHelper";
 
 export type ActiveTab = "input" | "kegiatan" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "spd" | "rekap" | "panduan" | "monitoring" | "daftar-memo";
 
@@ -29,6 +31,7 @@ interface NavbarProps {
   hasChanges?: boolean;
   participantCount: number;
   totalExpenditure: number;
+  spjType?: SpjDocType;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -43,17 +46,28 @@ export const Navbar: React.FC<NavbarProps> = ({
   hasChanges = false,
   participantCount,
   totalExpenditure,
+  spjType = "PERDIN",
 }) => {
-  // Main Course Tabs only (Input, Kwitansi, Memo, Nominatif, Rincian, Riil, SPPD Depan)
-  const mainTabs = [
-    { id: "input", label: "Input & Kalkulator", icon: Calculator },
-    { id: "kwitansi", label: "1. Kwitansi", icon: Receipt },
-    { id: "memorandum", label: "2. Memorandum", icon: FileText },
-    { id: "nominatif", label: "3. Nominatif", icon: FileSpreadsheet },
-    { id: "rincian", label: "4. Rincian Biaya", icon: ListOrdered },
-    { id: "riil", label: "5. Biaya Riil", icon: FileCheck },
-    { id: "spd", label: "6. SPPD Depan", icon: FileText },
-  ];
+  const isPengadaan = spjType !== "PERDIN";
+  const spjMeta = getSpjTypeMeta(spjType);
+
+  // Main Course Tabs (6 documents for Perdin, 3 documents for Konsumsi/ATK/Sewa/Diklat)
+  const mainTabs = isPengadaan
+    ? [
+        { id: "input", label: "Input & Kalkulator", icon: Calculator },
+        { id: "kwitansi", label: "1. Kuitansi SPJ", icon: Receipt },
+        { id: "memorandum", label: "2. Memorandum", icon: FileText },
+        { id: "nominatif", label: "3. Daftar Nominatif", icon: FileSpreadsheet },
+      ]
+    : [
+        { id: "input", label: "Input & Kalkulator", icon: Calculator },
+        { id: "kwitansi", label: "1. Kwitansi", icon: Receipt },
+        { id: "memorandum", label: "2. Memorandum", icon: FileText },
+        { id: "nominatif", label: "3. Nominatif", icon: FileSpreadsheet },
+        { id: "rincian", label: "4. Rincian Biaya", icon: ListOrdered },
+        { id: "riil", label: "5. Biaya Riil", icon: FileCheck },
+        { id: "spd", label: "6. SPPD Depan", icon: FileText },
+      ];
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 no-print transition-all shadow-2xs">
@@ -128,8 +142,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             {/* Live Metrics Pill */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 border border-slate-200/80 text-xs shadow-2xs">
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${spjMeta.badgeColor}`}>
+                {spjMeta.shortLabel}
+              </span>
               <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                {participantCount} Peserta
+                {participantCount} {isPengadaan ? "Item" : "Peserta"}
               </span>
               <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0" />
               <span className="font-bold text-slate-900 font-mono text-xs whitespace-nowrap">

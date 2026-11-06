@@ -19,6 +19,8 @@ import {
   TrendingUp,
   BookmarkCheck,
 } from "lucide-react";
+import { SpjDocType } from "@/lib/types";
+import { SPJ_TYPE_LIST } from "@/lib/pengadaanHelper";
 
 interface ClassicSidebarProps {
   isOpen: boolean;
@@ -33,6 +35,8 @@ interface ClassicSidebarProps {
   memoCount?: number;
   participantCount?: number;
   totalExpenditure?: number;
+  spjType?: SpjDocType;
+  onSelectSpjType?: (type: SpjDocType) => void;
 }
 
 export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
@@ -48,22 +52,33 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
   memoCount = 0,
   participantCount = 0,
   totalExpenditure = 0,
+  spjType = "PERDIN",
+  onSelectSpjType,
 }) => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
+  const isPengadaan = spjType !== "PERDIN";
+
   // Main Course: Documents of current SPJ
-  const docTabs = [
-    { id: "input", label: "Input & Kalkulator", icon: Calculator },
-    { id: "kwitansi", label: "1. Kwitansi SPJ", icon: Receipt },
-    { id: "memorandum", label: "2. Memorandum", icon: FileText },
-    { id: "nominatif", label: "3. Daftar Nominatif", icon: FileSpreadsheet },
-    { id: "rincian", label: "4. Rincian Biaya 7 Kolom", icon: ListOrdered },
-    { id: "riil", label: "5. Daftar Pengeluaran Riil", icon: FileCheck },
-    { id: "spd", label: "6. SPPD Depan", icon: FileText },
-  ];
+  const docTabs = isPengadaan
+    ? [
+        { id: "input", label: "Input & Kalkulator", icon: Calculator },
+        { id: "kwitansi", label: "1. Kuitansi SPJ", icon: Receipt },
+        { id: "memorandum", label: "2. Memorandum", icon: FileText },
+        { id: "nominatif", label: "3. Daftar Nominatif", icon: FileSpreadsheet },
+      ]
+    : [
+        { id: "input", label: "Input & Kalkulator", icon: Calculator },
+        { id: "kwitansi", label: "1. Kwitansi SPJ", icon: Receipt },
+        { id: "memorandum", label: "2. Memorandum", icon: FileText },
+        { id: "nominatif", label: "3. Daftar Nominatif", icon: FileSpreadsheet },
+        { id: "rincian", label: "4. Rincian Biaya 7 Kolom", icon: ListOrdered },
+        { id: "riil", label: "5. Daftar Pengeluaran Riil", icon: FileCheck },
+        { id: "spd", label: "6. SPPD Depan", icon: FileText },
+      ];
 
   // Archive & Management (Tab Groups style)
   const mgmtTabs = [
@@ -137,6 +152,26 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                 <Plus className="w-3.5 h-3.5" />
                 <span>Buat SPJ Baru</span>
               </button>
+            </div>
+          )}
+
+          {/* Section 0: PILIH JENIS SPJ */}
+          {onSelectSpjType && (
+            <div className="space-y-1 px-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1 block">
+                Jenis Dokumen SPJ
+              </span>
+              <select
+                value={spjType}
+                onChange={(e) => onSelectSpjType(e.target.value as SpjDocType)}
+                className="input-clean w-full h-8 px-2.5 text-xs font-bold bg-white cursor-pointer"
+              >
+                {SPJ_TYPE_LIST.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
 
@@ -300,7 +335,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
         {/* Sidebar Footer: Summary Card (macOS Status Style) */}
         <div className="p-3 bg-white/70 dark:bg-slate-900/70 border-t border-slate-200/70 dark:border-slate-800 space-y-1 text-xs">
           <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
-            <span className="font-medium">{participantCount} Peserta</span>
+            <span className="font-medium">{participantCount} {isPengadaan ? "Item" : "Peserta"}</span>
             <span className="font-mono font-bold text-slate-900 dark:text-white">
               Rp {totalExpenditure.toLocaleString("id-ID")}
             </span>
