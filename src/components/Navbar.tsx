@@ -13,11 +13,26 @@ import {
   Plus,
   PanelLeft,
   Home as HomeIcon,
+  FolderKanban,
+  ArrowRight,
 } from "lucide-react";
 import { SpjDocType } from "@/lib/types";
 import { getSpjTypeMeta } from "@/lib/pengadaanHelper";
 
-export type ActiveTab = "beranda" | "input" | "kegiatan" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "spd" | "rekap" | "panduan" | "monitoring" | "daftar-memo";
+export type ActiveTab =
+  | "beranda"
+  | "input"
+  | "kegiatan"
+  | "kwitansi"
+  | "memorandum"
+  | "nominatif"
+  | "rincian"
+  | "riil"
+  | "spd"
+  | "rekap"
+  | "panduan"
+  | "monitoring"
+  | "daftar-memo";
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -49,8 +64,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const isPengadaan = spjType !== "PERDIN";
   const spjMeta = getSpjTypeMeta(spjType);
+  const isBeranda = activeTab === "beranda";
 
-  // Main Course Tabs (Beranda + 6 documents for Perdin, or Beranda + 3 documents for Konsumsi/ATK/Sewa/Diklat)
+  // Main Course Tabs
   const mainTabs = isPengadaan
     ? [
         { id: "beranda", label: "Beranda", icon: HomeIcon },
@@ -71,10 +87,14 @@ export const Navbar: React.FC<NavbarProps> = ({
       ];
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 no-print transition-all shadow-2xs">
+    <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-xl border-b border-slate-200/70 no-print transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Tier 1: Brand & Top Utilities (Ultra Minimalist) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-2.5 border-b border-slate-100">
+        {/* Tier 1: Brand & Top Utilities */}
+        <div
+          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 ${
+            isBeranda ? "" : "border-b border-slate-100"
+          }`}
+        >
           {/* Brand Identity with Sidebar Toggle */}
           <div className="flex items-center gap-2.5">
             {onToggleSidebar && (
@@ -86,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     ? "bg-slate-900 text-white border-slate-900 hover:bg-black"
                     : "bg-white hover:bg-slate-50 border-slate-200/90"
                 }`}
-                title="Buka / Tutup Sidebar Klasik"
+                title="Buka / Tutup Menu Navigasi"
               >
                 <PanelLeft className="w-4 h-4" />
               </button>
@@ -96,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={() => setActiveTab("beranda")}
               className="relative w-8 h-8 rounded-xl bg-slate-50 p-1 flex items-center justify-center border border-slate-200/80 shadow-2xs overflow-hidden shrink-0 cursor-pointer hover:bg-slate-100 transition-colors"
-              title="Kembali ke Beranda Utama (Pilih Jenis SPJ)"
+              title="Kembali ke Beranda Go SPJ"
             >
               <Image
                 src="/logo-kemenkopangan.png"
@@ -112,15 +132,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setActiveTab("beranda")}
-                  className="text-xs md:text-sm font-bold tracking-tight text-slate-900 hover:text-blue-600 transition-colors cursor-pointer text-left"
-                  title="Kembali ke Beranda Utama (Pilih Jenis SPJ)"
+                  className="text-xs md:text-sm font-bold tracking-tight text-slate-900 hover:text-[#0071e3] transition-colors cursor-pointer text-left"
+                  title="Kembali ke Beranda Go SPJ"
                 >
-                  Kalkulator Keuangan &amp; SPPD
+                  Go SPJ
                 </button>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
                   Inspektorat
                 </span>
-                {currentLoadedId ? (
+                {!isBeranda && currentLoadedId && (
                   <span
                     className={`hidden md:inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                       hasChanges
@@ -136,86 +156,102 @@ export const Navbar: React.FC<NavbarProps> = ({
                     />
                     {currentLoadedId}
                   </span>
-                ) : (
-                  <span className="hidden md:inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    Draft Baru
-                  </span>
                 )}
               </div>
               <p className="text-[10.5px] text-slate-500 font-normal">
-                Kemenko Bidang Pangan RI
+                Kementerian Koordinator Bidang Pangan RI
               </p>
             </div>
           </div>
 
-          {/* Right Action Group: Live Metrics Pill, SPJ Baru, Cetak PDF, Sidebar Trigger */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Live Metrics Pill */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 border border-slate-200/80 text-xs shadow-2xs">
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${spjMeta.badgeColor}`}>
-                {spjMeta.shortLabel}
-              </span>
-              <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                {participantCount} {isPengadaan ? "Item" : "Peserta"}
-              </span>
-              <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0" />
-              <span className="font-bold text-slate-900 font-mono text-xs whitespace-nowrap">
-                Rp {totalExpenditure.toLocaleString("id-ID")}
-              </span>
-            </div>
-
-            {/* Quick Action: Buat SPJ Baru */}
-            {onCreateNewKegiatan && (
+          {/* Right Action Group */}
+          {isBeranda ? (
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={onCreateNewKegiatan}
-                className="btn-tactile flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer"
-                title="Mulai membuat berkas SPJ baru (reset form bersih & auto-increment ID)"
+                onClick={() => setActiveTab("kegiatan")}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 text-xs font-medium cursor-pointer transition-all"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>SPJ Baru</span>
+                <FolderKanban className="w-3.5 h-3.5 text-slate-500" />
+                <span>Riwayat SPJ</span>
               </button>
-            )}
+              <button
+                type="button"
+                onClick={() => setActiveTab("input")}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer transition-all"
+              >
+                <span>Buka Kalkulator</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Live Metrics Pill */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 border border-slate-200/80 text-xs shadow-2xs">
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${spjMeta.badgeColor}`}>
+                  {spjMeta.shortLabel}
+                </span>
+                <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
+                  {participantCount} {isPengadaan ? "Item" : "Peserta"}
+                </span>
+                <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0" />
+                <span className="font-bold text-slate-900 font-mono text-xs whitespace-nowrap">
+                  Rp {totalExpenditure.toLocaleString("id-ID")}
+                </span>
+              </div>
 
-            {/* Cetak PDF Primary Action */}
-            <button
-              type="button"
-              onClick={onPrint}
-              className="btn-tactile flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5 text-white" />
-              <span>Cetak PDF</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Tier 2: Dedicated Main Course Navigation Tabs */}
-        <div className="py-2 overflow-x-auto scrollbar-none flex justify-center sm:justify-start lg:justify-center">
-          <nav className="inline-flex items-center gap-1 p-1 bg-slate-200/50 border border-slate-300/40 rounded-xl backdrop-blur-md max-w-full">
-            {mainTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
+              {/* Quick Action: Buat SPJ Baru */}
+              {onCreateNewKegiatan && (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as ActiveTab)}
-                  className={`btn-tactile relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap cursor-pointer ${
-                    isActive
-                      ? "bg-white text-slate-900 shadow-xs font-semibold border border-white"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-white/40 font-normal"
-                  }`}
+                  type="button"
+                  onClick={onCreateNewKegiatan}
+                  className="btn-tactile flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer"
+                  title="Mulai membuat berkas SPJ baru (reset form bersih & auto-increment ID)"
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
-                  <span>{tab.label}</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>SPJ Baru</span>
                 </button>
-              );
-            })}
-          </nav>
+              )}
+
+              {/* Cetak PDF Primary Action */}
+              <button
+                type="button"
+                onClick={onPrint}
+                className="btn-tactile flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5 text-white" />
+                <span>Cetak PDF</span>
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Tier 2: Dedicated Main Course Navigation Tabs (Hidden on Beranda Landing Page for clean minimalism) */}
+        {!isBeranda && (
+          <div className="py-2 overflow-x-auto scrollbar-none flex justify-center sm:justify-start lg:justify-center">
+            <nav className="inline-flex items-center gap-1 p-1 bg-slate-200/50 border border-slate-300/40 rounded-xl backdrop-blur-md max-w-full">
+              {mainTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as ActiveTab)}
+                    className={`btn-tactile relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap cursor-pointer ${
+                      isActive
+                        ? "bg-white text-slate-900 shadow-xs font-semibold border border-white"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/40 font-normal"
+                    }`}
+                  >
+                    <Icon className={`w-3.5 h-3.5 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );
 };
-
-

@@ -2,24 +2,19 @@
 
 import React from "react";
 import { SpjDocType } from "@/lib/types";
-import { SPJ_TYPE_LIST, getSpjTypeMeta } from "@/lib/pengadaanHelper";
 import { ActiveTab } from "./Navbar";
 import {
   Briefcase,
   UtensilsCrossed,
-  Package,
   Car,
-  GraduationCap,
-  ArrowRight,
+  Mic,
+  Package,
+  ArrowUpRight,
   FolderKanban,
   ScrollText,
   Table2,
   PieChart,
-  CheckCircle2,
   Database,
-  PlayCircle,
-  PlusCircle,
-  HelpCircle,
 } from "lucide-react";
 
 interface LandingHomeViewProps {
@@ -37,481 +32,194 @@ interface LandingHomeViewProps {
   onOpenDbModal?: () => void;
 }
 
-interface ModuleDetailConfig {
+interface SpjSquareBlock {
+  no: string;
   type: SpjDocType;
+  title: string;
+  subtitle: string;
   icon: React.ComponentType<{ className?: string }>;
-  documents: string[];
-  taxRule: string;
-  makCode: string;
+  iconBg: string;
+  activeRing: string;
 }
 
-const MODULE_CONFIGS: Record<SpjDocType, ModuleDetailConfig> = {
-  PERDIN: {
+const SPJ_SQUARE_BLOCKS: SpjSquareBlock[] = [
+  {
+    no: "01",
     type: "PERDIN",
+    title: "Buat SPJ Perjalanan Dinas",
+    subtitle: "Kwitansi, Memo, Nominatif, Rincian, Riil & SPPD",
     icon: Briefcase,
-    documents: [
-      "1. Kwitansi Rampung",
-      "2. Memorandum (3 Hal)",
-      "3. Daftar Nominatif",
-      "4. Rincian Biaya (7 Kol)",
-      "5. Pengeluaran Riil",
-      "6. SPPD Depan",
-    ],
-    taxRule: "Otomatisasi Tarif SBM 38 Provinsi, UH 100%/60%/40%, Hotel 30%, dan Rekap 48 Kolom",
-    makCode: "MAK 524111 / 524113",
+    iconBg: "bg-blue-50 text-[#0071e3] border-blue-100 group-hover:bg-[#0071e3] group-hover:text-white",
+    activeRing: "border-[#0071e3] ring-2 ring-[#0071e3]/15",
   },
-  KONSUMSI: {
+  {
+    no: "02",
     type: "KONSUMSI",
+    title: "SPJ Konsumsi",
+    subtitle: "Kuitansi, Memorandum & Nominatif Konsumsi",
     icon: UtensilsCrossed,
-    documents: [
-      "1. Kuitansi / Bukti Pembelian",
-      "2. Memorandum (3 Hal)",
-      "3. Daftar Nominatif Konsumsi",
-    ],
-    taxRule: "PPN Include (11/111) + Potongan PPh Pasal 23 Jasa Catering (2% dari DPP)",
-    makCode: "MAK 521211",
+    iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white",
+    activeRing: "border-emerald-500 ring-2 ring-emerald-500/15",
   },
-  ATK: {
-    type: "ATK",
-    icon: Package,
-    documents: [
-      "1. Kuitansi / Bukti Pembelian",
-      "2. Memorandum (3 Hal)",
-      "3. Daftar Nominatif Semkit & ATK",
-    ],
-    taxRule: "PPN Include (11/111) / Manual + Potongan PPh Pasal 22 Pembelian Barang (1,5% dari DPP)",
-    makCode: "MAK 521211",
-  },
-  SEWA: {
+  {
+    no: "03",
     type: "SEWA",
+    title: "SPJ Sewa Kendaraan",
+    subtitle: "Kuitansi, Memorandum & Nominatif Sewa Mobil",
     icon: Car,
-    documents: [
-      "1. Kuitansi / Bukti Pembelian",
-      "2. Memorandum (3 Hal)",
-      "3. Daftar Nominatif Sewa Kendaraan",
-    ],
-    taxRule: "Potongan PPh Pasal 23 Sewa Harta (2% ber-NPWP / 4% tanpa NPWP) + Opsi PPN",
-    makCode: "MAK 522141",
+    iconBg: "bg-violet-50 text-violet-600 border-violet-100 group-hover:bg-violet-600 group-hover:text-white",
+    activeRing: "border-violet-500 ring-2 ring-violet-500/15",
   },
-  DIKLAT: {
+  {
+    no: "04",
     type: "DIKLAT",
-    icon: GraduationCap,
-    documents: [
-      "1. Kuitansi / Bukti Pembelian",
-      "2. Memorandum (3 Hal)",
-      "3. Daftar Nominatif Diklat",
-    ],
-    taxRule: "PNBP Diklat (Bebas Pajak) atau Jasa Pelatihan Swasta (PPN + PPh 23)",
-    makCode: "MAK 524111",
+    title: "SPJ Narsum",
+    subtitle: "Kuitansi, Memorandum & Nominatif Narasumber",
+    icon: Mic,
+    iconBg: "bg-rose-50 text-rose-600 border-rose-100 group-hover:bg-rose-600 group-hover:text-white",
+    activeRing: "border-rose-500 ring-2 ring-rose-500/15",
   },
-};
+  {
+    no: "05",
+    type: "ATK",
+    title: "SPJ ATK dan Seminar Kit",
+    subtitle: "Kuitansi, Memorandum & Nominatif ATK / Semkit",
+    icon: Package,
+    iconBg: "bg-amber-50 text-amber-600 border-amber-100 group-hover:bg-amber-600 group-hover:text-white",
+    activeRing: "border-amber-500 ring-2 ring-amber-500/15",
+  },
+];
 
 export const LandingHomeView: React.FC<LandingHomeViewProps> = ({
   currentSpjType,
-  currentLoadedId,
-  currentTitle,
-  currentTotal = 0,
   totalKegiatanCount,
-  pegawaiCount,
   memoCount,
-  sbmCount = 38,
   onSelectSpjToWork,
-  onContinueCurrentWork,
   onNavigateTab,
   onOpenDbModal,
 }) => {
-  const activeMeta = getSpjTypeMeta(currentSpjType);
-  const perdinMeta = getSpjTypeMeta("PERDIN");
-  const perdinConfig = MODULE_CONFIGS.PERDIN;
-  const pengadaanTypes = SPJ_TYPE_LIST.filter((m) => m.id !== "PERDIN");
-
   return (
-    <div className="space-y-6 pb-8">
-      {/* =====================================================================
-          1. WORKSPACE HEADER & ACTIVE DRAFT BAR (Calm Liquid Glass Surface)
-         ===================================================================== */}
-      <section className="glass-base rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-        <div className="p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="space-y-1.5 max-w-2xl">
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-              <span>Inspektorat • Kementerian Koordinator Bidang Pangan RI</span>
-              <span className="text-slate-300">•</span>
-              <span className="font-mono text-[11px] text-slate-600">TA 2026</span>
-            </div>
-            <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-              Sistem Administrasi &amp; Kalkulator SPJ Keuangan
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Pilih jenis dokumen pertanggungjawaban yang ingin Anda susun. Seluruh perhitungan tarif SBM, pemotongan pajak (PPN, PPh 22, PPh 23), hingga penomoran Memorandum dan SPD terhubung secara otomatis.
-            </p>
+    <div className="min-h-[calc(100vh-9rem)] flex flex-col justify-center py-8 sm:py-12 px-2">
+      <div className="max-w-6xl w-full mx-auto space-y-10 sm:space-y-12">
+        {/* =====================================================================
+            1. HERO GREETING (Clean, Minimalist, Modern Landing Page)
+           ===================================================================== */}
+        <div className="text-center max-w-2xl mx-auto space-y-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 border border-slate-200/80 shadow-2xs text-xs font-medium text-slate-600">
+            <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+            <span>Inspektorat • Kementerian Koordinator Bidang Pangan RI</span>
           </div>
 
-          {/* Primary Quick-Resume Action */}
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <button
-              type="button"
-              onClick={onContinueCurrentWork}
-              className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold shadow-xs cursor-pointer transition-all"
-            >
-              <PlayCircle className="w-4 h-4" />
-              <span>Lanjutkan: {activeMeta.shortLabel}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+            Selamat Datang di <span className="text-[#0071e3]">Go SPJ</span>
+          </h1>
 
-            {onOpenDbModal && (
-              <button
-                type="button"
-                onClick={onOpenDbModal}
-                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 text-xs font-semibold cursor-pointer transition-all"
-              >
-                <Database className="w-3.5 h-3.5 text-slate-500" />
-                <span>Sinkronisasi Cloud</span>
-              </button>
-            )}
-          </div>
+          <p className="text-sm sm:text-base text-slate-500 leading-relaxed font-normal">
+            Sistem pembuat dokumen perjalanan dinas dan pertanggungjawaban keuangan digital. Pilih jenis SPJ di bawah ini untuk mulai menyusun berkas secara otomatis, cepat, dan presisi.
+          </p>
         </div>
 
-        {/* Active Session & Operational Metadata Bar */}
-        <div className="bg-slate-50/80 border-t border-slate-200/70 px-5 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-            <span className="text-slate-500 shrink-0">Draft Aktif:</span>
-            <span className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${activeMeta.badgeColor}`}>
-              {activeMeta.shortLabel}
-            </span>
-            <span className="font-mono font-semibold text-slate-700 shrink-0">
-              {currentLoadedId || "Draft Baru"}
-            </span>
-            {currentTitle && (
-              <span className="text-slate-600 truncate hidden md:inline">
-                — {currentTitle}
-              </span>
-            )}
-            {currentTotal > 0 && (
-              <span className="font-mono font-bold text-slate-900 shrink-0 hidden sm:inline">
-                (Rp {currentTotal.toLocaleString("id-ID")})
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-4 text-[11px] text-slate-500 shrink-0 flex-wrap">
-            <span>
-              Berkas Tersimpan: <strong className="font-mono text-slate-800">{totalKegiatanCount}</strong>
-            </span>
-            <span className="text-slate-300">|</span>
-            <span>
-              Database Pegawai: <strong className="font-mono text-slate-800">{pegawaiCount}</strong>
-            </span>
-            <span className="text-slate-300">|</span>
-            <span>
-              Tarif SBM: <strong className="font-mono text-slate-800">{sbmCount} Prov</strong>
-            </span>
-            <span className="text-slate-300">|</span>
-            <span>
-              Reg. Memo: <strong className="font-mono text-slate-800">{memoCount}</strong>
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* =====================================================================
-          2. PEMILIHAN MODUL SPJ (Primary Perdin + 4 Pengadaan Modules)
-         ===================================================================== */}
-      <section className="space-y-3.5">
-        <div className="flex items-baseline justify-between gap-2 px-0.5">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900">
-              Pilih Dokumen SPJ yang Akan Dikerjakan
-            </h2>
-            <p className="text-xs text-slate-500">
-              Klik langsung pada modul kegiatan untuk membuka form perhitungan dan dokumen cetak
-            </p>
-          </div>
-        </div>
-
-        {/* 2A. PRIMARY FEATURED WORKFLOW: PERJALANAN DINAS (6 DOKUMEN) */}
-        <div
-          className={`glass-base rounded-2xl p-5 sm:p-6 transition-all border ${
-            currentSpjType === "PERDIN"
-              ? "border-[#0071e3] ring-1 ring-[#0071e3]/20"
-              : "border-slate-200/80 hover:border-slate-300"
-          }`}
-        >
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-            <div className="space-y-3 flex-1">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-700">
-                  <Briefcase className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                      {perdinMeta.label}
-                    </h3>
-                    <span className="text-[10.5px] font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
-                      {perdinConfig.makCode}
-                    </span>
-                    <span className="text-[10.5px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
-                      6 Dokumen Cetak
-                    </span>
-                    {currentSpjType === "PERDIN" && (
-                      <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Sedang Aktif
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {perdinConfig.taxRule}
-                  </p>
-                </div>
-              </div>
-
-              {/* 6 Output Documents inline list */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {perdinConfig.documents.map((doc) => (
-                  <span
-                    key={doc}
-                    className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-200/80"
-                  >
-                    {doc}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => onSelectSpjToWork("PERDIN", false)}
-                className={`btn-tactile inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
-                  currentSpjType === "PERDIN"
-                    ? "bg-[#0071e3] hover:bg-[#0077ed] text-white shadow-xs"
-                    : "bg-slate-900 hover:bg-slate-800 text-white"
-                }`}
-              >
-                <span>
-                  {currentSpjType === "PERDIN"
-                    ? "Lanjutkan SPJ Perdin"
-                    : "Buka SPJ Perjalanan Dinas"}
-                </span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onSelectSpjToWork("PERDIN", true)}
-                className="btn-tactile inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/90 text-xs font-medium cursor-pointer transition-all"
-              >
-                <PlusCircle className="w-3.5 h-3.5 text-slate-400" />
-                <span>Buat Perdin Baru</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 2B. 4 MODUL SPJ PENGADAAN & KEGIATAN (KONSUMSI, ATK, SEWA, DIKLAT) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-          {pengadaanTypes.map((meta) => {
-            const cfg = MODULE_CONFIGS[meta.id];
-            const Icon = cfg.icon;
-            const isSelected = currentSpjType === meta.id;
+        {/* =====================================================================
+            2. FIVE SQUARE BLOCKS (5 Blok Shape Kotak Minimalis)
+           ===================================================================== */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+          {SPJ_SQUARE_BLOCKS.map((block) => {
+            const Icon = block.icon;
+            const isSelected = currentSpjType === block.type;
 
             return (
-              <div
-                key={meta.id}
-                className={`glass-base rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all border ${
+              <button
+                key={block.type}
+                type="button"
+                onClick={() => onSelectSpjToWork(block.type, false)}
+                className={`group relative sm:aspect-square min-h-[200px] rounded-3xl bg-white/90 hover:bg-white backdrop-blur-xl p-6 flex flex-col justify-between text-left border transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer ${
                   isSelected
-                    ? "border-[#0071e3] ring-1 ring-[#0071e3]/20"
-                    : "border-slate-200/80 hover:border-slate-300"
+                    ? `${block.activeRing} shadow-md`
+                    : "border-slate-200/80 hover:border-slate-300 shadow-xs"
                 }`}
               >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-700 shrink-0">
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-sm font-bold text-slate-900">
-                            {meta.label}
-                          </h3>
-                          {isSelected && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                              <CheckCircle2 className="w-3 h-3" />
-                              Aktif
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[10.5px] font-mono font-semibold text-slate-600">
-                            {cfg.makCode}
-                          </span>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-[10.5px] text-slate-500">
-                            3 Dokumen (Kuitansi, Memo, Nominatif)
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                {/* Top Row: Icon & Number */}
+                <div className="flex items-start justify-between w-full">
+                  <div
+                    className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-colors duration-200 ${block.iconBg}`}
+                  >
+                    <Icon className="w-5 h-5" />
                   </div>
 
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {cfg.taxRule}
+                  <span className="font-mono text-xs font-bold text-slate-300 group-hover:text-slate-400 transition-colors">
+                    {block.no}
+                  </span>
+                </div>
+
+                {/* Bottom Row: Title & Subtitle */}
+                <div className="space-y-1.5 pt-4">
+                  <div className="flex items-end justify-between gap-2">
+                    <h2 className="text-base font-bold text-slate-900 leading-snug group-hover:text-[#0071e3] transition-colors">
+                      {block.title}
+                    </h2>
+                    <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-[#0071e3] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mb-0.5" />
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
+                    {block.subtitle}
                   </p>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {cfg.documents.map((doc) => (
-                      <span
-                        key={doc}
-                        className="text-[10.5px] font-medium px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 border border-slate-200/80"
-                      >
-                        {doc}
-                      </span>
-                    ))}
-                  </div>
                 </div>
-
-                <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onSelectSpjToWork(meta.id, false)}
-                    className={`btn-tactile flex-1 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
-                      isSelected
-                        ? "bg-[#0071e3] hover:bg-[#0077ed] text-white shadow-xs"
-                        : "bg-slate-900 hover:bg-slate-800 text-white"
-                    }`}
-                  >
-                    <span>
-                      {isSelected
-                        ? `Lanjutkan ${meta.shortLabel}`
-                        : `Kerjakan ${meta.shortLabel}`}
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => onSelectSpjToWork(meta.id, true)}
-                    className="btn-tactile inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/90 text-xs font-medium cursor-pointer transition-all"
-                    title={`Reset & mulai berkas ${meta.label} baru`}
-                  >
-                    <PlusCircle className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Baru</span>
-                  </button>
-                </div>
-              </div>
+              </button>
             );
           })}
         </div>
-      </section>
 
-      {/* =====================================================================
-          3. MANAJEMEN DATA, BUKU KENDALI & MONITORING (Unified Surface)
-         ===================================================================== */}
-      <section className="space-y-2.5">
-        <div className="px-0.5">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Buku Kendali, Rekapitulasi &amp; Referensi Anggaran
-          </h2>
-        </div>
-
-        <div className="glass-base rounded-2xl border border-slate-200/80 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/70 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 overflow-hidden">
+        {/* =====================================================================
+            3. MINIMALIST SECONDARY NAVIGATION PILLS
+           ===================================================================== */}
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-2">
           <button
             type="button"
             onClick={() => onNavigateTab("kegiatan")}
-            className="p-4 text-left hover:bg-slate-50/80 transition-colors cursor-pointer flex flex-col justify-between gap-2 group"
+            className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 hover:bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 text-xs font-medium shadow-2xs cursor-pointer transition-all"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-800 font-semibold text-xs group-hover:text-[#0071e3] transition-colors">
-                <FolderKanban className="w-4 h-4 text-slate-500 group-hover:text-[#0071e3]" />
-                <span>Daftar Kegiatan</span>
-              </div>
-              <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
-                {totalKegiatanCount}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 leading-snug">
-              Buka, edit kembali, atau kelola seluruh paket SPJ tersimpan
-            </p>
+            <FolderKanban className="w-3.5 h-3.5 text-slate-400" />
+            <span>Daftar Kegiatan ({totalKegiatanCount})</span>
           </button>
 
           <button
             type="button"
             onClick={() => onNavigateTab("daftar-memo")}
-            className="p-4 text-left hover:bg-slate-50/80 transition-colors cursor-pointer flex flex-col justify-between gap-2 group"
+            className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 hover:bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 text-xs font-medium shadow-2xs cursor-pointer transition-all"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-800 font-semibold text-xs group-hover:text-[#0071e3] transition-colors">
-                <ScrollText className="w-4 h-4 text-slate-500 group-hover:text-[#0071e3]" />
-                <span>Daftar Memorandum</span>
-              </div>
-              <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
-                {memoCount}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 leading-snug">
-              Buku kendali nomor urut Memorandum, MAK, dan kolom biaya
-            </p>
+            <ScrollText className="w-3.5 h-3.5 text-slate-400" />
+            <span>Daftar Memorandum ({memoCount})</span>
           </button>
 
           <button
             type="button"
             onClick={() => onNavigateTab("rekap")}
-            className="p-4 text-left hover:bg-slate-50/80 transition-colors cursor-pointer flex flex-col justify-between gap-2 group"
+            className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 hover:bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 text-xs font-medium shadow-2xs cursor-pointer transition-all"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-800 font-semibold text-xs group-hover:text-[#0071e3] transition-colors">
-                <Table2 className="w-4 h-4 text-slate-500 group-hover:text-[#0071e3]" />
-                <span>Rekapitulasi SPJ</span>
-              </div>
-              <span className="text-[10px] font-mono font-semibold text-slate-400">
-                48 Kolom
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 leading-snug">
-              Tabel rekapitulasi perjalanan dinas &amp; ekspor data Excel
-            </p>
+            <Table2 className="w-3.5 h-3.5 text-slate-400" />
+            <span>Rekap Perdin</span>
           </button>
 
           <button
             type="button"
             onClick={() => onNavigateTab("monitoring")}
-            className="p-4 text-left hover:bg-slate-50/80 transition-colors cursor-pointer flex flex-col justify-between gap-2 group"
+            className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 hover:bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 text-xs font-medium shadow-2xs cursor-pointer transition-all"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-800 font-semibold text-xs group-hover:text-[#0071e3] transition-colors">
-                <PieChart className="w-4 h-4 text-slate-500 group-hover:text-[#0071e3]" />
-                <span>Monitoring DIPA</span>
-              </div>
-              <span className="text-[10px] font-mono font-semibold text-slate-400">
-                FA 16 Segmen
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 leading-snug">
-              Pantau pagu, realisasi, dan sisa anggaran Inspektorat I–IV
-            </p>
+            <PieChart className="w-3.5 h-3.5 text-slate-400" />
+            <span>Monitoring Anggaran</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => onNavigateTab("panduan")}
-            className="p-4 text-left hover:bg-slate-50/80 transition-colors cursor-pointer flex flex-col justify-between gap-2 group"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-800 font-semibold text-xs group-hover:text-[#0071e3] transition-colors">
-                <HelpCircle className="w-4 h-4 text-slate-500 group-hover:text-[#0071e3]" />
-                <span>Panduan Sistem</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#0071e3] transition-colors" />
-            </div>
-            <p className="text-[11px] text-slate-500 leading-snug">
-              Petunjuk alur penyusunan SPJ, rumus pajak, dan pencetakan
-            </p>
-          </button>
+          {onOpenDbModal && (
+            <button
+              type="button"
+              onClick={onOpenDbModal}
+              className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 hover:bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 text-xs font-medium shadow-2xs cursor-pointer transition-all"
+            >
+              <Database className="w-3.5 h-3.5 text-slate-400" />
+              <span>Database Cloud</span>
+            </button>
+          )}
         </div>
-      </section>
+      </div>
     </div>
   );
 };
