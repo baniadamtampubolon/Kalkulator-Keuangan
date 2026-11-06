@@ -186,9 +186,17 @@ export function getMakAkunName(kode: string): string {
   return found ? found.nama : "";
 }
 
+export function normalizeKomponenCode(kode?: string): string {
+  if (!kode) return "";
+  const trimmed = kode.trim();
+  // Normalisasi kode komponen lama seperti WA.7457.EBD.Z28.051.A -> WA.7457.EBD.Z28.051.0A
+  return trimmed.replace(/^(WA\.7457\.EBD\.Z\d{2}\.\d{3})\.([ABH])$/i, "$1.0$2");
+}
+
 export function getKomponenName(kode: string, customDetail?: string): string {
   if (customDetail && customDetail.trim()) return customDetail.trim();
-  const found = LIST_NOMOR_KOMPONEN.find((k) => k.kode === kode);
+  const normalized = normalizeKomponenCode(kode);
+  const found = LIST_NOMOR_KOMPONEN.find((k) => k.kode === normalized || k.kode === kode);
   return found ? found.nama : "";
 }
 
@@ -197,14 +205,14 @@ export function getKomponenName(kode: string, customDetail?: string): string {
  * Mendukung pencarian fleksibel:
  * 1. Berdasarkan full MAK persis (contoh: "CL.7458.ABR.006.051.0A.521211")
  * 2. Berdasarkan kombinasi nomorKomp dan nomorMak
- * 3. Jika hanya salah satu yang terisi, mencocokkan yang ada.
+ * 3. Jika kombinasi spesifik belum tersedia di master JSON, fallback ke daftar item untuk MAK tersebut.
  */
 export function getItemDetailsForMak(
   nomorKomp?: string,
   nomorMak?: string,
   customList?: ItemDetailItem[]
 ): ItemDetailItem[] {
-  const cleanKomp = (nomorKomp || "").trim();
+  const cleanKomp = normalizeKomponenCode(nomorKomp);
   const cleanMak = (nomorMak || "").trim();
   const allList = getAllItemDetails(customList);
 
@@ -215,7 +223,7 @@ export function getItemDetailsForMak(
     if (matchedFull.length > 0) return matchedFull;
   }
 
-  return allList.filter((item) => {
+  const matched = allList.filter((item) => {
     if (cleanMak && item.kodeMak !== cleanMak && !cleanMak.endsWith(item.kodeMak)) {
       return false;
     }
@@ -229,6 +237,21 @@ export function getItemDetailsForMak(
 
     return true;
   });
+
+  if (matched.length > 0) return matched;
+
+  // Fallback: tampilkan seluruh item detail DIPA untuk akun MAK tersebut (deduplikasi per kode)
+  if (cleanMak) {
+    const seen = new Set<string>();
+    return allList.filter((item) => {
+      if (item.kodeMak !== cleanMak && !cleanMak.endsWith(item.kodeMak)) return false;
+      if (seen.has(item.kode)) return false;
+      seen.add(item.kode);
+      return true;
+    });
+  }
+
+  return allList;
 }
 
 export function getItemDetailByKode(kodeOrLabel: string): ItemDetailItem | undefined {

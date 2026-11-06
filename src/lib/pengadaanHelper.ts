@@ -9,6 +9,8 @@ export interface SpjTypeMetadata {
   defaultMak: string;
   defaultKomp: string;
   defaultDetailKomp: string;
+  defaultItemDetail: string;
+  defaultKeteranganItemDetail: string;
   defaultPerihalMemo: string;
   defaultUraianKegiatan: string;
   colHargaLabel: string;
@@ -44,8 +46,10 @@ export const SPJ_TYPE_LIST: SpjTypeMetadata[] = [
     badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
     description: "6 Dokumen SPJ Perdin Lengkap (Kwitansi, Memorandum, Nominatif, Rincian 7 Kolom, Riil, SPPD)",
     defaultMak: "524111",
-    defaultKomp: "WA.7457.EBD.Z29.051.A",
-    defaultDetailKomp: "Pelaksanaan Pengawasan Intern (Inspektorat I-IV)",
+    defaultKomp: "WA.7457.EBD.Z29.051.0B",
+    defaultDetailKomp: "Layanan Audit Internal Dalam Kota II - Assurance",
+    defaultItemDetail: "004864",
+    defaultKeteranganItemDetail: "Perjalanan Dinas Reviu ke Daerah",
     defaultPerihalMemo: "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas",
     defaultUraianKegiatan: "",
     colHargaLabel: "HARGA SATUAN",
@@ -60,8 +64,10 @@ export const SPJ_TYPE_LIST: SpjTypeMetadata[] = [
     badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
     description: "Kuitansi, Memorandum & Daftar Nominatif Konsumsi (Makan Siang & Snack + PPN & PPh)",
     defaultMak: "521211",
-    defaultKomp: "WA.7457.EBD.Z28.051.A",
-    defaultDetailKomp: "Dukungan Manajemen dan Teknis Inspektorat",
+    defaultKomp: "WA.7457.EBD.Z28.051.0B",
+    defaultDetailKomp: "Layanan Audit Internal Perkantoran Sama II - Assurance",
+    defaultItemDetail: "004538",
+    defaultKeteranganItemDetail: "Makan Rapat Biasa D.K.I. JAKARTA",
     defaultPerihalMemo: "Permintaan Pembayaran Langsung (LS) Konsumsi",
     defaultUraianKegiatan:
       "Biaya Konsumsi Rapat Koordinasi pada Inspektorat Kementerian Koordinator Bidang Pangan",
@@ -77,8 +83,10 @@ export const SPJ_TYPE_LIST: SpjTypeMetadata[] = [
     badgeColor: "bg-violet-50 text-violet-700 border-violet-200",
     description: "Kuitansi, Memorandum & Daftar Nominatif Sewa Kendaraan / Mobil (PPh 23 Sewa)",
     defaultMak: "522141",
-    defaultKomp: "WA.7457.EBD.Z29.051.B",
-    defaultDetailKomp: "Pelaksanaan Pengawasan Intern (Inspektorat I-IV)",
+    defaultKomp: "WA.7457.EBD.Z30.051.0A",
+    defaultDetailKomp: "Layanan Reviu Lap. Keuangan / Kinerja - Assurance",
+    defaultItemDetail: "004565",
+    defaultKeteranganItemDetail: "Sewa Kendaraan Roda 4 (DIY)",
     defaultPerihalMemo: "Permintaan Pembayaran Langsung (LS) Sewa Kendaraan",
     defaultUraianKegiatan:
       "Biaya Sewa Kendaraan Roda 4 dalam rangka Kegiatan Koordinasi dan Pengawasan Inspektorat",
@@ -94,8 +102,10 @@ export const SPJ_TYPE_LIST: SpjTypeMetadata[] = [
     badgeColor: "bg-rose-50 text-rose-700 border-rose-200",
     description: "Kuitansi, Memorandum & Daftar Nominatif Narasumber / Diklat",
     defaultMak: "522151",
-    defaultKomp: "WA.7457.EBD.Z29.052.A",
-    defaultDetailKomp: "Peningkatan Kapabilitas APIP",
+    defaultKomp: "WA.7457.EBD.Z28.051.0A",
+    defaultDetailKomp: "Layanan Audit Kinerja (Deputi Setmenko) - Assurance",
+    defaultItemDetail: "004535",
+    defaultKeteranganItemDetail: "Honorarium Narasumber Eselon II",
     defaultPerihalMemo: "Permintaan Pembayaran Langsung (LS) Honorarium Narasumber / Diklat",
     defaultUraianKegiatan:
       "Pembayaran Honorarium Narasumber / Kegiatan Peningkatan Kapabilitas pada Inspektorat Kementerian Koordinator Bidang Pangan",
@@ -111,8 +121,10 @@ export const SPJ_TYPE_LIST: SpjTypeMetadata[] = [
     badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
     description: "Kuitansi, Memorandum & Daftar Nominatif Seminar Kit / Alat Tulis Kantor (PPN & PPh 22)",
     defaultMak: "521211",
-    defaultKomp: "WA.7457.EBD.Z28.051.A",
-    defaultDetailKomp: "Dukungan Manajemen dan Teknis Inspektorat",
+    defaultKomp: "WA.7457.EBD.Z28.051.0B",
+    defaultDetailKomp: "Layanan Audit Internal Perkantoran Sama II - Assurance",
+    defaultItemDetail: "004536",
+    defaultKeteranganItemDetail: "ATK dan Computer Supplies",
     defaultPerihalMemo: "Permintaan Pembayaran Langsung (LS) ATK",
     defaultUraianKegiatan:
       "Pembelian Alat Tulis Kantor (ATK) dan Seminar Kit Kegiatan Inspektorat Kementerian Koordinator Bidang Pangan",

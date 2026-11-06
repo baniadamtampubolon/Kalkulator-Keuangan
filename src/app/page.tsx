@@ -571,9 +571,11 @@ export default function Home() {
         ...prev,
         spjType: nextType,
         nomorMemo: assignedMemo,
-        nomorKomp: prev.nomorKomp || meta.defaultKomp,
-        detailKomponen: prev.detailKomponen || meta.defaultDetailKomp,
+        nomorKomp: meta.defaultKomp,
+        detailKomponen: meta.defaultDetailKomp,
         nomorMak: meta.defaultMak,
+        itemDetail: meta.defaultItemDetail,
+        keteranganItemDetail: meta.defaultKeteranganItemDetail,
         keteranganMemo: meta.defaultPerihalMemo,
         keteranganKegiatan: isCurrentUraianDefault
           ? meta.defaultUraianKegiatan
@@ -680,8 +682,8 @@ export default function Home() {
           ? "Kunjungan Lapangan terkait Koordinasi Implementasi NEK Pengendalian Emisi GRK"
           : meta.defaultDetailKomp,
       nomorMak: meta.defaultMak,
-      itemDetail: "001",
-      keteranganItemDetail: "",
+      itemDetail: currentType === "PERDIN" ? "001" : meta.defaultItemDetail,
+      keteranganItemDetail: currentType === "PERDIN" ? "" : meta.defaultKeteranganItemDetail,
       noSpby: "",
       noSpm: "",
       jenisPengajuan: "RAMPUNG",
