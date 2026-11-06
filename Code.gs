@@ -504,9 +504,10 @@ function doPost(e) {
         }];
 
         itemsToWrite.forEach(function(it, idx) {
-          const vol = Number(it.volume) || 0;
+          const vol = Number(it.jumlah !== undefined ? it.jumlah : it.volume) || 0;
           const harga = Number(it.hargaSatuan) || 0;
           const brutoItem = vol * harga;
+          const ppnLabel = tax.ppnMode === 'INCLUDE_11_111' ? 'PPN 11/111 (Include)' : (tax.ppnMode === 'MANUAL' ? 'PPN Manual' : 'Tanpa PPN');
 
           pengadaanBatch.push([
             header.idKegiatan || '',
@@ -529,7 +530,7 @@ function doPost(e) {
             harga,
             brutoItem,
             calc.subTotalBruto !== undefined ? calc.subTotalBruto : (header.grandTotal || brutoItem),
-            calc.ppnLabel || tax.ppnMode || '',
+            calc.ppnLabel || ppnLabel,
             calc.nilaiPpn !== undefined ? calc.nilaiPpn : 0,
             calc.dpp !== undefined ? calc.dpp : (header.grandTotal || brutoItem),
             calc.pphLabel || tax.pphType || '',
@@ -538,8 +539,8 @@ function doPost(e) {
             tax.penerimaNama || header.penanggungJawabNama || '',
             tax.penerimaNip || header.penanggungJawabNip || '',
             tax.penerimaJabatan || header.penanggungJawabJabatan || '',
-            tax.nomorRekening || '',
-            tax.hasNpwp === false ? 'Tanpa NPWP' : 'Ber-NPWP',
+            tax.rekeningTransfer || tax.nomorRekening || '',
+            tax.pphType === 'PPH23_4' || tax.hasNpwp === false ? 'Tanpa NPWP' : 'Ber-NPWP',
             header.penanggungJawabNama || '',
             header.penanggungJawabNip || '',
             header.penanggungJawabJabatan || '',

@@ -1,6 +1,6 @@
-import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan, RiilItem, TicketDetail } from "./types";
+import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan, RiilItem, TicketDetail, SpjDocType } from "./types";
 import { generateIdKegiatan, getSavedKegiatanList, sortKegiatanByNewest } from "./kegiatanHelper";
-import { buildRekapFromSavedKegiatanList, deduplicateRekapRows, isSameRekapRow } from "./rekapHelper";
+import { buildRekapFromSavedKegiatanList, buildRekapPengadaanFromSavedKegiatanList, deduplicateRekapRows, isSameRekapRow } from "./rekapHelper";
 import { getMonthRoman } from "./calc";
 import { parseSpdNumber, saveLatestRegisteredSpdNumber } from "./spdHelper";
 import { calculatePengadaanTotals } from "./pengadaanHelper";
@@ -545,6 +545,60 @@ export async function fetchRekapFromSheet(
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);
     return { success: false, message: `Gagal memuat rekap: ${errMsg}` };
+  }
+}
+
+/**
+ * Tarik baris data Rekap SPJ Pengadaan (KONSUMSI, SEWA, DIKLAT/NARSUM, ATK) dari Google Spreadsheet
+ */
+export async function fetchRekapPengadaanFromSheet(
+  spjType: SpjDocType,
+  customUrl?: string
+): Promise<{ success: boolean; data?: Array<Record<string, unknown>>; message?: string }> {
+  const localRows = buildRekapPengadaanFromSavedKegiatanList(spjType);
+  const url = customUrl || getGasApiUrl();
+  if (!url) {
+    return {
+      success: true,
+      data: localRows,
+      message: "Memuat data rekap dari memori lokal.",
+    };
+  }
+
+  try {
+    const json = await executeGasRequest<Array<Record<string, unknown>>>(
+      "GET",
+      { action: "GET_REKAP_PENGADAAN", spjType },
+      url
+    );
+    if (json.status === "success" && Array.isArray(json.data)) {
+      const cleanedCloud = json.data
+        .map(cleanObjectKeys)
+        .filter((r) => Boolean(r["id_kegiatan"] || r["Nama Kegiatan / Uraian Pembayaran"] || r["Uraian Rincian Item"]));
+
+      const localIds = new Set(localRows.map((lr) => String(lr["id_kegiatan"] || "").trim()));
+      const extraCloud = cleanedCloud.filter((cr) => {
+        const cid = String(cr["id_kegiatan"] || "").trim();
+        return !cid || !localIds.has(cid);
+      });
+      const merged = [...localRows, ...extraCloud];
+      return {
+        success: true,
+        data: merged,
+        message: `Berhasil memuat ${merged.length} baris data rekap.`,
+      };
+    }
+    return {
+      success: true,
+      data: localRows,
+      message: `Memuat ${localRows.length} baris data rekap.`,
+    };
+  } catch {
+    return {
+      success: true,
+      data: localRows,
+      message: `Memuat ${localRows.length} baris data rekap lokal.`,
+    };
   }
 }
 

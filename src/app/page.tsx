@@ -81,6 +81,7 @@ export default function Home() {
   const [sbmList, setSbmList] = useState<SbmRate[]>(sbmRaw as SbmRate[]);
   const [memoList, setMemoList] = useState<NomorMemo[]>(memoRaw as NomorMemo[]);
   const [activeTab, setActiveTab] = useState<ActiveTab>("beranda");
+  const [activeRekapType, setActiveRekapType] = useState<SpjDocType>("PERDIN");
   const [isDbModalOpen, setIsDbModalOpen] = useState<boolean>(false);
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState<boolean>(false);
   const [isConfirmNewModalOpen, setIsConfirmNewModalOpen] = useState<boolean>(false);
@@ -1091,6 +1092,8 @@ export default function Home() {
         totalExpenditure={grandTotal}
         spjType={currentSpjType}
         onSelectSpjType={handleSwitchSpjType}
+        activeRekapType={activeRekapType}
+        onSelectRekapType={setActiveRekapType}
       />
 
       {/* Main Workspace (Full width when sidebar is collapsed, or flex-1 alongside) */}
@@ -1210,7 +1213,7 @@ export default function Home() {
                   {activeTab === "kegiatan"
                     ? "Daftar Riwayat Kegiatan"
                     : activeTab === "rekap"
-                    ? "Rekap Perdin (48 Kolom)"
+                    ? "Rekap Kegiatan (5 Modul SPJ)"
                     : activeTab === "monitoring"
                     ? "Monitoring Anggaran (16 Segmen)"
                     : activeTab === "daftar-memo"
@@ -1359,11 +1362,13 @@ export default function Home() {
             />
           )}
 
-          {/* Rekap Perdin (48-Column SPJ Database & Excel Export) */}
+          {/* Rekap Kegiatan (5 Modul SPJ Database & Excel Export) */}
           {activeTab === "rekap" && (
             <RekapPerdinTab
               header={header}
               rows={rows}
+              activeRekapType={activeRekapType}
+              onSelectRekapType={setActiveRekapType}
             />
           )}
 

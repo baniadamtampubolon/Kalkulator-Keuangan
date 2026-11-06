@@ -19,9 +19,11 @@ import {
   TrendingUp,
   BookmarkCheck,
   Home as HomeIcon,
+  ChevronDown,
 } from "lucide-react";
 import { SpjDocType } from "@/lib/types";
 import { SPJ_TYPE_LIST } from "@/lib/pengadaanHelper";
+import { REKAP_CATEGORY_LIST } from "@/lib/rekapHelper";
 
 interface ClassicSidebarProps {
   isOpen: boolean;
@@ -38,6 +40,8 @@ interface ClassicSidebarProps {
   totalExpenditure?: number;
   spjType?: SpjDocType;
   onSelectSpjType?: (type: SpjDocType) => void;
+  activeRekapType?: SpjDocType;
+  onSelectRekapType?: (type: SpjDocType) => void;
 }
 
 export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
@@ -55,11 +59,18 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
   totalExpenditure = 0,
   spjType = "PERDIN",
   onSelectSpjType,
+  activeRekapType = "PERDIN",
+  onSelectRekapType,
 }) => {
   const [mounted, setMounted] = React.useState(false);
+  const [isRekapClickedOpen, setIsRekapClickedOpen] = React.useState(false);
+  const [isRekapHovered, setIsRekapHovered] = React.useState(false);
+
   React.useEffect(() => {
     Promise.resolve().then(() => setMounted(true));
   }, []);
+
+  const isRekapSubmenuOpen = isRekapClickedOpen || isRekapHovered || activeTab === "rekap";
 
   const isPengadaan = spjType !== "PERDIN";
 
@@ -82,14 +93,6 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
         { id: "riil", label: "5. Daftar Pengeluaran Riil", icon: FileCheck },
         { id: "spd", label: "6. SPPD Depan", icon: FileText },
       ];
-
-  // Archive & Management (Tab Groups style)
-  const mgmtTabs = [
-    { id: "kegiatan", label: "Daftar Riwayat Kegiatan", icon: FolderKanban, count: totalKegiatanCount },
-    { id: "rekap", label: "Rekap Perdin (48 Kolom)", icon: FileSpreadsheet },
-    { id: "monitoring", label: "Monitoring Anggaran", icon: TrendingUp },
-    { id: "daftar-memo", label: "Daftar Memorandum", icon: BookmarkCheck, count: memoCount },
-  ];
 
   return (
     <>
@@ -241,43 +244,164 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
             </span>
 
             <nav className="space-y-0.5">
-              {mgmtTabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => onSelectTab(tab.id as ActiveTab)}
-                    className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
-                      isActive
-                        ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+              {/* 1. Daftar Riwayat Kegiatan */}
+              <button
+                type="button"
+                onClick={() => onSelectTab("kegiatan")}
+                className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                  activeTab === "kegiatan"
+                    ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <FolderKanban
+                    className={`w-4 h-4 shrink-0 ${
+                      activeTab === "kegiatan" ? "text-white" : "text-slate-500 dark:text-slate-400"
+                    }`}
+                  />
+                  <span className="truncate">Daftar Riwayat Kegiatan</span>
+                </div>
+
+                {mounted && totalKegiatanCount > 0 && (
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full font-mono ${
+                      activeTab === "kegiatan"
+                        ? "bg-white/20 text-white"
+                        : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon
-                        className={`w-4 h-4 shrink-0 ${
-                          isActive ? "text-white" : "text-slate-500 dark:text-slate-400"
-                        }`}
-                      />
-                      <span className="truncate">{tab.label}</span>
-                    </div>
+                    {totalKegiatanCount}
+                  </span>
+                )}
+              </button>
 
-                    {mounted && tab.count !== undefined && tab.count > 0 && (
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full font-mono ${
-                          isActive
-                            ? "bg-white/20 text-white"
-                            : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                        }`}
-                      >
-                        {tab.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {/* 2. Rekap Kegiatan (Hover / Klik untuk menampilkan 5 Rekap Kegiatan) */}
+              <div
+                className="space-y-0.5"
+                onMouseEnter={() => setIsRekapHovered(true)}
+                onMouseLeave={() => setIsRekapHovered(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRekapClickedOpen((prev) => !prev);
+                    onSelectTab("rekap");
+                  }}
+                  className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                    activeTab === "rekap"
+                      ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <FileSpreadsheet
+                      className={`w-4 h-4 shrink-0 ${
+                        activeTab === "rekap" ? "text-white" : "text-slate-500 dark:text-slate-400"
+                      }`}
+                    />
+                    <span className="truncate">Rekap Kegiatan</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span
+                      className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full font-mono ${
+                        activeTab === "rekap"
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-200/90 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                      }`}
+                    >
+                      5
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        isRekapSubmenuOpen ? "rotate-180" : ""
+                      } ${activeTab === "rekap" ? "text-white" : "text-slate-400"}`}
+                    />
+                  </div>
+                </button>
+
+                {/* Sub-menu 5 Rekap Kegiatan */}
+                {isRekapSubmenuOpen && (
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200/90 dark:border-slate-700 ml-4 animate-in fade-in slide-in-from-top-1 duration-150">
+                    {REKAP_CATEGORY_LIST.map((cat, idx) => {
+                      const isSubActive = activeTab === "rekap" && activeRekapType === cat.spjType;
+                      return (
+                        <button
+                          key={cat.spjType}
+                          type="button"
+                          onClick={() => {
+                            if (onSelectRekapType) onSelectRekapType(cat.spjType);
+                            onSelectTab("rekap");
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all text-left cursor-pointer ${
+                            isSubActive
+                              ? "bg-blue-50 dark:bg-blue-950/60 text-[#0071e3] dark:text-blue-400 font-bold border border-blue-200/80 dark:border-blue-800"
+                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800 font-medium"
+                          }`}
+                          title={cat.sheetName}
+                        >
+                          <span className="truncate">
+                            {idx + 1}. {cat.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Monitoring Anggaran */}
+              <button
+                type="button"
+                onClick={() => onSelectTab("monitoring")}
+                className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                  activeTab === "monitoring"
+                    ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <TrendingUp
+                    className={`w-4 h-4 shrink-0 ${
+                      activeTab === "monitoring" ? "text-white" : "text-slate-500 dark:text-slate-400"
+                    }`}
+                  />
+                  <span className="truncate">Monitoring Anggaran</span>
+                </div>
+              </button>
+
+              {/* 4. Daftar Memorandum */}
+              <button
+                type="button"
+                onClick={() => onSelectTab("daftar-memo")}
+                className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                  activeTab === "daftar-memo"
+                    ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <BookmarkCheck
+                    className={`w-4 h-4 shrink-0 ${
+                      activeTab === "daftar-memo" ? "text-white" : "text-slate-500 dark:text-slate-400"
+                    }`}
+                  />
+                  <span className="truncate">Daftar Memorandum</span>
+                </div>
+
+                {mounted && memoCount > 0 && (
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full font-mono ${
+                      activeTab === "daftar-memo"
+                        ? "bg-white/20 text-white"
+                        : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
+                  >
+                    {memoCount}
+                  </span>
+                )}
+              </button>
             </nav>
           </div>
 

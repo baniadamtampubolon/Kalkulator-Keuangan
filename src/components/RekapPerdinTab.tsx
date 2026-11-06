@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { HeaderData, ParticipantRow } from "@/lib/types";
+import { HeaderData, ParticipantRow, SpjDocType } from "@/lib/types";
 import {
   Download,
   Search,
@@ -16,9 +16,17 @@ import {
   X,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import { fetchRekapFromSheet, syncAllRekapToGoogleSheet } from "@/lib/googleSheetsService";
+import {
+  fetchRekapFromSheet,
+  fetchRekapPengadaanFromSheet,
+  syncAllRekapToGoogleSheet,
+} from "@/lib/googleSheetsService";
 import {
   STANDARD_REKAP_HEADERS,
+  STANDARD_REKAP_PENGADAAN_HEADERS,
+  REKAP_CATEGORY_LIST,
+  getRekapCategoryMeta,
+  buildRekapPengadaanFromSavedKegiatanList,
   formatRowsTo48Columns,
   getCompleteRekapData,
 } from "@/lib/rekapHelper";
@@ -27,9 +35,16 @@ import { ModalRekapRowEditor } from "./ModalRekapRowEditor";
 interface RekapPerdinTabProps {
   header: HeaderData;
   rows: ParticipantRow[];
+  activeRekapType?: SpjDocType;
+  onSelectRekapType?: (type: SpjDocType) => void;
 }
 
-export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) => {
+export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({
+  header,
+  rows,
+  activeRekapType = "PERDIN",
+  onSelectRekapType,
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewSource, setViewSource] = useState<"cloud" | "draft">("cloud");
   const [cloudRows, setCloudRows] = useState<Array<Record<string, unknown>>>(() => {
@@ -38,8 +53,12 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
     }
     return [];
   });
+  const [pengadaanRows, setPengadaanRows] = useState<Array<Record<string, unknown>>>([]);
   const [isFetching, setIsFetching] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+
+  const isPerdinRekap = activeRekapType === "PERDIN";
+  const currentRekapMeta = getRekapCategoryMeta(activeRekapType);
 
   // CRUD Modal States
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -100,8 +119,47 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
     };
   }, []);
 
+  // Load Pengadaan Rekap data when activeRekapType is one of the 4 Pengadaan SPJ types
+  useEffect(() => {
+    if (activeRekapType === "PERDIN") return;
+    let isMounted = true;
+
+    const reloadPengadaan = () => {
+      const localData = buildRekapPengadaanFromSavedKegiatanList(activeRekapType);
+      if (isMounted) {
+        setPengadaanRows(localData);
+      }
+    };
+
+    reloadPengadaan();
+    fetchRekapPengadaanFromSheet(activeRekapType).then((res) => {
+      if (isMounted && res.success && res.data) {
+        setPengadaanRows(res.data);
+      }
+    });
+
+    window.addEventListener("kegiatan-list-updated", reloadPengadaan);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("kegiatan-list-updated", reloadPengadaan);
+    };
+  }, [activeRekapType]);
+
   const handleManualRefresh = async () => {
     setIsFetching(true);
+    if (!isPerdinRekap) {
+      const res = await fetchRekapPengadaanFromSheet(activeRekapType);
+      setIsFetching(false);
+      if (res.success && res.data) {
+        setPengadaanRows(res.data);
+        setStatusMessage({
+          type: "success",
+          text: `Berhasil memuat ${res.data.length} baris dari ${currentRekapMeta.sheetName}.`,
+        });
+      }
+      return;
+    }
+
     const res = await fetchRekapFromSheet();
     setIsFetching(false);
     if (res.success && res.data) {
@@ -127,7 +185,7 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
 
   const activeDataList = viewSource === "cloud" ? cloudRows : draftFormattedRows;
 
-  // Filter based on search
+  // Filter based on search (Perdin)
   const filteredData = activeDataList.filter((item) => {
     const nama = String(item["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || item["NAMA EXTERNAL"] || "");
     const nip = String(item["NIP"] || "");
@@ -143,7 +201,27 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
     );
   });
 
-  const grandTotal = filteredData.reduce((acc, r) => acc + (Number(r["Total"]) || 0), 0);
+  // Filter based on search (4 Pengadaan Rekap)
+  const filteredPengadaanData = pengadaanRows.filter((item) => {
+    const query = searchTerm.toLowerCase();
+    if (!query) return true;
+    const keg = String(item["Nama Kegiatan / Uraian Pembayaran"] || "").toLowerCase();
+    const memo = String(item["Nomor Memo"] || "").toLowerCase();
+    const rincian = String(item["Uraian Rincian Item"] || "").toLowerCase();
+    const penerima = String(item["Nama Penerima / Vendor"] || "").toLowerCase();
+    const mak = String(item["Kode MAK"] || "").toLowerCase();
+    return (
+      keg.includes(query) ||
+      memo.includes(query) ||
+      rincian.includes(query) ||
+      penerima.includes(query) ||
+      mak.includes(query)
+    );
+  });
+
+  const grandTotal = isPerdinRekap
+    ? filteredData.reduce((acc, r) => acc + (Number(r["Total"]) || 0), 0)
+    : filteredPengadaanData.reduce((acc, r) => acc + (Number(r["Jumlah Bruto Item"]) || 0), 0);
 
   // CRUD Handlers
   const handleOpenCreate = () => {
@@ -264,6 +342,28 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
 
   // Export to Excel (.xlsx) matching active data
   const handleExportExcel = () => {
+    if (!isPerdinRekap) {
+      const headersToUse = STANDARD_REKAP_PENGADAAN_HEADERS;
+      const dataRows = filteredPengadaanData.map((item) =>
+        headersToUse.map((h) => item[h] ?? "")
+      );
+      const worksheetData = [headersToUse, ...dataRows];
+      const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+      ws["!cols"] = headersToUse.map((h, i) => {
+        let maxLen = h.length;
+        dataRows.forEach((row) => {
+          const val = String(row[i] || "");
+          if (val.length > maxLen) maxLen = Math.min(val.length, 45);
+        });
+        return { wch: Math.max(maxLen + 2, 14) };
+      });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, currentRekapMeta.shortLabel);
+      const filename = `${currentRekapMeta.sheetName}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      return;
+    }
+
     const dataRows = filteredData.map((item) => {
       return standardHeaders.map((h) => item[h] ?? "");
     });
@@ -303,6 +403,28 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
 
   return (
     <div className="space-y-4">
+      {/* 5 Rekap Kegiatan Switcher Bar */}
+      <div className="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs flex flex-wrap items-center gap-1.5">
+        {REKAP_CATEGORY_LIST.map((cat, idx) => {
+          const isSelected = activeRekapType === cat.spjType;
+          return (
+            <button
+              key={cat.spjType}
+              type="button"
+              onClick={() => onSelectRekapType?.(cat.spjType)}
+              className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                isSelected
+                  ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/90"
+              }`}
+              title={`Sheet: ${cat.sheetName}`}
+            >
+              {idx + 1}. {cat.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Consolidated Toolbar */}
       <div className="glass-base rounded-2xl p-4 md:p-5 space-y-3.5">
         {/* Row 1: Header Title & Primary Document Actions */}
@@ -310,27 +432,31 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
           <div className="space-y-0.5">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-xs md:text-sm font-bold text-slate-900 tracking-tight">
-                Rekap Pertanggungjawaban Perdin
+                {currentRekapMeta.label}
               </h2>
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/80">
-                48 Kolom SPJ
+              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/80">
+                {currentRekapMeta.sheetName}
               </span>
             </div>
             <p className="text-[11px] text-slate-500">
-              Data pertanggungjawaban dinas resmi terintegrasi dengan Google Spreadsheet Cloud
+              {currentRekapMeta.description} • Terintegrasi dengan Google Spreadsheet Cloud
             </p>
-          </div>          {/* Primary Action Buttons (Sinkron Data/Tabel & Ekspor) */}
+          </div>
+
+          {/* Primary Action Buttons (Sinkron Data/Tabel & Ekspor) */}
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={handleSyncToSpreadsheet}
-              disabled={isSyncing || cloudRows.length === 0}
-              className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer disabled:opacity-50 shadow-2xs transition-all"
-              title="Sinkronkan data dan seluruh tabel Rekap Perdin dengan Google Spreadsheet Cloud"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
-              <span>{isSyncing ? "Menyinkronkan..." : "Sinkron Data / Tabel"}</span>
-            </button>
+            {isPerdinRekap && (
+              <button
+                type="button"
+                onClick={handleSyncToSpreadsheet}
+                disabled={isSyncing || cloudRows.length === 0}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer disabled:opacity-50 shadow-2xs transition-all"
+                title="Sinkronkan data dan seluruh tabel Rekap Perdin dengan Google Spreadsheet Cloud"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+                <span>{isSyncing ? "Menyinkronkan..." : "Sinkron Data / Tabel"}</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -368,33 +494,39 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs">
           {/* Sisi Kiri: Switcher Sumber Data, Refresh, & Tambah Baris */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* View Source Switcher */}
-            <div className="flex items-center p-0.5 bg-slate-200/60 rounded-lg border border-slate-300/50 text-xs font-medium">
-              <button
-                type="button"
-                onClick={() => setViewSource("cloud")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                  viewSource === "cloud"
-                    ? "bg-white text-slate-900 shadow-2xs font-semibold"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
+            {isPerdinRekap ? (
+              <div className="flex items-center p-0.5 bg-slate-200/60 rounded-lg border border-slate-300/50 text-xs font-medium">
+                <button
+                  type="button"
+                  onClick={() => setViewSource("cloud")}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    viewSource === "cloud"
+                      ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <Cloud className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Cloud DB ({cloudRows.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewSource("draft")}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    viewSource === "draft"
+                      ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Draft ({rows.length})</span>
+                </button>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 border border-slate-200/80 text-slate-700 text-xs font-semibold">
                 <Cloud className="w-3.5 h-3.5 text-slate-600" />
-                <span>Cloud DB ({cloudRows.length})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewSource("draft")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                  viewSource === "draft"
-                    ? "bg-white text-slate-900 shadow-2xs font-semibold"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5 text-slate-600" />
-                <span>Draft ({rows.length})</span>
-              </button>
-            </div>
+                <span>Database {currentRekapMeta.shortLabel} ({pengadaanRows.length} baris)</span>
+              </div>
+            )}
 
             {/* Refresh from Cloud */}
             <button
@@ -408,16 +540,18 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
               <span>Refresh</span>
             </button>
 
-            {/* Create New Row */}
-            <button
-              type="button"
-              onClick={handleOpenCreate}
-              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-800 border border-slate-300/80 text-xs font-semibold cursor-pointer shadow-2xs"
-              title="Tambah baris perjalanan dinas baru secara langsung"
-            >
-              <Plus className="w-3.5 h-3.5 text-[#0071e3]" />
-              <span>Tambah Baris</span>
-            </button>
+            {/* Create New Row (Perdin only) */}
+            {isPerdinRekap && (
+              <button
+                type="button"
+                onClick={handleOpenCreate}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-800 border border-slate-300/80 text-xs font-semibold cursor-pointer shadow-2xs"
+                title="Tambah baris perjalanan dinas baru secara langsung"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#0071e3]" />
+                <span>Tambah Baris</span>
+              </button>
+            )}
           </div>
 
           {/* Sisi Kanan: Input Pencarian & Total Biaya Metric */}
@@ -428,14 +562,14 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Cari pegawai, NIP, kegiatan..."
+                placeholder={isPerdinRekap ? "Cari pegawai, NIP, kegiatan..." : "Cari kegiatan, memo, item, penerima..."}
                 className="input-glass h-8 pl-8 pr-2.5 text-xs w-full font-normal"
               />
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-slate-400 text-[11px] hidden sm:inline">
-                {filteredData.length} data {viewSource === "cloud" ? "(Cloud)" : "(Draft)"}
+                {isPerdinRekap ? filteredData.length : filteredPengadaanData.length} baris
               </span>
               <div className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs">
                 Total Biaya: <span className="font-mono font-bold text-slate-900">Rp {grandTotal.toLocaleString("id-ID")}</span>
@@ -445,7 +579,164 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
         </div>
       </div>
 
-      {/* Main 48-Column Table */}
+      {/* Table Area: 48-Column Perdin OR 4 Pengadaan SPJ Rekap */}
+      {!isPerdinRekap ? (
+        <div className="rounded-xl border border-slate-200/80 bg-white overflow-hidden shadow-2xs">
+          <div className="overflow-x-auto max-h-[72vh]">
+            <table className="w-full text-[11px] text-left border-collapse whitespace-nowrap">
+              <thead className="bg-slate-100 text-slate-700 sticky top-0 z-30 font-semibold text-[11px] border-b border-slate-300">
+                <tr>
+                  <th className="p-2 border-r border-slate-200 text-center w-10">No</th>
+                  <th className="p-2 border-r border-slate-200 min-w-[115px]">ID Kegiatan</th>
+                  <th className="p-2 border-r border-slate-200 min-w-[95px]">Tgl Kegiatan</th>
+                  <th className="p-2 border-r border-slate-200 min-w-[155px] sticky left-0 bg-slate-100 z-40 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
+                    Nomor Memo (Bersama)
+                  </th>
+                  <th className="p-2 border-r border-slate-200 min-w-[220px]">Nama Kegiatan / Uraian</th>
+                  <th className="p-2 border-r border-slate-200 min-w-[85px]">Kode MAK</th>
+                  <th className="p-2 border-r border-slate-200 min-w-[160px]">Kode Komponen</th>
+                  <th className="p-2 border-r border-slate-200 min-w-[190px]">Uraian Rincian Item</th>
+                  <th className="p-2 border-r border-slate-200 text-center min-w-[80px]">Vol &amp; Satuan</th>
+                  <th className="p-2 border-r border-slate-200 text-right min-w-[110px]">Harga Satuan</th>
+                  <th className="p-2 border-r border-slate-200 text-right min-w-[120px] bg-slate-200/70 font-bold text-slate-900">
+                    Jumlah Bruto Item
+                  </th>
+                  <th className="p-2 border-r border-slate-200 text-right min-w-[120px]">Sub Total Paket</th>
+                  <th className="p-2 border-r border-slate-200 text-right min-w-[100px]">Nilai PPN</th>
+                  <th className="p-2 border-r border-slate-200 text-right min-w-[110px]">DPP</th>
+                  <th className="p-2 border-r border-slate-200 min-w-[130px]">Jenis PPh</th>
+                  <th className="p-2 border-r border-slate-200 text-right min-w-[100px]">Nilai PPh</th>
+                  <th className="p-2 border-r border-slate-200 text-right min-w-[125px] bg-emerald-50 text-emerald-900 font-bold">
+                    Jumlah Bersih (Netto)
+                  </th>
+                  <th className="p-2 border-r border-slate-200 min-w-[180px]">Nama Penerima / Vendor</th>
+                  <th className="p-2 border-r border-slate-200 min-w-[140px]">NIP Penerima</th>
+                  <th className="p-2 border-r border-slate-200 min-w-[160px]">Rekening Transfer</th>
+                  <th className="p-2 border-r border-slate-200 min-w-[170px]">Penanggung Jawab (Memo)</th>
+                  <th className="p-2 min-w-[160px]">PPK</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {filteredPengadaanData.length === 0 ? (
+                  <tr>
+                    <td colSpan={22} className="p-8 text-center text-slate-500 font-medium">
+                      {isFetching ? (
+                        <div className="flex items-center justify-center gap-2 text-slate-600">
+                          <RefreshCw className="w-4 h-4 animate-spin text-slate-600" />
+                          <span>Sedang memuat data dari {currentRekapMeta.sheetName}...</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <p className="font-semibold text-slate-700">
+                            Belum ada data pada {currentRekapMeta.label} ({currentRekapMeta.sheetName}).
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            Buat &amp; simpan berkas {currentRekapMeta.shortLabel} dari Beranda / Input &amp; Kalkulator untuk mengisi tabel ini secara otomatis.
+                          </p>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredPengadaanData.map((item, idx) => {
+                    const hargaSatuan = Number(item["Harga Satuan"]) || 0;
+                    const brutoItem = Number(item["Jumlah Bruto Item"]) || 0;
+                    const subTotalPaket = Number(item["Sub Total Bruto Paket (Nilai Kuitansi)"]) || 0;
+                    const nilaiPpn = Number(item["Nilai PPN"]) || 0;
+                    const dpp = Number(item["DPP (Dasar Pengenaan Pajak)"]) || 0;
+                    const nilaiPph = Number(item["Nilai PPh"]) || 0;
+                    const netto = Number(item["Jumlah Bersih Diterima (Netto)"]) || 0;
+
+                    return (
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-2 border-r border-slate-200 text-center font-medium text-slate-400">
+                          {idx + 1}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 font-mono text-slate-600">
+                          {String(item["id_kegiatan"] || "—")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 font-mono text-slate-600">
+                          {formatCellDate(item["Tanggal Kegiatan"])}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 font-mono font-bold text-slate-900 sticky left-0 bg-white z-20 shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+                          {String(item["Nomor Memo"] || "—")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 font-medium text-slate-800 max-w-xs truncate" title={String(item["Nama Kegiatan / Uraian Pembayaran"] || "")}>
+                          {String(item["Nama Kegiatan / Uraian Pembayaran"] || "—")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 font-mono font-semibold text-slate-800">
+                          {String(item["Kode MAK"] || "—")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 font-mono text-slate-600">
+                          {String(item["Kode Komponen"] || "—")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 font-semibold text-slate-900">
+                          {String(item["Uraian Rincian Item"] || "—")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 text-center font-mono text-slate-700">
+                          {String(item["Volume"] || 0)} {String(item["Satuan"] || "")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 text-right font-mono">
+                          Rp {hargaSatuan.toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 text-right font-mono font-bold text-slate-900 bg-slate-50">
+                          Rp {brutoItem.toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 text-right font-mono text-slate-700">
+                          Rp {subTotalPaket.toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 text-right font-mono text-slate-600">
+                          {nilaiPpn > 0 ? `Rp ${nilaiPpn.toLocaleString("id-ID")}` : "—"}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 text-right font-mono text-slate-700">
+                          Rp {dpp.toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 text-slate-700">
+                          {String(item["Jenis PPh"] || "—")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 text-right font-mono text-amber-700">
+                          {nilaiPph > 0 ? `Rp ${nilaiPph.toLocaleString("id-ID")}` : "—"}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 text-right font-mono font-bold text-emerald-800 bg-emerald-50/40">
+                          Rp {netto.toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 font-semibold text-slate-900">
+                          {String(item["Nama Penerima / Vendor"] || "—")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 font-mono text-slate-600">
+                          {String(item["NIP Penerima"] || "—")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 font-mono text-slate-700">
+                          {String(item["Rekening Transfer"] || "—")}
+                        </td>
+                        <td className="p-2 border-r border-slate-200 text-slate-700">
+                          {String(item["Nama Penanggung Jawab (Memo)"] || "—")}
+                        </td>
+                        <td className="p-2 text-slate-700">
+                          {String(item["PPK Nama"] || "—")}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+              {filteredPengadaanData.length > 0 && (
+                <tfoot className="bg-slate-100/90 font-semibold border-t border-slate-200 text-slate-800 sticky bottom-0 z-20">
+                  <tr>
+                    <td colSpan={10} className="p-2.5 text-right">
+                      Total Bruto ({filteredPengadaanData.length} item rincian):
+                    </td>
+                    <td className="p-2.5 text-right font-mono font-bold text-slate-900 bg-slate-200/60">
+                      Rp {grandTotal.toLocaleString("id-ID")}
+                    </td>
+                    <td colSpan={11} className="p-2.5"></td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </div>
+      ) : (
       <div className="rounded-xl border border-slate-200/80 bg-white overflow-hidden shadow-2xs">
         <div className="overflow-x-auto max-h-[72vh]">
           <table className="w-full text-[11px] text-left border-collapse whitespace-nowrap">
@@ -731,6 +1022,7 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({ header, rows }) 
           </table>
         </div>
       </div>
+      )}
 
       {/* Modal Editor for 48 Columns SPJ (Create / Edit) */}
       <ModalRekapRowEditor
