@@ -35,6 +35,7 @@ import {
   BookmarkCheck,
   ArrowRight,
   TrendingUp,
+  Coins,
 } from "lucide-react";
 
 interface DaftarMemorandumTabProps {
@@ -152,6 +153,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
     let terpakaiCount = 0;
     let maxSeq = 0;
     let latestMemoStr = "";
+    let totalBiaya = 0;
 
     for (const m of fullMemoList) {
       const seq = extractMemoSeqNumber(m);
@@ -169,6 +171,13 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
         maxSeq = seq;
         latestMemoStr = m.format_lengkap || m.noMemo || `M.${seq}/INS/PPK/XI/2026`;
       }
+
+      const format = (m.format_lengkap || m.noMemo || `M.${seq}`).toLowerCase();
+      const linked = kegiatanByMemoMap.get(format) || (seq > 0 ? kegiatanByMemoMap.get(`seq-${seq}`) : undefined);
+      const rawNom = m.nominal ? Number(String(m.nominal).replace(/\D/g, "")) : (linked?.grandTotal || 0);
+      if (!isNaN(rawNom) && rawNom > 0) {
+        totalBiaya += rawNom;
+      }
     }
 
     const tersediaCount = Math.max(0, total - terpakaiCount);
@@ -180,12 +189,13 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
       total,
       terpakaiCount,
       tersediaCount,
+      totalBiaya,
       maxSeq,
       latestMemoStr: latestMemoStr || `M.320/INS/PPK/XI/2026`,
       nextSeq,
       nextMemoStr,
     };
-  }, [fullMemoList]);
+  }, [fullMemoList, kegiatanByMemoMap]);
 
   // Filtered List
   const filteredList = useMemo(() => {
@@ -241,6 +251,17 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
     });
   }, [fullMemoList, searchTerm, statusFilter, bulanFilter, spjFilter, kegiatanByMemoMap]);
 
+  // Total Biaya untuk entri yang sedang tampil (Filtered)
+  const filteredTotalBiaya = useMemo(() => {
+    return filteredList.reduce((acc, m) => {
+      const seq = extractMemoSeqNumber(m);
+      const format = (m.format_lengkap || m.noMemo || `M.${seq}`).toLowerCase();
+      const linked = kegiatanByMemoMap.get(format) || (seq > 0 ? kegiatanByMemoMap.get(`seq-${seq}`) : undefined);
+      const rawNom = m.nominal ? Number(String(m.nominal).replace(/\D/g, "")) : (linked?.grandTotal || 0);
+      return acc + (isNaN(rawNom) ? 0 : rawNom);
+    }, 0);
+  }, [filteredList, kegiatanByMemoMap]);
+
   // Handle Copy to Clipboard
   const handleCopyMemo = (memoStr: string) => {
     if (!navigator.clipboard) return;
@@ -293,6 +314,15 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
   // Open Edit Modal
   const handleOpenEditModal = (memo: NomorMemo) => {
     const seq = extractMemoSeqNumber(memo);
+    const rawNom = memo.nominal
+      ? typeof memo.nominal === "number"
+        ? memo.nominal
+        : Number(String(memo.nominal).replace(/\D/g, ""))
+      : 0;
+    const format = (memo.format_lengkap || memo.noMemo || `M.${seq}`).toLowerCase();
+    const linked = kegiatanByMemoMap.get(format) || (seq > 0 ? kegiatanByMemoMap.get(`seq-${seq}`) : undefined);
+    const nominalToEdit = rawNom > 0 ? rawNom : (linked?.grandTotal || 0);
+
     setEditingMemo(memo);
     setModalForm({
       nomorUrut: String(seq || memo.nomor_urut || ""),
@@ -303,9 +333,9 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
       tanggalMemo: memo.tanggal_memo || memo.tanggal || new Date().toISOString().slice(0, 10),
       perihal: memo.perihal || "",
       mak: memo.MAK || memo.mak || "",
-      nominal: memo.nominal ? String(memo.nominal) : "",
+      nominal: nominalToEdit > 0 ? nominalToEdit.toLocaleString("id-ID") : "",
       status: memo.status || "TERPAKAI",
-      idKegiatanRef: memo.id_kegiatan_ref || "",
+      idKegiatanRef: memo.id_kegiatan_ref || (linked?.idKegiatan || ""),
     });
     setIsModalOpen(true);
   };
@@ -409,7 +439,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
 
             <button
               type="button"
-              onClick={() => exportMemoListToExcel(filteredList)}
+              onClick={() => exportMemoListToExcel(filteredList, "Buku_Kendali_Memorandum", kegiatanByMemoMap)}
               className="btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-emerald-700 border border-emerald-300 hover:border-emerald-400 text-xs font-semibold shadow-2xs cursor-pointer transition-all"
               title="Unduh seluruh daftar memorandum ke format Microsoft Excel (.xlsx)"
             >
@@ -430,9 +460,9 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
         </div>
 
         {/* ========================================================================= */}
-        {/* 2. STATISTIK KENDALI PENOMORAN                                            */}
+        {/* 2. STATISTIK KENDALI PENOMORAN & AKUMULASI BIAYA                          */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
           {/* Total Register */}
           <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-1">
             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
@@ -462,6 +492,19 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             </div>
           </div>
 
+          {/* Total Biaya Terdata */}
+          <div className="p-3.5 bg-purple-50/70 rounded-xl border border-purple-200/80 space-y-1 col-span-2 sm:col-span-1">
+            <span className="text-[10px] uppercase font-bold text-purple-900 tracking-wider flex items-center gap-1">
+              <Coins className="w-3 h-3 text-purple-600" />
+              <span>Total Biaya Terdata</span>
+            </span>
+            <div className="flex items-baseline justify-between min-w-0">
+              <span className="text-base md:text-lg font-black text-purple-950 font-mono truncate" title={`Rp${stats.totalBiaya.toLocaleString("id-ID")}`}>
+                Rp{stats.totalBiaya.toLocaleString("id-ID")}
+              </span>
+            </div>
+          </div>
+
           {/* Nomor Terakhir Terdaftar */}
           <div className="p-3.5 bg-blue-50/70 rounded-xl border border-blue-200/80 space-y-1">
             <span className="text-[10px] uppercase font-bold text-blue-800 tracking-wider flex items-center gap-1">
@@ -479,7 +522,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
           <div className="p-3.5 bg-amber-50/70 rounded-xl border border-amber-200/80 space-y-1">
             <span className="text-[10px] uppercase font-bold text-amber-900 tracking-wider flex items-center gap-1">
               <ArrowRight className="w-3 h-3 text-amber-600" />
-              <span>Nomor Berikutnya (Rekomendasi)</span>
+              <span>Nomor Berikutnya</span>
             </span>
             <div className="flex items-baseline justify-between min-w-0">
               <span className="text-xs md:text-sm font-bold text-amber-950 font-mono truncate" title={stats.nextMemoStr}>
@@ -641,8 +684,9 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                   <th className="py-3 px-3.5 text-center w-14">No</th>
                   <th className="py-3 px-3.5 w-52">Nomor Memorandum</th>
                   <th className="py-3 px-3.5 w-36">Tanggal</th>
-                  <th className="py-3 px-3.5 min-w-[280px]">Perihal / Uraian Pengajuan</th>
+                  <th className="py-3 px-3.5 min-w-[260px]">Perihal / Uraian Pengajuan</th>
                   <th className="py-3 px-3.5 w-44">Pembebanan MAK</th>
+                  <th className="py-3 px-3.5 text-right w-36">Biaya (Rp)</th>
                   <th className="py-3 px-3.5 text-center w-24">Status</th>
                   <th className="py-3 px-3.5 text-right w-44">Aksi Cepat</th>
                 </tr>
@@ -663,6 +707,13 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                   const linkedKegiatan =
                     kegiatanByMemoMap.get(formatLengkap.toLowerCase()) ||
                     (seq > 0 ? kegiatanByMemoMap.get(`seq-${seq}`) : undefined);
+
+                  const rawNominal = memo.nominal
+                    ? typeof memo.nominal === "number"
+                      ? memo.nominal
+                      : Number(String(memo.nominal).replace(/\D/g, ""))
+                    : 0;
+                  const nominalDisplay = rawNominal > 0 ? rawNominal : (linkedKegiatan?.grandTotal || 0);
 
                   return (
                     <tr
@@ -732,6 +783,24 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                         </span>
                       </td>
 
+                      {/* Biaya / Nominal */}
+                      <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                        {nominalDisplay > 0 ? (
+                          <div className="space-y-0.5">
+                            <span className="font-mono font-bold text-slate-900 text-xs block">
+                              Rp{nominalDisplay.toLocaleString("id-ID")}
+                            </span>
+                            {linkedKegiatan && rawNominal === 0 && (
+                              <span className="text-[9.5px] text-emerald-600 font-medium block">
+                                Dari SPJ Riil
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 font-mono text-xs">-</span>
+                        )}
+                      </td>
+
                       {/* Status */}
                       <td className="py-3 px-3.5 text-center whitespace-nowrap">
                         <span
@@ -787,6 +856,17 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                   );
                 })}
               </tbody>
+              <tfoot className="bg-slate-50/90 border-t-2 border-slate-200 font-sans text-xs">
+                <tr>
+                  <td colSpan={5} className="py-3 px-3.5 text-right font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+                    Total Biaya Terdata ({filteredList.length} memo):
+                  </td>
+                  <td className="py-3 px-3.5 text-right font-mono font-black text-slate-900 text-xs whitespace-nowrap">
+                    Rp{filteredTotalBiaya.toLocaleString("id-ID")}
+                  </td>
+                  <td colSpan={2}></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
@@ -809,6 +889,13 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             const linkedKegiatan =
               kegiatanByMemoMap.get(formatLengkap.toLowerCase()) ||
               (seq > 0 ? kegiatanByMemoMap.get(`seq-${seq}`) : undefined);
+
+            const rawNominal = memo.nominal
+              ? typeof memo.nominal === "number"
+                ? memo.nominal
+                : Number(String(memo.nominal).replace(/\D/g, ""))
+              : 0;
+            const nominalDisplay = rawNominal > 0 ? rawNominal : (linkedKegiatan?.grandTotal || 0);
 
             return (
               <div
@@ -861,6 +948,27 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                       </span>
                     )}
                   </div>
+
+                  {/* Nominal Biaya */}
+                  {nominalDisplay > 0 ? (
+                    <div className="flex items-center justify-between text-xs py-1.5 px-3 bg-slate-50 rounded-xl border border-slate-200/70">
+                      <span className="text-slate-500 font-semibold text-[11px] flex items-center gap-1.5">
+                        <Coins className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Biaya:</span>
+                      </span>
+                      <span className="font-mono font-bold text-slate-900 text-xs">
+                        Rp{nominalDisplay.toLocaleString("id-ID")}
+                        {linkedKegiatan && rawNominal === 0 && (
+                          <span className="text-[9.5px] font-normal text-emerald-600 ml-1">(SPJ Riil)</span>
+                        )}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between text-xs py-1 px-3 text-slate-400 text-[11px]">
+                      <span>Biaya Pengajuan:</span>
+                      <span className="font-mono">-</span>
+                    </div>
+                  )}
 
                   {/* Perihal */}
                   <p className="text-xs text-slate-700 line-clamp-3 leading-relaxed pt-1">
@@ -1036,25 +1144,42 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                 />
               </div>
 
-              {/* Pembebanan MAK */}
-              <div className="space-y-1">
-                <label className="font-bold text-slate-800">Pembebanan Anggaran (MAK)</label>
-                <select
-                  value={modalForm.mak}
-                  onChange={(e) => setModalForm((prev) => ({ ...prev, mak: e.target.value }))}
-                  className="input-human w-full h-9 px-3 font-mono text-xs cursor-pointer bg-white"
-                >
-                  <option value="">-- Pilih MAK (Opsional) --</option>
-                  {LIST_NOMOR_KOMPONEN.map((k) => (
-                    <option key={k.kode} value={`${k.kode}.524111`}>
-                      {k.kode}.524111 ({k.nama})
-                    </option>
-                  ))}
-                  {modalForm.mak &&
-                    !LIST_NOMOR_KOMPONEN.some((k) => `${k.kode}.524111` === modalForm.mak) && (
-                      <option value={modalForm.mak}>{modalForm.mak} (Custom)</option>
-                    )}
-                </select>
+              {/* Pembebanan MAK & Nominal Biaya */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-800">Pembebanan Anggaran (MAK)</label>
+                  <select
+                    value={modalForm.mak}
+                    onChange={(e) => setModalForm((prev) => ({ ...prev, mak: e.target.value }))}
+                    className="input-human w-full h-9 px-3 font-mono text-xs cursor-pointer bg-white"
+                  >
+                    <option value="">-- Pilih MAK (Opsional) --</option>
+                    {LIST_NOMOR_KOMPONEN.map((k) => (
+                      <option key={k.kode} value={`${k.kode}.524111`}>
+                        {k.kode}.524111 ({k.nama})
+                      </option>
+                    ))}
+                    {modalForm.mak &&
+                      !LIST_NOMOR_KOMPONEN.some((k) => `${k.kode}.524111` === modalForm.mak) && (
+                        <option value={modalForm.mak}>{modalForm.mak} (Custom)</option>
+                      )}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-800">Biaya / Nominal Pengajuan (Rp)</label>
+                  <input
+                    type="text"
+                    value={modalForm.nominal}
+                    onChange={(e) => {
+                      const num = e.target.value.replace(/\D/g, "");
+                      const formatted = num ? Number(num).toLocaleString("id-ID") : "";
+                      setModalForm((prev) => ({ ...prev, nominal: formatted }));
+                    }}
+                    placeholder="Contoh: 15.000.000"
+                    className="input-human w-full h-9 px-3 font-mono text-xs font-bold text-slate-900"
+                  />
+                </div>
               </div>
 
               {/* Modal Actions */}
@@ -1080,3 +1205,4 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
     </div>
   );
 };
+

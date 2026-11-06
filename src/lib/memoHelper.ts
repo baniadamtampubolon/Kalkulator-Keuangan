@@ -3,7 +3,7 @@
  * Mengintegrasikan database master (nomor_memo.json), sinkronisasi cloud, dan penyimpanan lokal
  */
 
-import { NomorMemo } from "./types";
+import { NomorMemo, SavedKegiatan } from "./types";
 import * as XLSX from "xlsx";
 
 export const STORAGE_KEY_CUSTOM_MEMOS = "perdin_custom_memo_entries";
@@ -171,7 +171,11 @@ export function mergeAndSortMemoList(baseList: NomorMemo[], customList?: NomorMe
 /**
  * Ekspor buku kendali nomor memorandum ke file Excel (.xlsx)
  */
-export function exportMemoListToExcel(list: NomorMemo[], fileNamePrefix = "Buku_Kendali_Memorandum"): void {
+export function exportMemoListToExcel(
+  list: NomorMemo[],
+  fileNamePrefix = "Buku_Kendali_Memorandum",
+  kegiatanMap?: Map<string, SavedKegiatan>
+): void {
   if (typeof window === "undefined") return;
 
   const headerRow = [
@@ -180,7 +184,7 @@ export function exportMemoListToExcel(list: NomorMemo[], fileNamePrefix = "Buku_
     "Tanggal Memo",
     "Perihal / Uraian Pengajuan",
     "MAK / Komponen",
-    "Nominal (Rp)",
+    "Biaya / Nominal (Rp)",
     "Status",
     "ID Kegiatan Ref",
   ];
@@ -191,9 +195,15 @@ export function exportMemoListToExcel(list: NomorMemo[], fileNamePrefix = "Buku_
     const tgl = formatMemoDate(m.tanggal_memo || m.tanggal);
     const perihal = m.perihal || "-";
     const mak = m.MAK || m.mak || "-";
-    const nominal = typeof m.nominal === "number" ? m.nominal : Number(m.nominal) || "";
+
+    const linked = kegiatanMap
+      ? kegiatanMap.get(format.toLowerCase()) || (seq > 0 ? kegiatanMap.get(`seq-${seq}`) : undefined)
+      : undefined;
+
+    const rawNom = m.nominal ? Number(String(m.nominal).replace(/\D/g, "")) : (linked?.grandTotal || 0);
+    const nominal = rawNom > 0 ? rawNom : "";
     const status = m.status || (perihal !== "-" && perihal ? "TERPAKAI" : "TERSEDIA");
-    const idRef = m.id_kegiatan_ref || "-";
+    const idRef = m.id_kegiatan_ref || linked?.idKegiatan || "-";
 
     return [seq > 0 ? seq : "-", format, tgl, perihal, mak, nominal, status, idRef];
   });
@@ -218,3 +228,4 @@ export function exportMemoListToExcel(list: NomorMemo[], fileNamePrefix = "Buku_
   const today = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `${fileNamePrefix}_${today}.xlsx`);
 }
+
