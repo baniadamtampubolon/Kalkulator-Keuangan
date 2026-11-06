@@ -373,3 +373,4 @@ export function formatNominalExcel(val: number, maxFractionDigits = 2): string {
     maximumFractionDigits: maxFractionDigits,
   });
 }
+

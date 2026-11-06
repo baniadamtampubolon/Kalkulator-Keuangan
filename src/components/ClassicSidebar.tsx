@@ -18,6 +18,7 @@ import {
   Layers,
   TrendingUp,
   BookmarkCheck,
+  Home as HomeIcon,
 } from "lucide-react";
 import { SpjDocType } from "@/lib/types";
 import { SPJ_TYPE_LIST } from "@/lib/pengadaanHelper";
@@ -65,12 +66,14 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
   // Main Course: Documents of current SPJ
   const docTabs = isPengadaan
     ? [
+        { id: "beranda", label: "Beranda (Pilih Jenis SPJ)", icon: HomeIcon },
         { id: "input", label: "Input & Kalkulator", icon: Calculator },
         { id: "kwitansi", label: "1. Kuitansi SPJ", icon: Receipt },
         { id: "memorandum", label: "2. Memorandum", icon: FileText },
         { id: "nominatif", label: "3. Daftar Nominatif", icon: FileSpreadsheet },
       ]
     : [
+        { id: "beranda", label: "Beranda (Pilih Jenis SPJ)", icon: HomeIcon },
         { id: "input", label: "Input & Kalkulator", icon: Calculator },
         { id: "kwitansi", label: "1. Kwitansi SPJ", icon: Receipt },
         { id: "memorandum", label: "2. Memorandum", icon: FileText },

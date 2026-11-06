@@ -14,6 +14,7 @@ import { SppdDepanDoc } from "@/components/documents/SppdDepanDoc";
 import { KuitansiPengadaanDoc } from "@/components/documents/KuitansiPengadaanDoc";
 import { NominatifPengadaanDoc } from "@/components/documents/NominatifPengadaanDoc";
 import { PengadaanSpjForm } from "@/components/PengadaanSpjForm";
+import { LandingHomeView } from "@/components/LandingHomeView";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
 import { DaftarKegiatanTab } from "@/components/DaftarKegiatanTab";
 import { MonitoringAnggaranTab } from "@/components/MonitoringAnggaranTab";
@@ -77,7 +78,7 @@ export default function Home() {
   const [pegawaiList, setPegawaiList] = useState<Pegawai[]>(pegawaiRaw as Pegawai[]);
   const [sbmList, setSbmList] = useState<SbmRate[]>(sbmRaw as SbmRate[]);
   const [memoList, setMemoList] = useState<NomorMemo[]>(memoRaw as NomorMemo[]);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("input");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("beranda");
   const [isDbModalOpen, setIsDbModalOpen] = useState<boolean>(false);
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState<boolean>(false);
   const [isConfirmNewModalOpen, setIsConfirmNewModalOpen] = useState<boolean>(false);
@@ -1073,19 +1074,45 @@ export default function Home() {
 
         {/* Main Content Area */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-4 space-y-6 pb-12">
+          {/* Tab Beranda (Landing Page Pemilihan Jenis SPJ) */}
+          {activeTab === "beranda" && (
+            <LandingHomeView
+              currentSpjType={currentSpjType}
+              currentLoadedId={editingOriginalId || (isSaved ? header.idKegiatan : null)}
+              currentTitle={header.keteranganKegiatan}
+              currentTotal={grandTotal}
+              totalKegiatanCount={totalKegiatanCount}
+              memoCount={memoList.length}
+              pegawaiCount={pegawaiList.length}
+              onSelectSpjToWork={(type) => {
+                handleSwitchSpjType(type);
+                setActiveTab("input");
+              }}
+              onContinueCurrentWork={() => setActiveTab("input")}
+              onNavigateTab={(tab) => setActiveTab(tab)}
+            />
+          )}
+
           {/* Primary Document Type Selector (Pilih Jenis SPJ yang Ingin Dikerjakan) */}
-          {activeTab !== "kegiatan" &&
+          {activeTab !== "beranda" &&
+            activeTab !== "kegiatan" &&
             activeTab !== "rekap" &&
             activeTab !== "panduan" &&
             activeTab !== "monitoring" &&
             activeTab !== "daftar-memo" && (
               <div className="no-print bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("beranda")}
+                    className="btn-tactile inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 cursor-pointer transition-all"
+                    title="Kembali ke Halaman Utama (Landing Page)"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Beranda</span>
+                  </button>
                   <span className="text-xs font-bold text-slate-800 whitespace-nowrap">
-                    Pilih Jenis Dokumen SPJ:
-                  </span>
-                  <span className="hidden xl:inline text-[11px] text-slate-500">
-                    Pilih jenis kegiatan SPJ yang ingin Anda kerjakan
+                    Jenis SPJ Aktif:
                   </span>
                 </div>
 
@@ -1111,17 +1138,26 @@ export default function Home() {
               </div>
             )}
 
-          {/* Secondary Management Tabs: Return Bar to Input */}
+          {/* Secondary Management Tabs: Return Bar to Beranda / Input */}
           {(activeTab === "kegiatan" || activeTab === "rekap" || activeTab === "panduan" || activeTab === "monitoring" || activeTab === "daftar-memo") && (
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-2xs backdrop-blur-md no-print animate-fade-in">
-              <button
-                type="button"
-                onClick={() => setActiveTab("input")}
-                className="btn-tactile inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold border border-slate-200 cursor-pointer transition-all"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Kembali ke Input &amp; Kalkulator</span>
-              </button>
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-2xs backdrop-blur-md no-print animate-fade-in">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("beranda")}
+                  className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-semibold cursor-pointer transition-all"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Beranda Pilihan SPJ</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("input")}
+                  className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold border border-slate-200 cursor-pointer transition-all"
+                >
+                  <span>Ke Input &amp; Kalkulator</span>
+                </button>
+              </div>
               <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
                 <span className="hidden sm:inline">Layar Penuh</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />

@@ -350,3 +350,4 @@ export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({ head
     </div>
   );
 };
+

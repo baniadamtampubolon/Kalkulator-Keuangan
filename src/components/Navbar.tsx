@@ -13,11 +13,12 @@ import {
   Plus,
   Sparkles,
   PanelLeft,
+  Home as HomeIcon,
 } from "lucide-react";
 import { SpjDocType } from "@/lib/types";
 import { getSpjTypeMeta } from "@/lib/pengadaanHelper";
 
-export type ActiveTab = "input" | "kegiatan" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "spd" | "rekap" | "panduan" | "monitoring" | "daftar-memo";
+export type ActiveTab = "beranda" | "input" | "kegiatan" | "kwitansi" | "memorandum" | "nominatif" | "rincian" | "riil" | "spd" | "rekap" | "panduan" | "monitoring" | "daftar-memo";
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -51,15 +52,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isPengadaan = spjType !== "PERDIN";
   const spjMeta = getSpjTypeMeta(spjType);
 
-  // Main Course Tabs (6 documents for Perdin, 3 documents for Konsumsi/ATK/Sewa/Diklat)
+  // Main Course Tabs (Beranda + 6 documents for Perdin, or Beranda + 3 documents for Konsumsi/ATK/Sewa/Diklat)
   const mainTabs = isPengadaan
     ? [
+        { id: "beranda", label: "Beranda", icon: HomeIcon },
         { id: "input", label: "Input & Kalkulator", icon: Calculator },
         { id: "kwitansi", label: "1. Kuitansi SPJ", icon: Receipt },
         { id: "memorandum", label: "2. Memorandum", icon: FileText },
         { id: "nominatif", label: "3. Daftar Nominatif", icon: FileSpreadsheet },
       ]
     : [
+        { id: "beranda", label: "Beranda", icon: HomeIcon },
         { id: "input", label: "Input & Kalkulator", icon: Calculator },
         { id: "kwitansi", label: "1. Kwitansi", icon: Receipt },
         { id: "memorandum", label: "2. Memorandum", icon: FileText },
@@ -91,7 +94,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            <div className="relative w-8 h-8 rounded-xl bg-slate-50 p-1 flex items-center justify-center border border-slate-200/80 shadow-2xs overflow-hidden shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveTab("beranda")}
+              className="relative w-8 h-8 rounded-xl bg-slate-50 p-1 flex items-center justify-center border border-slate-200/80 shadow-2xs overflow-hidden shrink-0 cursor-pointer hover:bg-slate-100 transition-colors"
+              title="Kembali ke Beranda Utama (Pilih Jenis SPJ)"
+            >
               <Image
                 src="/logo-kemenkopangan.png"
                 alt="Logo Kemenko Pangan"
@@ -100,12 +108,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="w-full h-full object-contain"
                 priority
               />
-            </div>
+            </button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xs md:text-sm font-bold tracking-tight text-slate-900">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("beranda")}
+                  className="text-xs md:text-sm font-bold tracking-tight text-slate-900 hover:text-blue-600 transition-colors cursor-pointer text-left"
+                  title="Kembali ke Beranda Utama (Pilih Jenis SPJ)"
+                >
                   Kalkulator Keuangan &amp; SPPD
-                </h1>
+                </button>
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                   Inspektorat
                 </span>
