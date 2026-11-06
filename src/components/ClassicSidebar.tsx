@@ -17,6 +17,7 @@ import {
   Bookmark,
   Layers,
   TrendingUp,
+  BookmarkCheck,
 } from "lucide-react";
 
 interface ClassicSidebarProps {
@@ -29,6 +30,7 @@ interface ClassicSidebarProps {
   currentLoadedId?: string | null;
   hasChanges?: boolean;
   totalKegiatanCount?: number;
+  memoCount?: number;
   participantCount?: number;
   totalExpenditure?: number;
 }
@@ -43,6 +45,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
   currentLoadedId,
   hasChanges = false,
   totalKegiatanCount = 0,
+  memoCount = 0,
   participantCount = 0,
   totalExpenditure = 0,
 }) => {
@@ -67,6 +70,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
     { id: "kegiatan", label: "Daftar Riwayat Kegiatan", icon: FolderKanban, count: totalKegiatanCount },
     { id: "rekap", label: "Rekap Perdin (48 Kolom)", icon: FileSpreadsheet },
     { id: "monitoring", label: "Monitoring Anggaran", icon: TrendingUp },
+    { id: "daftar-memo", label: "Daftar Memorandum", icon: BookmarkCheck, count: memoCount },
   ];
 
   return (

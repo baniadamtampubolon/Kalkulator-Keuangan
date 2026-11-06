@@ -36,6 +36,7 @@ import {
   FolderKanban,
   Sparkles,
   AlertTriangle,
+  BookmarkCheck,
 } from "lucide-react";
 
 interface HeaderFormProps {
@@ -48,6 +49,7 @@ interface HeaderFormProps {
   onApplyStToAll: (stNumber: string) => void;
   onGenerateMemoNumber: () => void;
   onOpenDaftarKegiatan?: () => void;
+  onOpenDaftarMemo?: () => void;
   onCreateNewKegiatan?: () => void;
   editingOriginalId?: string | null;
 }
@@ -62,6 +64,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   onApplyStToAll,
   onGenerateMemoNumber,
   onOpenDaftarKegiatan,
+  onOpenDaftarMemo,
   onCreateNewKegiatan,
   editingOriginalId,
 }) => {
@@ -1112,7 +1115,20 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             {/* Nomor Memorandum + Ambil Nomor */}
             <div className="space-y-1">
               <label className="font-semibold text-slate-800 flex items-center justify-between">
-                <span>Nomor Memorandum</span>
+                <div className="flex items-center gap-2">
+                  <span>Nomor Memorandum</span>
+                  {onOpenDaftarMemo && (
+                    <button
+                      type="button"
+                      onClick={onOpenDaftarMemo}
+                      className="text-[10.5px] text-[#0071e3] hover:text-[#0077ed] font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Buka Buku Register & Daftar Nomor Memorandum"
+                    >
+                      <BookmarkCheck className="w-3 h-3" />
+                      <span>Daftar Memo</span>
+                    </button>
+                  )}
+                </div>
                 {latestMemoInfo?.lastMemoStr && (
                   <span className="text-[10px] font-normal text-slate-400 font-mono hidden sm:inline" title={`Nomor terakhir terdaftar di database master: ${latestMemoInfo.lastMemoStr}`}>
                     Terakhir: {latestMemoInfo.lastMemoStr}

@@ -14,6 +14,7 @@ import { SppdDepanDoc } from "@/components/documents/SppdDepanDoc";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
 import { DaftarKegiatanTab } from "@/components/DaftarKegiatanTab";
 import { MonitoringAnggaranTab } from "@/components/MonitoringAnggaranTab";
+import { DaftarMemorandumTab } from "@/components/DaftarMemorandumTab";
 import { ModalDatabaseSync } from "@/components/ModalDatabaseSync";
 import { ModalSelesaiSpj } from "@/components/ModalSelesaiSpj";
 import { ModalConfirmNewSpj } from "@/components/ModalConfirmNewSpj";
@@ -780,6 +781,7 @@ export default function Home() {
         currentLoadedId={editingOriginalId || (isSaved ? header.idKegiatan : null)}
         hasChanges={hasChanges}
         totalKegiatanCount={totalKegiatanCount}
+        memoCount={memoList.length}
         participantCount={rows.length}
         totalExpenditure={grandTotal}
       />
@@ -804,7 +806,7 @@ export default function Home() {
         {/* Main Content Area */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-4 space-y-6 pb-12">
           {/* Secondary Management Tabs: Return Bar to Input */}
-          {(activeTab === "kegiatan" || activeTab === "rekap" || activeTab === "panduan" || activeTab === "monitoring") && (
+          {(activeTab === "kegiatan" || activeTab === "rekap" || activeTab === "panduan" || activeTab === "monitoring" || activeTab === "daftar-memo") && (
             <div className="flex items-center justify-between p-3 rounded-2xl bg-white/95 border border-slate-200/90 shadow-2xs backdrop-blur-md no-print animate-fade-in">
               <button
                 type="button"
@@ -824,6 +826,8 @@ export default function Home() {
                     ? "Rekap Perdin (48 Kolom)"
                     : activeTab === "monitoring"
                     ? "Monitoring Anggaran (16 Segmen)"
+                    : activeTab === "daftar-memo"
+                    ? "Buku Kendali & Daftar Memorandum Terdaftar"
                     : "Buku Panduan & Tutorial"}
                 </span>
               </div>
@@ -843,6 +847,7 @@ export default function Home() {
                 onApplyStToAll={handleApplyStToAll}
                 onGenerateMemoNumber={handleGenerateMemoNumber}
                 onOpenDaftarKegiatan={() => setActiveTab("kegiatan")}
+                onOpenDaftarMemo={() => setActiveTab("daftar-memo")}
                 onCreateNewKegiatan={handleRequestCreateNew}
                 editingOriginalId={editingOriginalId}
               />
@@ -951,6 +956,28 @@ export default function Home() {
 
           {/* Monitoring Anggaran (SAKTI 16 Segmen Realization Report) */}
           {activeTab === "monitoring" && <MonitoringAnggaranTab />}
+
+          {/* Buku Kendali & Daftar Memorandum Terdaftar */}
+          {activeTab === "daftar-memo" && (
+            <DaftarMemorandumTab
+              memoList={memoList}
+              onSelectMemo={(memoNumber, memoPerihal) => {
+                setHeader((prev) => ({
+                  ...prev,
+                  nomorMemo: memoNumber,
+                  keteranganMemo: memoPerihal || prev.keteranganMemo,
+                }));
+                setActiveTab("input");
+              }}
+              onLoadKegiatan={handleEditKegiatan}
+              onRefreshMemo={async () => {
+                const res = await fetchMasterDataFromSheet();
+                if (res.success && res.data?.memo) {
+                  setMemoList(res.data.memo);
+                }
+              }}
+            />
+          )}
 
           {/* Tab: Daftar Kegiatan */}
           {activeTab === "kegiatan" && (
