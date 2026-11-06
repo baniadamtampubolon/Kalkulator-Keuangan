@@ -18,6 +18,10 @@ const SHEET_NAMES = {
   KEGIATAN: 'DB_KEGIATAN',
   PESERTA: 'DB_PESERTA',
   REKAP: 'REKAP_PERDIN_48KOLOM',
+  REKAP_KONSUMSI: 'REKAP_SPJ_KONSUMSI',
+  REKAP_SEWA: 'REKAP_SPJ_SEWA_KENDARAAN',
+  REKAP_NARSUM: 'REKAP_SPJ_NARSUM',
+  REKAP_ATK: 'REKAP_SPJ_ATK_SEMKIT',
   LOGS: 'AUDIT_LOGS'
 };
 
@@ -78,8 +82,39 @@ const DEFAULT_HEADERS = {
     'Representatif ()', 'Taksi Bandara', 'Biaya Reschedule ()', 'Total',
     'Nilai Nominal di Daftar Nominatif', 'PENGEMBALIAN',
     'id_kegiatan', 'nomor_memo'
+  ],
+  REKAP_PENGADAAN: [
+    'id_kegiatan', 'Jenis SPJ', 'Tanggal Kegiatan', 'Nomor Memo', 'Tanggal Memo', 'Perihal Memo',
+    'Nama Kegiatan / Uraian Pembayaran', 'No SPBY', 'No SPM', 'Kode Komponen', 'Detail Komponen',
+    'Kode MAK', 'Item Detail', 'No Item', 'Uraian Rincian Item', 'Volume', 'Satuan',
+    'Harga Satuan', 'Jumlah Bruto Item', 'Sub Total Bruto Paket (Nilai Kuitansi)',
+    'Jenis PPN', 'Nilai PPN', 'DPP (Dasar Pengenaan Pajak)', 'Jenis PPh', 'Nilai PPh',
+    'Jumlah Bersih Diterima (Netto)', 'Nama Penerima / Vendor', 'NIP Penerima', 'Jabatan Penerima',
+    'Rekening Transfer', 'Status NPWP', 'Nama Penanggung Jawab (Memo)', 'NIP Penanggung Jawab',
+    'Jabatan Penanggung Jawab', 'PPK Nama', 'PPK NIP', 'Bendahara', 'Verifikator', 'Updated At'
   ]
 };
+
+/**
+ * Helper: Tentukan nama Sheet Rekap berdasarkan jenis SPJ Pengadaan (4 fitur SPJ baru)
+ */
+function getPengadaanSheetNameBySpjType(spjType) {
+  const t = String(spjType || '').trim().toUpperCase();
+  if (t === 'KONSUMSI') return SHEET_NAMES.REKAP_KONSUMSI;
+  if (t === 'SEWA') return SHEET_NAMES.REKAP_SEWA;
+  if (t === 'DIKLAT' || t === 'NARSUM') return SHEET_NAMES.REKAP_NARSUM;
+  if (t === 'ATK' || t === 'SEMKIT') return SHEET_NAMES.REKAP_ATK;
+  return null;
+}
+
+function getAllPengadaanSheetNames() {
+  return [
+    SHEET_NAMES.REKAP_KONSUMSI,
+    SHEET_NAMES.REKAP_SEWA,
+    SHEET_NAMES.REKAP_NARSUM,
+    SHEET_NAMES.REKAP_ATK
+  ];
+}
 
 /**
  * FUNGSI SETUP OTOMATIS (Jalankan sekali via tombol Run jika ingin inisialisasi instan)
@@ -93,8 +128,12 @@ function SETUP_INITIAL_TABS() {
   getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
   getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
   getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
+  getOrCreateSheet(ss, SHEET_NAMES.REKAP_KONSUMSI, DEFAULT_HEADERS.REKAP_PENGADAAN);
+  getOrCreateSheet(ss, SHEET_NAMES.REKAP_SEWA, DEFAULT_HEADERS.REKAP_PENGADAAN);
+  getOrCreateSheet(ss, SHEET_NAMES.REKAP_NARSUM, DEFAULT_HEADERS.REKAP_PENGADAAN);
+  getOrCreateSheet(ss, SHEET_NAMES.REKAP_ATK, DEFAULT_HEADERS.REKAP_PENGADAAN);
   getOrCreateSheet(ss, SHEET_NAMES.LOGS, ['Timestamp', 'Action', 'Reference_ID', 'Details']);
-  Logger.log('✅ Inisialisasi 8 tab lembar kerja berhasil!');
+  Logger.log('✅ Inisialisasi 12 tab lembar kerja (termasuk 4 sheet Rekap SPJ Baru) berhasil!');
 }
 
 function getSpreadsheet() {
@@ -154,6 +193,32 @@ function doGet(e) {
         status: 'success',
         data: sheetToObjects(pesertaSheet),
         latestSpdNumber: getLatestSpdNumberFromSheet(ss)
+      });
+    }
+
+    if (action === 'GET_REKAP_PENGADAAN') {
+      const spjTypeParam = (e && e.parameter && e.parameter.spjType) || '';
+      const targetSheetName = getPengadaanSheetNameBySpjType(spjTypeParam);
+      if (targetSheetName) {
+        const pSheet = getOrCreateSheet(ss, targetSheetName, DEFAULT_HEADERS.REKAP_PENGADAAN);
+        return createJsonResponse({
+          status: 'success',
+          data: sheetToObjects(pSheet),
+          sheetName: targetSheetName
+        });
+      }
+      const konsumsiSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP_KONSUMSI, DEFAULT_HEADERS.REKAP_PENGADAAN);
+      const sewaSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP_SEWA, DEFAULT_HEADERS.REKAP_PENGADAAN);
+      const narsumSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP_NARSUM, DEFAULT_HEADERS.REKAP_PENGADAAN);
+      const atkSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP_ATK, DEFAULT_HEADERS.REKAP_PENGADAAN);
+      return createJsonResponse({
+        status: 'success',
+        data: {
+          konsumsi: sheetToObjects(konsumsiSheet),
+          sewa: sheetToObjects(sewaSheet),
+          narsum: sheetToObjects(narsumSheet),
+          atk: sheetToObjects(atkSheet)
+        }
       });
     }
 
@@ -375,6 +440,142 @@ function doPost(e) {
       deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.idKegiatan);
       if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
         deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.oldIdKegiatan);
+      }
+
+      // Bersihkan baris lama di ke-4 sheet REKAP SPJ Baru jika ada update/perubahan jenis SPJ
+      const allPengadaanSheets = getAllPengadaanSheetNames();
+      allPengadaanSheets.forEach(function(sName) {
+        const sObj = ss.getSheetByName(sName);
+        if (sObj && sObj.getLastRow() >= 2) {
+          deleteRowsByColumnValue(sObj, 'id_kegiatan', header.idKegiatan);
+          if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
+            deleteRowsByColumnValue(sObj, 'id_kegiatan', header.oldIdKegiatan);
+          }
+          if (finalNomorMemo) {
+            deleteRowsByColumnValue(sObj, 'Nomor Memo', finalNomorMemo);
+          }
+          if (prevMemoFromDb || header.oldNomorMemo) {
+            deleteRowsByColumnValue(sObj, 'Nomor Memo', prevMemoFromDb || header.oldNomorMemo);
+          }
+        }
+      });
+
+      const spjType = String(header.spjType || payload.spjType || 'PERDIN').trim().toUpperCase();
+      const targetPengadaanSheetName = getPengadaanSheetNameBySpjType(spjType);
+
+      // JIKA MERUPAKAN SALAH SATU DARI 4 FITUR SPJ BARU (KONSUMSI, SEWA, NARSUM/DIKLAT, ATK & SEMKIT):
+      if (targetPengadaanSheetName) {
+        // Pastikan tidak ada sisa baris di REKAP_PERDIN_48KOLOM jika sebelumnya pernah tersimpan di sana
+        deleteRekapRowsByKeys(rekapSheet, {
+          idKegiatan: header.idKegiatan,
+          oldIdKegiatan: header.oldIdKegiatan,
+          nomorMemo: finalNomorMemo,
+          oldNomorMemo: prevMemoFromDb || header.oldNomorMemo,
+          namaKegiatan: header.namaKegiatan,
+          oldNamaKegiatan: prevNamaFromDb || header.oldNamaKegiatan,
+          participantNames: []
+        });
+
+        const pengadaanSheet = getOrCreateSheet(ss, targetPengadaanSheetName, DEFAULT_HEADERS.REKAP_PENGADAAN);
+        const pengadaanData = payload.pengadaan || {};
+        const items = Array.isArray(pengadaanData.items) && pengadaanData.items.length > 0
+          ? pengadaanData.items
+          : (Array.isArray(header.pengadaanItems) ? header.pengadaanItems : []);
+        const tax = pengadaanData.tax || header.pengadaanTax || {};
+        const calc = pengadaanData.calc || {};
+
+        const spjLabelMap = {
+          'KONSUMSI': 'SPJ Konsumsi',
+          'SEWA': 'SPJ Sewa Kendaraan',
+          'DIKLAT': 'SPJ Narsum',
+          'NARSUM': 'SPJ Narsum',
+          'ATK': 'SPJ ATK dan Seminar Kit',
+          'SEMKIT': 'SPJ ATK dan Seminar Kit'
+        };
+        const jenisSpjLabel = spjLabelMap[spjType] || spjType;
+        const itemDetailFull = (header.itemDetail || '001') + (header.keteranganItemDetail ? ' - ' + header.keteranganItemDetail : '');
+
+        const pengadaanBatch = [];
+        const itemsToWrite = items.length > 0 ? items : [{
+          uraian: header.namaKegiatan || jenisSpjLabel,
+          volume: 1,
+          satuan: 'Paket',
+          hargaSatuan: Number(header.grandTotal) || 0
+        }];
+
+        itemsToWrite.forEach(function(it, idx) {
+          const vol = Number(it.volume) || 0;
+          const harga = Number(it.hargaSatuan) || 0;
+          const brutoItem = vol * harga;
+
+          pengadaanBatch.push([
+            header.idKegiatan || '',
+            jenisSpjLabel,
+            header.tanggalSpd || header.tanggalMulai || '',
+            finalNomorMemo || '',
+            header.tanggalMemo || '',
+            header.perihal || header.keteranganMemo || '',
+            header.namaKegiatan || '',
+            header.noSpby || '',
+            finalNoSpmToUse || '',
+            header.kodeKomponen || '',
+            header.detailKomponen || '',
+            header.kodeMak || '',
+            itemDetailFull,
+            idx + 1,
+            it.uraian || '',
+            vol,
+            it.satuan || 'Paket',
+            harga,
+            brutoItem,
+            calc.subTotalBruto !== undefined ? calc.subTotalBruto : (header.grandTotal || brutoItem),
+            calc.ppnLabel || tax.ppnMode || '',
+            calc.nilaiPpn !== undefined ? calc.nilaiPpn : 0,
+            calc.dpp !== undefined ? calc.dpp : (header.grandTotal || brutoItem),
+            calc.pphLabel || tax.pphType || '',
+            calc.nilaiPph !== undefined ? calc.nilaiPph : 0,
+            calc.jumlahBersih !== undefined ? calc.jumlahBersih : (header.grandTotal || brutoItem),
+            tax.penerimaNama || header.penanggungJawabNama || '',
+            tax.penerimaNip || header.penanggungJawabNip || '',
+            tax.penerimaJabatan || header.penanggungJawabJabatan || '',
+            tax.nomorRekening || '',
+            tax.hasNpwp === false ? 'Tanpa NPWP' : 'Ber-NPWP',
+            header.penanggungJawabNama || '',
+            header.penanggungJawabNip || '',
+            header.penanggungJawabJabatan || '',
+            header.ppkNama || '',
+            header.ppkNip || '',
+            header.bendaharaNama || '',
+            header.verifikatorNama || '',
+            new Date()
+          ]);
+        });
+
+        if (pengadaanBatch.length > 0) {
+          const sheetCols = pengadaanSheet.getLastColumn() || DEFAULT_HEADERS.REKAP_PENGADAAN.length;
+          const adjustedPengadaanBatch = pengadaanBatch.map(function(row) {
+            if (row.length === sheetCols) return row;
+            if (row.length < sheetCols) {
+              const copy = row.slice();
+              while (copy.length < sheetCols) copy.push('');
+              return copy;
+            }
+            return row.slice(0, sheetCols);
+          });
+          pengadaanSheet.getRange(pengadaanSheet.getLastRow() + 1, 1, adjustedPengadaanBatch.length, sheetCols)
+            .setValues(adjustedPengadaanBatch);
+        }
+
+        logAction(ss, 'SAVE_' + spjType, header.idKegiatan, 'Berhasil menyimpan ' + jenisSpjLabel + ' ke ' + targetPengadaanSheetName);
+
+        return createJsonResponse({
+          status: 'success',
+          message: 'Data ' + jenisSpjLabel + ' berhasil disimpan ke sheet ' + targetPengadaanSheetName + ' & berbagi nomor di MASTER_MEMO.',
+          idKegiatan: header.idKegiatan,
+          assignedNomorMemo: finalNomorMemo,
+          sheetName: targetPengadaanSheetName,
+          latestSpdNumber: getLatestSpdNumberFromSheet(ss)
+        });
       }
 
       // FILTER ANTI-HANTU: Hanya peserta yang memiliki nama yang disimpan ke database
@@ -670,6 +871,22 @@ function doPost(e) {
         deleteRowsByColumnValue(rekapSheet, 'No SPBY', idKegiatan);
       }
 
+      // Hapus juga dari ke-4 sheet Rekap SPJ Pengadaan jika ada
+      getAllPengadaanSheetNames().forEach(function(sName) {
+        const pSheet = ss.getSheetByName(sName);
+        if (pSheet && pSheet.getLastRow() >= 2) {
+          if (idKegiatan) {
+            deleteRowsByColumnValue(pSheet, 'id_kegiatan', idKegiatan);
+          }
+          if (nomorMemo) {
+            deleteRowsByColumnValue(pSheet, 'Nomor Memo', nomorMemo);
+          }
+          if (namaKegiatan) {
+            deleteRowsByColumnValue(pSheet, 'Nama Kegiatan / Uraian Pembayaran', namaKegiatan);
+          }
+        }
+      });
+
       pruneGhostRows(rekapSheet);
       logAction(ss, 'DELETE_KEGIATAN', idKegiatan || namaKegiatan, 'Menghapus paket kegiatan ' + (namaKegiatan || idKegiatan));
 
@@ -695,11 +912,18 @@ function doPost(e) {
         rekapSheet.deleteRows(2, rekapSheet.getLastRow() - 1);
       }
 
+      getAllPengadaanSheetNames().forEach(function(sName) {
+        const pSheet = ss.getSheetByName(sName);
+        if (pSheet && pSheet.getLastRow() >= 2) {
+          pSheet.deleteRows(2, pSheet.getLastRow() - 1);
+        }
+      });
+
       logAction(ss, 'RESET_TRANSAKSI', 'ALL', 'Mengosongkan seluruh data transaksi uji coba.');
 
       return createJsonResponse({
         status: 'success',
-        message: 'Seluruh data transaksi uji coba (DB_KEGIATAN, DB_PESERTA, REKAP_PERDIN_48KOLOM) berhasil dikosongkan 100% secara bersih.'
+        message: 'Seluruh data transaksi uji coba (DB_KEGIATAN, DB_PESERTA, REKAP_PERDIN_48KOLOM, dan 4 Sheet Rekap SPJ Baru) berhasil dikosongkan 100% secara bersih.'
       });
     }
 

@@ -4,6 +4,7 @@
  */
 
 import { NomorMemo, SavedKegiatan } from "./types";
+import { getSavedKegiatanList } from "./kegiatanHelper";
 import * as XLSX from "xlsx";
 
 export const STORAGE_KEY_CUSTOM_MEMOS = "perdin_custom_memo_entries";
@@ -140,28 +141,56 @@ export function deleteCustomMemo(formatOrSeq: string | number): void {
 }
 
 /**
- * Menggabungkan master data memo bawaan dengan memo kustom lokal secara unik & terurut
+ * Menggabungkan master data memo bawaan dengan memo kustom lokal & seluruh kegiatan tersimpan (5 jenis SPJ) secara unik & terurut
  */
 export function mergeAndSortMemoList(baseList: NomorMemo[], customList?: NomorMemo[]): NomorMemo[] {
   const customs = customList !== undefined ? customList : getCustomMemoList();
+  const savedKegiatan = typeof window !== "undefined" ? getSavedKegiatanList() : [];
   const seenKodes = new Set<string>();
+  const seenSeqs = new Set<number>();
   const merged: NomorMemo[] = [];
 
-  // Dahulukan kustom jika ada penimpaan
+  const registerEntry = (entry: NomorMemo) => {
+    const seq = extractMemoSeqNumber(entry);
+    const key = (entry.format_lengkap || entry.noMemo || (seq > 0 ? `SEQ-${seq}` : "")).trim().toLowerCase();
+    if (!key) return;
+    if (seenKodes.has(key)) return;
+    if (seq > 0 && seenSeqs.has(seq)) return;
+    seenKodes.add(key);
+    if (seq > 0) seenSeqs.add(seq);
+    merged.push(entry);
+  };
+
+  // 1. Dahulukan kustom lokal terbaru jika ada penimpaan
   for (const c of customs) {
-    const key = (c.format_lengkap || c.noMemo || `SEQ-${extractMemoSeqNumber(c)}`).trim();
-    if (key && !seenKodes.has(key)) {
-      seenKodes.add(key);
-      merged.push(c);
-    }
+    registerEntry(c);
   }
 
+  // 2. Pastikan seluruh nomor memo dari 5 modul SPJ di Daftar Kegiatan ikut terdaftar bersama
+  for (const k of savedKegiatan) {
+    const memoNo = (k.header?.nomorMemo || "").trim();
+    if (!memoNo || memoNo.toLowerCase().includes("xxx")) continue;
+    const seq = extractMemoSeqNumber(memoNo);
+    if (seq <= 0) continue;
+    registerEntry({
+      tahun_anggaran: 2026,
+      nomor_urut: String(seq),
+      format_lengkap: memoNo,
+      tanggal_memo: k.header?.tanggalMemo || k.tanggalSpd || "",
+      perihal: k.header?.keteranganMemo || k.namaKegiatan || "",
+      id_kegiatan_ref: k.idKegiatan,
+      status: "TERPAKAI",
+      nominal: k.grandTotal || 0,
+      MAK: k.header?.nomorMak || "524111",
+      noMemo: memoNo,
+      tanggal: k.header?.tanggalMemo || k.tanggalSpd || "",
+      mak: k.header?.nomorMak || "524111",
+    });
+  }
+
+  // 3. Tambahkan daftar memo dari MASTER_MEMO
   for (const b of baseList) {
-    const key = (b.format_lengkap || b.noMemo || `SEQ-${extractMemoSeqNumber(b)}`).trim();
-    if (key && !seenKodes.has(key)) {
-      seenKodes.add(key);
-      merged.push(b);
-    }
+    registerEntry(b);
   }
 
   // Urutkan nomor urut descending (terbaru di atas)

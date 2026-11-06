@@ -3,6 +3,8 @@ import { generateIdKegiatan, getSavedKegiatanList, sortKegiatanByNewest } from "
 import { buildRekapFromSavedKegiatanList, deduplicateRekapRows, isSameRekapRow } from "./rekapHelper";
 import { getMonthRoman } from "./calc";
 import { parseSpdNumber, saveLatestRegisteredSpdNumber } from "./spdHelper";
+import { calculatePengadaanTotals } from "./pengadaanHelper";
+import { saveCustomMemo } from "./memoHelper";
 import { ItemDetailItem, LIST_ITEM_DETAIL, getItemDetailByKode, getKomponenName } from "@/data/mak_akun";
 
 export interface GasApiResponse<T = unknown> {
@@ -1417,7 +1419,17 @@ export async function savePerdinToGoogleSheet(
     (p) => Boolean((p.nama && p.nama.trim() !== "") || (p.namaExternal && p.namaExternal.trim() !== ""))
   );
 
-  const grandTotal = validParticipants.reduce((sum, p) => sum + (p.totalJumlah || 0), 0);
+  const spjType = header.spjType || "PERDIN";
+  const isPengadaan = spjType !== "PERDIN";
+  const pengadaanCalc =
+    isPengadaan && header.pengadaanItems && header.pengadaanItems.length > 0
+      ? calculatePengadaanTotals(header.pengadaanItems, header.pengadaanTax)
+      : null;
+
+  const grandTotal =
+    isPengadaan && pengadaanCalc && pengadaanCalc.subTotalBruto > 0
+      ? pengadaanCalc.subTotalBruto
+      : validParticipants.reduce((sum, p) => sum + (p.totalJumlah || 0), 0);
 
   const cleanTglSpd = cleanIsoDate(header.tanggalSpd);
   const cleanTglMemo = cleanIsoDate(header.tanggalMemo || cleanTglSpd, cleanTglSpd);
@@ -1431,10 +1443,11 @@ export async function savePerdinToGoogleSheet(
     tanggalSpd: cleanTglSpd,
     kotaTujuan: header.kotaTujuanList?.[0] || "",
     provinsiTujuan: header.provinsiTujuan || "JAWA BARAT",
-    jumlahPeserta: validParticipants.length,
+    jumlahPeserta: isPengadaan ? (header.pengadaanItems?.length || validParticipants.length) : validParticipants.length,
     grandTotal,
     header: {
       ...header,
+      spjType,
       idKegiatan,
       tanggalSpd: cleanTglSpd,
       tanggalMemo: cleanTglMemo,
@@ -1454,7 +1467,16 @@ export async function savePerdinToGoogleSheet(
 
   const payload = {
     action: "SAVE_PERDIN",
+    spjType,
+    pengadaan: isPengadaan
+      ? {
+          items: header.pengadaanItems || [],
+          tax: header.pengadaanTax || null,
+          calc: pengadaanCalc,
+        }
+      : undefined,
     header: {
+      spjType,
       idKegiatan,
       oldIdKegiatan: oldIdKegiatan || idKegiatan,
       oldNamaKegiatan: options?.oldNamaKegiatan || "",
@@ -1496,6 +1518,8 @@ export async function savePerdinToGoogleSheet(
       penanggungJawabJabatan: header.penanggungJawabJabatan || "",
       grandTotal,
       statusDokumen: "FINAL",
+      pengadaanItems: header.pengadaanItems || [],
+      pengadaanTax: header.pengadaanTax || null,
       payload_json: JSON.stringify(fullSnapshot),
     },
     fullSnapshot,
@@ -1587,32 +1611,35 @@ export async function savePerdinToGoogleSheet(
     try {
       localStorage.setItem(`draft_perdin_${idKegiatan}`, JSON.stringify(payload));
 
-      // Jika nomor memo diisi, simpan / perbarui statusnya di cache Master Memo lokal
+      // Jika nomor memo diisi, simpan / perbarui statusnya di cache Master Memo lokal & Custom Memo bersama
       if (header.nomorMemo) {
+        const memoNumMatch = header.nomorMemo.match(/\bM\.?(\d+)/i) || header.nomorMemo.match(/(\d+)/);
+        const numStr = memoNumMatch ? memoNumMatch[1] : "";
+        const memoRomanMonth = getMonthRoman(header.tanggalMemo) || "XI";
+        const memoYear = Number(header.tanggalMemo ? new Date(header.tanggalMemo).getFullYear() : 2026) || 2026;
+        const memoEntry: NomorMemo = {
+          tahun_anggaran: memoYear,
+          nomor_urut: numStr,
+          format_lengkap: header.nomorMemo,
+          tanggal_memo: header.tanggalMemo || "",
+          perihal: header.keteranganMemo || header.keteranganKegiatan || "Perjalanan Dinas",
+          id_kegiatan_ref: idKegiatan,
+          status: "TERPAKAI",
+          nominal: grandTotal,
+          MAK: header.nomorMak || "524111",
+          noMemo: header.nomorMemo,
+          tanggal: header.tanggalMemo || "",
+          mak: header.nomorMak || "524111",
+          bulanRomawi: memoRomanMonth,
+        };
+
+        // Simpan ke daftar memo kustom bersama agar seluruh 5 jenis SPJ berbagi urutan nomor memo secara instan
+        saveCustomMemo(memoEntry);
+
         const rawCache = localStorage.getItem(STORAGE_KEY_MASTER_CACHE);
         if (rawCache) {
           const cached = JSON.parse(rawCache) as MasterSyncData;
           if (cached && Array.isArray(cached.memo)) {
-            const memoNumMatch = header.nomorMemo.match(/\bM\.?(\d+)/i) || header.nomorMemo.match(/(\d+)/);
-            const numStr = memoNumMatch ? memoNumMatch[1] : "";
-            const memoRomanMonth = getMonthRoman(header.tanggalMemo) || "XI";
-            const memoYear = Number(header.tanggalMemo ? new Date(header.tanggalMemo).getFullYear() : 2026) || 2026;
-            const memoEntry: NomorMemo = {
-              tahun_anggaran: memoYear,
-              nomor_urut: numStr,
-              format_lengkap: header.nomorMemo,
-              tanggal_memo: header.tanggalMemo || "",
-              perihal: header.keteranganMemo || header.keteranganKegiatan || "Perjalanan Dinas",
-              id_kegiatan_ref: idKegiatan,
-              status: "TERPAKAI",
-              nominal: grandTotal,
-              MAK: header.nomorMak || "524111",
-              noMemo: header.nomorMemo,
-              tanggal: header.tanggalMemo || "",
-              mak: header.nomorMak || "524111",
-              bulanRomawi: memoRomanMonth,
-            };
-
             const existingIdx = cached.memo.findIndex(
               (m) =>
                 (m.format_lengkap && m.format_lengkap === header.nomorMemo) ||

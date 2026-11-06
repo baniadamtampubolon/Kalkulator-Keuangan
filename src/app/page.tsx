@@ -35,6 +35,7 @@ import {
   checkAndAutoMigrateCache,
 } from "@/lib/googleSheetsService";
 import { saveOrUpdateRekapLocal } from "@/lib/rekapHelper";
+import { mergeAndSortMemoList } from "@/lib/memoHelper";
 import {
   generateIdKegiatan,
   saveKegiatanRecord,
@@ -449,10 +450,11 @@ export default function Home() {
     );
   };
 
-  // Handle Next Memo Number Generation
+  // Handle Next Memo Number Generation (Berbagi Nomor Memorandum di seluruh 5 jenis SPJ)
   const handleGenerateMemoNumber = () => {
+    const sharedPool = mergeAndSortMemoList(memoList);
     const { nextMemoNumber } = generateNextMemoNumber(
-      memoList,
+      sharedPool,
       header.nomorMemo,
       header.tanggalMemo
     );
@@ -529,10 +531,18 @@ export default function Home() {
   const handleSwitchSpjType = (nextType: SpjDocType) => {
     const meta = getSpjTypeMeta(nextType);
     const allDefaultUraians = SPJ_TYPE_LIST.map((t) => t.defaultUraianKegiatan).filter(Boolean);
+    const sharedPool = mergeAndSortMemoList(memoList);
 
     setHeader((prev) => {
       const currentType = prev.spjType || "PERDIN";
-      if (currentType === nextType) return prev;
+      const needsAutoMemo = !prev.nomorMemo || prev.nomorMemo.toLowerCase().includes("xxx");
+      const assignedMemo = needsAutoMemo
+        ? generateNextMemoNumber(sharedPool, undefined, prev.tanggalMemo || prev.tanggalSpd).nextMemoNumber
+        : prev.nomorMemo;
+
+      if (currentType === nextType) {
+        return needsAutoMemo ? { ...prev, nomorMemo: assignedMemo } : prev;
+      }
 
       const isCurrentUraianDefault =
         !prev.keteranganKegiatan ||
@@ -543,6 +553,7 @@ export default function Home() {
         return {
           ...prev,
           spjType: "PERDIN",
+          nomorMemo: assignedMemo,
           nomorMak: prev.nomorMak || "524111",
           keteranganMemo: "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas",
           keteranganKegiatan: isCurrentUraianDefault ? "" : prev.keteranganKegiatan,
@@ -558,6 +569,7 @@ export default function Home() {
       return {
         ...prev,
         spjType: nextType,
+        nomorMemo: assignedMemo,
         nomorKomp: prev.nomorKomp || meta.defaultKomp,
         detailKomponen: prev.detailKomponen || meta.defaultDetailKomp,
         nomorMak: meta.defaultMak,
@@ -580,8 +592,8 @@ export default function Home() {
     }
   };
 
-  // Start fresh kegiatan with clean state and next sequential ID
-  const handleCreateNewKegiatan = () => {
+  // Start fresh kegiatan with clean state and next sequential ID (Sharing MASTER_MEMO pool)
+  const handleCreateNewKegiatan = (overrideType?: SpjDocType) => {
     setEditingOriginalId(null);
     setEditingOriginalTitle(null);
     setEditingOriginalMemo(null);
@@ -638,9 +650,15 @@ export default function Home() {
     const sbmJakarta = findSbmByProvince(sbmList, header.berangkatDari || "DKI JAKARTA");
     const calculatedInitialRow = calculateRowTotal(initialRow, sbm, activeUh, activeCols, { sbmJakarta });
 
-    const genMemo = generateNextMemoNumber(memoList, undefined, today);
-    const currentType = header.spjType || "PERDIN";
+    const sharedPool = mergeAndSortMemoList(memoList);
+    const genMemo = generateNextMemoNumber(sharedPool, undefined, today);
+    const currentType = overrideType || header.spjType || "PERDIN";
     const meta = getSpjTypeMeta(currentType);
+    const defaultPenerima = header.penanggungJawabNama || "Reni Sutaryo, S.Si., M.Adm.Pemb";
+    const foundPegawai = pegawaiList.find(
+      (p) => p.nama.toLowerCase() === defaultPenerima.toLowerCase()
+    );
+    const defaultRek = formatPegawaiBankRekening(foundPegawai);
 
     setHeader((prev) => ({
       ...prev,
@@ -674,8 +692,9 @@ export default function Home() {
           ? undefined
           : getDefaultPengadaanTax(
               currentType,
-              prev.penanggungJawabNama || "Reni Sutaryo, S.Si., M.Adm.Pemb",
-              prev.penanggungJawabNip || "19791126200604 2 014"
+              defaultPenerima,
+              prev.penanggungJawabNip || foundPegawai?.nip || "19791126200604 2 014",
+              defaultRek
             ),
     }));
     setRows([calculatedInitialRow]);
@@ -685,7 +704,7 @@ export default function Home() {
   };
 
   // Safe Request to Create New Kegiatan (Checks for unsaved changes)
-  const handleRequestCreateNew = () => {
+  const handleRequestCreateNew = (overrideType?: SpjDocType) => {
     const isPengadaan = Boolean(header.spjType && header.spjType !== "PERDIN");
     const hasValidData = isPengadaan
       ? Boolean(header.keteranganKegiatan && header.keteranganKegiatan.trim() !== "")
@@ -693,9 +712,10 @@ export default function Home() {
           Boolean((r.nama && r.nama.trim() !== "") || (r.namaExternal && r.namaExternal.trim() !== ""))
         );
     if (hasChanges || (!isSaved && hasValidData)) {
+      if (overrideType) handleSwitchSpjType(overrideType);
       setIsConfirmNewModalOpen(true);
     } else {
-      handleCreateNewKegiatan();
+      handleCreateNewKegiatan(overrideType);
     }
   };
 
@@ -741,9 +761,10 @@ export default function Home() {
           savedBatchId ||
           generateIdKegiatan(today, header.noKegiatanUrut || "001", header.kategoriSpj || "A");
 
+        const sharedPool = mergeAndSortMemoList(memoList);
         let nomorMemoToSave = header.nomorMemo || "";
         if (!nomorMemoToSave || nomorMemoToSave.includes("xxx") || nomorMemoToSave.includes("...")) {
-          const gen = generateNextMemoNumber(memoList, undefined, header.tanggalMemo || today);
+          const gen = generateNextMemoNumber(sharedPool, undefined, header.tanggalMemo || today);
           nomorMemoToSave = gen.nextMemoNumber;
         }
 
@@ -759,7 +780,7 @@ export default function Home() {
         };
         setHeader(updatedHeader);
 
-        // Create a representative ParticipantRow so Rekap & Cloud Sync store the total & recipient
+        // Create a representative ParticipantRow so Daftar Kegiatan & Cloud Sync store the total & recipient
         const syntheticRow: ParticipantRow = {
           id: "1",
           kodeNama: spjMeta.shortLabel,
@@ -804,6 +825,15 @@ export default function Home() {
         const oldBatchId = editingOriginalId || savedBatchId || undefined;
         const oldNama = editingOriginalTitle || undefined;
         const oldMemo = editingOriginalMemo || undefined;
+        const isUpdate = Boolean(oldBatchId);
+
+        const sheetNameBySpj: Record<string, string> = {
+          KONSUMSI: "REKAP_SPJ_KONSUMSI",
+          SEWA: "REKAP_SPJ_SEWA_KENDARAAN",
+          DIKLAT: "REKAP_SPJ_NARSUM",
+          ATK: "REKAP_SPJ_ATK_SEMKIT",
+        };
+        const targetRekapSheetName = sheetNameBySpj[currentSpjType] || "REKAP_SPJ";
 
         saveKegiatanRecord(
           {
@@ -827,15 +857,6 @@ export default function Home() {
         );
         setTotalKegiatanCount(getSavedKegiatanList().length);
 
-        const { isUpdate } = saveOrUpdateRekapLocal(
-          updatedHeader,
-          [syntheticRow],
-          idKegiatan,
-          oldBatchId,
-          oldNama,
-          oldMemo
-        );
-
         setEditingOriginalId(idKegiatan);
         setEditingOriginalTitle(updatedHeader.keteranganKegiatan || null);
         setEditingOriginalMemo(updatedHeader.nomorMemo || null);
@@ -855,12 +876,15 @@ export default function Home() {
           }
         );
 
+        // Perbarui state memoList dari gabungan bersama
+        setMemoList((prev) => mergeAndSortMemoList(prev));
+
         if (sheetRes.success) {
           setSaveFeedback({
             type: "success",
             text: isUpdate
-              ? `Data ${spjMeta.label} berhasil diperbarui & tersinkron ke Google Spreadsheet!`
-              : `Data ${spjMeta.label} berhasil disimpan & tersinkron ke Google Spreadsheet!`,
+              ? `Data ${spjMeta.label} berhasil diperbarui di ${targetRekapSheetName} & MASTER_MEMO!`
+              : `Data ${spjMeta.label} berhasil disimpan ke ${targetRekapSheetName} & MASTER_MEMO!`,
           });
         } else {
           setSaveFeedback({
@@ -910,10 +934,11 @@ export default function Home() {
         savedBatchId ||
         generateIdKegiatan(today, header.noKegiatanUrut || "001", header.kategoriSpj || "A");
 
-      // Auto-assign sequential Nomor Memorandum jika masih kosong atau placeholder 'xxx'
+      // Auto-assign sequential Nomor Memorandum jika masih kosong atau placeholder 'xxx' (Berbagi MASTER_MEMO)
+      const sharedPool = mergeAndSortMemoList(memoList);
       let nomorMemoToSave = header.nomorMemo || "";
       if (!nomorMemoToSave || nomorMemoToSave.includes("xxx") || nomorMemoToSave.includes("...")) {
-        const gen = generateNextMemoNumber(memoList, undefined, header.tanggalMemo || today);
+        const gen = generateNextMemoNumber(sharedPool, undefined, header.tanggalMemo || today);
         nomorMemoToSave = gen.nextMemoNumber;
       }
 
@@ -998,6 +1023,8 @@ export default function Home() {
           oldNomorMemo: oldMemo,
         }
       );
+
+      setMemoList((prev) => mergeAndSortMemoList(prev));
 
       if (sheetRes.success) {
         setSaveFeedback({
@@ -1098,10 +1125,10 @@ export default function Home() {
               pegawaiCount={pegawaiList.length}
               sbmCount={sbmList.length}
               onSelectSpjToWork={(type, createNew) => {
-                handleSwitchSpjType(type);
                 if (createNew) {
-                  handleRequestCreateNew();
+                  handleRequestCreateNew(type);
                 } else {
+                  handleSwitchSpjType(type);
                   setActiveTab("input");
                 }
               }}

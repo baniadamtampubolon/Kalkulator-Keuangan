@@ -349,6 +349,7 @@ export function buildRekapFromSavedKegiatanList(): Array<Record<string, unknown>
 
   savedActivities.forEach((keg) => {
     if (!keg.idKegiatan || seenBatchIds.has(keg.idKegiatan)) return;
+    if (keg.header?.spjType && keg.header.spjType !== "PERDIN") return;
     seenBatchIds.add(keg.idKegiatan);
     if (keg.header && Array.isArray(keg.rows) && keg.rows.length > 0) {
       const rows = formatRowsTo48Columns(
