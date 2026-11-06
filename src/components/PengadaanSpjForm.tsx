@@ -917,8 +917,8 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
                 onChange={(e) => handleSelectPpk(e.target.value)}
                 className="input-clean w-full h-9 px-2.5 text-xs font-medium bg-white cursor-pointer"
               >
-                {pegawaiList.map((p) => (
-                  <option key={p.nip || p.nama} value={p.nama}>
+                {pegawaiList.map((p, idx) => (
+                  <option key={`${p.nama}-${idx}`} value={p.nama}>
                     {p.nama}
                   </option>
                 ))}
@@ -1012,8 +1012,8 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
                   onChange={(e) => handleSelectPenerimaDropdown(e.target.value)}
                   className="input-clean w-full h-9 px-2.5 text-xs font-medium bg-white cursor-pointer"
                 >
-                  {pegawaiList.map((p) => (
-                    <option key={p.nip || p.nama} value={p.nama}>
+                  {pegawaiList.map((p, idx) => (
+                    <option key={`${p.nama}-${idx}`} value={p.nama}>
                       {p.nama}
                     </option>
                   ))}
