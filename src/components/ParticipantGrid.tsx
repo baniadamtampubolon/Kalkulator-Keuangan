@@ -250,6 +250,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       golongan: "",
       jabatan: "",
       isPejabat: false,
+      hotelList: lastRow.hotelList ? JSON.parse(JSON.stringify(lastRow.hotelList)) : undefined,
     };
     setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols, { sbmJakarta, isMultiProvinsi: isMultiProv })]);
   };
@@ -936,6 +937,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                     <button
                       type="button"
                       onClick={() => setModalHotelRow(row)}
+                      title={
+                        row.hotelList && row.hotelList.length > 1
+                          ? `${row.hotelList.length} Hotel: ${row.hotelList.map((h) => h.namaHotel || "Hotel").join(", ")}`
+                          : row.namaHotel || "Input Rincian Hotel / Penginapan"
+                      }
                       className={`btn-tactile inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${
                         row.hotel > 0
                           ? "bg-slate-100 border-slate-300 text-slate-800 font-semibold"
@@ -948,7 +954,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                         }`}
                       />
                       <Hotel className="w-3 h-3 text-slate-500" />
-                      <span>{row.hotel > 0 ? `Rp ${(row.hotel / 1000).toFixed(0)}k` : "Input"}</span>
+                      <span>
+                        {row.hotel > 0
+                          ? `${row.hotelList && row.hotelList.length > 1 ? `[${row.hotelList.length} Htl] ` : ""}Rp ${(row.hotel / 1000).toFixed(0)}k`
+                          : "Input"}
+                      </span>
                     </button>
                   </td>
                 )}
@@ -1226,9 +1236,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
             checkOut,
             kotaHotel,
             noBillFolio,
-            noKamar
+            noKamar,
+            hotelList,
+            applyToAll
           ) => {
-            handleUpdateRow(modalHotelRow.id, {
+            const updates = {
               hotel: total,
               namaHotel: namaHotel,
               rateHotel: rate,
@@ -1238,7 +1250,22 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
               kotaHotel: kotaHotel,
               noBillFolio: noBillFolio,
               noKamar: noKamar,
-            });
+              hotelList: hotelList,
+            };
+
+            if (applyToAll && rows.length > 1) {
+              setRows((prev) =>
+                prev.map((r) => {
+                  const merged = { ...r, ...updates };
+                  return calculateRowTotal(merged, currentSbm, activeUh, activeCols, {
+                    sbmJakarta,
+                    isMultiProvinsi: isMultiProv,
+                  });
+                })
+              );
+            } else {
+              handleUpdateRow(modalHotelRow.id, updates);
+            }
             setModalHotelRow(null);
           }}
         />

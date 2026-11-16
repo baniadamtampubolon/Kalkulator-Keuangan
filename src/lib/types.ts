@@ -68,6 +68,18 @@ export interface TicketDetail {
   moda?: string;
 }
 
+export interface HotelDetail {
+  id?: string;
+  namaHotel?: string;
+  kotaHotel?: string;
+  checkIn?: string;
+  checkOut?: string;
+  malam?: number;
+  rate?: number;
+  noBillFolio?: string;
+  noKamar?: string;
+}
+
 export interface ParticipantRow {
   id: string;
   kodeNama: string;
@@ -111,7 +123,7 @@ export interface ParticipantRow {
   tiketPulangList?: TicketDetail[];
   boardingPass?: "ADA" | "TIDAK";
 
-  // Hotel & Penginapan Rincian SPJ
+  // Hotel & Penginapan Rincian SPJ (Mendukung Multi-Hotel)
   hotel: number;
   penginapan30: number;
   namaHotel?: string;
@@ -122,6 +134,7 @@ export interface ParticipantRow {
   noKamar?: string;
   malamHotel?: number;
   rateHotel?: number;
+  hotelList?: HotelDetail[];
 
   // Meeting
   fulldayMeeting: number;

@@ -1,4 +1,4 @@
-import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan, RiilItem, TicketDetail, SpjDocType } from "./types";
+import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo, SavedKegiatan, RiilItem, TicketDetail, HotelDetail, SpjDocType } from "./types";
 import { generateIdKegiatan, getSavedKegiatanList, sortKegiatanByNewest } from "./kegiatanHelper";
 import { buildRekapFromSavedKegiatanList, buildRekapPengadaanFromSavedKegiatanList, deduplicateRekapRows, isSameRekapRow } from "./rekapHelper";
 import { getMonthRoman } from "./calc";
@@ -753,6 +753,32 @@ function pesertaRowToParticipant(rawP: Record<string, unknown>, idx: number): Pa
 
   const rawSpdVal = p["nomor_spd"] || p["nomorSpd"] || p["No. SPD"] || p["No SPD"] || idx + 1;
 
+  // Parse hotel_list_json / hotelList
+  let hotelList: HotelDetail[] | undefined = undefined;
+  const rawHotelList = p["hotel_list_json"] || p["hotelList"] || p["hotel_list"];
+  if (typeof rawHotelList === "string" && rawHotelList.trim() !== "") {
+    try {
+      const parsed = JSON.parse(rawHotelList);
+      if (Array.isArray(parsed)) {
+        hotelList = parsed.map((h: Record<string, unknown>, hIdx: number) => ({
+          id: String(h.id || `htl_${hIdx + 1}`),
+          namaHotel: String(h.namaHotel || h.nama_hotel || ""),
+          kotaHotel: String(h.kotaHotel || h.kota_hotel || ""),
+          checkIn: cleanIsoDate(h.checkIn || h.check_in || ""),
+          checkOut: cleanIsoDate(h.checkOut || h.check_out || ""),
+          malam: Number(h.malam || 1),
+          rate: Number(h.rate || 0),
+          noBillFolio: String(h.noBillFolio || h.no_bill_folio || ""),
+          noKamar: String(h.noKamar || h.no_kamar || ""),
+        }));
+      }
+    } catch {
+      hotelList = undefined;
+    }
+  } else if (Array.isArray(rawHotelList)) {
+    hotelList = rawHotelList as HotelDetail[];
+  }
+
   return {
     id: String(p["id_peserta"] || idx + 1),
     kodeNama: String(p["id_pegawai"] || p["kode_nama"] || ""),
@@ -806,8 +832,10 @@ function pesertaRowToParticipant(rawP: Record<string, unknown>, idx: number): Pa
     checkInHotel: cleanIsoDate(p["hotel_checkin"] || p["Tanggal Check In"]),
     checkOutHotel: cleanIsoDate(p["hotel_checkout"] || p["Tanggal Check Out"]),
     malamHotel: Number(p["hotel_malam"] || p["Jumlah Hari Menginap"] || 1),
+    rateHotel: Number(p["hotel_rate"] || p["rateHotel"] || 0),
     noBillFolio: String(p["hotel_bill_folio"] || ""),
     noKamar: String(p["hotel_no_kamar"] || ""),
+    hotelList,
     sewaKendaraan: Number(p["spj_sewa_kendaraan"] || p["Sewa kendaraan ()"] || 0),
     taksiBandara: Number(p["spj_taksi_bandara"] || p["Taksi Bandara"] || 0),
     biayaReschedule: Number(p["spj_biaya_reschedule"] || p["Biaya Reschedule ()"] || 0),
@@ -862,6 +890,14 @@ function rekapRowToParticipant(rekap: Record<string, unknown>, idx: number): Par
     transportDaerahPp: Number(rekap["Transport Daerah PP"] || 0),
     hotel: Number(rekap["Biaya Penginapan Biasa (Hotel)"] || 0),
     penginapan30: Number(rekap["Penginapan 30%"] || 0),
+    namaHotel: String(rekap["Nama Penginapan"] || ""),
+    checkInHotel: cleanIsoDate(rekap["Tanggal Check In"]),
+    checkOutHotel: cleanIsoDate(rekap["Tanggal Check Out"]),
+    malamHotel: Number(rekap["Jumlah Hari Menginap"] || (Number(rekap["Biaya Penginapan Biasa (Hotel)"]) > 0 ? 1 : 0)),
+    rateHotel:
+      Number(rekap["Jumlah Hari Menginap"]) > 0
+        ? Math.round(Number(rekap["Biaya Penginapan Biasa (Hotel)"] || 0) / Number(rekap["Jumlah Hari Menginap"]))
+        : Number(rekap["Biaya Penginapan Biasa (Hotel)"] || 0),
     fulldayMeeting: 0,
     fullboardMeeting: Number(rekap["Biaya Fullboard/Fullday/Halfday ()"] || 0),
     representatif: Number(rekap["Representatif ()"] || 0),
@@ -1640,13 +1676,32 @@ export async function savePerdinToGoogleSheet(
           : p.tiketDetailPulang?.harga || 0,
       },
       hotelDetail: {
-        namaHotel: p.namaHotel || "",
-        tanggalCheckin: p.checkInHotel || p.tanggalMulai,
-        tanggalCheckout: p.checkOutHotel || p.tanggalSelesai,
-        jumlahMalam: p.malamHotel || 1,
-        noBillFolio: p.noBillFolio || "",
-        noKamar: p.noKamar || "",
+        namaHotel:
+          p.hotelList && p.hotelList.length > 0
+            ? p.hotelList.map((h) => h.namaHotel).filter(Boolean).join(" / ") || p.namaHotel || ""
+            : p.namaHotel || "",
+        tanggalCheckin:
+          p.hotelList && p.hotelList.length > 0 && p.hotelList[0].checkIn
+            ? p.hotelList[0].checkIn
+            : p.checkInHotel || p.tanggalMulai,
+        tanggalCheckout:
+          p.hotelList && p.hotelList.length > 0 && p.hotelList[p.hotelList.length - 1].checkOut
+            ? p.hotelList[p.hotelList.length - 1].checkOut
+            : p.checkOutHotel || p.tanggalSelesai,
+        jumlahMalam:
+          p.hotelList && p.hotelList.length > 0
+            ? p.hotelList.reduce((sum, h) => sum + (Number(h.malam) || 0), 0) || p.malamHotel || 1
+            : p.malamHotel || 1,
+        noBillFolio:
+          p.hotelList && p.hotelList.length > 0
+            ? p.hotelList.map((h) => h.noBillFolio).filter(Boolean).join(" / ") || p.noBillFolio || ""
+            : p.noBillFolio || "",
+        noKamar:
+          p.hotelList && p.hotelList.length > 0
+            ? p.hotelList.map((h) => h.noKamar).filter(Boolean).join(" / ") || p.noKamar || ""
+            : p.noKamar || "",
         ratePerMalam: p.rateHotel || 0,
+        hotelList: p.hotelList || [],
       },
       riilItems: p.riilItems || [],
       spjExtra: {

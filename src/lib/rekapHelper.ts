@@ -346,6 +346,38 @@ export function formatRowTo48Columns(
     ? pulangLegs.reduce((acc, t) => acc + (Number(t.harga) || 0), 0)
     : (r.tiket ? Math.round(r.tiket / 2) : 0);
 
+  const hotelItems = r.hotelList && r.hotelList.length > 0 ? r.hotelList : [];
+  const namaPenginapan = (() => {
+    if (hotelItems.length > 0) {
+      const names = hotelItems.map((h) => h.namaHotel).filter(Boolean);
+      if (names.length > 0) return names.join(" / ");
+    }
+    return r.namaHotel || "";
+  })();
+
+  const tglCheckIn = (() => {
+    if (hotelItems.length > 0 && hotelItems[0].checkIn) {
+      return hotelItems[0].checkIn;
+    }
+    return r.checkInHotel || (r.hotel > 0 ? r.tanggalMulai : "");
+  })();
+
+  const tglCheckOut = (() => {
+    if (hotelItems.length > 0) {
+      const last = hotelItems[hotelItems.length - 1];
+      if (last.checkOut) return last.checkOut;
+    }
+    return r.checkOutHotel || (r.hotel > 0 ? r.tanggalSelesai : "");
+  })();
+
+  const jmlHariMenginap = (() => {
+    if (hotelItems.length > 0) {
+      const totalMalam = hotelItems.reduce((sum, h) => sum + (Number(h.malam) || 0), 0);
+      if (totalMalam > 0) return totalMalam;
+    }
+    return r.malamHotel || (r.hotel > 0 ? 1 : 0);
+  })();
+
   const biayaTransport =
     (r.transportasiDarat || 0) + (r.transportasiLokal || 0) + (r.dukunganTransportasi || 0);
 
@@ -388,10 +420,10 @@ export function formatRowTo48Columns(
     "Nama Maskapai": maskapai,
     "Kode Booking": kodeBooking,
     "Boarding Pass (Ada/Tidak)": r.boardingPass || (r.tiket > 0 ? "ADA" : ""),
-    "Nama Penginapan": r.namaHotel || "",
-    "Tanggal Check In": r.checkInHotel || (r.hotel > 0 ? r.tanggalMulai : ""),
-    "Tanggal Check Out": r.checkOutHotel || (r.hotel > 0 ? r.tanggalSelesai : ""),
-    "Jumlah Hari Menginap": r.malamHotel || (r.hotel > 0 ? 1 : 0),
+    "Nama Penginapan": namaPenginapan,
+    "Tanggal Check In": tglCheckIn,
+    "Tanggal Check Out": tglCheckOut,
+    "Jumlah Hari Menginap": jmlHariMenginap,
     "Lama Hari 100%": r.hariUhBiasa !== undefined ? r.hariUhBiasa : r.lamaHari || 1,
     "Lama Hari 40%": r.hariUhBiasa40 || r.hariUhBiasa60 || 0,
     "Total Hari": r.lamaHari || 1,

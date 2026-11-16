@@ -298,10 +298,25 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
           }
 
           if (activeCols.hotel && activeRow.hotel > 0) {
+            let hotelDetailStr = `${activeRow.malamHotel || 1}  malam @ Rp  ${(activeRow.rateHotel || 0).toLocaleString("id-ID")}`;
+            if (activeRow.hotelList && activeRow.hotelList.length > 1) {
+              hotelDetailStr = activeRow.hotelList
+                .map(
+                  (h) =>
+                    `${h.namaHotel ? `${h.namaHotel} ` : ""}(${h.malam || 1} malam @ Rp ${(h.rate || 0).toLocaleString("id-ID")})`
+                )
+                .join("; ");
+            } else if (activeRow.hotelList && activeRow.hotelList.length === 1) {
+              const h = activeRow.hotelList[0];
+              hotelDetailStr = `${h.namaHotel ? `${h.namaHotel} - ` : ""}${h.malam || 1} malam @ Rp ${(h.rate || 0).toLocaleString("id-ID")}`;
+            } else if (activeRow.namaHotel) {
+              hotelDetailStr = `${activeRow.namaHotel} - ${activeRow.malamHotel || 1} malam @ Rp ${(activeRow.rateHotel || 0).toLocaleString("id-ID")}`;
+            }
+
             lineItems.push({
               no: itemNum++,
               title: "Penginapan / Hotel",
-              detail: `${activeRow.malamHotel || 1}  malam @ Rp  ${(activeRow.rateHotel || 0).toLocaleString("id-ID")}`,
+              detail: hotelDetailStr,
               amount: activeRow.hotel,
             });
           }

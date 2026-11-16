@@ -129,8 +129,15 @@ export function calculateRowTotal(
     updated.biayaUhFullboard = 0;
   }
 
-  // 3. Hotel vs Penginapan 30%
-  if (activeCols.hotel && updated.malamHotel && updated.rateHotel) {
+  // 3. Hotel vs Penginapan 30% (Mendukung Multi-Hotel)
+  if (activeCols.hotel && Array.isArray(updated.hotelList) && updated.hotelList.length > 0) {
+    updated.hotel = updated.hotelList.reduce(
+      (sum, h) => sum + ((Number(h.malam) || 0) * (Number(h.rate) || 0)),
+      0
+    );
+    const totalMalam = updated.hotelList.reduce((sum, h) => sum + (Number(h.malam) || 0), 0);
+    if (totalMalam > 0) updated.malamHotel = totalMalam;
+  } else if (activeCols.hotel && updated.malamHotel && updated.rateHotel) {
     updated.hotel = updated.malamHotel * updated.rateHotel;
   } else if (!activeCols.hotel) {
     updated.hotel = 0;

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ParticipantRow, RiilItem, TicketDetail } from "@/lib/types";
+import { ParticipantRow, RiilItem, TicketDetail, HotelDetail } from "@/lib/types";
 import { X, Plus, Trash2, Plane, Hotel, DollarSign, FileSpreadsheet } from "lucide-react";
 import { CurrencyInput } from "./CurrencyInput";
 
@@ -559,7 +559,7 @@ export const ModalTiket: React.FC<ModalTiketProps> = ({ row, isOpen, onClose, on
 };
 
 // ============================================================================
-// 2. Modal Hotel (Layout Sesuai Gambar Referensi 2)
+// 2. Modal Hotel (Mendukung Multi-Hotel / Berpindah Kota dalam 1 Perdin / ST)
 // ============================================================================
 interface ModalHotelProps {
   row: ParticipantRow;
@@ -574,62 +574,174 @@ interface ModalHotelProps {
     checkOut: string,
     kotaHotel: string,
     noBillFolio: string,
-    noKamar: string
+    noKamar: string,
+    hotelList?: HotelDetail[],
+    applyToAll?: boolean
   ) => void;
 }
 
 export const ModalHotel: React.FC<ModalHotelProps> = ({ row, isOpen, onClose, onSave }) => {
-  const [namaHotel, setNamaHotel] = useState<string>(row.namaHotel || "");
-  const [kotaHotel, setKotaHotel] = useState<string>(row.kotaHotel || row.tujuanKota || "");
-  const [checkIn, setCheckIn] = useState<string>(row.checkInHotel || row.tanggalMulai || "");
-  const [checkOut, setCheckOut] = useState<string>(row.checkOutHotel || row.tanggalSelesai || "");
-  const [noBillFolio, setNoBillFolio] = useState<string>(row.noBillFolio || "");
-  const [noKamar, setNoKamar] = useState<string>(row.noKamar || "");
-  const [malamHotel, setMalamHotel] = useState<number>(row.malamHotel || 1);
-  const [rateHotel, setRateHotel] = useState<number>(row.rateHotel || 0);
-
-  const handleCheckInChange = (newVal: string) => {
-    setCheckIn(newVal);
-    if (newVal && checkOut) {
-      const d1 = new Date(newVal);
-      const d2 = new Date(checkOut);
-      if (!isNaN(d1.getTime()) && !isNaN(d2.getTime()) && d2 >= d1) {
-        const diffDays = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-        if (diffDays > 0) setMalamHotel(diffDays);
-      }
+  const [hotelList, setHotelList] = useState<HotelDetail[]>(() => {
+    if (row.hotelList && row.hotelList.length > 0) {
+      return row.hotelList.map((h, i) => ({
+        ...h,
+        id: h.id || `htl_${i + 1}`,
+        malam: h.malam !== undefined ? h.malam : 1,
+        rate: h.rate !== undefined ? h.rate : 0,
+      }));
     }
-  };
+    return [
+      {
+        id: "htl_1",
+        namaHotel: row.namaHotel || "",
+        kotaHotel: row.kotaHotel || row.tujuanKota || "",
+        checkIn: row.checkInHotel || row.tanggalMulai || "",
+        checkOut: row.checkOutHotel || row.tanggalSelesai || "",
+        noBillFolio: row.noBillFolio || "",
+        noKamar: row.noKamar || "",
+        malam: row.malamHotel !== undefined ? row.malamHotel : (row.hotel > 0 ? 1 : 1),
+        rate:
+          row.rateHotel !== undefined
+            ? row.rateHotel
+            : row.hotel > 0 && row.malamHotel
+            ? Math.round(row.hotel / row.malamHotel)
+            : row.hotel || 0,
+      },
+    ];
+  });
 
-  const handleCheckOutChange = (newVal: string) => {
-    setCheckOut(newVal);
-    if (checkIn && newVal) {
-      const d1 = new Date(checkIn);
-      const d2 = new Date(newVal);
-      if (!isNaN(d1.getTime()) && !isNaN(d2.getTime()) && d2 >= d1) {
-        const diffDays = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-        if (diffDays > 0) setMalamHotel(diffDays);
-      }
-    }
-  };
+  const [applyToAll, setApplyToAll] = useState(false);
 
   if (!isOpen) return null;
 
-  const total = rateHotel * malamHotel;
+  const handleAddHotel = () => {
+    const prev = hotelList[hotelList.length - 1];
+    const nextCheckIn = prev?.checkOut || row.tanggalMulai || "";
+    let nextCheckOut = row.tanggalSelesai || nextCheckIn;
+    if (nextCheckOut <= nextCheckIn && nextCheckIn) {
+      const d = new Date(nextCheckIn);
+      d.setDate(d.getDate() + 1);
+      nextCheckOut = d.toISOString().split("T")[0];
+    }
+    let initMalam = 1;
+    if (nextCheckIn && nextCheckOut) {
+      const d1 = new Date(nextCheckIn);
+      const d2 = new Date(nextCheckOut);
+      if (!isNaN(d1.getTime()) && !isNaN(d2.getTime()) && d2 >= d1) {
+        const diff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+        if (diff > 0) initMalam = diff;
+      }
+    }
+
+    setHotelList([
+      ...hotelList,
+      {
+        id: `htl_${Date.now()}_${hotelList.length + 1}`,
+        namaHotel: "",
+        kotaHotel: prev?.kotaHotel || row.tujuanKota || "",
+        checkIn: nextCheckIn,
+        checkOut: nextCheckOut,
+        noBillFolio: "",
+        noKamar: "",
+        malam: initMalam,
+        rate: prev?.rate || 0,
+      },
+    ]);
+  };
+
+  const handleRemoveHotel = (idx: number) => {
+    if (hotelList.length <= 1) return;
+    setHotelList(hotelList.filter((_, i) => i !== idx));
+  };
+
+  const handleUpdateHotel = (idx: number, updates: Partial<HotelDetail>) => {
+    setHotelList(
+      hotelList.map((item, i) => {
+        if (i !== idx) return item;
+        const merged = { ...item, ...updates };
+        if (updates.checkIn !== undefined || updates.checkOut !== undefined) {
+          const cin = updates.checkIn !== undefined ? updates.checkIn : merged.checkIn;
+          const cout = updates.checkOut !== undefined ? updates.checkOut : merged.checkOut;
+          if (cin && cout) {
+            const d1 = new Date(cin);
+            const d2 = new Date(cout);
+            if (!isNaN(d1.getTime()) && !isNaN(d2.getTime()) && d2 >= d1) {
+              const diff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+              if (diff > 0) merged.malam = diff;
+            }
+          }
+        }
+        return merged;
+      })
+    );
+  };
+
+  const totalMalam = hotelList.reduce((acc, h) => acc + (Number(h.malam) || 0), 0);
+  const totalHotel = hotelList.reduce(
+    (acc, h) => acc + (Number(h.malam) || 0) * (Number(h.rate) || 0),
+    0
+  );
+
+  const handleSave = () => {
+    const namaHotelSummary =
+      hotelList.map((h) => h.namaHotel).filter(Boolean).join(" & ") ||
+      hotelList[0]?.namaHotel ||
+      "";
+    const kotaHotelSummary =
+      hotelList.map((h) => h.kotaHotel).filter(Boolean).join(" / ") ||
+      hotelList[0]?.kotaHotel ||
+      "";
+    const checkInEarliest = hotelList[0]?.checkIn || row.tanggalMulai || "";
+    const checkOutLatest =
+      hotelList[hotelList.length - 1]?.checkOut || row.tanggalSelesai || "";
+    const noBillFolioSummary =
+      hotelList.map((h) => h.noBillFolio).filter(Boolean).join(" / ") ||
+      hotelList[0]?.noBillFolio ||
+      "";
+    const noKamarSummary =
+      hotelList.map((h) => h.noKamar).filter(Boolean).join(" / ") ||
+      hotelList[0]?.noKamar ||
+      "";
+    const avgRate =
+      totalMalam > 0 ? Math.round(totalHotel / totalMalam) : hotelList[0]?.rate || 0;
+
+    onSave(
+      totalHotel,
+      namaHotelSummary,
+      avgRate,
+      totalMalam,
+      checkInEarliest,
+      checkOutLatest,
+      kotaHotelSummary,
+      noBillFolioSummary,
+      noKamarSummary,
+      hotelList,
+      applyToAll
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md transition-all">
-      <div className="bg-white/95 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="bg-white/95 rounded-3xl w-full max-w-4xl shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2.5 text-slate-800">
-            <Hotel className="w-5 h-5 text-slate-700" />
-            <h3 className="font-bold text-sm md:text-base text-slate-900">
-              Penginapan: <span className="text-slate-800">{row.nama || "Pelaksana Dinas"}</span>
-            </h3>
+            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200/60 shadow-2xs">
+              <Hotel className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm md:text-base text-slate-900">
+                Rincian Hotel &amp; Penginapan: <span className="text-blue-700">{row.nama || "Pelaksana Dinas"}</span>
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Mendukung input lebih dari satu hotel dalam satu ST / penugasan (berpindah kota &amp; hotel lanjutan)
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Tutup Modal"
           >
             <X className="w-5 h-5" />
           </button>
@@ -637,98 +749,248 @@ export const ModalHotel: React.FC<ModalHotelProps> = ({ row, isOpen, onClose, on
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-4 text-xs">
-          <div className="space-y-1">
-            <label className="font-semibold text-slate-700 block">Nama Hotel</label>
-            <input
-              type="text"
-              value={namaHotel}
-              onChange={(e) => setNamaHotel(e.target.value)}
-              placeholder="Contoh: JW MARRIOTT SURABAYA / Hotel Santika"
-              className="input-glass w-full h-10 px-3 text-xs font-medium"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="font-semibold text-slate-700 block">Kota Hotel</label>
-            <input
-              type="text"
-              value={kotaHotel}
-              onChange={(e) => setKotaHotel(e.target.value)}
-              placeholder="Contoh: Surabaya / Depok"
-              className="input-glass w-full h-10 px-3 text-xs font-medium"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700 block">Check-in</label>
-              <input
-                type="date"
-                value={checkIn}
-                onChange={(e) => handleCheckInChange(e.target.value)}
-                className="input-glass w-full h-10 px-3 text-xs font-medium cursor-pointer"
-              />
+          {/* Header Stats Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-800 text-xs">Daftar Penginapan:</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold text-[11px]">
+                {hotelList.length} Hotel
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold text-[11px]">
+                Total {totalMalam} Malam
+              </span>
             </div>
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700 block">Check-out</label>
-              <input
-                type="date"
-                value={checkOut}
-                onChange={(e) => handleCheckOutChange(e.target.value)}
-                className="input-glass w-full h-10 px-3 text-xs font-medium cursor-pointer"
-              />
+            <div className="text-right">
+              <span className="text-[10px] text-slate-400 block font-medium">Subtotal Biaya Hotel:</span>
+              <span className="text-xs font-bold font-mono text-blue-700">
+                Rp {totalHotel.toLocaleString("id-ID")}
+              </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700 block">No. Bill/Folio</label>
-              <input
-                type="text"
-                value={noBillFolio}
-                onChange={(e) => setNoBillFolio(e.target.value)}
-                placeholder="Contoh: INV-2026-081"
-                className="input-glass w-full h-10 px-3 text-xs font-mono font-medium"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700 block">No. Kamar</label>
-              <input
-                type="text"
-                value={noKamar}
-                onChange={(e) => setNoKamar(e.target.value)}
-                placeholder="Contoh: 1204"
-                className="input-glass w-full h-10 px-3 text-xs font-mono font-medium"
-              />
-            </div>
+          {/* List of Hotel Cards */}
+          <div className="space-y-3.5">
+            {hotelList.map((hotel, idx) => {
+              const subtotalThisHotel = (Number(hotel.malam) || 0) * (Number(hotel.rate) || 0);
+
+              return (
+                <div
+                  key={hotel.id || `htl_card_${idx}`}
+                  className="bg-white p-4.5 rounded-2xl border border-slate-200 shadow-2xs space-y-3"
+                >
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-bold text-xs">
+                        {idx + 1}
+                      </span>
+                      <span className="font-bold text-slate-900 text-xs md:text-sm">
+                        {idx === 0
+                          ? "Hotel 1 (Penginapan Awal / Utama)"
+                          : `Hotel ${idx + 1} (Penginapan Lanjutan / Pindah Kota)`}
+                      </span>
+                      {hotel.kotaHotel && (
+                        <span className="text-[10.5px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                          📍 {hotel.kotaHotel}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right hidden sm:block">
+                        <span className="text-[10px] text-slate-400 block">Biaya Hotel Ini:</span>
+                        <span className="text-xs font-bold font-mono text-slate-900">
+                          Rp {subtotalThisHotel.toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                      {hotelList.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveHotel(idx)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Hapus hotel ini"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Form Fields Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    {/* Nama Hotel */}
+                    <div className="md:col-span-7 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700 block">
+                        Nama Hotel / Penginapan <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={hotel.namaHotel || ""}
+                        onChange={(e) => handleUpdateHotel(idx, { namaHotel: e.target.value })}
+                        placeholder="Contoh: JW MARRIOTT SURABAYA / Hotel Santika Premiere"
+                        className="input-glass w-full h-9 px-3 text-xs font-medium"
+                      />
+                    </div>
+
+                    {/* Kota Hotel */}
+                    <div className="md:col-span-5 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700 block">
+                        Kota Lokasi Hotel
+                      </label>
+                      <input
+                        type="text"
+                        value={hotel.kotaHotel || ""}
+                        onChange={(e) => handleUpdateHotel(idx, { kotaHotel: e.target.value })}
+                        placeholder="Contoh: Surabaya / Malang / Bandung"
+                        className="input-glass w-full h-9 px-3 text-xs font-medium"
+                      />
+                    </div>
+
+                    {/* Check-in */}
+                    <div className="md:col-span-3 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700 block">
+                        Tanggal Check-in
+                      </label>
+                      <input
+                        type="date"
+                        value={hotel.checkIn || ""}
+                        onChange={(e) => handleUpdateHotel(idx, { checkIn: e.target.value })}
+                        className="input-glass w-full h-9 px-2.5 text-xs font-medium cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Check-out */}
+                    <div className="md:col-span-3 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700 block">
+                        Tanggal Check-out
+                      </label>
+                      <input
+                        type="date"
+                        value={hotel.checkOut || ""}
+                        onChange={(e) => handleUpdateHotel(idx, { checkOut: e.target.value })}
+                        className="input-glass w-full h-9 px-2.5 text-xs font-medium cursor-pointer"
+                      />
+                    </div>
+
+                    {/* No. Bill/Folio */}
+                    <div className="md:col-span-3 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700 block">
+                        No. Bill / Folio Invoice
+                      </label>
+                      <input
+                        type="text"
+                        value={hotel.noBillFolio || ""}
+                        onChange={(e) => handleUpdateHotel(idx, { noBillFolio: e.target.value })}
+                        placeholder="INV-2026-081"
+                        className="input-glass w-full h-9 px-2.5 text-xs font-mono font-medium"
+                      />
+                    </div>
+
+                    {/* No. Kamar */}
+                    <div className="md:col-span-3 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700 block">
+                        No. Kamar
+                      </label>
+                      <input
+                        type="text"
+                        value={hotel.noKamar || ""}
+                        onChange={(e) => handleUpdateHotel(idx, { noKamar: e.target.value })}
+                        placeholder="1204"
+                        className="input-glass w-full h-9 px-2.5 text-xs font-mono font-medium"
+                      />
+                    </div>
+
+                    {/* Malam */}
+                    <div className="md:col-span-3 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700 block">
+                        Jumlah Malam
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={hotel.malam || 1}
+                        onChange={(e) =>
+                          handleUpdateHotel(idx, { malam: Math.max(1, parseInt(e.target.value) || 1) })
+                        }
+                        className="input-glass w-full h-9 px-2 text-xs font-bold text-center"
+                      />
+                    </div>
+
+                    {/* Rate Per Malam */}
+                    <div className="md:col-span-5 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700 block">
+                        Rate Per Malam (Rp)
+                      </label>
+                      <CurrencyInput
+                        value={hotel.rate}
+                        onChange={(val) => handleUpdateHotel(idx, { rate: val })}
+                        placeholder="0"
+                        className="input-glass w-full h-9 px-3 text-xs font-mono font-bold text-right"
+                      />
+                    </div>
+
+                    {/* Subtotal Display Box */}
+                    <div className="md:col-span-4 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700 block">
+                        Subtotal Hotel Ini (Rp)
+                      </label>
+                      <div className="h-9 px-3 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between font-mono text-xs shadow-2xs">
+                        <span className="text-[10px] text-slate-500 font-sans">
+                          {hotel.malam || 1} mlm ×
+                        </span>
+                        <span className="font-bold text-slate-900">
+                          Rp {subtotalThisHotel.toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700 block">Malam</label>
-              <input
-                type="number"
-                value={malamHotel}
-                onChange={(e) => setMalamHotel(parseInt(e.target.value) || 1)}
-                className="input-glass w-full h-10 px-3 text-xs font-bold text-center"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700 block">Rate Per Malam (Rp)</label>
-              <CurrencyInput
-                value={rateHotel}
-                onChange={(val) => setRateHotel(val)}
-                placeholder="0"
-                className="input-glass w-full h-10 px-3 text-xs font-mono font-bold text-right"
-              />
-            </div>
-          </div>
+          {/* Tombol Tambah Hotel Lanjutan */}
+          <button
+            type="button"
+            onClick={handleAddHotel}
+            className="btn-tactile w-full py-2.5 rounded-2xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold flex items-center justify-center gap-2 border border-blue-200/90 cursor-pointer transition-colors shadow-2xs"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tambah Hotel / Penginapan Lanjutan (Hotel {hotelList.length + 1})</span>
+          </button>
 
-          {/* Highlighted Total Biaya Hotel Box */}
-          <div className="space-y-1 pt-1">
-            <label className="font-bold text-slate-800 block text-xs">Total Biaya Hotel (Rp)</label>
-            <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-200 text-right font-mono font-bold text-slate-900 text-base shadow-2xs">
-              {total.toLocaleString("id-ID")}
+          {/* Bottom Bar: Multi-participant Sync Option & Total */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={applyToAll}
+                  onChange={(e) => setApplyToAll(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-[#0071e3] focus:ring-blue-500 cursor-pointer"
+                />
+                <span className="font-semibold">
+                  Terapkan rincian hotel ini ke semua peserta rombongan
+                </span>
+              </label>
+              <p className="text-[11px] text-slate-500">
+                {hotelList.length > 1
+                  ? hotelList
+                      .map(
+                        (h, i) =>
+                          `${h.namaHotel || `Hotel ${i + 1}`} (${h.malam || 1} mlm: Rp ${((Number(h.malam) || 0) * (Number(h.rate) || 0)).toLocaleString("id-ID")})`
+                      )
+                      .join(" + ")
+                  : "Total biaya penginapan otomatis diperbarui pada perhitungan SPJ dan dokumen cetak"}
+              </p>
+            </div>
+
+            <div className="text-right">
+              <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">
+                Total Biaya Seluruh Hotel ({totalMalam} Malam)
+              </span>
+              <span className="text-base sm:text-lg font-bold font-mono text-[#0071e3]">
+                Rp {totalHotel.toLocaleString("id-ID")}
+              </span>
             </div>
           </div>
         </div>
@@ -744,22 +1006,10 @@ export const ModalHotel: React.FC<ModalHotelProps> = ({ row, isOpen, onClose, on
           </button>
           <button
             type="button"
-            onClick={() =>
-              onSave(
-                total,
-                namaHotel,
-                rateHotel,
-                malamHotel,
-                checkIn,
-                checkOut,
-                kotaHotel,
-                noBillFolio,
-                noKamar
-              )
-            }
+            onClick={handleSave}
             className="btn-tactile px-5 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-bold shadow-sm cursor-pointer"
           >
-            Simpan Hotel
+            Simpan Rincian Hotel
           </button>
         </div>
       </div>
