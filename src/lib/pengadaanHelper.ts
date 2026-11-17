@@ -141,6 +141,22 @@ export function getSpjTypeMeta(type?: SpjDocType): SpjTypeMetadata {
 }
 
 export function getDefaultPengadaanItems(type: SpjDocType): PengadaanItemRow[] {
+  const meta = getSpjTypeMeta(type);
+  return [
+    {
+      id: `${type.toLowerCase()}-1`,
+      no: 1,
+      uraian: "",
+      hargaSatuan: 0,
+      jumlah: 1,
+      satuan: meta.defaultSatuan || "Pak",
+      subTotal: 0,
+      ppnJenis: type === "SEWA" || type === "DIKLAT" ? "NONE" : "INCLUDE",
+    },
+  ];
+}
+
+export function getPengadaanExampleItems(type: SpjDocType): PengadaanItemRow[] {
   if (type === "KONSUMSI") {
     return [
       {
@@ -261,7 +277,7 @@ export function getPengadaanScenarioPresets(type: SpjDocType): PengadaanScenario
         id: "kons-lengkap",
         label: "Paket Rapat Lengkap (Makan + Snack)",
         description: "Makan Siang Rp 53.000 + Snack Rp 28.000 • PPN Include (11/111) + PPh 23 (2%)",
-        items: getDefaultPengadaanItems("KONSUMSI"),
+        items: getPengadaanExampleItems("KONSUMSI"),
         ppnMode: "INCLUDE_11_111",
         pphType: "PPH23_2",
       },
@@ -322,7 +338,7 @@ export function getPengadaanScenarioPresets(type: SpjDocType): PengadaanScenario
         id: "atk-rutin",
         label: "Paket ATK Rutin Kantor (5 Item)",
         description: "Kertas A4, Amplop, Pulpen, Sticky Note, Tissue • PPN Include + PPh 22 (1,5%)",
-        items: getDefaultPengadaanItems("ATK"),
+        items: getPengadaanExampleItems("ATK"),
         ppnMode: "INCLUDE_11_111",
         pphType: "PPH22_1_5",
       },
@@ -403,7 +419,7 @@ export function getPengadaanScenarioPresets(type: SpjDocType): PengadaanScenario
         id: "sewa-npwp",
         label: "Sewa Harian Non-PKP + NPWP (PPh 2%)",
         description: "Sewa Kendaraan Rp 1.300.000/hari • Tanpa PPN + Potong PPh 23 (2%)",
-        items: getDefaultPengadaanItems("SEWA"),
+        items: getPengadaanExampleItems("SEWA"),
         ppnMode: "NONE",
         pphType: "PPH23_2",
       },
@@ -430,7 +446,7 @@ export function getPengadaanScenarioPresets(type: SpjDocType): PengadaanScenario
         id: "sewa-non-npwp",
         label: "Sewa Tanpa NPWP (PPh 23 4%)",
         description: "Tarif PPh 23 lebih tinggi 100% (4%) untuk penyedia tanpa NPWP",
-        items: getDefaultPengadaanItems("SEWA"),
+        items: getPengadaanExampleItems("SEWA"),
         ppnMode: "NONE",
         pphType: "PPH23_4",
       },
@@ -443,7 +459,7 @@ export function getPengadaanScenarioPresets(type: SpjDocType): PengadaanScenario
       id: "diklat-pnbp",
       label: "PNBP Diklat Instansi Pemerintah (Bebas Pajak)",
       description: "Biaya Kontribusi / PNBP Diklat Instansi Pembina • Tanpa PPN & PPh",
-      items: getDefaultPengadaanItems("DIKLAT"),
+      items: getPengadaanExampleItems("DIKLAT"),
       ppnMode: "NONE",
       pphType: "NONE",
     },

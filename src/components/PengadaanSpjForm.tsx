@@ -25,6 +25,7 @@ import {
   formatNominalExcel,
   formatPegawaiBankRekening,
   getDefaultPengadaanItems,
+  getPengadaanExampleItems,
   getDefaultPengadaanTax,
   getPengadaanScenarioPresets,
   getSpjTypeMeta,
@@ -121,8 +122,8 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
     if (raw && LIST_NOMOR_KOMPONEN.some((k) => k.kode === raw)) {
       return raw;
     }
-    return raw || spjMeta.defaultKomp;
-  }, [header.nomorKomp, spjMeta.defaultKomp]);
+    return raw || "";
+  }, [header.nomorKomp]);
 
   useEffect(() => {
     let active = true;
@@ -293,8 +294,22 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
     );
     setHeader((prev) => ({
       ...prev,
+      keteranganKegiatan: "",
+      nomorKomp: "",
+      detailKomponen: "",
+      itemDetail: "",
+      keteranganItemDetail: "",
       pengadaanItems: defItems,
       pengadaanTax: defTax,
+    }));
+  };
+
+  const handleLoadExampleItems = () => {
+    const exItems = getPengadaanExampleItems(spjType);
+    setHeader((prev) => ({
+      ...prev,
+      keteranganKegiatan: prev.keteranganKegiatan || spjMeta.defaultUraianKegiatan,
+      pengadaanItems: exItems,
     }));
   };
 
@@ -755,10 +770,19 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
               type="button"
               onClick={handleResetDefaultItems}
               className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-xs font-medium border border-slate-200/90 dark:border-slate-800 shadow-2xs cursor-pointer"
-              title="Reset ke contoh data standar Excel SPJ 2026"
+              title="Kosongkan seluruh isian tabel dan mulai input bersih"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Default</span>
+              <span>Kosongkan Tabel</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleLoadExampleItems}
+              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-blue-600 dark:text-blue-400 text-xs font-semibold border border-blue-200 dark:border-blue-900/60 shadow-2xs cursor-pointer"
+              title="Isi contoh data standar Excel SPJ 2026 sebagai referensi"
+            >
+              <Wand2 className="w-3.5 h-3.5" />
+              <span>Contoh Data</span>
             </button>
             <button
               type="button"

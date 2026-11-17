@@ -575,14 +575,14 @@ export default function Home() {
         ...prev,
         spjType: nextType,
         nomorMemo: assignedMemo,
-        nomorKomp: meta.defaultKomp,
-        detailKomponen: meta.defaultDetailKomp,
+        nomorKomp: "",
+        detailKomponen: "",
         nomorMak: meta.defaultMak,
-        itemDetail: meta.defaultItemDetail,
-        keteranganItemDetail: meta.defaultKeteranganItemDetail,
+        itemDetail: "",
+        keteranganItemDetail: "",
         keteranganMemo: meta.defaultPerihalMemo,
         keteranganKegiatan: isCurrentUraianDefault
-          ? meta.defaultUraianKegiatan
+          ? ""
           : prev.keteranganKegiatan,
         pengadaanItems: getDefaultPengadaanItems(nextType),
         pengadaanTax: getDefaultPengadaanTax(
@@ -673,21 +673,21 @@ export default function Home() {
       idKegiatan: newId,
       kategoriSpj: "A",
       noKegiatanUrut: nextNo,
-      keteranganKegiatan: currentType === "PERDIN" ? "" : meta.defaultUraianKegiatan,
+      keteranganKegiatan: "",
       keteranganMemo: meta.defaultPerihalMemo,
       nomorMemo: genMemo.nextMemoNumber,
       nomorStMaster: "",
       nomorStStaff: "",
       nomorStPejabat: "",
       useDifferentStPejabat: false,
-      nomorKomp: currentType === "PERDIN" ? "CL.7458.ABR.006.075.EE" : meta.defaultKomp,
+      nomorKomp: currentType === "PERDIN" ? "CL.7458.ABR.006.075.EE" : "",
       detailKomponen:
         currentType === "PERDIN"
           ? "Kunjungan Lapangan terkait Koordinasi Implementasi NEK Pengendalian Emisi GRK"
-          : meta.defaultDetailKomp,
+          : "",
       nomorMak: meta.defaultMak,
-      itemDetail: currentType === "PERDIN" ? "001" : meta.defaultItemDetail,
-      keteranganItemDetail: currentType === "PERDIN" ? "" : meta.defaultKeteranganItemDetail,
+      itemDetail: currentType === "PERDIN" ? "001" : "",
+      keteranganItemDetail: "",
       noSpby: "",
       noSpm: "",
       jenisPengajuan: "RAMPUNG",
