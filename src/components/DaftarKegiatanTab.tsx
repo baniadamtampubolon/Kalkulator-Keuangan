@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { SavedKegiatan } from "@/lib/types";
+import { SavedKegiatan, SpjDocType } from "@/lib/types";
 import {
   getSavedKegiatanList,
   deleteKegiatanRecord,
@@ -26,6 +26,11 @@ import {
   Edit3,
   Trash2,
   ArrowDownWideNarrow,
+  UtensilsCrossed,
+  Car,
+  Mic,
+  Package,
+  Layers,
 } from "lucide-react";
 
 interface DaftarKegiatanTabProps {
@@ -52,6 +57,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
   }, []);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterSpjType, setFilterSpjType] = useState<"ALL" | SpjDocType>("ALL");
   const [filterKategori, setFilterKategori] = useState<"ALL" | "A" | "NA">("ALL");
   const [sortBy, setSortBy] = useState<"NEWEST" | "DATE_DESC" | "OLDEST" | "NAME_AZ">("NEWEST");
   const [isLoadingCloud, setIsLoadingCloud] = useState<boolean>(false);
@@ -159,7 +165,10 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
           ? isItemNonAsn
           : item.kategori === "A";
 
-      return matchesSearch && matchesKategori;
+      const itemSpjType: SpjDocType = item.header?.spjType || "PERDIN";
+      const matchesSpjType = filterSpjType === "ALL" ? true : itemSpjType === filterSpjType;
+
+      return matchesSearch && matchesKategori && matchesSpjType;
     });
 
     if (sortBy === "NEWEST") {
@@ -177,10 +186,15 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
     }
 
     return sortKegiatanByNewest(list);
-  }, [kegiatanList, searchTerm, filterKategori, sortBy]);
+  }, [kegiatanList, searchTerm, filterKategori, filterSpjType, sortBy]);
 
   const countAsn = kegiatanList.filter((k) => k.kategori === "A").length;
   const countNonAsn = kegiatanList.filter((k) => k.kategori === "NA" || (k.kategori as string) === "B").length;
+  const countPerdin = kegiatanList.filter((k) => (k.header?.spjType || "PERDIN") === "PERDIN").length;
+  const countKonsumsi = kegiatanList.filter((k) => k.header?.spjType === "KONSUMSI").length;
+  const countSewa = kegiatanList.filter((k) => k.header?.spjType === "SEWA").length;
+  const countDiklat = kegiatanList.filter((k) => k.header?.spjType === "DIKLAT").length;
+  const countAtk = kegiatanList.filter((k) => k.header?.spjType === "ATK").length;
   const totalAnggaran = kegiatanList.reduce((acc, k) => acc + (k.grandTotal || 0), 0);
   const totalPeserta = kegiatanList.reduce((acc, k) => acc + (k.jumlahPeserta || k.rows?.length || 0), 0);
 
@@ -367,6 +381,93 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
           </div>
         </div>
 
+        {/* Filter Jenis Kegiatan / Modul SPJ */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mr-1 inline-flex items-center gap-1">
+            <Layers className="w-3.5 h-3.5" />
+            <span>Jenis Kegiatan:</span>
+          </span>
+          {(
+            [
+              {
+                id: "ALL",
+                label: "Semua Kegiatan",
+                count: kegiatanList.length,
+                icon: Layers,
+                activeClass:
+                  "bg-slate-900 dark:bg-blue-600 text-white border-slate-900 dark:border-blue-600 shadow-xs",
+              },
+              {
+                id: "PERDIN",
+                label: "Perjalanan Dinas",
+                count: countPerdin,
+                icon: Briefcase,
+                activeClass:
+                  "bg-[#0071e3] text-white border-[#0071e3] shadow-xs",
+              },
+              {
+                id: "KONSUMSI",
+                label: "SPJ Konsumsi",
+                count: countKonsumsi,
+                icon: UtensilsCrossed,
+                activeClass:
+                  "bg-emerald-600 text-white border-emerald-600 shadow-xs",
+              },
+              {
+                id: "SEWA",
+                label: "Sewa Kendaraan",
+                count: countSewa,
+                icon: Car,
+                activeClass:
+                  "bg-violet-600 text-white border-violet-600 shadow-xs",
+              },
+              {
+                id: "DIKLAT",
+                label: "SPJ Narsum",
+                count: countDiklat,
+                icon: Mic,
+                activeClass:
+                  "bg-rose-600 text-white border-rose-600 shadow-xs",
+              },
+              {
+                id: "ATK",
+                label: "ATK & Semkit",
+                count: countAtk,
+                icon: Package,
+                activeClass:
+                  "bg-amber-600 text-white border-amber-600 shadow-xs",
+              },
+            ] as const
+          ).map((item) => {
+            const Icon = item.icon;
+            const isSelected = filterSpjType === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setFilterSpjType(item.id)}
+                className={`btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  isSelected
+                    ? item.activeClass
+                    : "bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{item.label}</span>
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                    isSelected
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                  }`}
+                >
+                  {item.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Filter Category Segmented Control */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
           <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
@@ -471,15 +572,30 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
             </div>
             <div className="space-y-1 max-w-sm mx-auto">
               <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                {searchTerm ? "Kegiatan Tidak Ditemukan" : "Belum Ada Daftar Kegiatan"}
+                {searchTerm || filterSpjType !== "ALL" || filterKategori !== "ALL"
+                  ? "Kegiatan Tidak Ditemukan"
+                  : "Belum Ada Daftar Kegiatan"}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {searchTerm
-                  ? "Tidak ada kegiatan yang sesuai dengan kata kunci pencarian Anda."
-                  : "Mulai buat paket perjalanan dinas baru dengan mengisi form input & kalkulator."}
+                {searchTerm || filterSpjType !== "ALL" || filterKategori !== "ALL"
+                  ? "Tidak ada kegiatan yang sesuai dengan filter atau kata kunci pencarian Anda."
+                  : "Mulai buat paket SPJ baru dengan mengisi form input & kalkulator."}
               </p>
             </div>
-            {!searchTerm && (
+            {searchTerm || filterSpjType !== "ALL" || filterKategori !== "ALL" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilterSpjType("ALL");
+                  setFilterKategori("ALL");
+                }}
+                className="btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 dark:bg-blue-600 hover:bg-black dark:hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer shadow-xs transition-all"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Tampilkan Semua Kegiatan</span>
+              </button>
+            ) : (
               <button
                 type="button"
                 onClick={onCreateNewKegiatan}
