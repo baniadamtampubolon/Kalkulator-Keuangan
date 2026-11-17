@@ -491,11 +491,11 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
           ------------------------------------------------------------- */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden">
         {/* Table Header */}
-        <div className="grid grid-cols-12 gap-3 px-4 py-2.5 bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          <div className="col-span-12 sm:col-span-4 lg:col-span-4">Identitas &amp; Dokumen SPJ</div>
-          <div className="hidden sm:block sm:col-span-8 lg:col-span-5">Uraian Kegiatan &amp; Pelaksana</div>
-          <div className="hidden lg:block lg:col-span-2 text-right">Total Anggaran</div>
-          <div className="hidden lg:block lg:col-span-1 text-right">Aksi</div>
+        <div className="grid grid-cols-12 lg:grid-cols-[270px_minmax(0,1fr)_140px_104px] gap-4 px-4 py-2.5 bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <div className="col-span-12 lg:col-span-1">Identitas &amp; Dokumen SPJ</div>
+          <div className="hidden lg:block">Uraian Kegiatan &amp; Pelaksana</div>
+          <div className="hidden lg:block text-right">Total Anggaran</div>
+          <div className="hidden lg:block text-right">Aksi</div>
         </div>
 
         {/* List Content */}
@@ -605,12 +605,12 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                       : ""
                   }`}
                 >
-                  <div className="grid grid-cols-12 gap-3 items-center">
+                  <div className="grid grid-cols-12 lg:grid-cols-[270px_minmax(0,1fr)_140px_104px] gap-4 items-start">
                     {/* -------------------------------------------------------------
-                        KOLOM 1: IDENTITAS & DOKUMEN SPJ (Clean Icon + Typography)
+                        KOLOM 1: IDENTITAS & DOKUMEN SPJ (Clean 4-Line Layout + Icons)
                         ------------------------------------------------------------- */}
-                    <div className="col-span-12 sm:col-span-4 lg:col-span-4 space-y-1 min-w-0">
-                      {/* Baris 1: ID + Jenis SPJ + Kategori */}
+                    <div className="col-span-12 sm:col-span-5 lg:col-span-1 space-y-1 min-w-0">
+                      {/* Baris 1: KEG-2611-017-A · Perjalanan Dinas · ASN */}
                       <div className="flex items-center gap-1.5 flex-wrap text-xs">
                         <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                           {item.idKegiatan}
@@ -631,66 +631,59 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                           {item.kategori === "A" ? "ASN" : "Non-ASN"}
                         </span>
                         {isCurrent && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0071e3] dark:text-blue-400 ml-1">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0071e3] dark:text-blue-400 ml-0.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3] animate-pulse" />
                             <span>Aktif</span>
                           </span>
                         )}
                       </div>
 
-                      {/* Baris 2: Tanggal & SPD / Memo */}
-                      <div className="flex items-center gap-2 flex-wrap text-[11.5px] text-slate-600 dark:text-slate-300">
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                          <span>{formatDateIndo(item.tanggalSpd)}</span>
-                        </span>
-                        {spdRangeText && (
-                          <span className="inline-flex items-center gap-1 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                            <Hash className="w-3 h-3 text-slate-400 shrink-0" />
-                            <span>{spdRangeText}</span>
-                          </span>
-                        )}
-                        {memoShort && (
-                          <span
-                            className="inline-flex items-center gap-1 font-mono text-[11px] text-slate-500 dark:text-slate-400"
-                            title={`Memorandum: ${item.header?.nomorMemo}`}
-                          >
-                            <FileText className="w-3 h-3 text-slate-400 shrink-0" />
-                            <span>{memoShort}</span>
-                          </span>
-                        )}
+                      {/* Baris 2: Tanggal Pelaksanaan */}
+                      <div className="flex items-center gap-1.5 text-[11.5px] text-slate-600 dark:text-slate-300">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                        <span>{formatDateIndo(item.tanggalSpd)}</span>
                       </div>
 
-                      {/* Baris 3: Nomor ST & Akun MAK */}
-                      {(item.header?.nomorStMaster || item.header?.nomorMak) && (
-                        <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                      {/* Baris 3: Nomor SPD */}
+                      {spdRangeText && (
+                        <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                          <Hash className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                          <span>{spdRangeText}</span>
+                        </div>
+                      )}
+
+                      {/* Baris 4: Nomor ST + Nomor Memo (Tanpa MAK) */}
+                      {(item.header?.nomorStMaster || memoShort) && (
+                        <div className="flex items-center gap-2 flex-wrap font-mono text-[11px] text-slate-500 dark:text-slate-400">
                           {item.header?.nomorStMaster && (
                             <span
-                              className="inline-flex items-center gap-1 truncate max-w-[210px]"
+                              className="inline-flex items-center gap-1"
                               title={`Nomor ST: ${item.header.nomorStMaster}`}
                             >
-                              <FileText className="w-3 h-3 text-slate-400 shrink-0" />
-                              <span className="truncate">{item.header.nomorStMaster}</span>
+                              <FileText className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                              <span>{item.header.nomorStMaster}</span>
                             </span>
                           )}
-                          {item.header?.nomorStMaster && item.header?.nomorMak && (
-                            <span className="text-slate-300 dark:text-slate-700">·</span>
-                          )}
-                          {item.header?.nomorMak && (
-                            <span>MAK {item.header.nomorMak}</span>
+                          {memoShort && (
+                            <span
+                              className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 font-semibold"
+                              title={`Memorandum: ${item.header?.nomorMemo}`}
+                            >
+                              {!item.header?.nomorStMaster && (
+                                <FileText className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                              )}
+                              <span>{memoShort}</span>
+                            </span>
                           )}
                         </div>
                       )}
                     </div>
 
                     {/* -------------------------------------------------------------
-                        KOLOM 2: URAIAN KEGIATAN & PELAKSANA / ITEM
+                        KOLOM 2: URAIAN KEGIATAN (FULL TEXT) & PELAKSANA / ITEM
                         ------------------------------------------------------------- */}
-                    <div className="col-span-12 sm:col-span-8 lg:col-span-5 space-y-1 min-w-0">
-                      <h4
-                        className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2"
-                        title={item.namaKegiatan || "Kegiatan Inspektorat"}
-                      >
+                    <div className="col-span-12 sm:col-span-7 lg:col-span-1 space-y-1.5 min-w-0">
+                      <h4 className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 leading-snug">
                         {item.namaKegiatan || "Perjalanan Dinas Jabatan Inspektorat"}
                       </h4>
 
@@ -699,32 +692,26 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                         {!isPengadaan && (
                           <div className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
                             <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                            <span className="truncate">{lokasiText}</span>
+                            <span>{lokasiText}</span>
                           </div>
                         )}
 
                         {isPengadaan && pengadaanItemsList.length > 0 ? (
                           <div
-                            className="inline-flex items-center gap-1.5 cursor-help"
+                            className="inline-flex items-start gap-1.5 cursor-help"
                             title={pengadaanItemsList
                               .map((it, i) => `${i + 1}. ${it.uraian} (${it.jumlah} ${it.satuan})`)
                               .join("\n")}
                           >
-                            <Package className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                            <span className="truncate">
-                              {pengadaanItemsList
-                                .slice(0, 3)
-                                .map((it) => it.uraian)
-                                .join(", ")}
-                              {pengadaanItemsList.length > 3
-                                ? ` (+${pengadaanItemsList.length - 3} item lainnya)`
-                                : ""}
+                            <Package className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
+                            <span>
+                              {pengadaanItemsList.map((it) => it.uraian).join(", ")}
                             </span>
                           </div>
                         ) : (
                           participants.length > 0 && (
                             <div
-                              className="inline-flex items-center gap-1.5 cursor-help"
+                              className="inline-flex items-start gap-1.5 cursor-help"
                               title={participants
                                 .map(
                                   (p, i) =>
@@ -734,15 +721,9 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                                 )
                                 .join("\n")}
                             >
-                              <Users className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                              <span className="truncate">
-                                {participants
-                                  .slice(0, 3)
-                                  .map((p) => p.name)
-                                  .join(", ")}
-                                {participants.length > 3
-                                  ? ` (+${participants.length - 3} lainnya)`
-                                  : ""}
+                              <Users className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
+                              <span>
+                                {participants.map((p) => p.name).join(", ")}
                               </span>
                             </div>
                           )
@@ -753,7 +734,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                     {/* -------------------------------------------------------------
                         KOLOM 3: TOTAL ANGGARAN & JUMLAH
                         ------------------------------------------------------------- */}
-                    <div className="col-span-6 lg:col-span-2 text-left lg:text-right">
+                    <div className="col-span-6 lg:col-span-1 text-left lg:text-right whitespace-nowrap">
                       <span className="text-sm font-bold text-slate-900 dark:text-slate-100 font-mono block">
                         Rp {(item.grandTotal || 0).toLocaleString("id-ID")}
                       </span>
@@ -770,7 +751,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                     {/* -------------------------------------------------------------
                         KOLOM 4: AKSI (Ringkas)
                         ------------------------------------------------------------- */}
-                    <div className="col-span-6 lg:col-span-1 flex items-center justify-end gap-1.5">
+                    <div className="col-span-6 lg:col-span-1 flex items-center justify-end gap-1.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => onEditKegiatan(item)}
