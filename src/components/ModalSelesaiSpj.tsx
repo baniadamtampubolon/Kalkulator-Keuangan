@@ -27,6 +27,8 @@ interface ModalSelesaiSpjProps {
   onClose: () => void;
   header: HeaderData;
   rows: ParticipantRow[];
+  isCloudSynced?: boolean;
+  lastCloudSyncTime?: string | null;
   onNavigateToTab: (tab: ActiveTab) => void;
   onPrintAll: () => void;
   onCreateNewKegiatan: () => void;
@@ -37,6 +39,8 @@ export const ModalSelesaiSpj: React.FC<ModalSelesaiSpjProps> = ({
   onClose,
   header,
   rows,
+  isCloudSynced = false,
+  lastCloudSyncTime = null,
   onNavigateToTab,
   onPrintAll,
   onCreateNewKegiatan,
@@ -45,6 +49,16 @@ export const ModalSelesaiSpj: React.FC<ModalSelesaiSpjProps> = ({
 
   const isPengadaan = Boolean(header.spjType && header.spjType !== "PERDIN");
   const spjMeta = getSpjTypeMeta(header.spjType);
+  const targetRekapSheetName =
+    header.spjType === "KONSUMSI"
+      ? "REKAP_SPJ_KONSUMSI"
+      : header.spjType === "SEWA"
+      ? "REKAP_SPJ_SEWA_KENDARAAN"
+      : header.spjType === "DIKLAT"
+      ? "REKAP_SPJ_NARSUM"
+      : header.spjType === "ATK"
+      ? "REKAP_SPJ_ATK_SEMKIT"
+      : "REKAP_PERDIN_48KOLOM";
   const pengadaanCalc = calculatePengadaanTotals(header.pengadaanItems || [], header.pengadaanTax);
 
   const validRows = rows.filter(
@@ -106,15 +120,29 @@ export const ModalSelesaiSpj: React.FC<ModalSelesaiSpjProps> = ({
             <Sparkles className="w-8 h-8" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            SPJ Selesai & Berhasil Disimpan!
+            {isCloudSynced
+              ? `SPJ ${spjMeta.shortLabel} Tersinkron ke Database Cloud!`
+              : `SPJ ${spjMeta.shortLabel} Tersimpan di Lokal`}
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto">
-            Semua data perjalanan dinas telah tersimpan ke <span className="font-semibold text-slate-900 dark:text-slate-100">Daftar Kegiatan</span>, <span className="font-semibold text-slate-900 dark:text-slate-100">Rekap Perdin</span>, dan tersinkronisasi ke <span className="font-semibold text-slate-900 dark:text-slate-100">Google Spreadsheet</span>.
+            {isCloudSynced ? (
+              <>
+                Semua data <span className="font-semibold text-slate-900 dark:text-slate-100">{spjMeta.label}</span> telah tersimpan ke{" "}
+                <span className="font-semibold text-slate-900 dark:text-slate-100">Daftar Kegiatan</span>,{" "}
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{targetRekapSheetName}</span>, dan{" "}
+                <span className="font-semibold text-slate-900 dark:text-slate-100">MASTER_MEMO</span> di Google Spreadsheet
+                {lastCloudSyncTime ? ` (pukul ${lastCloudSyncTime})` : ""}.
+              </>
+            ) : (
+              <>
+                Data <span className="font-semibold text-slate-900 dark:text-slate-100">{spjMeta.label}</span> telah tersimpan di penyimpanan lokal browser, namun belum berhasil dikirim ke Google Spreadsheet. Anda dapat menekan tombol <span className="font-semibold">Kirim Ulang ke Cloud</span> pada halaman form.
+              </>
+            )}
           </p>
         </div>
 
         {/* SPJ Summary Card (Stage Summary) */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-3">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-slate-800/80 dark:to-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-200/60 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-600 text-white font-mono shadow-xs">
@@ -124,9 +152,15 @@ export const ModalSelesaiSpj: React.FC<ModalSelesaiSpjProps> = ({
                 Kategori {header.kategoriSpj || "A"}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-100/80 px-2.5 py-0.5 rounded-full">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Status: Tersimpan & Valid</span>
+            <div
+              className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+                isCloudSynced
+                  ? "text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/70"
+                  : "text-amber-800 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/70"
+              }`}
+            >
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isCloudSynced ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`} />
+              <span>{isCloudSynced ? "Status: Tersinkron Cloud & Valid" : "Status: Tersimpan Lokal"}</span>
             </div>
           </div>
 

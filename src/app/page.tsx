@@ -207,10 +207,12 @@ export default function Home() {
     berangkatDari: "Jakarta",
   });
 
-  // Save & Update State Tracking (Proses -> Rekap Perdin)
+  // Save & Update State Tracking (Proses -> Rekap Perdin / Cloud)
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
   const [savedBatchId, setSavedBatchId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isCloudSynced, setIsCloudSynced] = useState<boolean>(false);
+  const [lastCloudSyncTime, setLastCloudSyncTime] = useState<string | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<{
     type: "success" | "error" | "info";
     text: string;
@@ -525,6 +527,8 @@ export default function Home() {
     setEditingOriginalMemo(kegiatan.header?.nomorMemo || null);
     setSavedBatchId(kegiatan.idKegiatan);
     setSavedSnapshot(JSON.stringify({ header: normalizedHeader, rows: kegiatan.rows }));
+    setIsCloudSynced(true);
+    setLastCloudSyncTime(null);
     setActiveTab("input");
   };
 
@@ -703,6 +707,8 @@ export default function Home() {
     setRows([calculatedInitialRow]);
     setSavedBatchId(null);
     setSavedSnapshot(null);
+    setIsCloudSynced(false);
+    setLastCloudSyncTime(null);
     setActiveTab("input");
   };
 
@@ -883,16 +889,26 @@ export default function Home() {
         setMemoList((prev) => mergeAndSortMemoList(prev));
 
         if (sheetRes.success) {
+          setIsCloudSynced(true);
+          setLastCloudSyncTime(
+            new Date().toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            })
+          );
           setSaveFeedback({
             type: "success",
             text: isUpdate
-              ? `Data ${spjMeta.label} berhasil diperbarui di ${targetRekapSheetName} & MASTER_MEMO!`
-              : `Data ${spjMeta.label} berhasil disimpan ke ${targetRekapSheetName} & MASTER_MEMO!`,
+              ? `Data ${spjMeta.label} berhasil diperbarui di ${targetRekapSheetName} & MASTER_MEMO (Database Cloud)!`
+              : `Data ${spjMeta.label} berhasil disimpan ke ${targetRekapSheetName} & MASTER_MEMO (Database Cloud)!`,
           });
         } else {
+          setIsCloudSynced(false);
+          setLastCloudSyncTime(null);
           setSaveFeedback({
             type: "info",
-            text: `Data ${spjMeta.label} tersimpan di Daftar Kegiatan lokal. (${sheetRes.message})`,
+            text: `Data ${spjMeta.label} tersimpan di Daftar Kegiatan lokal, tetapi belum tersinkron ke Cloud. (${sheetRes.message})`,
           });
         }
 
@@ -1030,6 +1046,14 @@ export default function Home() {
       setMemoList((prev) => mergeAndSortMemoList(prev));
 
       if (sheetRes.success) {
+        setIsCloudSynced(true);
+        setLastCloudSyncTime(
+          new Date().toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })
+        );
         setSaveFeedback({
           type: "success",
           text: isUpdate
@@ -1037,6 +1061,8 @@ export default function Home() {
             : "Data SPJ berhasil disimpan ke Rekap Perdin & tersinkron ke Google Spreadsheet!",
         });
       } else {
+        setIsCloudSynced(false);
+        setLastCloudSyncTime(null);
         setSaveFeedback({
           type: "info",
           text: `Data tersimpan di Rekap Perdin & Daftar Kegiatan lokal. (${sheetRes.message})`,
@@ -1242,6 +1268,8 @@ export default function Home() {
                 isSaved={isSaved}
                 hasChanges={hasChanges}
                 isSaving={isSaving}
+                isCloudSynced={isCloudSynced}
+                lastCloudSyncTime={lastCloudSyncTime}
                 saveFeedback={saveFeedback}
                 onSaveOrUpdate={handleSaveOrUpdateData}
                 onClearFeedback={() => setSaveFeedback(null)}
@@ -1439,6 +1467,8 @@ export default function Home() {
         onClose={() => setIsCompletionModalOpen(false)}
         header={header}
         rows={rows}
+        isCloudSynced={isCloudSynced}
+        lastCloudSyncTime={lastCloudSyncTime}
         onNavigateToTab={(tab) => setActiveTab(tab)}
         onPrintAll={handlePrintAllFromModal}
         onCreateNewKegiatan={() => {

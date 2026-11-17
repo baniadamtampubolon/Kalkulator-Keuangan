@@ -51,6 +51,8 @@ import {
   AlertCircle,
   RotateCcw,
   Save,
+  CloudUpload,
+  RefreshCw,
   Receipt,
   FileSpreadsheet,
   Info,
@@ -69,6 +71,8 @@ interface PengadaanSpjFormProps {
   isSaved: boolean;
   hasChanges: boolean;
   isSaving: boolean;
+  isCloudSynced?: boolean;
+  lastCloudSyncTime?: string | null;
   saveFeedback: { type: "success" | "error" | "info"; text: string } | null;
   onSaveOrUpdate: () => void;
   onClearFeedback: () => void;
@@ -88,6 +92,8 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
   isSaved,
   hasChanges,
   isSaving,
+  isCloudSynced = false,
+  lastCloudSyncTime = null,
   saveFeedback,
   onSaveOrUpdate,
   onClearFeedback,
@@ -95,6 +101,14 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
 }) => {
   const spjType = header.spjType || "KONSUMSI";
   const spjMeta = getSpjTypeMeta(spjType);
+  const targetRekapSheetName =
+    spjType === "KONSUMSI"
+      ? "REKAP_SPJ_KONSUMSI"
+      : spjType === "SEWA"
+      ? "REKAP_SPJ_SEWA_KENDARAAN"
+      : spjType === "DIKLAT"
+      ? "REKAP_SPJ_NARSUM"
+      : "REKAP_SPJ_ATK_SEMKIT";
   const scenarioPresets = useMemo(() => getPengadaanScenarioPresets(spjType), [spjType]);
 
   const [customItems, setCustomItems] = useState<ItemDetailItem[]>([]);
@@ -763,6 +777,54 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
               <Plus className="w-3.5 h-3.5" />
               <span>Tambah Baris</span>
             </button>
+
+            <div className="h-4 w-[1px] bg-slate-200/90 dark:bg-slate-700 mx-0.5 hidden sm:block" />
+
+            {!isSaved ? (
+              <button
+                type="button"
+                onClick={onSaveOrUpdate}
+                disabled={isSaving}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer shadow-2xs transition-all disabled:opacity-50"
+                title={`Simpan data ${spjMeta.shortLabel} ke ${targetRekapSheetName} (Database Cloud)`}
+              >
+                <CloudUpload className={`w-3.5 h-3.5 ${isSaving ? "animate-bounce" : ""}`} />
+                <span>{isSaving ? "Menyimpan..." : "Simpan Data"}</span>
+              </button>
+            ) : hasChanges ? (
+              <button
+                type="button"
+                onClick={onSaveOrUpdate}
+                disabled={isSaving}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold cursor-pointer shadow-md transition-all animate-pulse disabled:opacity-50"
+                title={`Ada perubahan data! Klik untuk update ke ${targetRekapSheetName}`}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSaving ? "animate-spin" : ""}`} />
+                <span>{isSaving ? "Memperbarui..." : "Update Data"}</span>
+              </button>
+            ) : !isCloudSynced ? (
+              <button
+                type="button"
+                onClick={onSaveOrUpdate}
+                disabled={isSaving}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-semibold cursor-pointer shadow-2xs transition-all"
+                title="Data baru tersimpan di lokal, klik untuk kirim ulang ke Database Cloud"
+              >
+                <CloudUpload className={`w-3.5 h-3.5 ${isSaving ? "animate-bounce" : ""}`} />
+                <span>{isSaving ? "Menyinkronkan..." : "Kirim ke Cloud"}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onSaveOrUpdate}
+                disabled={isSaving}
+                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-700 text-xs font-semibold cursor-pointer shadow-2xs transition-all"
+                title={`Data telah tersinkron di ${targetRekapSheetName} (Database Cloud)`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Tersinkron Cloud</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1289,25 +1351,129 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
         </div>
       )}
 
-      <div className="glass-floating rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 border border-slate-200/90 dark:border-slate-800">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={onSaveOrUpdate}
-            disabled={isSaving}
-            className="btn-tactile inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-60 text-white text-xs font-semibold shadow-xs cursor-pointer transition-all"
+      {/* Save & Update Status Card (Unambiguous Cloud Sync Status) */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              !isSaved
+                ? "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                : hasChanges
+                ? "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/70"
+                : !isCloudSynced
+                ? "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/70"
+                : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/70"
+            }`}
           >
-            <Save className="w-4 h-4" />
-            <span>
-              {isSaving
-                ? "Menyimpan..."
-                : editingOriginalId || isSaved
-                ? hasChanges
-                  ? "Perbarui Berkas SPJ"
-                  : "Tersimpan (Klik untuk Simpan Ulang)"
-                : `Simpan ${spjMeta.label}`}
-            </span>
-          </button>
+            {!isSaved ? (
+              <CloudUpload className="w-5 h-5" />
+            ) : hasChanges || !isCloudSynced ? (
+              <AlertCircle className="w-5 h-5" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5" />
+            )}
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                {!isSaved
+                  ? `Data ${spjMeta.shortLabel} Belum Disimpan ke Database Cloud`
+                  : hasChanges
+                  ? "Terdapat Perubahan Data yang Belum Diupdate ke Cloud"
+                  : !isCloudSynced
+                  ? "Data Tersimpan di Lokal, Belum Tersinkron ke Cloud"
+                  : `Data Terupdate di Database Cloud (${targetRekapSheetName})`}
+              </span>
+              <span
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  !isSaved
+                    ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                    : hasChanges
+                    ? "bg-amber-100 dark:bg-amber-900/70 text-amber-800 dark:text-amber-200 animate-pulse"
+                    : !isCloudSynced
+                    ? "bg-amber-100 dark:bg-amber-900/70 text-amber-800 dark:text-amber-200"
+                    : "bg-emerald-100 dark:bg-emerald-900/70 text-emerald-800 dark:text-emerald-200"
+                }`}
+              >
+                {!isSaved
+                  ? "Draft"
+                  : hasChanges
+                  ? "Perlu Update"
+                  : !isCloudSynced
+                  ? "Lokal Saja"
+                  : "Tersinkron Cloud"}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              {!isSaved
+                ? `Klik tombol 'Simpan ke Cloud' agar data ${spjMeta.label} masuk ke sheet ${targetRekapSheetName} & MASTER_MEMO.`
+                : hasChanges
+                ? `Perubahan pada rincian/identitas telah dideteksi. Klik 'Update Data Cloud' untuk memperbarui ${targetRekapSheetName}.`
+                : !isCloudSynced
+                ? "Koneksi ke Google Sheets belum selesai atau URL GAS belum terpasang. Klik 'Kirim Ulang ke Cloud'."
+                : `Seluruh rincian ${spjMeta.label}, nilai pajak, dan nomor memorandum telah aman tersimpan di Google Sheets${
+                    lastCloudSyncTime ? ` (pukul ${lastCloudSyncTime})` : ""
+                  }.`}
+            </p>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <div className="flex items-center justify-end gap-2 shrink-0">
+          {!isSaved ? (
+            <button
+              type="button"
+              onClick={onSaveOrUpdate}
+              disabled={isSaving}
+              className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer shadow-sm disabled:opacity-50 transition-all"
+            >
+              <CloudUpload className={`w-4 h-4 ${isSaving ? "animate-bounce" : ""}`} />
+              <span>{isSaving ? "Menyimpan ke Cloud..." : "Simpan ke Cloud"}</span>
+            </button>
+          ) : hasChanges ? (
+            <button
+              type="button"
+              onClick={onSaveOrUpdate}
+              disabled={isSaving}
+              className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold cursor-pointer shadow-md disabled:opacity-50 transition-all animate-pulse"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`} />
+              <span>{isSaving ? "Memperbarui Cloud..." : "Update Data Cloud"}</span>
+            </button>
+          ) : !isCloudSynced ? (
+            <button
+              type="button"
+              onClick={onSaveOrUpdate}
+              disabled={isSaving}
+              className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold cursor-pointer shadow-sm disabled:opacity-50 transition-all"
+            >
+              <CloudUpload className={`w-4 h-4 ${isSaving ? "animate-bounce" : ""}`} />
+              <span>{isSaving ? "Mengirim ke Cloud..." : "Kirim Ulang ke Cloud"}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onSaveOrUpdate}
+              disabled={isSaving}
+              className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-700 text-xs font-semibold cursor-pointer shadow-2xs transition-all"
+              title="Klik jika ingin melakukan sinkronisasi ulang ke Google Sheets"
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>{isSaving ? "Menyinkronkan..." : "Tersimpan di Cloud"}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Document Preview Shortcuts */}
+      <div className="glass-floating rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 border border-slate-200/90 dark:border-slate-800">
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <Save className="w-4 h-4 text-slate-400" />
+          <span>
+            {editingOriginalId
+              ? `ID Berkas Aktif: ${editingOriginalId}`
+              : "ID Berkas dibuat otomatis saat Simpan ke Cloud"}
+          </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
