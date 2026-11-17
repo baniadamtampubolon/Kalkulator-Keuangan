@@ -20,7 +20,6 @@ import {
   X,
   RotateCw,
   Users,
-  User,
   Coins,
   Briefcase,
   Edit3,
@@ -31,6 +30,8 @@ import {
   Mic,
   Package,
   Layers,
+  FileText,
+  Hash,
 } from "lucide-react";
 
 interface DaftarKegiatanTabProps {
@@ -153,8 +154,21 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
         (item.header?.nomorStMaster || "").toLowerCase().includes(term) ||
         (item.header?.nomorMemo || "").toLowerCase().includes(term) ||
         (item.header?.nomorMak || "").toLowerCase().includes(term) ||
+        (item.header?.pengadaanItems || []).some((it) =>
+          (it.uraian || "").toLowerCase().includes(term)
+        ) ||
         (item.rows || []).some((r) =>
-          (r.nama || r.namaExternal || r.kodeNama || r.nip || "").toLowerCase().includes(term)
+          (
+            r.nama ||
+            r.namaExternal ||
+            r.kodeNama ||
+            r.nip ||
+            r.nomorSt ||
+            r.nomorSpd ||
+            ""
+          )
+            .toLowerCase()
+            .includes(term)
         );
 
       const isItemNonAsn = item.kategori === "NA" || (item.kategori as string) === "B";
@@ -232,147 +246,149 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* -------------------------------------------------------------
-          1. DASHBOARD SUMMARY KPI CARDS (Apple Minimal Style)
+          1. COMPACT SUMMARY STRIP (Hemat Ruang Vertikal, Tanpa Bloating)
           ------------------------------------------------------------- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Metric 1: Total Kegiatan */}
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800">
+        <div className="px-4 py-2.5 flex items-center justify-between gap-2">
+          <div>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
               Total Berkas SPJ
             </span>
-            <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600">
-              <Briefcase className="w-4 h-4" />
+            <div className="flex items-baseline gap-2">
+              <span className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono">
+                {kegiatanList.length}
+              </span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                ({countAsn} ASN · {countNonAsn} Non-ASN)
+              </span>
             </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
-              {kegiatanList.length}
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">Paket Terdaftar</span>
-          </div>
-          <div className="flex items-center gap-2 pt-0.5 text-[10.5px] text-slate-500 dark:text-slate-400">
-            <span className="inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-              {countAsn} ASN [A]
-            </span>
-            <span>•</span>
-            <span className="inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              {countNonAsn} Non-ASN
-            </span>
-          </div>
+          <Briefcase className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
         </div>
 
-        {/* Metric 2: Total Peserta */}
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Personil Berangkat
+        <div className="px-4 py-2.5 flex items-center justify-between gap-2">
+          <div>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+              Personil / Pelaksana
             </span>
-            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600">
-              <Users className="w-4 h-4" />
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono">
+                {totalPeserta}
+              </span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">orang tercatat</span>
             </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
-              {totalPeserta}
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">Orang Pelaksana</span>
-          </div>
-          <p className="text-[10.5px] text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-            Dari seluruh rekapitulasi surat tugas
-          </p>
+          <Users className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
         </div>
 
-        {/* Metric 3: Total Anggaran */}
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Total Realisasi Anggaran
+        <div className="px-4 py-2.5 flex items-center justify-between gap-2">
+          <div>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+              Total Realisasi
             </span>
-            <div className="p-1.5 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600">
-              <Coins className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 font-mono">
+            <span className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono block">
               Rp {totalAnggaran.toLocaleString("id-ID")}
             </span>
           </div>
-          <p className="text-[10.5px] text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-            Akun MAK 524111 Inspektorat
-          </p>
+          <Coins className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
         </div>
 
-        {/* Metric 4: Sedang Dibuka / Status */}
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              SPJ Sedang Dibuka
+        <div className="px-4 py-2.5 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+              Sedang Dibuka
             </span>
-            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-sm sm:text-base font-bold text-blue-600 font-mono truncate">
+            <span className="text-sm font-bold text-[#0071e3] dark:text-blue-400 font-mono truncate block">
               {currentLoadedId || "Draft Baru"}
             </span>
           </div>
-          <p className="text-[10.5px] text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-            {currentLoadedId ? "Sedang aktif di form input & kalkulator" : "Belum ada paket yang dimuat"}
-          </p>
+          <CheckCircle2 className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
         </div>
       </div>
 
       {/* -------------------------------------------------------------
-          2. SEARCH, FILTER & ACTION BAR
+          2. UNIFIED SEARCH, FILTER & TAB BAR (Clean Flat Design)
           ------------------------------------------------------------- */}
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs p-3.5 sm:p-4 space-y-3">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          {/* Search Box */}
-          <div className="relative flex-1 max-w-md">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden">
+        {/* Top Row: Search + Compact Controls + Actions */}
+        <div className="p-3 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 border-b border-slate-100 dark:border-slate-800">
+          <div className="relative flex-1 min-w-0">
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Cari ID, nama kegiatan, kota, nomor ST, nama pegawai..."
-              className="input-human w-full pl-9 pr-8 py-2 text-xs font-normal"
+              placeholder="Cari ID KEG, uraian kegiatan, nomor ST, Memo, MAK, lokasi, nama pegawai / item..."
+              className="input-clean w-full h-9 pl-9 pr-8 text-xs font-normal"
             />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => setSearchTerm("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                title="Hapus pencarian"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Right Action Buttons */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Sync Cloud Button */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Compact Kategori Dropdown */}
+            <select
+              value={filterKategori}
+              onChange={(e) => setFilterKategori(e.target.value as "ALL" | "A" | "NA")}
+              className="input-clean h-9 px-2.5 text-xs font-semibold cursor-pointer"
+              title="Filter kategori ASN / Non-ASN"
+            >
+              <option value="ALL">Semua Kategori ({kegiatanList.length})</option>
+              <option value="A">ASN [A] ({countAsn})</option>
+              <option value="NA">Non-ASN [NA] ({countNonAsn})</option>
+            </select>
+
+            {/* Compact Sort Selector */}
+            <div className="inline-flex items-center gap-1.5">
+              <ArrowDownWideNarrow className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 hidden sm:inline" />
+              <select
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(e.target.value as "NEWEST" | "DATE_DESC" | "OLDEST" | "NAME_AZ")
+                }
+                className="input-clean h-9 px-2.5 text-xs font-semibold cursor-pointer"
+                title="Urutkan daftar kegiatan"
+              >
+                <option value="NEWEST">Terbaru (Default)</option>
+                <option value="DATE_DESC">Tgl Pelaksanaan Terbaru</option>
+                <option value="OLDEST">Terlama Dahulu</option>
+                <option value="NAME_AZ">Nama Kegiatan (A–Z)</option>
+              </select>
+            </div>
+
+            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-700 hidden sm:block" />
+
+            {/* Sync Cloud */}
             <button
               type="button"
               onClick={syncWithCloud}
               disabled={isLoadingCloud}
-              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-semibold cursor-pointer shadow-2xs transition-all disabled:opacity-50"
+              className="btn-tactile inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold cursor-pointer transition-all disabled:opacity-50"
               title="Tarik & perbarui data kegiatan dari Google Spreadsheet"
             >
-              <RotateCw className={`w-3.5 h-3.5 text-blue-600 ${isLoadingCloud ? "animate-spin" : ""}`} />
-              <span>{isLoadingCloud ? "Menyinkronkan..." : "Sinkron Cloud"}</span>
+              <RotateCw
+                className={`w-3.5 h-3.5 text-[#0071e3] dark:text-blue-400 ${
+                  isLoadingCloud ? "animate-spin" : ""
+                }`}
+              />
+              <span>{isLoadingCloud ? "Menyinkronkan..." : "Sinkron"}</span>
             </button>
 
-            {/* Create New SPJ Button */}
+            {/* Create New SPJ */}
             <button
               type="button"
               onClick={onCreateNewKegiatan}
-              className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-all"
+              className="btn-tactile inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer transition-all"
               title="Mulai membuat berkas SPJ baru"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -381,162 +397,80 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
           </div>
         </div>
 
-        {/* Filter Jenis Kegiatan / Modul SPJ */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mr-1 inline-flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5" />
-            <span>Jenis Kegiatan:</span>
-          </span>
+        {/* Bottom Row: Flat Tabs Filter Jenis Kegiatan (Tanpa Oval Pill Bloat) */}
+        <div className="px-3 flex items-center gap-1 overflow-x-auto scrollbar-none bg-slate-50/70 dark:bg-slate-800/40">
           {(
             [
               {
                 id: "ALL",
-                label: "Semua Kegiatan",
+                label: "Semua Jenis",
                 count: kegiatanList.length,
                 icon: Layers,
-                activeClass:
-                  "bg-slate-900 dark:bg-blue-600 text-white border-slate-900 dark:border-blue-600 shadow-xs",
+                accent: "text-slate-900 dark:text-white border-slate-900 dark:border-blue-400",
               },
               {
                 id: "PERDIN",
                 label: "Perjalanan Dinas",
                 count: countPerdin,
                 icon: Briefcase,
-                activeClass:
-                  "bg-[#0071e3] text-white border-[#0071e3] shadow-xs",
+                accent: "text-[#0071e3] dark:text-blue-400 border-[#0071e3] dark:border-blue-400",
               },
               {
                 id: "KONSUMSI",
                 label: "SPJ Konsumsi",
                 count: countKonsumsi,
                 icon: UtensilsCrossed,
-                activeClass:
-                  "bg-emerald-600 text-white border-emerald-600 shadow-xs",
+                accent: "text-emerald-600 dark:text-emerald-400 border-emerald-600 dark:border-emerald-400",
               },
               {
                 id: "SEWA",
                 label: "Sewa Kendaraan",
                 count: countSewa,
                 icon: Car,
-                activeClass:
-                  "bg-violet-600 text-white border-violet-600 shadow-xs",
+                accent: "text-violet-600 dark:text-violet-400 border-violet-600 dark:border-violet-400",
               },
               {
                 id: "DIKLAT",
                 label: "SPJ Narsum",
                 count: countDiklat,
                 icon: Mic,
-                activeClass:
-                  "bg-rose-600 text-white border-rose-600 shadow-xs",
+                accent: "text-rose-600 dark:text-rose-400 border-rose-600 dark:border-rose-400",
               },
               {
                 id: "ATK",
                 label: "ATK & Semkit",
                 count: countAtk,
                 icon: Package,
-                activeClass:
-                  "bg-amber-600 text-white border-amber-600 shadow-xs",
+                accent: "text-amber-600 dark:text-amber-400 border-amber-600 dark:border-amber-400",
               },
             ] as const
-          ).map((item) => {
-            const Icon = item.icon;
-            const isSelected = filterSpjType === item.id;
+          ).map((tab) => {
+            const Icon = tab.icon;
+            const isSelected = filterSpjType === tab.id;
             return (
               <button
-                key={item.id}
+                key={tab.id}
                 type="button"
-                onClick={() => setFilterSpjType(item.id)}
-                className={`btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                onClick={() => setFilterSpjType(tab.id)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2.5 text-xs whitespace-nowrap border-b-2 transition-all cursor-pointer ${
                   isSelected
-                    ? item.activeClass
-                    : "bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
+                    ? `${tab.accent} font-bold`
+                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium"
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{item.label}</span>
-                <span
-                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
-                    isSelected
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
-                  }`}
-                >
-                  {item.count}
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span>{tab.label}</span>
+                <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+                  ({tab.count})
                 </span>
               </button>
             );
           })}
         </div>
 
-        {/* Filter Category Segmented Control */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
-            <button
-              type="button"
-              onClick={() => setFilterKategori("ALL")}
-              className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
-                filterKategori === "ALL"
-                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              Semua ({kegiatanList.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterKategori("A")}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
-                filterKategori === "A"
-                  ? "bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-200 shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              <span>ASN [A] ({countAsn})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterKategori("NA")}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
-                filterKategori === "NA"
-                  ? "bg-white dark:bg-slate-900 text-amber-900 dark:text-amber-200 shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              <span>Non-ASN [NA] ({countNonAsn})</span>
-            </button>
-          </div>
-
-          {/* Right: Sort Selector & Format info */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium inline-flex items-center gap-1">
-                <ArrowDownWideNarrow className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                <span>Urutkan:</span>
-              </span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "NEWEST" | "DATE_DESC" | "OLDEST" | "NAME_AZ")}
-                className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-slate-300 rounded-xl px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer shadow-2xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                title="Pilih urutan daftar kegiatan"
-              >
-                <option value="NEWEST">⚡ Terbaru (Default)</option>
-                <option value="DATE_DESC">📅 Tanggal Pelaksanaan Terbaru</option>
-                <option value="OLDEST">⏳ Terlama Dahulu</option>
-                <option value="NAME_AZ">🔤 Nama Kegiatan (A - Z)</option>
-              </select>
-            </div>
-
-            <div className="hidden md:block text-[11px] text-slate-400 dark:text-slate-500 font-mono border-l border-slate-200 dark:border-slate-800 pl-3">
-              Format: <span className="text-slate-700 dark:text-slate-300 font-bold">KEG-YYMM-001-A</span>
-            </div>
-          </div>
-        </div>
-
         {/* Toast Notification */}
         {notification && (
-          <div className="flex items-center justify-between gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70 text-emerald-900 dark:text-emerald-200 text-xs animate-fade-in">
+          <div className="mx-3 my-2.5 flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70 text-emerald-900 dark:text-emerald-200 text-xs animate-fade-in">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span className="font-medium">{notification.message}</span>
@@ -544,7 +478,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
             <button
               type="button"
               onClick={() => setNotification(null)}
-              className="p-1 rounded hover:bg-emerald-100 text-slate-500 dark:text-slate-400 cursor-pointer"
+              className="p-1 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-slate-500 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -553,22 +487,22 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
       </div>
 
       {/* -------------------------------------------------------------
-          3. MAIN INFORMATION-RICH ACTIVITIES LIST / TABLE
+          3. CLEAN TYPOGRAPHY & ICON-DRIVEN ACTIVITIES LIST
           ------------------------------------------------------------- */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden">
-        {/* Table Header (Clean, Light Apple Design) */}
-        <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          <div className="col-span-12 sm:col-span-4 lg:col-span-3">Identitas &amp; Dokumen SPJ</div>
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden">
+        {/* Table Header */}
+        <div className="grid grid-cols-12 gap-3 px-4 py-2.5 bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <div className="col-span-12 sm:col-span-4 lg:col-span-4">Identitas &amp; Dokumen SPJ</div>
           <div className="hidden sm:block sm:col-span-8 lg:col-span-5">Uraian Kegiatan &amp; Pelaksana</div>
           <div className="hidden lg:block lg:col-span-2 text-right">Total Anggaran</div>
-          <div className="hidden lg:block lg:col-span-2 text-center">Aksi</div>
+          <div className="hidden lg:block lg:col-span-1 text-right">Aksi</div>
         </div>
 
         {/* List Content */}
         {filteredList.length === 0 ? (
-          <div className="py-14 text-center text-slate-400 dark:text-slate-500 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800">
-              <FolderOpen className="w-6 h-6 stroke-1" />
+          <div className="py-12 text-center text-slate-400 dark:text-slate-500 space-y-3">
+            <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400 border border-slate-200 dark:border-slate-700">
+              <FolderOpen className="w-5 h-5 stroke-1" />
             </div>
             <div className="space-y-1 max-w-sm mx-auto">
               <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">
@@ -590,7 +524,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                   setFilterSpjType("ALL");
                   setFilterKategori("ALL");
                 }}
-                className="btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 dark:bg-blue-600 hover:bg-black dark:hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer shadow-xs transition-all"
+                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 dark:bg-blue-600 hover:bg-black dark:hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer transition-all"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Tampilkan Semua Kegiatan</span>
@@ -599,7 +533,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
               <button
                 type="button"
                 onClick={onCreateNewKegiatan}
-                className="btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer shadow-xs transition-all"
+                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer transition-all"
               >
                 <Plus className="w-4 h-4" />
                 <span>Buat SPJ Baru Sekarang</span>
@@ -610,6 +544,22 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {filteredList.map((item) => {
               const isCurrent = currentLoadedId === item.idKegiatan;
+              const itemSpjType: SpjDocType = item.header?.spjType || "PERDIN";
+              const isPengadaan = itemSpjType !== "PERDIN";
+              const meta = getSpjTypeMeta(itemSpjType);
+
+              const spjHighlight =
+                itemSpjType === "KONSUMSI"
+                  ? { Icon: UtensilsCrossed, color: "text-emerald-600 dark:text-emerald-400" }
+                  : itemSpjType === "SEWA"
+                  ? { Icon: Car, color: "text-violet-600 dark:text-violet-400" }
+                  : itemSpjType === "DIKLAT"
+                  ? { Icon: Mic, color: "text-rose-600 dark:text-rose-400" }
+                  : itemSpjType === "ATK"
+                  ? { Icon: Package, color: "text-amber-600 dark:text-amber-400" }
+                  : { Icon: Briefcase, color: "text-[#0071e3] dark:text-blue-400" };
+              const SpjIcon = spjHighlight.Icon;
+
               const participants = (item.rows || [])
                 .map((r, idx) => {
                   const rawName = (r.nama || r.namaExternal || r.kodeNama || "").trim();
@@ -626,12 +576,11 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                 .filter((p) => p.name && p.name !== "—" && p.name !== "-");
 
               const lokasiText =
-                (item.kotaTujuan && item.provinsiTujuan)
+                item.kotaTujuan && item.provinsiTujuan
                   ? `${item.kotaTujuan}, ${item.provinsiTujuan}`
                   : item.kotaTujuan || item.provinsiTujuan || "Indonesia";
 
-              // Rentang Nomor SPD
-              const spdNumbers = participants.map((p) => p.nomorSpd).filter(Boolean);
+              const spdNumbers = participants.map((p) => p.nomorSpd).filter((n) => n && n !== "-");
               const spdRangeText =
                 spdNumbers.length > 1
                   ? `SPD ${spdNumbers[0]} s.d ${spdNumbers[spdNumbers.length - 1]}`
@@ -639,192 +588,204 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                   ? `SPD ${spdNumbers[0]}`
                   : null;
 
+              const memoShort = item.header?.nomorMemo
+                ? item.header.nomorMemo.split("/")[0].trim()
+                : null;
+
+              const pengadaanItemsList = (item.header?.pengadaanItems || []).filter(
+                (it) => it.uraian && it.uraian.trim() !== ""
+              );
+
               return (
                 <div
                   key={item.idKegiatan}
-                  className={`p-4 transition-all hover:bg-slate-50/70 ${
-                    isCurrent ? "bg-blue-50/40 border-l-4 border-l-blue-600" : ""
+                  className={`px-4 py-3 transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/50 ${
+                    isCurrent
+                      ? "bg-blue-50/40 dark:bg-blue-950/20 border-l-3 border-l-[#0071e3]"
+                      : ""
                   }`}
                 >
-                  <div className="grid grid-cols-12 gap-3.5 items-center">
+                  <div className="grid grid-cols-12 gap-3 items-center">
                     {/* -------------------------------------------------------------
-                        KOLOM 1: IDENTITAS & DOKUMEN SPJ
+                        KOLOM 1: IDENTITAS & DOKUMEN SPJ (Clean Icon + Typography)
                         ------------------------------------------------------------- */}
-                    <div className="col-span-12 sm:col-span-4 lg:col-span-3 space-y-1.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {/* ID Kegiatan Mono Badge */}
-                        <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300/80 dark:border-slate-700 text-slate-900 dark:text-slate-100 shadow-2xs">
+                    <div className="col-span-12 sm:col-span-4 lg:col-span-4 space-y-1 min-w-0">
+                      {/* Baris 1: ID + Jenis SPJ + Kategori */}
+                      <div className="flex items-center gap-1.5 flex-wrap text-xs">
+                        <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                           {item.idKegiatan}
                         </span>
-
-                        {/* Jenis SPJ Badge */}
-                        {(() => {
-                          const meta = getSpjTypeMeta(item.header?.spjType);
-                          return (
-                            <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${meta.badgeColor}`}
-                            >
-                              {meta.shortLabel}
-                            </span>
-                          );
-                        })()}
-
-                        {/* Kategori Badge */}
+                        <span className="text-slate-300 dark:text-slate-700">·</span>
+                        <span className={`inline-flex items-center gap-1 font-semibold ${spjHighlight.color}`}>
+                          <SpjIcon className="w-3.5 h-3.5 shrink-0" />
+                          <span>{meta.shortLabel}</span>
+                        </span>
+                        <span className="text-slate-300 dark:text-slate-700">·</span>
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          className={`text-[11px] font-semibold ${
                             item.kategori === "A"
-                              ? "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/70"
-                              : "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70"
+                              ? "text-slate-600 dark:text-slate-300"
+                              : "text-amber-600 dark:text-amber-400"
                           }`}
                         >
-                          {item.kategori === "A" ? "ASN [A]" : "Non-ASN [NA]"}
+                          {item.kategori === "A" ? "ASN" : "Non-ASN"}
                         </span>
-                      </div>
-
-                      {/* Tanggal & Nomor SPD */}
-                      <div className="space-y-0.5 text-xs text-slate-600 dark:text-slate-300">
-                        <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                          <span className="font-medium">{formatDateIndo(item.tanggalSpd)}</span>
-                        </div>
-
-                        {spdRangeText && (
-                          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-mono">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                            <span>{spdRangeText}</span>
-                          </div>
+                        {isCurrent && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0071e3] dark:text-blue-400 ml-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3] animate-pulse" />
+                            <span>Aktif</span>
+                          </span>
                         )}
                       </div>
 
-                      {/* Nomor ST & Memo (Administrative Metadata) */}
-                      {(item.header?.nomorStMaster || item.header?.nomorMemo || item.header?.nomorMak) && (
-                        <div className="pt-1 flex flex-wrap gap-1.5 text-[10.5px]">
-                          {item.header?.nomorStMaster && (
-                            <span
-                              className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 truncate max-w-[170px]"
-                              title={`Nomor ST: ${item.header.nomorStMaster}`}
-                            >
-                              ST: {item.header.nomorStMaster}
-                            </span>
-                          )}
-                          {item.header?.nomorMak && (
-                            <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-800">
-                              MAK {item.header.nomorMak}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* -------------------------------------------------------------
-                        KOLOM 2: URAIAN KEGIATAN & DAFTAR PESERTA
-                        ------------------------------------------------------------- */}
-                    <div className="col-span-12 sm:col-span-8 lg:col-span-5 space-y-2">
-                      <div className="space-y-1">
-                        <div className="flex items-start gap-2">
-                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug">
-                            {item.namaKegiatan || "Perjalanan Dinas Jabatan Inspektorat"}
-                          </h4>
-                        </div>
-
-                        {/* Location Pill */}
-                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 flex-wrap">
-                          <span className="inline-flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-800">
-                            <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                            <span>{lokasiText}</span>
+                      {/* Baris 2: Tanggal & SPD / Memo */}
+                      <div className="flex items-center gap-2 flex-wrap text-[11.5px] text-slate-600 dark:text-slate-300">
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                          <span>{formatDateIndo(item.tanggalSpd)}</span>
+                        </span>
+                        {spdRangeText && (
+                          <span className="inline-flex items-center gap-1 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                            <Hash className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>{spdRangeText}</span>
                           </span>
-
-                          {isCurrent && (
-                            <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100 px-2 py-0.5 rounded-md">
-                              <CheckCircle2 className="w-3 h-3 text-blue-600" />
-                              Sedang Dibuka
-                            </span>
-                          )}
-                        </div>
+                        )}
+                        {memoShort && (
+                          <span
+                            className="inline-flex items-center gap-1 font-mono text-[11px] text-slate-500 dark:text-slate-400"
+                            title={`Memorandum: ${item.header?.nomorMemo}`}
+                          >
+                            <FileText className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>{memoShort}</span>
+                          </span>
+                        )}
                       </div>
 
-                      {/* Participant Preview Pills */}
-                      {participants.length > 0 && (
-                        <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-1.5">
-                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 mr-1">
-                            <Users className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Pelaksana ({participants.length}):</span>
-                          </span>
-
-                          {participants.slice(0, 4).map((p, pIdx) => (
+                      {/* Baris 3: Nomor ST & Akun MAK */}
+                      {(item.header?.nomorStMaster || item.header?.nomorMak) && (
+                        <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                          {item.header?.nomorStMaster && (
                             <span
-                              key={pIdx}
-                              className="inline-flex items-center gap-1 text-[11px] font-medium bg-white dark:bg-slate-900 hover:bg-blue-50/80 text-slate-700 dark:text-slate-300 hover:text-blue-700 px-2 py-0.5 rounded-md border border-slate-200/90 dark:border-slate-800 shadow-2xs transition-all cursor-help"
-                              title={
-                                p.details || p.nip
-                                  ? `${p.name}${p.details ? `\n${p.details}` : ""}${p.nip ? `\nNIP: ${p.nip}` : ""}${p.biaya ? `\nTotal: Rp ${p.biaya.toLocaleString("id-ID")}` : ""}`
-                                  : p.name
-                              }
+                              className="inline-flex items-center gap-1 truncate max-w-[210px]"
+                              title={`Nomor ST: ${item.header.nomorStMaster}`}
                             >
-                              <User className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
-                              <span className="truncate max-w-[130px] sm:max-w-[160px]">{p.name}</span>
+                              <FileText className="w-3 h-3 text-slate-400 shrink-0" />
+                              <span className="truncate">{item.header.nomorStMaster}</span>
                             </span>
-                          ))}
-
-                          {participants.length > 4 && (
-                            <span
-                              className="text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/70 hover:bg-blue-100 cursor-help transition-colors"
-                              title={
-                                `Peserta lainnya:\n` +
-                                participants
-                                  .slice(4)
-                                  .map((p, i) => `${i + 5}. ${p.name}${p.details ? ` (${p.details})` : ""}`)
-                                  .join("\n")
-                              }
-                            >
-                              +{participants.length - 4} lainnya
-                            </span>
+                          )}
+                          {item.header?.nomorStMaster && item.header?.nomorMak && (
+                            <span className="text-slate-300 dark:text-slate-700">·</span>
+                          )}
+                          {item.header?.nomorMak && (
+                            <span>MAK {item.header.nomorMak}</span>
                           )}
                         </div>
                       )}
                     </div>
 
                     {/* -------------------------------------------------------------
-                        KOLOM 3: TOTAL ANGGARAN & PERSONIL
+                        KOLOM 2: URAIAN KEGIATAN & PELAKSANA / ITEM
                         ------------------------------------------------------------- */}
-                    <div className="col-span-6 lg:col-span-2 text-left lg:text-right space-y-1">
-                      <span className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
-                        Total Anggaran
-                      </span>
-                      <span className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 font-mono block">
+                    <div className="col-span-12 sm:col-span-8 lg:col-span-5 space-y-1 min-w-0">
+                      <h4
+                        className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2"
+                        title={item.namaKegiatan || "Kegiatan Inspektorat"}
+                      >
+                        {item.namaKegiatan || "Perjalanan Dinas Jabatan Inspektorat"}
+                      </h4>
+
+                      {/* Inline Metadata: Lokasi & Pelaksana / Item (Clean Icon + Plain Text) */}
+                      <div className="flex flex-col gap-0.5 text-[11.5px] text-slate-500 dark:text-slate-400">
+                        {!isPengadaan && (
+                          <div className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                            <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                            <span className="truncate">{lokasiText}</span>
+                          </div>
+                        )}
+
+                        {isPengadaan && pengadaanItemsList.length > 0 ? (
+                          <div
+                            className="inline-flex items-center gap-1.5 cursor-help"
+                            title={pengadaanItemsList
+                              .map((it, i) => `${i + 1}. ${it.uraian} (${it.jumlah} ${it.satuan})`)
+                              .join("\n")}
+                          >
+                            <Package className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                            <span className="truncate">
+                              {pengadaanItemsList
+                                .slice(0, 3)
+                                .map((it) => it.uraian)
+                                .join(", ")}
+                              {pengadaanItemsList.length > 3
+                                ? ` (+${pengadaanItemsList.length - 3} item lainnya)`
+                                : ""}
+                            </span>
+                          </div>
+                        ) : (
+                          participants.length > 0 && (
+                            <div
+                              className="inline-flex items-center gap-1.5 cursor-help"
+                              title={participants
+                                .map(
+                                  (p, i) =>
+                                    `${i + 1}. ${p.name}${p.details ? ` (${p.details})` : ""}${
+                                      p.biaya ? ` — Rp ${p.biaya.toLocaleString("id-ID")}` : ""
+                                    }`
+                                )
+                                .join("\n")}
+                            >
+                              <Users className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                              <span className="truncate">
+                                {participants
+                                  .slice(0, 3)
+                                  .map((p) => p.name)
+                                  .join(", ")}
+                                {participants.length > 3
+                                  ? ` (+${participants.length - 3} lainnya)`
+                                  : ""}
+                              </span>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+
+                    {/* -------------------------------------------------------------
+                        KOLOM 3: TOTAL ANGGARAN & JUMLAH
+                        ------------------------------------------------------------- */}
+                    <div className="col-span-6 lg:col-span-2 text-left lg:text-right">
+                      <span className="text-sm font-bold text-slate-900 dark:text-slate-100 font-mono block">
                         Rp {(item.grandTotal || 0).toLocaleString("id-ID")}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                        <Users className="w-3 h-3 text-slate-500 dark:text-slate-400" />
+                      <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                        <Users className="w-3 h-3 text-slate-400 shrink-0" />
                         <span>
-                          {item.header?.spjType && item.header.spjType !== "PERDIN"
-                            ? `${item.header.pengadaanItems?.length || item.jumlahPeserta || 1} Item`
+                          {isPengadaan
+                            ? `${item.header?.pengadaanItems?.length || item.jumlahPeserta || 1} Item`
                             : `${item.jumlahPeserta || participants.length || 1} Orang`}
                         </span>
                       </span>
                     </div>
 
                     {/* -------------------------------------------------------------
-                        KOLOM 4: AKSI (Buka & Edit, Hapus)
+                        KOLOM 4: AKSI (Ringkas)
                         ------------------------------------------------------------- */}
-                    <div className="col-span-6 lg:col-span-2 flex items-center justify-end gap-2">
-                      {/* Buka & Edit Button */}
+                    <div className="col-span-6 lg:col-span-1 flex items-center justify-end gap-1.5">
                       <button
                         type="button"
                         onClick={() => onEditKegiatan(item)}
-                        className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-2xs cursor-pointer transition-all"
-                        title="Buka data kegiatan ini di form input untuk diedit atau dicetak"
+                        className="btn-tactile inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer transition-all"
+                        title="Buka & Edit data kegiatan ini"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
-                        <span>Buka &amp; Edit</span>
+                        <span>Buka</span>
                       </button>
 
-                      {/* Hapus Button */}
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(item)}
-                        className="btn-tactile p-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-rose-50 text-slate-400 dark:text-slate-500 hover:text-rose-600 border border-slate-200 dark:border-slate-800 hover:border-rose-200 shadow-2xs cursor-pointer transition-all"
-                        title="Hapus paket kegiatan ini dari database"
+                        className="btn-tactile p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-all cursor-pointer"
+                        title="Hapus paket kegiatan ini"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
