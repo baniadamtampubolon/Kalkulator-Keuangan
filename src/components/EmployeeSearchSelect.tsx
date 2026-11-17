@@ -165,18 +165,18 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
         ref={triggerRef}
         onClick={isOpen ? handleClose : handleOpen}
         className={`input-glass w-full min-h-[32px] px-2 py-1 flex items-center justify-between gap-1.5 cursor-pointer select-none transition-all ${
-          isOpen ? "ring-2 ring-blue-500/30 border-blue-500 bg-white" : "hover:border-slate-300"
-        } ${disabled ? "opacity-50 cursor-not-allowed bg-slate-100" : ""}`}
+          isOpen ? "ring-2 ring-blue-500/30 border-blue-500 bg-white dark:bg-slate-900" : "hover:border-slate-300"
+        } ${disabled ? "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
         tabIndex={disabled ? -1 : 0}
         title={value ? `Terpilih: ${value}` : "Klik untuk mencari pegawai"}
       >
         <div className="flex-1 min-w-0 pr-1">
           {value ? (
-            <div className="truncate text-xs font-semibold text-slate-900 leading-tight">
+            <div className="truncate text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight">
               {value}
             </div>
           ) : (
-            <span className="text-slate-400 text-xs italic">{placeholder}</span>
+            <span className="text-slate-400 dark:text-slate-500 text-xs italic">{placeholder}</span>
           )}
         </div>
 
@@ -188,14 +188,14 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
                 e.stopPropagation();
                 onSelect("");
               }}
-              className="p-0.5 rounded-full hover:bg-slate-200/80 text-slate-400 hover:text-slate-600 transition-colors"
+              className="p-0.5 rounded-full hover:bg-slate-200/80 text-slate-400 dark:text-slate-500 hover:text-slate-600 transition-colors"
               title="Kosongkan pilihan"
             >
               <X className="w-3 h-3" />
             </button>
           )}
           <ChevronDown
-            className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+            className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
               isOpen ? "rotate-180 text-blue-600" : ""
             }`}
           />
@@ -204,7 +204,7 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
 
       {/* Sub-label: NIP */}
       {(nip || selectedPegawai?.nip) && (
-        <span className="block text-[10px] font-mono text-slate-400 pl-1 pt-0.5 whitespace-nowrap">
+        <span className="block text-[10px] font-mono text-slate-400 dark:text-slate-500 pl-1 pt-0.5 whitespace-nowrap">
           NIP. {nip || selectedPegawai?.nip}
         </span>
       )}
@@ -222,11 +222,11 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
               left: `${coords.left}px`,
               width: `${coords.width}px`,
             }}
-            className="z-[9999] bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-100 text-xs flex flex-col max-h-72"
+            className="z-[9999] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-100 text-xs flex flex-col max-h-72"
           >
             {/* Search Input Header */}
-            <div className="p-2 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10 flex items-center gap-2">
-              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
+            <div className="p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/70 sticky top-0 z-10 flex items-center gap-2">
+              <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 ml-1" />
               <input
                 ref={inputRef}
                 type="text"
@@ -237,13 +237,13 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder="Cari nama, NIP, atau jabatan..."
-                className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 outline-none font-medium"
+                className="w-full bg-transparent text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 outline-none font-medium"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200/60"
+                  className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 rounded-full hover:bg-slate-200/60"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -255,7 +255,7 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
               {filteredList.length === 0 ? (
                 <div className="py-5 px-3 text-center space-y-2">
                   <User className="w-5 h-5 mx-auto text-slate-300" />
-                  <p className="text-xs text-slate-600">Pegawai tidak ditemukan di master data</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300">Pegawai tidak ditemukan di master data</p>
                   {searchQuery.trim() && (
                     <button
                       type="button"
@@ -263,7 +263,7 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
                         onSelect(searchQuery.trim());
                         handleClose();
                       }}
-                      className="px-2.5 py-1 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1 text-xs font-medium rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100 border border-blue-200 dark:border-blue-800/70 transition-colors inline-flex items-center gap-1 cursor-pointer"
                     >
                       <span>Gunakan nama: &ldquo;{searchQuery.trim()}&rdquo;</span>
                     </button>
@@ -283,29 +283,29 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
                       }}
                       onMouseEnter={() => setHighlightedIndex(index)}
                       className={`px-2.5 py-2 rounded-lg cursor-pointer transition-colors flex items-start justify-between gap-2 ${
-                        isHighlighted ? "bg-blue-50/80 text-blue-950" : "hover:bg-slate-50"
+                        isHighlighted ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-950" : "hover:bg-slate-50 dark:hover:bg-slate-800/80"
                       } ${isSelected ? "bg-blue-100/60 font-semibold" : ""}`}
                     >
                       <div className="flex-1 min-w-0 space-y-0.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span
                             className={`text-xs truncate ${
-                              isSelected ? "font-bold text-blue-900" : "font-medium text-slate-800"
+                              isSelected ? "font-bold text-blue-900 dark:text-blue-200" : "font-medium text-slate-800 dark:text-slate-200"
                             }`}
                           >
                             {p.nama}
                           </span>
                           {p.golongan && (
-                            <span className="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-slate-100 border border-slate-200/80 text-slate-600 font-semibold shrink-0">
+                            <span className="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold shrink-0">
                               {p.golongan}
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono flex-wrap">
+                        <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 font-mono flex-wrap">
                           {p.nip && <span>NIP. {p.nip}</span>}
                           {p.jabatan && (
-                            <span className="text-slate-400 truncate max-w-[150px] font-sans">
+                            <span className="text-slate-400 dark:text-slate-500 truncate max-w-[150px] font-sans">
                               • {p.jabatan}
                             </span>
                           )}
@@ -324,7 +324,7 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
             </div>
 
             {/* Footer Status */}
-            <div className="px-2.5 py-1.5 bg-slate-50/90 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+            <div className="px-2.5 py-1.5 bg-slate-50/90 dark:bg-slate-800/70 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500">
               <span>{filteredList.length} pegawai ditemukan</span>
               <span className="font-mono text-[9.5px]">Enter untuk pilih</span>
             </div>

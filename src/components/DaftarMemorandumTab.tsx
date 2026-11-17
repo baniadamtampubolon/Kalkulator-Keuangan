@@ -370,7 +370,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
           <button
             type="button"
             onClick={() => setToastMessage(null)}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-slate-400 dark:text-slate-500 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -388,10 +388,10 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                 <BookmarkCheck className="w-4 h-4" />
               </div>
               <div>
-                <h1 className="text-base md:text-lg font-bold text-slate-900 tracking-tight">
+                <h1 className="text-base md:text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                   Buku Kendali &amp; Daftar Memorandum Terdaftar
                 </h1>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Register penomoran resmi Nota Dinas Memorandum Pengajuan Pembayaran Langsung (LS) Inspektorat Kemenko Pangan
                 </p>
               </div>
@@ -404,7 +404,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                 type="button"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold shadow-2xs cursor-pointer transition-all disabled:opacity-50"
+                className="btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-semibold shadow-2xs cursor-pointer transition-all disabled:opacity-50"
                 title="Sinkronkan dengan master database Google Sheets"
               >
                 <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-blue-600" : ""}`} />
@@ -415,7 +415,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             <button
               type="button"
               onClick={() => exportMemoListToExcel(filteredList, "Buku_Kendali_Memorandum", kegiatanByMemoMap)}
-              className="btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-emerald-700 border border-emerald-300 hover:border-emerald-400 text-xs font-semibold shadow-2xs cursor-pointer transition-all"
+              className="btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 hover:border-emerald-400 text-xs font-semibold shadow-2xs cursor-pointer transition-all"
               title="Unduh seluruh daftar memorandum ke format Microsoft Excel (.xlsx)"
             >
               <Download className="w-3.5 h-3.5 text-emerald-600" />
@@ -439,26 +439,26 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
         {/* ========================================================================= */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
           {/* Total Register */}
-          <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+          <div className="p-3.5 bg-slate-50/80 dark:bg-slate-800/70 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-1">
+            <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
               Total Memo Terdaftar
             </span>
             <div className="flex items-baseline justify-between">
-              <span className="text-xl md:text-2xl font-black text-slate-900 font-mono">
+              <span className="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 font-mono">
                 {stats.total}
               </span>
-              <span className="text-[11px] text-slate-500 font-medium">Buku Register</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Buku Register</span>
             </div>
           </div>
 
           {/* Nomor Terpakai */}
-          <div className="p-3.5 bg-emerald-50/70 rounded-xl border border-emerald-200/80 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-emerald-800 tracking-wider flex items-center gap-1">
+          <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/50 rounded-xl border border-emerald-200/80 dark:border-emerald-800/70 space-y-1">
+            <span className="text-[10px] uppercase font-bold text-emerald-800 dark:text-emerald-300 tracking-wider flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
               <span>Nomor Terpakai</span>
             </span>
             <div className="flex items-baseline justify-between">
-              <span className="text-xl md:text-2xl font-black text-emerald-700 font-mono">
+              <span className="text-xl md:text-2xl font-black text-emerald-700 dark:text-emerald-300 font-mono">
                 {stats.terpakaiCount}
               </span>
               <span className="text-[11px] text-emerald-600 font-semibold font-mono">
@@ -481,21 +481,21 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
           </div>
 
           {/* Nomor Terakhir Terdaftar */}
-          <div className="p-3.5 bg-blue-50/70 rounded-xl border border-blue-200/80 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-blue-800 tracking-wider flex items-center gap-1">
+          <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/50 rounded-xl border border-blue-200/80 dark:border-blue-800/70 space-y-1">
+            <span className="text-[10px] uppercase font-bold text-blue-800 dark:text-blue-300 tracking-wider flex items-center gap-1">
               <Clock className="w-3 h-3 text-blue-600" />
               <span>Nomor Terakhir</span>
             </span>
             <div className="flex items-baseline justify-between min-w-0">
-              <span className="text-xs md:text-sm font-bold text-blue-900 font-mono truncate" title={stats.latestMemoStr}>
+              <span className="text-xs md:text-sm font-bold text-blue-900 dark:text-blue-200 font-mono truncate" title={stats.latestMemoStr}>
                 {stats.latestMemoStr}
               </span>
             </div>
           </div>
 
           {/* Estimasi Nomor Berikutnya */}
-          <div className="p-3.5 bg-amber-50/70 rounded-xl border border-amber-200/80 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-amber-900 tracking-wider flex items-center gap-1">
+          <div className="p-3.5 bg-amber-50/70 dark:bg-amber-950/50 rounded-xl border border-amber-200/80 dark:border-amber-800/70 space-y-1">
+            <span className="text-[10px] uppercase font-bold text-amber-900 dark:text-amber-200 tracking-wider flex items-center gap-1">
               <ArrowRight className="w-3 h-3 text-amber-600" />
               <span>Nomor Berikutnya</span>
             </span>
@@ -508,7 +508,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                 onClick={() => {
                   if (onSelectMemo) onSelectMemo(stats.nextMemoStr);
                 }}
-                className="text-[10.5px] font-bold text-amber-700 hover:text-amber-900 underline cursor-pointer shrink-0 ml-1"
+                className="text-[10.5px] font-bold text-amber-700 dark:text-amber-300 hover:text-amber-900 underline cursor-pointer shrink-0 ml-1"
                 title="Langsung gunakan nomor urut berikutnya di kalkulator"
               >
                 Gunakan
@@ -525,7 +525,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search Box */}
           <div className="relative flex-1 min-w-[240px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
@@ -537,7 +537,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
               <button
                 type="button"
                 onClick={() => setSearchTerm("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-600"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -550,7 +550,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as "ALL" | "TERPAKAI" | "TERSEDIA")}
-              className="input-human h-10 px-3 text-xs font-semibold text-slate-800 cursor-pointer bg-white"
+              className="input-human h-10 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer bg-white dark:bg-slate-900"
             >
               <option value="ALL">Semua Status ({fullMemoList.length})</option>
               <option value="TERPAKAI">Terpakai ({stats.terpakaiCount})</option>
@@ -561,7 +561,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             <select
               value={bulanFilter}
               onChange={(e) => setBulanFilter(e.target.value)}
-              className="input-human h-10 px-3 text-xs font-semibold text-slate-800 cursor-pointer bg-white"
+              className="input-human h-10 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer bg-white dark:bg-slate-900"
             >
               <option value="ALL">Semua Bulan</option>
               {["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"].map((m) => (
@@ -575,7 +575,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             <select
               value={spjFilter}
               onChange={(e) => setSpjFilter(e.target.value as "ALL" | "WITH_SPJ" | "WITHOUT_SPJ")}
-              className="input-human h-10 px-3 text-xs font-semibold text-slate-800 cursor-pointer bg-white"
+              className="input-human h-10 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer bg-white dark:bg-slate-900"
             >
               <option value="ALL">Semua Berkas</option>
               <option value="WITH_SPJ">Ada Berkas SPJ ({savedKegiatanList.length})</option>
@@ -583,12 +583,12 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             </select>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center rounded-xl border border-slate-200 bg-slate-100 p-0.5">
+            <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 p-0.5">
               <button
                 type="button"
                 onClick={() => setViewMode("table")}
                 className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                  viewMode === "table" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-800"
+                  viewMode === "table" ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
                 }`}
                 title="Tampilan Tabel Detail"
               >
@@ -599,7 +599,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                 type="button"
                 onClick={() => setViewMode("grid")}
                 className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                  viewMode === "grid" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-800"
+                  viewMode === "grid" ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
                 }`}
                 title="Tampilan Kartu Berkas"
               >
@@ -611,10 +611,10 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
         </div>
 
         {/* Results Counter & Active Filter Pills */}
-        <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100">
+        <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <span>
-              Menampilkan <strong className="text-slate-900 font-mono">{filteredList.length}</strong> dari {fullMemoList.length} entri memorandum
+              Menampilkan <strong className="text-slate-900 dark:text-slate-100 font-mono">{filteredList.length}</strong> dari {fullMemoList.length} entri memorandum
             </span>
             {(searchTerm || statusFilter !== "ALL" || bulanFilter !== "ALL" || spjFilter !== "ALL") && (
               <button
@@ -638,12 +638,12 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
       {/* 4. MAIN DATA DISPLAY: TABEL ATAU KARTU                                    */}
       {/* ========================================================================= */}
       {filteredList.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
-          <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+        <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
+          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 mx-auto flex items-center justify-center">
             <Search className="w-6 h-6" />
           </div>
-          <h3 className="text-sm font-bold text-slate-800">Tidak ada nomor memorandum yang cocok</h3>
-          <p className="text-xs text-slate-500 max-w-md mx-auto">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Tidak ada nomor memorandum yang cocok</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
             Coba ubah kata kunci pencarian atau sesuaikan filter status dan bulan di panel atas.
           </p>
         </div>
@@ -651,11 +651,11 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
         /* -------------------------------------------------------------
            VIEW A: SPREADSHEET TABLE VIEW (Mac/Excel Style)
            ------------------------------------------------------------- */
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/90 border-b border-slate-200 text-slate-600 uppercase tracking-wider text-[10.5px] font-bold select-none">
+                <tr className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider text-[10.5px] font-bold select-none">
                   <th className="py-3 px-3.5 text-center w-14">No</th>
                   <th className="py-3 px-3.5 w-52">Nomor Memorandum</th>
                   <th className="py-3 px-3.5 w-36">Tanggal</th>
@@ -666,7 +666,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                   <th className="py-3 px-3.5 text-right w-44">Aksi Cepat</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-sans">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
                 {filteredList.map((memo, idx) => {
                   const seq = extractMemoSeqNumber(memo);
                   const formatLengkap = memo.format_lengkap || memo.noMemo || `M.${seq}/INS/PPK/XI/2026`;
@@ -696,20 +696,20 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                       className="hover:bg-blue-50/40 transition-colors group"
                     >
                       {/* No. Urut */}
-                      <td className="py-3 px-3.5 text-center font-mono font-bold text-slate-500">
+                      <td className="py-3 px-3.5 text-center font-mono font-bold text-slate-500 dark:text-slate-400">
                         {seq > 0 ? seq : idx + 1}
                       </td>
 
                       {/* Nomor Memorandum */}
                       <td className="py-3 px-3.5">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-blue-700 text-xs tracking-tight">
+                          <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs tracking-tight">
                             {formatLengkap}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleCopyMemo(formatLengkap)}
-                            className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                            className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                             title="Salin nomor memorandum ke clipboard"
                           >
                             {isCopied ? (
@@ -723,7 +723,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                         {linkedKegiatan && (
                           <div className="pt-1">
                             <span
-                              className="inline-flex items-center gap-1 text-[9.5px] font-semibold text-emerald-800 bg-emerald-100/80 border border-emerald-200 px-1.5 py-0.5 rounded cursor-pointer hover:bg-emerald-200/80 transition-colors"
+                              className="inline-flex items-center gap-1 text-[9.5px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-100/80 border border-emerald-200 dark:border-emerald-800/70 px-1.5 py-0.5 rounded cursor-pointer hover:bg-emerald-200/80 transition-colors"
                               title={`Terhubung ke Berkas SPJ ID: ${linkedKegiatan.idKegiatan}. Klik untuk membuka berkas ini.`}
                               onClick={() => {
                                 if (onLoadKegiatan) onLoadKegiatan(linkedKegiatan);
@@ -737,22 +737,22 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                       </td>
 
                       {/* Tanggal Memo */}
-                      <td className="py-3 px-3.5 text-slate-600 whitespace-nowrap">
+                      <td className="py-3 px-3.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                          <Calendar className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
                           <span>{tglDisplay}</span>
                         </div>
                       </td>
 
                       {/* Perihal / Uraian */}
-                      <td className="py-3 px-3.5 text-slate-800 leading-relaxed">
+                      <td className="py-3 px-3.5 text-slate-800 dark:text-slate-200 leading-relaxed">
                         <p className="line-clamp-2" title={memo.perihal}>
-                          {memo.perihal || <span className="text-slate-400 italic">Belum ada keterangan perihal</span>}
+                          {memo.perihal || <span className="text-slate-400 dark:text-slate-500 italic">Belum ada keterangan perihal</span>}
                         </p>
                       </td>
 
                       {/* MAK */}
-                      <td className="py-3 px-3.5 font-mono text-[11px] text-slate-600">
+                      <td className="py-3 px-3.5 font-mono text-[11px] text-slate-600 dark:text-slate-300">
                         <span className="truncate block max-w-[170px]" title={makDisplay}>
                           {makDisplay}
                         </span>
@@ -762,7 +762,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                       <td className="py-3 px-3.5 text-right whitespace-nowrap">
                         {nominalDisplay > 0 ? (
                           <div className="space-y-0.5">
-                            <span className="font-mono font-bold text-slate-900 text-xs block">
+                            <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-xs block">
                               Rp{nominalDisplay.toLocaleString("id-ID")}
                             </span>
                             {linkedKegiatan && rawNominal === 0 && (
@@ -772,7 +772,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-400 font-mono text-xs">-</span>
+                          <span className="text-slate-400 dark:text-slate-500 font-mono text-xs">-</span>
                         )}
                       </td>
 
@@ -781,8 +781,8 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border ${
                             isUsed
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                              : "bg-slate-100 text-slate-600 border-slate-200"
+                              ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800"
                           }`}
                         >
                           {isUsed ? "TERPAKAI" : "TERSEDIA"}
@@ -809,7 +809,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                             <button
                               type="button"
                               onClick={() => onLoadKegiatan(linkedKegiatan)}
-                              className="p-1 rounded-lg text-emerald-700 hover:bg-emerald-50 border border-emerald-200 transition-colors cursor-pointer"
+                              className="p-1 rounded-lg text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 border border-emerald-200 dark:border-emerald-800/70 transition-colors cursor-pointer"
                               title="Buka Berkas SPJ ini di Kalkulator"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
@@ -820,7 +820,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(memo)}
-                            className="p-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-colors cursor-pointer"
+                            className="p-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent hover:border-slate-200 transition-colors cursor-pointer"
                             title="Edit data nomor memo"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -831,12 +831,12 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                   );
                 })}
               </tbody>
-              <tfoot className="bg-slate-50/90 border-t-2 border-slate-200 font-sans text-xs">
+              <tfoot className="bg-slate-50/90 dark:bg-slate-800/70 border-t-2 border-slate-200 dark:border-slate-800 font-sans text-xs">
                 <tr>
-                  <td colSpan={5} className="py-3 px-3.5 text-right font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+                  <td colSpan={5} className="py-3 px-3.5 text-right font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
                     Total Biaya Terdata ({filteredList.length} memo):
                   </td>
-                  <td className="py-3 px-3.5 text-right font-mono font-black text-slate-900 text-xs whitespace-nowrap">
+                  <td className="py-3 px-3.5 text-right font-mono font-black text-slate-900 dark:text-slate-100 text-xs whitespace-nowrap">
                     Rp{filteredTotalBiaya.toLocaleString("id-ID")}
                   </td>
                   <td colSpan={2}></td>
@@ -875,19 +875,19 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             return (
               <div
                 key={formatLengkap + idx}
-                className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-3 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all flex flex-col justify-between"
               >
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-blue-700 text-xs">
+                        <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs">
                           {formatLengkap}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleCopyMemo(formatLengkap)}
-                          className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                          className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
                           title="Salin nomor memo"
                         >
                           {isCopied ? (
@@ -897,14 +897,14 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                           )}
                         </button>
                       </div>
-                      <span className="text-[10px] text-slate-400 font-mono">No. Urut #{seq > 0 ? seq : idx + 1}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">No. Urut #{seq > 0 ? seq : idx + 1}</span>
                     </div>
 
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                         isUsed
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                          : "bg-slate-100 text-slate-600 border-slate-200"
+                          ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800"
                       }`}
                     >
                       {isUsed ? "TERPAKAI" : "TERSEDIA"}
@@ -912,13 +912,13 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                   </div>
 
                   {/* Tanggal & MAK */}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-slate-400" />
+                      <Calendar className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                       <span>{tglDisplay}</span>
                     </span>
                     {makDisplay !== "-" && (
-                      <span className="font-mono text-slate-600 truncate max-w-[160px]" title={makDisplay}>
+                      <span className="font-mono text-slate-600 dark:text-slate-300 truncate max-w-[160px]" title={makDisplay}>
                         {makDisplay}
                       </span>
                     )}
@@ -926,12 +926,12 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
 
                   {/* Nominal Biaya */}
                   {nominalDisplay > 0 ? (
-                    <div className="flex items-center justify-between text-xs py-1.5 px-3 bg-slate-50 rounded-xl border border-slate-200/70">
-                      <span className="text-slate-500 font-semibold text-[11px] flex items-center gap-1.5">
+                    <div className="flex items-center justify-between text-xs py-1.5 px-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-200/70 dark:border-slate-800">
+                      <span className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] flex items-center gap-1.5">
                         <Coins className="w-3.5 h-3.5 text-amber-600" />
                         <span>Biaya:</span>
                       </span>
-                      <span className="font-mono font-bold text-slate-900 text-xs">
+                      <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-xs">
                         Rp{nominalDisplay.toLocaleString("id-ID")}
                         {linkedKegiatan && rawNominal === 0 && (
                           <span className="text-[9.5px] font-normal text-emerald-600 ml-1">(SPJ Riil)</span>
@@ -939,26 +939,26 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                       </span>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between text-xs py-1 px-3 text-slate-400 text-[11px]">
+                    <div className="flex items-center justify-between text-xs py-1 px-3 text-slate-400 dark:text-slate-500 text-[11px]">
                       <span>Biaya Pengajuan:</span>
                       <span className="font-mono">-</span>
                     </div>
                   )}
 
                   {/* Perihal */}
-                  <p className="text-xs text-slate-700 line-clamp-3 leading-relaxed pt-1">
-                    {memo.perihal || <span className="text-slate-400 italic">Belum ada perihal</span>}
+                  <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-3 leading-relaxed pt-1">
+                    {memo.perihal || <span className="text-slate-400 dark:text-slate-500 italic">Belum ada perihal</span>}
                   </p>
 
                   {/* Linked Kegiatan */}
                   {linkedKegiatan && (
-                    <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-[10.5px] flex items-center justify-between">
+                    <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70 text-emerald-900 dark:text-emerald-200 text-[10.5px] flex items-center justify-between">
                       <span className="font-medium truncate">SPJ: {linkedKegiatan.namaKegiatan}</span>
                       {onLoadKegiatan && (
                         <button
                           type="button"
                           onClick={() => onLoadKegiatan(linkedKegiatan)}
-                          className="text-emerald-700 font-bold underline shrink-0 cursor-pointer"
+                          className="text-emerald-700 dark:text-emerald-300 font-bold underline shrink-0 cursor-pointer"
                         >
                           Buka
                         </button>
@@ -968,11 +968,11 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                 </div>
 
                 {/* Footer Actions */}
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <button
                     type="button"
                     onClick={() => handleOpenEditModal(memo)}
-                    className="text-[11px] text-slate-500 hover:text-slate-800 font-medium flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 font-medium flex items-center gap-1 cursor-pointer"
                   >
                     <Edit3 className="w-3 h-3" />
                     <span>Edit</span>
@@ -1000,18 +1000,18 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
       {/* ========================================================================= */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden animate-scale-up">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-lg w-full overflow-hidden animate-scale-up">
             {/* Modal Header */}
-            <div className="p-4 md:p-5 border-b border-slate-100 flex items-center justify-between">
+            <div className="p-4 md:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#0071e3] flex items-center justify-center font-bold">
                   <BookmarkCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                     {editingMemo ? "Edit Data Nomor Memorandum" : "Daftarkan Nomor Memorandum Baru"}
                   </h3>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {editingMemo ? "Perbarui informasi pada register buku kendali" : "Tambahkan nomor urut baru ke register master"}
                   </p>
                 </div>
@@ -1019,7 +1019,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer transition-colors"
+                className="p-1 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1030,7 +1030,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
               {/* Nomor Urut & Format */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-800">
+                  <label className="font-bold text-slate-800 dark:text-slate-200">
                     Nomor Urut Angka <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1038,17 +1038,17 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                     value={modalForm.nomorUrut}
                     onChange={(e) => setModalForm((prev) => ({ ...prev, nomorUrut: e.target.value }))}
                     placeholder="321"
-                    className="input-human w-full h-9 px-3 font-mono font-bold text-slate-900"
+                    className="input-human w-full h-9 px-3 font-mono font-bold text-slate-900 dark:text-slate-100"
                     required
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-800">Bulan Romawi</label>
+                  <label className="font-bold text-slate-800 dark:text-slate-200">Bulan Romawi</label>
                   <select
                     value={modalForm.bulanRomawi}
                     onChange={(e) => setModalForm((prev) => ({ ...prev, bulanRomawi: e.target.value }))}
-                    className="input-human w-full h-9 px-3 font-mono font-semibold text-slate-900 cursor-pointer bg-white"
+                    className="input-human w-full h-9 px-3 font-mono font-semibold text-slate-900 dark:text-slate-100 cursor-pointer bg-white dark:bg-slate-900"
                   >
                     {["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"].map((b) => (
                       <option key={b} value={b}>
@@ -1060,9 +1060,9 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
               </div>
 
               {/* Preview Format Lengkap */}
-              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-                <span className="text-[11px] font-medium text-slate-500">Format Lengkap Resmi:</span>
-                <span className="font-mono font-bold text-blue-700 text-xs">
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Format Lengkap Resmi:</span>
+                <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs">
                   {modalForm.prefix}
                   {modalForm.nomorUrut || "xxx"}
                   {modalForm.unit}
@@ -1074,7 +1074,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
               {/* Tanggal Memo & Status */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-800">
+                  <label className="font-bold text-slate-800 dark:text-slate-200">
                     Tanggal Memo <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1091,11 +1091,11 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-800">Status</label>
+                  <label className="font-bold text-slate-800 dark:text-slate-200">Status</label>
                   <select
                     value={modalForm.status}
                     onChange={(e) => setModalForm((prev) => ({ ...prev, status: e.target.value }))}
-                    className="input-human w-full h-9 px-3 font-semibold text-slate-900 cursor-pointer bg-white"
+                    className="input-human w-full h-9 px-3 font-semibold text-slate-900 dark:text-slate-100 cursor-pointer bg-white dark:bg-slate-900"
                   >
                     <option value="TERPAKAI">TERPAKAI</option>
                     <option value="TERSEDIA">TERSEDIA / KOSONG</option>
@@ -1106,7 +1106,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
 
               {/* Perihal / Uraian Kegiatan */}
               <div className="space-y-1">
-                <label className="font-bold text-slate-800">
+                <label className="font-bold text-slate-800 dark:text-slate-200">
                   Perihal / Uraian Nota Dinas <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -1122,11 +1122,11 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
               {/* Pembebanan MAK & Nominal Biaya */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-800">Pembebanan Anggaran (MAK)</label>
+                  <label className="font-bold text-slate-800 dark:text-slate-200">Pembebanan Anggaran (MAK)</label>
                   <select
                     value={modalForm.mak}
                     onChange={(e) => setModalForm((prev) => ({ ...prev, mak: e.target.value }))}
-                    className="input-human w-full h-9 px-3 font-mono text-xs cursor-pointer bg-white"
+                    className="input-human w-full h-9 px-3 font-mono text-xs cursor-pointer bg-white dark:bg-slate-900"
                   >
                     <option value="">-- Pilih MAK (Opsional) --</option>
                     {LIST_NOMOR_KOMPONEN.map((k) => (
@@ -1142,7 +1142,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-800">Biaya / Nominal Pengajuan (Rp)</label>
+                  <label className="font-bold text-slate-800 dark:text-slate-200">Biaya / Nominal Pengajuan (Rp)</label>
                   <input
                     type="text"
                     value={modalForm.nominal}
@@ -1152,17 +1152,17 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                       setModalForm((prev) => ({ ...prev, nominal: formatted }));
                     }}
                     placeholder="Contoh: 15.000.000"
-                    className="input-human w-full h-9 px-3 font-mono text-xs font-bold text-slate-900"
+                    className="input-human w-full h-9 px-3 font-mono text-xs font-bold text-slate-900 dark:text-slate-100"
                   />
                 </div>
               </div>
 
               {/* Modal Actions */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="btn-tactile px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium cursor-pointer"
+                  className="btn-tactile px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium cursor-pointer"
                 >
                   Batal
                 </button>

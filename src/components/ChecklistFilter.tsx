@@ -140,15 +140,15 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
         onClick={() => toggleCost(key)}
         className={`btn-tactile inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all ${
           isActive
-            ? "glass-control-active text-slate-900 font-semibold"
-            : "glass-control text-slate-600 hover:text-slate-900 hover:bg-white/80"
+            ? "glass-control-active text-slate-900 dark:text-slate-100 font-semibold"
+            : "glass-control text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/80"
         }`}
       >
         <span
           className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-all ${
             isActive
               ? "bg-[#0071e3] border-[#0071e3] text-white"
-              : "border-slate-300 bg-white/70"
+              : "border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70"
           }`}
         >
           {isActive && <Check className="w-2.5 h-2.5 stroke-[3]" />}
@@ -161,12 +161,12 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
   return (
     <section className="glass-base rounded-2xl p-4 md:p-5 space-y-4">
       {/* Preset Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 border-b border-slate-200/70">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 border-b border-slate-200/70 dark:border-slate-800">
         <div className="flex items-center gap-2">
-          <span className="w-5 h-5 rounded-md bg-slate-200 text-slate-700 flex items-center justify-center">
+          <span className="w-5 h-5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center">
             <Sparkles className="w-3 h-3" />
           </span>
-          <span className="text-xs font-semibold text-slate-800">
+          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
             Preset Cepat Skema Biaya
           </span>
         </div>
@@ -175,7 +175,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
           <button
             type="button"
             onClick={applyPresetDarat}
-            className="btn-tactile px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs border border-slate-200/80 shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
+            className="btn-tactile px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-medium text-xs border border-slate-200/80 dark:border-slate-800 shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
           >
             <span>🚗</span>
             <span>Standar Darat PP</span>
@@ -184,7 +184,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
           <button
             type="button"
             onClick={applyPresetUdara}
-            className="btn-tactile px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs border border-slate-200/80 shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
+            className="btn-tactile px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-medium text-xs border border-slate-200/80 dark:border-slate-800 shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
           >
             <span>✈️</span>
             <span>Udara + Hotel</span>
@@ -193,7 +193,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
           <button
             type="button"
             onClick={applyPresetFullboard}
-            className="btn-tactile px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs border border-slate-200/80 shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
+            className="btn-tactile px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-medium text-xs border border-slate-200/80 dark:border-slate-800 shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
           >
             <span>🏨</span>
             <span>Fullboard Meeting</span>
@@ -202,7 +202,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
           <button
             type="button"
             onClick={applyPresetDarat}
-            className="btn-tactile px-2 py-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 font-medium text-xs cursor-pointer inline-flex items-center gap-1"
+            className="btn-tactile px-2 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium text-xs cursor-pointer inline-flex items-center gap-1"
             title="Reset ke pengaturan default"
           >
             <RotateCcw className="w-3 h-3" />
@@ -216,10 +216,10 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
         {/* Kolom Kiri: Komponen Biaya (Categorized) */}
         <div className="lg:col-span-8 space-y-3">
           <div className="flex items-baseline justify-between">
-            <h3 className="text-xs font-semibold text-slate-800">
+            <h3 className="text-xs font-semibold text-slate-800 dark:text-slate-200">
               Komponen Biaya yang Dihitung
             </h3>
-            <span className="text-[11px] text-slate-400">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">
               Pilih komponen yang relevan dengan kegiatan
             </span>
           </div>
@@ -227,7 +227,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
           <div className="space-y-2.5">
             {/* Transportasi */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-medium text-slate-400 w-24 shrink-0">
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 w-24 shrink-0">
                 Transportasi:
               </span>
               <div className="flex flex-wrap gap-1.5 flex-1">
@@ -237,7 +237,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
 
             {/* Akomodasi & Rapat */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-medium text-slate-400 w-24 shrink-0">
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 w-24 shrink-0">
                 Akomodasi:
               </span>
               <div className="flex flex-wrap gap-1.5 flex-1">
@@ -247,7 +247,7 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
 
             {/* Lainnya */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-medium text-slate-400 w-24 shrink-0">
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 w-24 shrink-0">
                 Lain-lain:
               </span>
               <div className="flex flex-wrap gap-1.5 flex-1">
@@ -260,10 +260,10 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
         {/* Kolom Kanan: Jenis Uang Harian SBM */}
         <div className="lg:col-span-4 space-y-3 lg:border-l lg:border-slate-200/70 lg:pl-5">
           <div>
-            <h3 className="text-xs font-semibold text-slate-800">
+            <h3 className="text-xs font-semibold text-slate-800 dark:text-slate-200">
               Jenis Uang Harian (SBM PMK)
             </h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
               Standar tarif uang saku sesuai skema dinas
             </p>
           </div>
@@ -278,19 +278,19 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
                   onClick={() => toggleUh(key)}
                   className={`btn-tactile flex items-center justify-between p-2 rounded-lg text-xs font-medium cursor-pointer transition-all ${
                     isActive
-                      ? "glass-control-active text-slate-900 font-semibold"
-                      : "glass-control text-slate-600 hover:text-slate-900 hover:bg-white/80"
+                      ? "glass-control-active text-slate-900 dark:text-slate-100 font-semibold"
+                      : "glass-control text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/80"
                   }`}
                 >
                   <div className="text-left leading-tight">
                     <span className="block">{label}</span>
-                    <span className="text-[10px] text-slate-400 font-normal">{sub}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">{sub}</span>
                   </div>
                   <span
                     className={`w-3.5 h-3.5 rounded shrink-0 ml-2 flex items-center justify-center border transition-all ${
                       isActive
                         ? "bg-[#0071e3] border-[#0071e3] text-white"
-                        : "border-slate-300 bg-white/70"
+                        : "border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70"
                     }`}
                   >
                     {isActive && <Check className="w-2.5 h-2.5 stroke-[3]" />}

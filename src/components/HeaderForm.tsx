@@ -372,25 +372,25 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           ------------------------------------------------------------- */}
       <section className="form-card p-4 md:p-5 space-y-3.5">
         {/* Top Header Row with Title, Badges, and Clean Action Group */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center font-bold text-xs border border-slate-200 shadow-2xs">
+            <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs border border-slate-200 dark:border-slate-800 shadow-2xs">
               1
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-xs md:text-sm font-bold text-slate-900 tracking-tight">
+                <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                   Informasi & Narasi Kegiatan
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                   Wajib Diisi
                 </span>
                 {editingOriginalId ? (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/70">
                     Mengedit: {editingOriginalId}
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                     Draft Baru
                   </span>
                 )}
@@ -404,10 +404,10 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               <button
                 type="button"
                 onClick={onOpenDaftarKegiatan}
-                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200/90 shadow-2xs cursor-pointer transition-all"
+                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-medium border border-slate-200/90 dark:border-slate-800 shadow-2xs cursor-pointer transition-all"
                 title="Buka Daftar Seluruh Kegiatan SPJ Tersimpan"
               >
-                <FolderKanban className="w-3.5 h-3.5 text-slate-500" />
+                <FolderKanban className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>Daftar Kegiatan</span>
               </button>
             )}
@@ -428,39 +428,39 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
         {/* Sub-panel Identitas Berkas SPJ & Klasifikasi Kegiatan */}
         <div className="space-y-2">
-          <div className="p-2.5 sm:p-3 bg-slate-50/70 border border-slate-200/80 rounded-xl flex flex-col lg:flex-row lg:items-center justify-between gap-3 transition-all">
+          <div className="p-2.5 sm:p-3 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 rounded-xl flex flex-col lg:flex-row lg:items-center justify-between gap-3 transition-all">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200/90 text-slate-600 flex items-center justify-center shrink-0 shadow-2xs">
-                <FolderKanban className="w-4 h-4 text-slate-500" />
+              <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 shadow-2xs">
+                <FolderKanban className="w-4 h-4 text-slate-500 dark:text-slate-400" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                  <span className="text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
                     ID Kegiatan
                   </span>
                   <span className={`px-2.5 py-0.5 rounded-lg font-mono font-bold text-xs border shadow-2xs ${
                     conflictingKegiatan
-                      ? "bg-amber-50 text-amber-900 border-amber-300"
+                      ? "bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200 border-amber-300"
                       : isEditingCurrent
-                      ? "bg-blue-50 text-[#0071e3] border-blue-200"
-                      : "bg-white text-slate-900 border-slate-200"
+                      ? "bg-blue-50 dark:bg-blue-950/50 text-[#0071e3] border-blue-200 dark:border-blue-800/70"
+                      : "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800"
                   }`}>
                     {currentId}
                   </span>
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/60 text-slate-600 border border-slate-300/50">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/60 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-300/50">
                     {(header.kategoriSpj || "A") === "A" ? "Kategori A • ASN" : "Kategori NA • Non-ASN"}
                   </span>
                   {conflictingKegiatan ? (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:text-amber-300 border border-amber-300 flex items-center gap-1">
                       <AlertTriangle className="w-3 h-3 text-amber-600" />
                       ID Sudah Terpakai
                     </span>
                   ) : isEditingCurrent ? (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-[#0071e3] border border-blue-200">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-[#0071e3] border border-blue-200 dark:border-blue-800/70">
                       Mode Edit
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                       ID Siap Digunakan
                     </span>
@@ -471,14 +471,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
             <div className="flex items-center gap-2 shrink-0 flex-wrap">
               {/* Segmented Control Kategori A / NA */}
-              <div className="inline-flex rounded-lg bg-slate-200/60 p-0.5 text-xs font-medium border border-slate-300/40">
+              <div className="inline-flex rounded-lg bg-slate-200/60 dark:bg-slate-700 p-0.5 text-xs font-medium border border-slate-300/40">
                 <button
                   type="button"
                   onClick={() => updateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut, "A")}
                   className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                     (header.kategoriSpj || "A") === "A"
-                      ? "bg-white text-slate-900 shadow-xs"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
                   }`}
                   title="Pilih ASN jika peserta memiliki NIP dan pangkat/jabatan"
                 >
@@ -489,8 +489,8 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   onClick={() => updateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut, "NA")}
                   className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                     (header.kategoriSpj || "A") === "NA" || (header.kategoriSpj as string) === "B"
-                      ? "bg-white text-slate-900 shadow-xs"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
                   }`}
                   title="Pilih Non-ASN jika peserta adalah eksternal / narasumber"
                 >
@@ -500,8 +500,8 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
               {/* No Urut Input with Auto Button */}
               <div className="flex items-center gap-1.5">
-                <div className="flex items-center gap-1.5 bg-white border border-slate-200/90 rounded-lg px-2 py-1 shadow-2xs">
-                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">No:</span>
+                <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-lg px-2 py-1 shadow-2xs">
+                  <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">No:</span>
                   <input
                     type="text"
                     maxLength={3}
@@ -511,14 +511,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                       const val = e.target.value.replace(/[^0-9]/g, "");
                       updateIdKegiatan(header.tanggalSpd, val, header.kategoriSpj);
                     }}
-                    className="w-9 text-center text-xs font-mono font-bold text-slate-800 focus:outline-hidden"
+                    className="w-9 text-center text-xs font-mono font-bold text-slate-800 dark:text-slate-200 focus:outline-hidden"
                     title="Nomor Urut Kegiatan"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => updateIdKegiatan(header.tanggalSpd, nextAvailableNo, header.kategoriSpj)}
-                  className="btn-tactile inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-[#0071e3] text-[#0071e3] hover:text-white border border-blue-200/80 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+                  className="btn-tactile inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/50 hover:bg-[#0071e3] text-[#0071e3] hover:text-white border border-blue-200/80 dark:border-blue-800/70 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
                   title={`Gunakan nomor urut berikutnya (${nextAvailableNo})`}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
@@ -530,13 +530,13 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
           {/* Alert Peringatan jika ID bertabrakan */}
           {conflictingKegiatan && (
-            <div className="text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-xs animate-fade-in">
+            <div className="text-xs bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/70 text-amber-800 dark:text-amber-300 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-xs animate-fade-in">
               <div className="flex items-start sm:items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
                 <div>
                   <span>ID <strong>{currentId}</strong> sudah dipakai oleh kegiatan: </span>
-                  <strong className="text-slate-900">&ldquo;{conflictingKegiatan.namaKegiatan}&rdquo;</strong>
-                  <p className="text-[11px] text-amber-700 mt-0.5">
+                  <strong className="text-slate-900 dark:text-slate-100">&ldquo;{conflictingKegiatan.namaKegiatan}&rdquo;</strong>
+                  <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5">
                     Gunakan nomor urut lain atau klik tombol di samping agar data kegiatan baru tidak menimpa kegiatan yang sudah ada.
                   </p>
                 </div>
@@ -558,7 +558,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             {/* Keterangan Kegiatan Dinas */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-800 flex items-center gap-1">
+              <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <span>Keterangan Kegiatan Dinas</span>
                 <span className="text-red-500 font-bold">*</span>
               </label>
@@ -569,7 +569,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 placeholder="Contoh: Perjalanan Dinas dalam rangka Rapat Koordinasi Nasional Kebijakan Pangan..."
                 className="input-human w-full p-2.5 text-xs font-normal resize-none"
               />
-              <p className="text-[10.5px] text-slate-400">
+              <p className="text-[10.5px] text-slate-400 dark:text-slate-500">
                 Uraian ini tercetak sebagai bunyi kegiatan resmi pada seluruh lembar SPJ.
               </p>
             </div>
@@ -577,7 +577,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             {/* Perihal Memorandum */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="font-semibold text-slate-800 flex items-center gap-1">
+                <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                   <span>Perihal Memorandum (Nota Dinas)</span>
                   <span className="text-red-500 font-bold">*</span>
                 </label>
@@ -617,7 +617,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                         handleChange("keteranganMemo", e.target.value);
                       }
                     }}
-                    className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 cursor-pointer bg-white"
+                    className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 dark:text-slate-100 cursor-pointer bg-white dark:bg-slate-900"
                   >
                     <option value="">-- Pilih Perihal Memorandum --</option>
                     {OPSI_PERIHAL_MEMORANDUM.map((opsi) => (
@@ -629,9 +629,9 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   </select>
 
                   {header.keteranganMemo && (
-                    <div className="text-[11px] text-slate-700 bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1.5 leading-relaxed flex items-center justify-between gap-2">
+                    <div className="text-[11px] text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 rounded-lg px-2.5 py-1.5 leading-relaxed flex items-center justify-between gap-2">
                       <span className="truncate">
-                        <strong className="text-slate-900">Perihal Terpilih:</strong> {header.keteranganMemo}
+                        <strong className="text-slate-900 dark:text-slate-100">Perihal Terpilih:</strong> {header.keteranganMemo}
                       </span>
                     </div>
                   )}
@@ -649,7 +649,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 </div>
               )}
 
-              <p className="text-[10.5px] text-slate-400">
+              <p className="text-[10.5px] text-slate-400 dark:text-slate-500">
                 Uraian perihal pada nota dinas internal pengajuan pencairan anggaran ke PPK.
               </p>
             </div>
@@ -661,34 +661,34 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           SEKSI 2: DESTINASI & MODA TRANSPORTASI (PENENTU SBM)
           ------------------------------------------------------------- */}
       <section className="form-card p-4 md:p-5 space-y-3.5">
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-xs border border-slate-300/70 shadow-2xs">
+            <div className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs border border-slate-300/70 dark:border-slate-700 shadow-2xs">
               2
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xs md:text-sm font-bold text-slate-900 tracking-tight">
+                <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                   Destinasi & Pengaturan Perjalanan
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                   Tarif SBM PMK
                 </span>
               </div>
             </div>
           </div>
-          <MapPin className="w-4 h-4 text-slate-400 hidden sm:block" />
+          <MapPin className="w-4 h-4 text-slate-400 dark:text-slate-500 hidden sm:block" />
         </div>
 
         <div className="form-group-panel space-y-3.5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
             {/* Kolom Kiri: Provinsi & Kota Tujuan */}
-            <div className="space-y-3 p-3.5 bg-white rounded-xl border border-slate-200/80">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+            <div className="space-y-3 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
                   Lokasi Tujuan (Target Dinas)
                 </span>
-                <label className="flex items-center gap-1.5 cursor-pointer select-none text-[11px] font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 transition-colors">
+                <label className="flex items-center gap-1.5 cursor-pointer select-none text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-700 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-800 transition-colors">
                   <input
                     type="checkbox"
                     checked={Boolean(header.isMultiProvinsi)}
@@ -706,14 +706,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     }}
                     className="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
-                  <span className={header.isMultiProvinsi ? "text-blue-600 font-bold" : "text-slate-600"}>
+                  <span className={header.isMultiProvinsi ? "text-blue-600 font-bold" : "text-slate-600 dark:text-slate-300"}>
                     2 Provinsi (Multi-Provinsi)
                   </span>
                 </label>
               </div>
 
               {header.isMultiProvinsi && (
-                <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200/80 text-amber-900 text-[11px] leading-relaxed flex items-start gap-2">
+                <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/70 text-amber-900 dark:text-amber-200 text-[11px] leading-relaxed flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <div>
                     <strong>Perdin Lintas 2 Provinsi Aktif:</strong> Tarif SBM tidak diinput otomatis. Anda dapat mengisi nominal Uang Harian & Transportasi secara langsung pada tabel rincian peserta.
@@ -723,14 +723,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
               {/* Provinsi Tujuan ke-1 */}
               <div className="space-y-1">
-                <label className="font-semibold text-slate-800 flex items-center gap-1">
+                <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                   <span>{header.isMultiProvinsi ? "1. Provinsi Tujuan Pertama" : "Provinsi Tujuan (SBM)"}</span>
                   <span className="text-red-500 font-bold">*</span>
                 </label>
                 <select
                   value={header.provinsiTujuan}
                   onChange={(e) => handleChange("provinsiTujuan", e.target.value)}
-                  className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 cursor-pointer"
+                  className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 dark:text-slate-100 cursor-pointer"
                 >
                   {sbmList.map((sbm) => (
                     <option key={sbm.provinsi} value={sbm.provinsi}>
@@ -743,14 +743,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               {/* Kota / Kabupaten Tujuan Pertama */}
               <div className="space-y-1.5 pt-1">
                 <div className="flex items-center justify-between">
-                  <label className="font-semibold text-slate-800 flex items-center gap-1">
+                  <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                     <span>Kota / Kabupaten di {header.provinsiTujuan}</span>
                     <span className="text-red-500 font-bold">*</span>
                   </label>
                   <button
                     type="button"
                     onClick={handleAddKota}
-                    className="btn-tactile flex items-center gap-1 text-[11px] font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-lg border border-slate-300 cursor-pointer"
+                    className="btn-tactile flex items-center gap-1 text-[11px] font-medium text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 cursor-pointer"
                   >
                     <Plus className="w-3 h-3" />
                     <span>Tambah Kota</span>
@@ -777,7 +777,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                         <button
                           type="button"
                           onClick={() => handleRemoveKota(idx)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 border border-transparent hover:border-slate-300 cursor-pointer transition-colors"
+                          className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent hover:border-slate-300 cursor-pointer transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -788,7 +788,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
                 {availableKabkot.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[10px] text-slate-400 font-medium">Pilihan cepat:</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Pilihan cepat:</span>
                     {availableKabkot.slice(0, 5).map((k) => (
                       <button
                         key={k}
@@ -801,7 +801,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                             handleChange("kotaTujuanList", [...list, k]);
                           }
                         }}
-                        className="btn-tactile text-[10px] px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-medium cursor-pointer"
+                        className="btn-tactile text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 font-medium cursor-pointer"
                       >
                         + {k}
                       </button>
@@ -812,16 +812,16 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
               {/* Blok Provinsi Tujuan ke-2 (Hanya tampil jika Mode 2 Provinsi aktif) */}
               {header.isMultiProvinsi && (
-                <div className="pt-3 border-t border-slate-200/80 space-y-3">
+                <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800 space-y-3">
                   <div className="space-y-1">
-                    <label className="font-semibold text-slate-800 flex items-center gap-1">
+                    <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                       <span>2. Provinsi Tujuan Kedua</span>
                       <span className="text-red-500 font-bold">*</span>
                     </label>
                     <select
                       value={header.provinsiTujuan2 || "BANTEN"}
                       onChange={(e) => handleChange("provinsiTujuan2", e.target.value)}
-                      className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 cursor-pointer"
+                      className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 dark:text-slate-100 cursor-pointer"
                     >
                       {sbmList.map((sbm) => (
                         <option key={sbm.provinsi} value={sbm.provinsi}>
@@ -834,14 +834,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   {/* Kota / Kabupaten Tujuan Kedua */}
                   <div className="space-y-1.5 pt-1">
                     <div className="flex items-center justify-between">
-                      <label className="font-semibold text-slate-800 flex items-center gap-1">
+                      <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                         <span>Kota / Kabupaten di {header.provinsiTujuan2 || "BANTEN"}</span>
                         <span className="text-red-500 font-bold">*</span>
                       </label>
                       <button
                         type="button"
                         onClick={handleAddKota2}
-                        className="btn-tactile flex items-center gap-1 text-[11px] font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-lg border border-slate-300 cursor-pointer"
+                        className="btn-tactile flex items-center gap-1 text-[11px] font-medium text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 cursor-pointer"
                       >
                         <Plus className="w-3 h-3" />
                         <span>Tambah Kota</span>
@@ -868,7 +868,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                             <button
                               type="button"
                               onClick={() => handleRemoveKota2(idx)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 border border-transparent hover:border-slate-300 cursor-pointer transition-colors"
+                              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent hover:border-slate-300 cursor-pointer transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -879,7 +879,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
                     {availableKabkot2.length > 0 && (
                       <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                        <span className="text-[10px] text-slate-400 font-medium">Pilihan cepat:</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Pilihan cepat:</span>
                         {availableKabkot2.slice(0, 5).map((k) => (
                           <button
                             key={k}
@@ -892,7 +892,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                                 handleChange("kotaTujuanList2", [...list, k]);
                               }
                             }}
-                            className="btn-tactile text-[10px] px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-medium cursor-pointer"
+                            className="btn-tactile text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 font-medium cursor-pointer"
                           >
                             + {k}
                           </button>
@@ -905,15 +905,15 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             </div>
 
             {/* Kolom Kanan: Parameter Perjalanan */}
-            <div className="space-y-3 p-3.5 bg-white rounded-xl border border-slate-200/80">
-              <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block border-b border-slate-100 pb-1">
+            <div className="space-y-3 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800">
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block border-b border-slate-100 dark:border-slate-800 pb-1">
                 Rute Keberangkatan & Moda Transportasi
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Kota Keberangkatan */}
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-800">
+                  <label className="font-semibold text-slate-800 dark:text-slate-200">
                     Berangkat Dari
                   </label>
                   <input
@@ -923,13 +923,13 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     placeholder="Jakarta"
                     className="input-human w-full h-9.5 px-3 font-medium"
                   />
-                  <span className="text-[10px] text-slate-400">Default: Jakarta</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">Default: Jakarta</span>
                 </div>
 
                 {/* Moda Transportasi */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="font-semibold text-slate-800">
+                    <label className="font-semibold text-slate-800 dark:text-slate-200">
                       Alat Angkutan
                     </label>
                     <button
@@ -987,7 +987,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
                   {/* Kombinasi Cepat Multi-Moda */}
                   <div className="flex flex-wrap items-center gap-1 pt-0.5">
-                    <span className="text-[10px] text-slate-400 font-medium">Kombinasi cepat:</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Kombinasi cepat:</span>
                     {[
                       { key: "Pesawat Udara", label: "✈️ Pesawat" },
                       { key: "Kereta Api", label: "🚆 Kereta" },
@@ -1013,8 +1013,8 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                           }}
                           className={`btn-tactile text-[10px] px-1.5 py-0.5 rounded border transition-all cursor-pointer ${
                             isActive
-                              ? "bg-blue-100 text-blue-900 border-blue-300 font-bold"
-                              : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 font-medium"
+                              ? "bg-blue-100 text-blue-900 dark:text-blue-200 border-blue-300 font-bold"
+                              : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 font-medium"
                           }`}
                         >
                           {m.label}
@@ -1027,7 +1027,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
               {/* Jenis Perdin */}
               <div className="space-y-1 pt-1">
-                <label className="font-semibold text-slate-800">
+                <label className="font-semibold text-slate-800 dark:text-slate-200">
                   Jenis Perjalanan Dinas
                 </label>
                 <select
@@ -1038,7 +1038,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                       e.target.value as "Perdin Jabodetabekdung" | "Perdin Luar Kota" | "Perdin Luar Negeri"
                     )
                   }
-                  className="input-human w-full h-9.5 px-3 font-semibold text-slate-800 cursor-pointer"
+                  className="input-human w-full h-9.5 px-3 font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
                 >
                   <option value="Perdin Luar Kota">Perdin Luar Kota (Standar Tarif SBM)</option>
                   <option value="Perdin Jabodetabekdung">Perdin Jabodetabek & Bandung (Lokal)</option>
@@ -1054,23 +1054,23 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           SEKSI 3: PENOMORAN DOKUMEN & SURAT TUGAS (LEGALITAS)
           ------------------------------------------------------------- */}
       <section className="form-card p-4 md:p-5 space-y-3.5">
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-xs border border-slate-300/70 shadow-2xs">
+            <div className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs border border-slate-300/70 dark:border-slate-700 shadow-2xs">
               3
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xs md:text-sm font-bold text-slate-900 tracking-tight">
+                <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                   Penomoran Dokumen & Surat Tugas (ST)
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                   Dasar Hukum SPJ
                 </span>
               </div>
             </div>
           </div>
-          <FileCheck2 className="w-4 h-4 text-slate-400 hidden sm:block" />
+          <FileCheck2 className="w-4 h-4 text-slate-400 dark:text-slate-500 hidden sm:block" />
         </div>
 
         <div className="form-group-panel space-y-4">
@@ -1078,7 +1078,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             {/* Tanggal SPD */}
             <div className="space-y-1">
-              <label className="font-semibold text-slate-800 flex items-center gap-1">
+              <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <span>Tanggal SPD</span>
                 <span className="text-red-500 font-bold">*</span>
               </label>
@@ -1092,12 +1092,12 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 }}
                 className="input-human w-full h-9.5 px-3 font-medium cursor-pointer"
               />
-              <span className="text-[10px] text-slate-400">Tanggal penetapan SPD resmi</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">Tanggal penetapan SPD resmi</span>
             </div>
 
             {/* Tanggal Memo */}
             <div className="space-y-1">
-              <label className="font-semibold text-slate-800 flex items-center gap-1">
+              <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <span>Tanggal Memo</span>
                 <span className="text-red-500 font-bold">*</span>
               </label>
@@ -1107,12 +1107,12 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 onChange={(e) => handleChange("tanggalMemo", e.target.value)}
                 className="input-human w-full h-9.5 px-3 font-medium cursor-pointer"
               />
-              <span className="text-[10px] text-slate-400">Tanggal pengantar nota dinas</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">Tanggal pengantar nota dinas</span>
             </div>
 
             {/* Nomor Memorandum + Ambil Nomor */}
             <div className="space-y-1">
-              <label className="font-semibold text-slate-800 flex items-center justify-between">
+              <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span>Nomor Memorandum</span>
                   {onOpenDaftarMemo && (
@@ -1128,7 +1128,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   )}
                 </div>
                 {latestMemoInfo?.lastMemoStr && (
-                  <span className="text-[10px] font-normal text-slate-400 font-mono hidden sm:inline" title={`Nomor terakhir terdaftar di database master: ${latestMemoInfo.lastMemoStr}`}>
+                  <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500 font-mono hidden sm:inline" title={`Nomor terakhir terdaftar di database master: ${latestMemoInfo.lastMemoStr}`}>
                     Terakhir: {latestMemoInfo.lastMemoStr}
                   </span>
                 )}
@@ -1157,9 +1157,9 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               ) : (
                 /* Mode Standar: Segmented Input (M. [ xxx ] /INS/PPK/IX/2026) */
                 <div className="flex gap-1.5 items-stretch">
-                  <div className="flex-1 flex items-stretch h-9.5 rounded-lg border border-slate-300 focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500 overflow-hidden bg-white shadow-2xs transition-all">
+                  <div className="flex-1 flex items-stretch h-9.5 rounded-lg border border-slate-300 dark:border-slate-700 focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500 overflow-hidden bg-white dark:bg-slate-900 shadow-2xs transition-all">
                     {/* Prefix M. */}
-                    <div className="flex items-center px-2.5 bg-slate-50 border-r border-slate-200 select-none text-slate-500 font-mono text-xs font-medium">
+                    <div className="flex items-center px-2.5 bg-slate-50 dark:bg-slate-800/70 border-r border-slate-200 dark:border-slate-800 select-none text-slate-500 dark:text-slate-400 font-mono text-xs font-medium">
                       M.
                     </div>
 
@@ -1179,17 +1179,17 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                         }
                       }}
                       placeholder="xxx"
-                      className="w-16 sm:w-20 px-2 text-center font-mono font-semibold text-xs text-blue-600 bg-white focus:outline-none focus:bg-blue-50/20 transition-colors"
+                      className="w-16 sm:w-20 px-2 text-center font-mono font-semibold text-xs text-blue-600 bg-white dark:bg-slate-900 focus:outline-none focus:bg-blue-50/20 transition-colors"
                       title="Ketik nomor urut memorandum (misal: 391 atau xxx)"
                     />
 
                     {/* Suffix: /INS/PPK/IX/2026 */}
                     <div 
-                      className="flex items-center px-2.5 bg-slate-50 border-l border-slate-200 select-none flex-1 truncate text-slate-500 font-mono text-xs"
+                      className="flex items-center px-2.5 bg-slate-50 dark:bg-slate-800/70 border-l border-slate-200 dark:border-slate-800 select-none flex-1 truncate text-slate-500 dark:text-slate-400 font-mono text-xs"
                       title={`Bulan Romawi (${currentMemoRomanMonth}) dan Tahun (${currentMemoYear}) sinkron otomatis dari Tanggal Memo`}
                     >
                       <span className="truncate">
-                        /INS/PPK/<strong className="text-slate-700 font-semibold">{currentMemoRomanMonth}</strong>/{currentMemoYear}
+                        /INS/PPK/<strong className="text-slate-700 dark:text-slate-300 font-semibold">{currentMemoRomanMonth}</strong>/{currentMemoYear}
                       </span>
                     </div>
                   </div>
@@ -1207,18 +1207,18 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 </div>
               )}
 
-              <span className="text-[10px] text-slate-400 block truncate">
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
                 Bulan & tahun otomatis mengikuti tanggal memo
               </span>
             </div>
           </div>
 
           {/* Sub-panel 2: Penomoran Surat Tugas (ST) */}
-          <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-3 text-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
-              <span className="font-bold text-slate-900">Penomoran Surat Tugas (ST)</span>
+          <div className="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+              <span className="font-bold text-slate-900 dark:text-slate-100">Penomoran Surat Tugas (ST)</span>
 
-              <label className="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer select-none bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 transition-colors">
+              <label className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 transition-colors">
                 <input
                   type="checkbox"
                   checked={header.useDifferentStPejabat || false}
@@ -1227,7 +1227,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     handleChange("useDifferentStPejabat", checked);
                     if (!checked) handleChange("nomorStPejabat", "");
                   }}
-                  className="w-3.5 h-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-500 cursor-pointer"
+                  className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-slate-500 cursor-pointer"
                 />
                 <span className="font-medium">Gunakan nomor ST terpisah untuk Pejabat / Inspektur</span>
               </label>
@@ -1236,7 +1236,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
               {/* ST Utama / Staf Pelaksana */}
               <div className="space-y-1">
-                <label className="font-semibold text-slate-800 flex items-center gap-1">
+                <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                   <span>Nomor ST Utama / Staf Pelaksana</span>
                   <span className="text-red-500 font-bold">*</span>
                 </label>
@@ -1249,7 +1249,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                       handleChange("nomorStMaster", e.target.value);
                     }}
                     placeholder="Contoh: ST-05/INS/01/2026"
-                    className="input-human flex-1 h-9.5 px-3 font-mono font-bold text-slate-900"
+                    className="input-human flex-1 h-9.5 px-3 font-mono font-bold text-slate-900 dark:text-slate-100"
                   />
                   <button
                     type="button"
@@ -1261,15 +1261,15 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     <span>Terapkan ke Semua</span>
                   </button>
                 </div>
-                <span className="text-[10px] text-slate-400 block mt-0.5">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
                   Nomor surat tugas ini berlaku untuk rombongan dinas atau staf pelaksana.
                 </span>
               </div>
 
               {/* ST Khusus Pejabat (Jika dicentang) */}
               {header.useDifferentStPejabat ? (
-                <div className="space-y-1 p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-                  <label className="font-bold text-slate-900 flex items-center gap-1">
+                <div className="space-y-1 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-800">
+                  <label className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
                     <span>Nomor ST Khusus Pejabat (Inspektur / Eselon)</span>
                     <span className="text-red-500 font-bold">*</span>
                   </label>
@@ -1278,14 +1278,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     value={header.nomorStPejabat || ""}
                     onChange={(e) => handleChange("nomorStPejabat", e.target.value)}
                     placeholder="Contoh: ST-01/SESMEN/01/2026"
-                    className="input-human w-full h-9.5 px-3 font-mono font-bold text-slate-900 border-slate-300"
+                    className="input-human w-full h-9.5 px-3 font-mono font-bold text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700"
                   />
-                  <span className="text-[10px] text-slate-500 block">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
                     Khusus disematkan pada lembar SPD personil berstatus Pejabat / Golongan IV.
                   </span>
                 </div>
               ) : (
-                <div className="hidden md:flex items-center h-full p-2.5 rounded-lg border border-dashed border-slate-200 text-slate-400 text-[11px] italic">
+                <div className="hidden md:flex items-center h-full p-2.5 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[11px] italic">
                   Seluruh peserta menggunakan nomor ST yang sama. Centang opsi di atas bila pejabat memiliki ST tersendiri.
                 </div>
               )}
@@ -1298,38 +1298,38 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           SEKSI 4: PEMBEBANAN ANGGARAN & SPJ (STANDAR DIPA)
           ------------------------------------------------------------- */}
       <section className="form-card p-4 md:p-5 space-y-3.5">
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-xs border border-slate-300/70 shadow-2xs">
+            <div className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs border border-slate-300/70 dark:border-slate-700 shadow-2xs">
               4
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xs md:text-sm font-bold text-slate-900 tracking-tight">
+                <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                   Pembebanan Anggaran & Pertanggungjawaban SPJ
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                   Standar DIPA Terisi Otomatis
                 </span>
               </div>
             </div>
           </div>
-          <Landmark className="w-4 h-4 text-slate-400 hidden sm:block" />
+          <Landmark className="w-4 h-4 text-slate-400 dark:text-slate-500 hidden sm:block" />
         </div>
 
         <div className="form-group-panel space-y-3.5 text-xs">
           {/* Baris 1: NOMOR KOMPONEN & NOMOR MAK (Sesuai Gambar 1, 2, 3) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             {/* NOMOR KOMPONEN */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
+                <label className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">
                   NOMOR KOMPONEN {isCustomKomponen ? "(CUSTOM)" : ""}
                 </label>
                 <div className="flex items-center gap-2">
                   {!isCustomKomponen && getKomponenName(header.nomorKomp, header.detailKomponen) && (
                     <span
-                      className="text-[10px] font-medium text-slate-500 truncate max-w-[180px]"
+                      className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate max-w-[180px]"
                       title={getKomponenName(header.nomorKomp, header.detailKomponen)}
                     >
                       {getKomponenName(header.nomorKomp, header.detailKomponen)}
@@ -1338,7 +1338,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsManualKomponenOverride(!isCustomKomponen)}
-                    className="text-[10px] font-medium text-slate-500 hover:text-slate-800 underline transition-colors cursor-pointer"
+                    className="text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 underline transition-colors cursor-pointer"
                   >
                     {isCustomKomponen ? "Pilih dari daftar" : "Custom"}
                   </button>
@@ -1360,7 +1360,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                       }));
                     }
                   }}
-                  className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 cursor-pointer text-xs"
+                  className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 dark:text-slate-100 cursor-pointer text-xs"
                 >
                   <option value="">-- Pilih Komponen --</option>
                   {LIST_NOMOR_KOMPONEN.map((k) => (
@@ -1380,9 +1380,9 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     )}
                 </select>
               ) : (
-                <div className="space-y-2.5 p-3 bg-slate-50/90 rounded-xl border border-slate-200">
+                <div className="space-y-2.5 p-3 bg-slate-50/90 dark:bg-slate-800/70 rounded-xl border border-slate-200 dark:border-slate-800">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-700 block">
+                    <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">
                       Masukan nomor Komponen Custom:
                     </label>
                     <input
@@ -1390,11 +1390,11 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                       value={header.nomorKomp || ""}
                       onChange={(e) => handleChange("nomorKomp", e.target.value)}
                       placeholder="Contoh: CL.7458.ABR.006.051.0A"
-                      className="input-default w-full h-8 px-2.5 font-mono font-bold text-slate-800 text-xs bg-white"
+                      className="input-default w-full h-8 px-2.5 font-mono font-bold text-slate-800 dark:text-slate-200 text-xs bg-white dark:bg-slate-900"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-700 block">
+                    <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">
                       Masukan detail Nomor Komponen:
                     </label>
                     <input
@@ -1402,7 +1402,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                       value={header.detailKomponen || ""}
                       onChange={(e) => handleChange("detailKomponen", e.target.value)}
                       placeholder="Contoh: Koordinasi dan Evaluasi Kebijakan Tata Niaga"
-                      className="input-default w-full h-8 px-2.5 font-medium text-slate-800 text-xs bg-white"
+                      className="input-default w-full h-8 px-2.5 font-medium text-slate-800 dark:text-slate-200 text-xs bg-white dark:bg-slate-900"
                     />
                   </div>
                 </div>
@@ -1412,12 +1412,12 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             {/* NOMOR MAK */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
+                <label className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">
                   NOMOR MAK
                 </label>
                 {getMakAkunName(header.nomorMak) && (
                   <span
-                    className="text-[10px] font-medium text-slate-500 truncate max-w-[240px]"
+                    className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate max-w-[240px]"
                     title={getMakAkunName(header.nomorMak)}
                   >
                     {getMakAkunName(header.nomorMak)}
@@ -1427,7 +1427,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               <select
                 value={header.nomorMak || ""}
                 onChange={(e) => handleChange("nomorMak", e.target.value)}
-                className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 cursor-pointer text-xs"
+                className="input-human w-full h-10 px-3 font-mono font-semibold text-slate-900 dark:text-slate-100 cursor-pointer text-xs"
               >
                 <option value="">-- Pilih MAK --</option>
                 {LIST_NOMOR_MAK.map((m) => (
@@ -1450,7 +1450,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-0.5">
             {/* Unit Kerja */}
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Unit Kerja</label>
+              <label className="font-semibold text-slate-700 dark:text-slate-300">Unit Kerja</label>
               <input
                 type="text"
                 value={header.unitKerja}
@@ -1461,7 +1461,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
             {/* Jenis Pengajuan */}
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Pengajuan</label>
+              <label className="font-semibold text-slate-700 dark:text-slate-300">Pengajuan</label>
               <select
                 value={header.jenisPengajuan || "RAMPUNG"}
                 onChange={(e) =>
@@ -1470,7 +1470,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     e.target.value as "RENCANA" | "RAMPUNG" | "MERAMPUNGKAN"
                   )
                 }
-                className="input-human w-full h-9 px-2 font-bold text-slate-800 cursor-pointer"
+                className="input-human w-full h-9 px-2 font-bold text-slate-800 dark:text-slate-200 cursor-pointer"
               >
                 <option value="RAMPUNG">RAMPUNG</option>
                 <option value="RENCANA">RENCANA</option>
@@ -1480,13 +1480,13 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
             {/* Pilihan Cepat DIPA */}
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700 truncate block" title="Pilih Cepat dari Database DIPA (Opsional)">
+              <label className="font-semibold text-slate-700 dark:text-slate-300 truncate block" title="Pilih Cepat dari Database DIPA (Opsional)">
                 Pilih Cepat Item Detail DIPA
               </label>
               <select
                 value=""
                 onChange={(e) => handleSelectQuickItemDetail(e.target.value)}
-                className="input-human w-full h-9 px-2 font-mono text-slate-700 text-xs cursor-pointer truncate"
+                className="input-human w-full h-9 px-2 font-mono text-slate-700 dark:text-slate-300 text-xs cursor-pointer truncate"
                 title="Pilih item detail bawaan untuk mengisi otomatis kode & keterangan"
               >
                 <option value="">-- Pilih dari DIPA ({availableItemDetails.length}) --</option>
@@ -1500,34 +1500,34 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           </div>
 
           {/* Baris 3: Input Manual Kode Item Detail & Keterangan Item Detail (Auto-Save ke Database) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             {/* Kode Item Detail */}
             <div className="space-y-1">
-              <label className="font-bold text-slate-700 text-xs flex items-center gap-1">
+              <label className="font-bold text-slate-700 dark:text-slate-300 text-xs flex items-center gap-1">
                 <span>Item Detail (Kode)</span>
-                <span className="text-[10px] font-normal text-slate-400">(contoh: 010010)</span>
+                <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">(contoh: 010010)</span>
               </label>
               <input
                 type="text"
                 value={header.itemDetail || ""}
                 onChange={(e) => handleItemDetailKodeChange(e.target.value)}
                 placeholder="010010"
-                className="input-default w-full h-9 px-2.5 font-mono font-bold text-slate-900 text-xs"
+                className="input-default w-full h-9 px-2.5 font-mono font-bold text-slate-900 dark:text-slate-100 text-xs"
               />
             </div>
 
             {/* Keterangan Item Detail */}
             <div className="space-y-1 md:col-span-2">
-              <label className="font-bold text-slate-700 text-xs flex items-center gap-1">
+              <label className="font-bold text-slate-700 dark:text-slate-300 text-xs flex items-center gap-1">
                 <span>Keterangan / Uraian Item Detail</span>
-                <span className="text-[10px] font-normal text-slate-400">(contoh: Belanja Keperluan ATK)</span>
+                <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">(contoh: Belanja Keperluan ATK)</span>
               </label>
               <input
                 type="text"
                 value={header.keteranganItemDetail || ""}
                 onChange={(e) => handleItemDetailKeteranganChange(e.target.value)}
                 placeholder="Belanja Keperluan ATK / Satuan Biaya Tiket Pesawat..."
-                className="input-default w-full h-9 px-2.5 font-medium text-slate-900 text-xs"
+                className="input-default w-full h-9 px-2.5 font-medium text-slate-900 dark:text-slate-100 text-xs"
               />
             </div>
           </div>
@@ -1538,17 +1538,17 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           SEKSI 5: PEJABAT PENANDATANGAN & VERIFIKASI
           ------------------------------------------------------------- */}
       <section className="form-card p-4 md:p-5 space-y-3.5">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-slate-100">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-xs border border-slate-300/70 shadow-2xs">
+            <div className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs border border-slate-300/70 dark:border-slate-700 shadow-2xs">
               5
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xs md:text-sm font-bold text-slate-900 tracking-tight">
+                <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                   Pejabat Penandatangan & Verifikasi
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                   Tanda Tangan Dokumen
                 </span>
               </div>
@@ -1556,7 +1556,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <Users2 className="w-4 h-4 text-slate-400 hidden sm:block mr-1" />
+            <Users2 className="w-4 h-4 text-slate-400 dark:text-slate-500 hidden sm:block mr-1" />
             <button
               type="button"
               onClick={() => setIsModalTambahPegawaiOpen(true)}
@@ -1572,14 +1572,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             {/* PPK Selector */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-800 flex items-center gap-1">
+              <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <span>Pejabat Pembuat Komitmen (PPK)</span>
                 <span className="text-red-500 font-bold">*</span>
               </label>
               <select
                 value={header.ppkNama}
                 onChange={(e) => handlePpkChange(e.target.value)}
-                className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 cursor-pointer"
+                className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 dark:text-slate-100 cursor-pointer"
               >
                 {pegawaiList.map((p, idx) => (
                   <option key={`ppk-${p.nip || p.kodeNama || p.nama}-${idx}`} value={p.nama}>
@@ -1587,14 +1587,14 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   </option>
                 ))}
               </select>
-              <span className="text-[10.5px] text-slate-400 block">
+              <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
                 Tanda tangan kiri pada Nominatif & Kuitansi (Arif Wibowo).
               </span>
             </div>
 
             {/* Bendahara Pengeluaran */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-800 flex items-center gap-1">
+              <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <span>Bendahara Pengeluaran</span>
                 <span className="text-red-500 font-bold">*</span>
               </label>
@@ -1602,23 +1602,23 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 type="text"
                 value={header.bendahara}
                 onChange={(e) => handleChange("bendahara", e.target.value)}
-                className="input-human w-full h-9.5 px-3 font-medium text-slate-900"
+                className="input-human w-full h-9.5 px-3 font-medium text-slate-900 dark:text-slate-100"
               />
-              <span className="text-[10.5px] text-slate-400 block">
+              <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
                 Tanda tangan tengah pada Nominatif (Raka Panji).
               </span>
             </div>
 
             {/* Penanggung Jawab Kegiatan */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-800 flex items-center gap-1">
+              <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <span>Penanggung Jawab Kegiatan</span>
                 <span className="text-red-500 font-bold">*</span>
               </label>
               <select
                 value={header.penanggungJawabNama || "Reni Sutaryo, S.Si., M.Adm.Pemb"}
                 onChange={(e) => handlePenanggungJawabChange(e.target.value)}
-                className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 cursor-pointer"
+                className="input-human w-full h-9.5 px-3 font-semibold text-slate-900 dark:text-slate-100 cursor-pointer"
               >
                 {pegawaiList.map((p, idx) => (
                   <option key={`pj-${p.nip || p.kodeNama || p.nama}-${idx}`} value={p.nama}>
@@ -1626,16 +1626,16 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   </option>
                 ))}
               </select>
-              <span className="text-[10.5px] text-slate-400 block">
+              <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
                 Tanda tangan kanan pada Nominatif (Reni Sutaryo).
               </span>
             </div>
 
             {/* Petugas Verifikasi (Hanya Taufik Prasetyo & Noviarty) */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-800 flex items-center gap-1">
+              <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <span>Petugas Verifikasi</span>
-                <span className="text-[10px] font-medium text-slate-400">(Taufik / Noviarty)</span>
+                <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">(Taufik / Noviarty)</span>
               </label>
               <select
                 value={
@@ -1668,7 +1668,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     </option>
                   )}
               </select>
-              <span className="text-[10.5px] text-slate-400 block">
+              <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
                 Pemeriksa kelengkapan berkas bukti riil dan tiket (Taufik Prasetyo / Noviarty).
               </span>
             </div>

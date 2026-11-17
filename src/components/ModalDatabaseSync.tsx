@@ -233,18 +233,18 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-800 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 bg-white border-b border-slate-200 flex items-center justify-between">
+        <div className="px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center border border-slate-200 dark:border-slate-800">
               <Database className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-slate-900 tracking-tight">Koneksi Database Google Sheets</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">Koneksi Database Google Sheets</h3>
                 <span
-                  className="text-[10px] font-medium px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200"
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-[#0071e3]" : "bg-slate-400"}`}
@@ -252,7 +252,7 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                   {isConnected ? "Terhubung" : "Belum Terhubung"}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Penyimpanan transaksi dinas & sinkronisasi Rekap 48 Kolom
               </p>
             </div>
@@ -260,62 +260,62 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
           <button
             type="button"
             onClick={handleClose}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto space-y-4 text-xs text-slate-700">
+        <div className="p-6 overflow-y-auto space-y-4 text-xs text-slate-700 dark:text-slate-300">
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-3 gap-2.5">
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-slate-200/60 text-slate-700 flex items-center justify-center shrink-0">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-800 flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-slate-200/60 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
                 <Users className="w-3.5 h-3.5" />
               </div>
               <div>
-                <div className="text-[10px] font-medium text-slate-400">Pegawai Aktif</div>
-                <div className="text-xs font-bold text-slate-900">{currentPegawaiList.length} orang</div>
+                <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500">Pegawai Aktif</div>
+                <div className="text-xs font-bold text-slate-900 dark:text-slate-100">{currentPegawaiList.length} orang</div>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-slate-200/60 text-slate-700 flex items-center justify-center shrink-0">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-800 flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-slate-200/60 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
                 <MapPin className="w-3.5 h-3.5" />
               </div>
               <div>
-                <div className="text-[10px] font-medium text-slate-400">Tarif SBM</div>
-                <div className="text-xs font-bold text-slate-900">{currentSbmList.length} provinsi</div>
+                <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500">Tarif SBM</div>
+                <div className="text-xs font-bold text-slate-900 dark:text-slate-100">{currentSbmList.length} provinsi</div>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-slate-200/60 text-slate-700 flex items-center justify-center shrink-0">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-800 flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-slate-200/60 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
                 <FileSpreadsheet className="w-3.5 h-3.5" />
               </div>
               <div>
-                <div className="text-[10px] font-medium text-slate-400">Register Memo</div>
-                <div className="text-xs font-bold text-slate-900">{currentMemoList.length} nomor</div>
+                <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500">Register Memo</div>
+                <div className="text-xs font-bold text-slate-900 dark:text-slate-100">{currentMemoList.length} nomor</div>
               </div>
             </div>
           </div>
 
           {/* URL Configuration Section */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2.5">
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-800 space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <label className="block text-[11px] font-semibold text-slate-700">
+                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                   URL Web App Google Apps Script
                 </label>
                 {isUnlocked ? (
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 inline-flex items-center gap-1">
                     <Unlock className="w-2.5 h-2.5" />
                     Admin Terbuka
                   </span>
                 ) : (
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300 inline-flex items-center gap-1">
-                    <Lock className="w-2.5 h-2.5 text-slate-600" />
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5 text-slate-600 dark:text-slate-300" />
                     Terkunci PIN
                   </span>
                 )}
@@ -326,7 +326,7 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                   <button
                     type="button"
                     onClick={handleResetUrl}
-                    className="text-[11px] text-slate-500 hover:text-slate-800 font-medium inline-flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 font-medium inline-flex items-center gap-1 cursor-pointer"
                     title="Kembalikan ke URL default sistem (.env)"
                   >
                     <RotateCcw className="w-3 h-3" />
@@ -338,7 +338,7 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                   <button
                     type="button"
                     onClick={handleLockAgain}
-                    className="btn-tactile text-[11px] px-2.5 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium inline-flex items-center gap-1 cursor-pointer"
+                    className="btn-tactile text-[11px] px-2.5 py-1 rounded-md bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-300 font-medium inline-flex items-center gap-1 cursor-pointer"
                     title="Kunci kembali URL agar aman dari perubahan"
                   >
                     <Lock className="w-3 h-3" />
@@ -365,9 +365,9 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
             <div className="flex gap-2">
               <div className="relative flex-1">
                 {isUnlocked ? (
-                  <Link2 className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <Link2 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
                 ) : (
-                  <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
                 )}
                 <input
                   type={isUnlocked ? "text" : "password"}
@@ -380,8 +380,8 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                   }}
                   className={`w-full pl-8 pr-2.5 py-1.5 text-xs font-mono rounded-lg border transition-all ${
                     isUnlocked
-                      ? "border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-300 focus:border-slate-400"
-                      : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed select-none"
+                      ? "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-300 focus:border-slate-400"
+                      : "border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed select-none"
                   }`}
                   title={isUnlocked ? "URL Google Apps Script" : "URL dikunci dengan PIN Admin"}
                 />
@@ -397,12 +397,12 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
               </button>
             </div>
             {!isUnlocked ? (
-              <p className="text-[10.5px] text-amber-700 bg-amber-50/80 border border-amber-200/60 rounded-lg p-2 leading-relaxed flex items-center gap-1.5">
+              <p className="text-[10.5px] text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/50 border border-amber-200/60 rounded-lg p-2 leading-relaxed flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                 <span>URL Web App dikunci dengan PIN Admin untuk melindungi endpoint database dari salah ketik atau pengubahan yang tidak disengaja.</span>
               </p>
             ) : (
-              <p className="text-[10.5px] text-slate-400 leading-relaxed">
+              <p className="text-[10.5px] text-slate-400 dark:text-slate-500 leading-relaxed">
                 Pastikan deployment Web App di Google Apps Script memiliki akses &ldquo;Anyone&rdquo;. Klik &quot;Kunci URL&quot; setelah selesai mengubah.
               </p>
             )}
@@ -411,11 +411,11 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
           {/* Status Alert */}
           {statusMessage.text && (
             <div
-              className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-2 text-xs text-slate-800"
+              className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/70 flex items-start gap-2 text-xs text-slate-800 dark:text-slate-200"
             >
-              {statusMessage.type === "success" && <CheckCircle2 className="w-3.5 h-3.5 text-slate-800 shrink-0 mt-0.5" />}
-              {statusMessage.type === "error" && <AlertCircle className="w-3.5 h-3.5 text-slate-800 shrink-0 mt-0.5" />}
-              {statusMessage.type === "info" && <RefreshCw className="w-3.5 h-3.5 text-slate-600 shrink-0 mt-0.5 animate-spin" />}
+              {statusMessage.type === "success" && <CheckCircle2 className="w-3.5 h-3.5 text-slate-800 dark:text-slate-200 shrink-0 mt-0.5" />}
+              {statusMessage.type === "error" && <AlertCircle className="w-3.5 h-3.5 text-slate-800 dark:text-slate-200 shrink-0 mt-0.5" />}
+              {statusMessage.type === "info" && <RefreshCw className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300 shrink-0 mt-0.5 animate-spin" />}
               <div className="flex-1 leading-relaxed text-[11px]">{statusMessage.text}</div>
             </div>
           )}
@@ -423,15 +423,15 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
           {/* Actions Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
             {/* Action 1: Save Perdin */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-white flex flex-col justify-between gap-3">
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between gap-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center">
+                  <span className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center">
                     <Save className="w-3.5 h-3.5" />
                   </span>
-                  <h4 className="text-xs font-semibold text-slate-900">Simpan Transaksi Perdin</h4>
+                  <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100">Simpan Transaksi Perdin</h4>
                 </div>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                   Kirim kegiatan saat ini ({rows.length} peserta, total Rp{" "}
                   {rows.reduce((s, r) => s + (r.totalJumlah || 0), 0).toLocaleString("id-ID")}) ke database spreadsheet.
                 </p>
@@ -448,15 +448,15 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
             </div>
 
             {/* Action 2: Pull Master + Rekap Data */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-white flex flex-col justify-between gap-3">
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between gap-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center">
+                  <span className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center">
                     <CloudDownload className="w-3.5 h-3.5" />
                   </span>
-                  <h4 className="text-xs font-semibold text-slate-900">Tarik Seluruh Data Cloud</h4>
+                  <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100">Tarik Seluruh Data Cloud</h4>
                 </div>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                   Perbarui master Pegawai, tarif SBM PMK 2026, Register Memo, serta data Rekap 48 Kolom dari Google Sheets.
                 </p>
               </div>
@@ -464,7 +464,7 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                 type="button"
                 onClick={handleFetchAllData}
                 disabled={isSyncing || !url}
-                className="btn-tactile w-full py-2 px-3 rounded-lg bg-white hover:bg-slate-50 text-slate-800 border border-slate-300/80 text-xs font-medium inline-flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-2xs"
+                className="btn-tactile w-full py-2 px-3 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-300/80 dark:border-slate-700 text-xs font-medium inline-flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-2xs"
               >
                 {isSyncing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                 <span>Tarik Data Master & Rekap</span>
@@ -473,13 +473,13 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
           </div>
 
           {/* Purge Cache & Resync Section */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5 font-semibold text-xs text-slate-800">
+              <div className="flex items-center gap-1.5 font-semibold text-xs text-slate-800 dark:text-slate-200">
                 <RotateCcw className="w-3.5 h-3.5 text-[#0071e3]" />
                 <span>Pemulihan Data & Reset Cache Browser</span>
               </div>
-              <p className="text-[10.5px] text-slate-500 leading-relaxed max-w-md">
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">
                 Gunakan ini jika browser masih menampilkan nomor SPD atau data lama. Fitur ini akan menghapus cache lokal (localStorage) dan memuat data segar langsung dari Google Spreadsheet.
               </p>
             </div>
@@ -487,20 +487,20 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
               type="button"
               onClick={handlePurgeCacheAndReload}
               disabled={isSyncing}
-              className="btn-tactile px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-medium inline-flex items-center gap-1.5 shrink-0 disabled:opacity-50 cursor-pointer shadow-2xs"
+              className="btn-tactile px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-medium inline-flex items-center gap-1.5 shrink-0 disabled:opacity-50 cursor-pointer shadow-2xs"
               title="Hapus cache lokal & unduh ulang seluruh data dari cloud"
             >
-              {isSyncing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 text-slate-500" />}
+              {isSyncing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />}
               <span>Bersihkan Cache & Sinkron Ulang</span>
             </button>
           </div>
 
           {/* Quick Info & Guide */}
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70 text-slate-600 flex items-start gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-800 text-slate-600 dark:text-slate-300 flex items-start gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0 mt-0.5" />
             <div className="space-y-0.5 text-[10.5px] leading-relaxed">
-              <span className="font-semibold text-slate-700">Keamanan Transaksi & Sinkronisasi:</span>
-              <p className="text-slate-500">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Keamanan Transaksi & Sinkronisasi:</span>
+              <p className="text-slate-500 dark:text-slate-400">
                 Penyimpanan ke Google Sheets menggunakan penguncian transaksi (LockService) untuk mencegah tumpang tindih data. Data master juga dicadangkan otomatis ke penyimpanan lokal browser.
               </p>
             </div>
@@ -508,8 +508,8 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400 font-mono">
+        <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/70 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
             {isConnected ? "Status: Online (Google Sheets)" : "Status: Siap Terhubung"}
           </span>
           <div className="flex gap-2">
@@ -517,7 +517,7 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
               <button
                 type="button"
                 onClick={handleSaveUrl}
-                className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300/80 text-xs font-medium transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300/80 dark:border-slate-700 text-xs font-medium transition-colors cursor-pointer"
               >
                 Simpan Pengaturan
               </button>
@@ -536,13 +536,13 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
       {/* PIN Verification Modal */}
       {showPinModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xs w-full p-5 space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-xs w-full p-5 space-y-4">
             <div className="text-center space-y-1.5">
-              <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center mx-auto border border-slate-200">
-                <Lock className="w-5 h-5 text-slate-800" />
+              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center mx-auto border border-slate-200 dark:border-slate-800">
+                <Lock className="w-5 h-5 text-slate-800 dark:text-slate-200" />
               </div>
-              <h4 className="text-sm font-bold text-slate-900">Masukkan PIN Admin</h4>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">Masukkan PIN Admin</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                 Fitur ini dikunci demi keamanan integritas database.
               </p>
             </div>
@@ -559,7 +559,7 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                     setPinError("");
                   }}
                   placeholder="******"
-                  className="w-full text-center tracking-[0.4em] font-mono text-xl py-2 px-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] bg-slate-50 focus:bg-white transition-all text-slate-900"
+                  className="w-full text-center tracking-[0.4em] font-mono text-xl py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] bg-slate-50 dark:bg-slate-800/70 focus:bg-white transition-all text-slate-900 dark:text-slate-100"
                 />
                 {pinError && (
                   <p className="text-[11px] text-rose-600 font-medium text-center mt-1.5 flex items-center justify-center gap-1">
@@ -577,7 +577,7 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                     setPinInput("");
                     setPinError("");
                   }}
-                  className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium cursor-pointer transition-colors"
+                  className="flex-1 py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium cursor-pointer transition-colors"
                 >
                   Batal
                 </button>

@@ -144,18 +144,18 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-800 w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="px-6 py-4 bg-white border-b border-slate-200 text-slate-900 flex items-center justify-between">
+        <div className="px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
               <FileSpreadsheet className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold tracking-tight text-slate-900">
+              <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 {mode === "create" ? "Tambah Baris Rekap Perdin (48 Kolom)" : "Edit Data Rekap Perdin"}
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {mode === "create"
                   ? "Input data transaksi pertanggungjawaban dinas langsung ke database rekap"
                   : `Ubah data rekap untuk: ${formData["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || formData["NAMA EXTERNAL"] || "Pegawai"}`}
@@ -165,21 +165,21 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="px-6 pt-3 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-2 text-xs">
+        <div className="px-6 pt-3 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex flex-wrap gap-2 text-xs">
           <button
             type="button"
             onClick={() => setActiveSubTab("admin")}
             className={`pb-2.5 px-3 font-semibold border-b-2 transition-all cursor-pointer ${
               activeSubTab === "admin"
                 ? "border-[#0071e3] text-[#0071e3]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
             }`}
           >
             1. Administrasi & Pegawai
@@ -190,7 +190,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
             className={`pb-2.5 px-3 font-semibold border-b-2 transition-all cursor-pointer ${
               activeSubTab === "travel"
                 ? "border-[#0071e3] text-[#0071e3]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
             }`}
           >
             2. Kegiatan & Transportasi
@@ -201,7 +201,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
             className={`pb-2.5 px-3 font-semibold border-b-2 transition-all cursor-pointer ${
               activeSubTab === "costs"
                 ? "border-[#0071e3] text-[#0071e3]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
             }`}
           >
             3. Uang Harian & Penginapan
@@ -212,7 +212,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
             className={`pb-2.5 px-3 font-semibold border-b-2 transition-all cursor-pointer ${
               activeSubTab === "other"
                 ? "border-[#0071e3] text-[#0071e3]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
             }`}
           >
             4. Biaya Lainnya & Total
@@ -220,13 +220,13 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs text-slate-700">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs text-slate-700 dark:text-slate-300">
           {/* TAB 1: ADMINISTRASI & PEGAWAI */}
           {activeSubTab === "admin" && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">No. SPBY</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">No. SPBY</label>
                   <input
                     type="text"
                     value={String(formData["No SPBY"] || "")}
@@ -236,7 +236,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Jenis Pengajuan</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Jenis Pengajuan</label>
                   <select
                     value={String(formData["JENIS PENGAJUAN"] || "RAMPUNG")}
                     onChange={(e) => handleChange("JENIS PENGAJUAN", e.target.value)}
@@ -248,7 +248,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">No. SPM</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">No. SPM</label>
                   <input
                     type="text"
                     value={String(formData["No SPM"] || "")}
@@ -261,7 +261,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Nama Pegawai Internal</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Nama Pegawai Internal</label>
                   <input
                     type="text"
                     value={String(formData["NAMA PEGAWAI INTERNAL INSPEKTORAT"] || "")}
@@ -271,7 +271,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Nama External (Jika Ada)</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Nama External (Jika Ada)</label>
                   <input
                     type="text"
                     value={String(formData["NAMA EXTERNAL"] || "")}
@@ -284,7 +284,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div className="space-y-1 sm:col-span-2">
-                  <label className="font-semibold text-slate-700">NIP</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">NIP</label>
                   <input
                     type="text"
                     value={String(formData["NIP"] || "")}
@@ -294,7 +294,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Golongan</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Golongan</label>
                   <input
                     type="text"
                     value={String(formData["Gol"] || "")}
@@ -311,7 +311,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Status Pegawai</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Status Pegawai</label>
                   <select
                     value={String(formData["Status Pegawai"] || "PNS")}
                     onChange={(e) => handleChange("Status Pegawai", e.target.value)}
@@ -325,7 +325,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Jabatan</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Jabatan</label>
                   <input
                     type="text"
                     value={String(formData["Jabatan"] || "")}
@@ -335,7 +335,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Unit Kerja</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Unit Kerja</label>
                   <input
                     type="text"
                     value={String(formData["Unit Kerja"] || "INSPEKTORAT")}
@@ -352,7 +352,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
           {activeSubTab === "travel" && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700">Nama Kegiatan Dinas</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Nama Kegiatan Dinas</label>
                 <textarea
                   rows={2}
                   value={String(formData["Nama Kegiatan"] || "")}
@@ -364,7 +364,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">No. Surat Tugas (ST)</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">No. Surat Tugas (ST)</label>
                   <input
                     type="text"
                     value={String(formData["No Surat Tugas"] || "")}
@@ -374,7 +374,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Jenis Perdin</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Jenis Perdin</label>
                   <select
                     value={String(formData["Jenis Perdin"] || "Perdin Luar Kota")}
                     onChange={(e) => handleChange("Jenis Perdin", e.target.value)}
@@ -386,7 +386,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Moda Angkutan</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Moda Angkutan</label>
                   <select
                     value={String(formData["Angkutan"] || "Angkutan Darat")}
                     onChange={(e) => handleChange("Angkutan", e.target.value)}
@@ -402,7 +402,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Berangkat dari</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Berangkat dari</label>
                   <input
                     type="text"
                     value={String(formData["Berangkat dari-"] || "Jakarta")}
@@ -412,7 +412,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Tujuan ke</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Tujuan ke</label>
                   <input
                     type="text"
                     value={String(formData["Tujuan ke-"] || "")}
@@ -425,7 +425,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Tgl Berangkat</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Tgl Berangkat</label>
                   <input
                     type="date"
                     value={String(formData["Tgl Berangkat"] || "")}
@@ -434,7 +434,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Tgl Kembali</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Tgl Kembali</label>
                   <input
                     type="date"
                     value={String(formData["Tgl Kembali"] || "")}
@@ -443,7 +443,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Total Durasi Hari</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Total Durasi Hari</label>
                   <input
                     type="number"
                     min={1}
@@ -455,11 +455,11 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
               </div>
 
               {/* Rincian Tiket */}
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
-                <span className="font-semibold text-slate-800 block text-[11.5px]">Rincian Tiket Pesawat / KA</span>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 block text-[11.5px]">Rincian Tiket Pesawat / KA</span>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">No. Tiket</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">No. Tiket</label>
                     <input
                       type="text"
                       value={String(formData["Nomor Tiket"] || "")}
@@ -469,7 +469,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">Maskapai</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Maskapai</label>
                     <input
                       type="text"
                       value={String(formData["Nama Maskapai"] || "")}
@@ -479,7 +479,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">Kode Booking</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Kode Booking</label>
                     <input
                       type="text"
                       value={String(formData["Kode Booking"] || "")}
@@ -489,7 +489,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">Boarding Pass</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Boarding Pass</label>
                     <select
                       value={String(formData["Boarding Pass (Ada/Tidak)"] || "ADA")}
                       onChange={(e) => handleChange("Boarding Pass (Ada/Tidak)", e.target.value)}
@@ -503,7 +503,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">Harga Fare Pergi (Rp)</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Harga Fare Pergi (Rp)</label>
                     <CurrencyInput
                       value={Number(formData["Harga Fare Tiket Pergi ()"]) || 0}
                       onChange={(val) => handleChange("Harga Fare Tiket Pergi ()", val)}
@@ -511,7 +511,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">Harga Fare Pulang (Rp)</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Harga Fare Pulang (Rp)</label>
                     <CurrencyInput
                       value={Number(formData["Harga FareTiket Pulang ()"]) || 0}
                       onChange={(val) => handleChange("Harga FareTiket Pulang ()", val)}
@@ -527,22 +527,22 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
           {activeSubTab === "costs" && (
             <div className="space-y-4">
               {/* Uang Harian Section (Separation of Duration vs Paid UH Days) */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-800 text-[11.5px]">
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11.5px]">
                     Uang Harian (Hari yang Dibayarkan & Tarif SBM)
                   </span>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">
                     Durasi dinas: {String(formData["Total Hari"] || 1)} hr
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="p-2.5 rounded-lg bg-white border border-slate-200 space-y-1.5">
-                    <span className="font-medium text-slate-700 block">UH Biasa (100%)</span>
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                    <span className="font-medium text-slate-700 dark:text-slate-300 block">UH Biasa (100%)</span>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] text-slate-500">Lama Hari</label>
+                        <label className="text-[10px] text-slate-500 dark:text-slate-400">Lama Hari</label>
                         <input
                           type="number"
                           min={0}
@@ -552,7 +552,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-500">Total Biaya (Rp)</label>
+                        <label className="text-[10px] text-slate-500 dark:text-slate-400">Total Biaya (Rp)</label>
                         <CurrencyInput
                           value={Number(formData["UH 100% ()"]) || 0}
                           onChange={(val) => handleChange("UH 100% ()", val)}
@@ -562,11 +562,11 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-lg bg-white border border-slate-200 space-y-1.5">
-                    <span className="font-medium text-slate-700 block">UH Diklat / Workshop (60%)</span>
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                    <span className="font-medium text-slate-700 dark:text-slate-300 block">UH Diklat / Workshop (60%)</span>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] text-slate-500">Lama Hari</label>
+                        <label className="text-[10px] text-slate-500 dark:text-slate-400">Lama Hari</label>
                         <input
                           type="number"
                           min={0}
@@ -576,7 +576,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-500">Total Biaya (Rp)</label>
+                        <label className="text-[10px] text-slate-500 dark:text-slate-400">Total Biaya (Rp)</label>
                         <CurrencyInput
                           value={Number(formData["UH 40% ()"]) || 0}
                           onChange={(val) => handleChange("UH 40% ()", val)}
@@ -588,7 +588,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.5px] font-medium text-slate-600">
+                  <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">
                     UH Fullboard / Fullday / Halfday (Rp)
                   </label>
                   <CurrencyInput
@@ -602,11 +602,11 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
               </div>
 
               {/* Penginapan & Hotel Section */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
-                <span className="font-semibold text-slate-800 block text-[11.5px]">Akomodasi / Penginapan</span>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 block text-[11.5px]">Akomodasi / Penginapan</span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div className="space-y-1 sm:col-span-2">
-                    <label className="text-[10.5px] font-medium text-slate-600">Nama Hotel / Penginapan</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Nama Hotel / Penginapan</label>
                     <input
                       type="text"
                       value={String(formData["Nama Penginapan"] || "")}
@@ -616,7 +616,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">Jumlah Malam</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Jumlah Malam</label>
                     <input
                       type="number"
                       min={0}
@@ -629,7 +629,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">Tgl Check In</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Tgl Check In</label>
                     <input
                       type="date"
                       value={String(formData["Tanggal Check In"] || "")}
@@ -638,7 +638,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">Tgl Check Out</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Tgl Check Out</label>
                     <input
                       type="date"
                       value={String(formData["Tanggal Check Out"] || "")}
@@ -650,7 +650,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">Biaya Hotel Riil (Rp)</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Biaya Hotel Riil (Rp)</label>
                     <CurrencyInput
                       value={Number(formData["Biaya Penginapan Biasa (Hotel)"]) || 0}
                       onChange={(val) =>
@@ -660,7 +660,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10.5px] font-medium text-slate-600">Penginapan 30% SBM (Rp)</label>
+                    <label className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300">Penginapan 30% SBM (Rp)</label>
                     <CurrencyInput
                       value={Number(formData["Penginapan 30%"]) || 0}
                       onChange={(val) => handleChange("Penginapan 30%", val)}
@@ -677,7 +677,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Transport Jakarta PP</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Transport Jakarta PP</label>
                   <CurrencyInput
                     value={Number(formData["Transport Jakarta PP"]) || 0}
                     onChange={(val) => handleChange("Transport Jakarta PP", val)}
@@ -685,7 +685,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Transport Daerah PP</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Transport Daerah PP</label>
                   <CurrencyInput
                     value={Number(formData["Transport Daerah PP"]) || 0}
                     onChange={(val) => handleChange("Transport Daerah PP", val)}
@@ -693,7 +693,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Biaya Transport Darat/Lokal</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Biaya Transport Darat/Lokal</label>
                   <CurrencyInput
                     value={Number(formData["Biaya Transport ()"]) || 0}
                     onChange={(val) => handleChange("Biaya Transport ()", val)}
@@ -704,7 +704,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Sewa Kendaraan (Rp)</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Sewa Kendaraan (Rp)</label>
                   <CurrencyInput
                     value={Number(formData["Sewa kendaraan ()"]) || 0}
                     onChange={(val) => handleChange("Sewa kendaraan ()", val)}
@@ -712,7 +712,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Taksi Bandara (Rp)</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Taksi Bandara (Rp)</label>
                   <CurrencyInput
                     value={Number(formData["Taksi Bandara"]) || 0}
                     onChange={(val) => handleChange("Taksi Bandara", val)}
@@ -720,7 +720,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Biaya Reschedule (Rp)</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Biaya Reschedule (Rp)</label>
                   <CurrencyInput
                     value={Number(formData["Biaya Reschedule ()"]) || 0}
                     onChange={(val) => handleChange("Biaya Reschedule ()", val)}
@@ -731,7 +731,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Pengeluaran Riil (Rp)</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Pengeluaran Riil (Rp)</label>
                   <CurrencyInput
                     value={Number(formData["Riil ()"]) || 0}
                     onChange={(val) => handleChange("Riil ()", val)}
@@ -739,7 +739,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Paket Meeting / Fullboard</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Paket Meeting / Fullboard</label>
                   <CurrencyInput
                     value={Number(formData["Biaya Fullboard/Fullday/Halfday ()"]) || 0}
                     onChange={(val) =>
@@ -749,7 +749,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Uang Representatif (Rp)</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Uang Representatif (Rp)</label>
                   <CurrencyInput
                     value={Number(formData["Representatif ()"]) || 0}
                     onChange={(val) => handleChange("Representatif ()", val)}
@@ -760,7 +760,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Kurs Valuta (Jika LN)</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Kurs Valuta (Jika LN)</label>
                   <CurrencyInput
                     value={Number(formData["Kurs ()"]) || 0}
                     onChange={(val) => handleChange("Kurs ()", val)}
@@ -768,20 +768,20 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-rose-700">Pengembalian Kas (Rp)</label>
+                  <label className="font-semibold text-rose-700 dark:text-rose-300">Pengembalian Kas (Rp)</label>
                   <CurrencyInput
                     value={Number(formData["PENGEMBALIAN"]) || 0}
                     onChange={(val) => handleChange("PENGEMBALIAN", val)}
-                    className="input-glass w-full h-8 px-2 text-xs font-mono text-right text-rose-700 bg-rose-50/40"
+                    className="input-glass w-full h-8 px-2 text-xs font-mono text-right text-rose-700 dark:text-rose-300 bg-rose-50/40"
                   />
                 </div>
               </div>
 
               {/* Grand Total Box */}
-              <div className="p-4 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-slate-900 block text-xs">Total Biaya SPJ Perdin:</span>
-                  <span className="text-[11px] text-slate-500">
+                  <span className="font-bold text-slate-900 dark:text-slate-100 block text-xs">Total Biaya SPJ Perdin:</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
                     Akumulasi otomatis seluruh komponen biaya yang diinput
                   </span>
                 </div>
@@ -789,13 +789,13 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   <button
                     type="button"
                     onClick={handleRecalculateTotal}
-                    className="btn-tactile text-[11px] px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 flex items-center gap-1 cursor-pointer"
+                    className="btn-tactile text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 flex items-center gap-1 cursor-pointer"
                     title="Hitung ulang total penjumlahan"
                   >
                     <Calculator className="w-3 h-3" />
                     <span>Hitung Ulang</span>
                   </button>
-                  <span className="font-mono font-black text-sm md:text-base text-slate-900">
+                  <span className="font-mono font-black text-sm md:text-base text-slate-900 dark:text-slate-100">
                     Rp {(Number(formData["Total"]) || 0).toLocaleString("id-ID")}
                   </span>
                 </div>
@@ -804,8 +804,8 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
           )}
 
           {/* Footer Actions */}
-          <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
-            <span className="text-[11px] text-slate-400">
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">
               {activeSubTab === "admin"
                 ? "Langkah 1 dari 4: Identitas & Administrasi"
                 : activeSubTab === "travel"
@@ -818,7 +818,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="btn-tactile px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="btn-tactile px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
               >
                 Batal
               </button>

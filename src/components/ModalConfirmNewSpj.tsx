@@ -22,23 +22,23 @@ export const ModalConfirmNewSpj: React.FC<ModalConfirmNewSpjProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in no-print">
-      <div className="relative w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 space-y-5">
+      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-5">
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer"
+          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
 
         <div className="flex items-start gap-3.5">
-          <div className="p-3 rounded-2xl bg-amber-100 text-amber-700 shrink-0">
+          <div className="p-3 rounded-2xl bg-amber-100 text-amber-700 dark:text-amber-300 shrink-0">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-slate-900">Mulai Pembuatan SPJ Baru?</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Mulai Pembuatan SPJ Baru?</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               {hasUnsavedChanges
                 ? "Form saat ini memiliki data atau perubahan yang belum disimpan ke database. Jika Anda membuat SPJ baru, perubahan yang belum tersimpan akan dibersihkan."
                 : "Form akan direset bersih dan nomor ID Kegiatan baru akan di-generate secara otomatis untuk paket SPJ berikutnya."}
@@ -76,7 +76,7 @@ export const ModalConfirmNewSpj: React.FC<ModalConfirmNewSpjProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="btn-tactile w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer"
+            className="btn-tactile w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-all cursor-pointer"
           >
             <span>Batal</span>
           </button>

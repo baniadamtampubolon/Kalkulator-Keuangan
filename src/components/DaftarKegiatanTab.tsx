@@ -224,22 +224,22 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
           ------------------------------------------------------------- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Metric 1: Total Kegiatan */}
-        <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 shadow-2xs space-y-1">
+        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 shadow-2xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Total Berkas SPJ
             </span>
-            <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+            <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600">
               <Briefcase className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-bold text-slate-900 font-mono">
+            <span className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
               {kegiatanList.length}
             </span>
-            <span className="text-xs text-slate-500">Paket Terdaftar</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Paket Terdaftar</span>
           </div>
-          <div className="flex items-center gap-2 pt-0.5 text-[10.5px] text-slate-500">
+          <div className="flex items-center gap-2 pt-0.5 text-[10.5px] text-slate-500 dark:text-slate-400">
             <span className="inline-flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
               {countAsn} ASN [A]
@@ -253,53 +253,53 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
         </div>
 
         {/* Metric 2: Total Peserta */}
-        <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 shadow-2xs space-y-1">
+        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 shadow-2xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Personil Berangkat
             </span>
-            <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600">
               <Users className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-bold text-slate-900 font-mono">
+            <span className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
               {totalPeserta}
             </span>
-            <span className="text-xs text-slate-500">Orang Pelaksana</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Orang Pelaksana</span>
           </div>
-          <p className="text-[10.5px] text-slate-500 pt-0.5 truncate">
+          <p className="text-[10.5px] text-slate-500 dark:text-slate-400 pt-0.5 truncate">
             Dari seluruh rekapitulasi surat tugas
           </p>
         </div>
 
         {/* Metric 3: Total Anggaran */}
-        <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 shadow-2xs space-y-1">
+        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 shadow-2xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Total Realisasi Anggaran
             </span>
-            <div className="p-1.5 rounded-lg bg-violet-50 text-violet-600">
+            <div className="p-1.5 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600">
               <Coins className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-lg sm:text-xl font-extrabold text-slate-900 font-mono">
+            <span className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 font-mono">
               Rp {totalAnggaran.toLocaleString("id-ID")}
             </span>
           </div>
-          <p className="text-[10.5px] text-slate-500 pt-0.5 truncate">
+          <p className="text-[10.5px] text-slate-500 dark:text-slate-400 pt-0.5 truncate">
             Akun MAK 524111 Inspektorat
           </p>
         </div>
 
         {/* Metric 4: Sedang Dibuka / Status */}
-        <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 shadow-2xs space-y-1">
+        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 shadow-2xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               SPJ Sedang Dibuka
             </span>
-            <div className="p-1.5 rounded-lg bg-slate-100 text-slate-600">
+            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
@@ -308,7 +308,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
               {currentLoadedId || "Draft Baru"}
             </span>
           </div>
-          <p className="text-[10.5px] text-slate-500 pt-0.5 truncate">
+          <p className="text-[10.5px] text-slate-500 dark:text-slate-400 pt-0.5 truncate">
             {currentLoadedId ? "Sedang aktif di form input & kalkulator" : "Belum ada paket yang dimuat"}
           </p>
         </div>
@@ -317,11 +317,11 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
       {/* -------------------------------------------------------------
           2. SEARCH, FILTER & ACTION BAR
           ------------------------------------------------------------- */}
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-2xs p-3.5 sm:p-4 space-y-3">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs p-3.5 sm:p-4 space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Search Box */}
           <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
@@ -333,7 +333,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
               <button
                 type="button"
                 onClick={() => setSearchTerm("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -347,7 +347,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
               type="button"
               onClick={syncWithCloud}
               disabled={isLoadingCloud}
-              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold cursor-pointer shadow-2xs transition-all disabled:opacity-50"
+              className="btn-tactile inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-semibold cursor-pointer shadow-2xs transition-all disabled:opacity-50"
               title="Tarik & perbarui data kegiatan dari Google Spreadsheet"
             >
               <RotateCw className={`w-3.5 h-3.5 text-blue-600 ${isLoadingCloud ? "animate-spin" : ""}`} />
@@ -368,15 +368,15 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
         </div>
 
         {/* Filter Category Segmented Control */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
-          <div className="inline-flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
             <button
               type="button"
               onClick={() => setFilterKategori("ALL")}
               className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                 filterKategori === "ALL"
-                  ? "bg-white text-slate-900 shadow-xs font-semibold"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs font-semibold"
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Semua ({kegiatanList.length})
@@ -386,8 +386,8 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
               onClick={() => setFilterKategori("A")}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                 filterKategori === "A"
-                  ? "bg-white text-blue-900 shadow-xs font-semibold"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-200 shadow-xs font-semibold"
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-blue-500" />
@@ -398,8 +398,8 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
               onClick={() => setFilterKategori("NA")}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                 filterKategori === "NA"
-                  ? "bg-white text-amber-900 shadow-xs font-semibold"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-white dark:bg-slate-900 text-amber-900 dark:text-amber-200 shadow-xs font-semibold"
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -410,14 +410,14 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
           {/* Right: Sort Selector & Format info */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-[11px] text-slate-500 font-medium inline-flex items-center gap-1">
-                <ArrowDownWideNarrow className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium inline-flex items-center gap-1">
+                <ArrowDownWideNarrow className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                 <span>Urutkan:</span>
               </span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "NEWEST" | "DATE_DESC" | "OLDEST" | "NAME_AZ")}
-                className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl px-2.5 py-1 text-xs font-semibold text-slate-700 cursor-pointer shadow-2xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-slate-300 rounded-xl px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer shadow-2xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                 title="Pilih urutan daftar kegiatan"
               >
                 <option value="NEWEST">⚡ Terbaru (Default)</option>
@@ -427,15 +427,15 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
               </select>
             </div>
 
-            <div className="hidden md:block text-[11px] text-slate-400 font-mono border-l border-slate-200 pl-3">
-              Format: <span className="text-slate-700 font-bold">KEG-YYMM-001-A</span>
+            <div className="hidden md:block text-[11px] text-slate-400 dark:text-slate-500 font-mono border-l border-slate-200 dark:border-slate-800 pl-3">
+              Format: <span className="text-slate-700 dark:text-slate-300 font-bold">KEG-YYMM-001-A</span>
             </div>
           </div>
         </div>
 
         {/* Toast Notification */}
         {notification && (
-          <div className="flex items-center justify-between gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs animate-fade-in">
+          <div className="flex items-center justify-between gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70 text-emerald-900 dark:text-emerald-200 text-xs animate-fade-in">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span className="font-medium">{notification.message}</span>
@@ -443,7 +443,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
             <button
               type="button"
               onClick={() => setNotification(null)}
-              className="p-1 rounded hover:bg-emerald-100 text-slate-500 cursor-pointer"
+              className="p-1 rounded hover:bg-emerald-100 text-slate-500 dark:text-slate-400 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -454,9 +454,9 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
       {/* -------------------------------------------------------------
           3. MAIN INFORMATION-RICH ACTIVITIES LIST / TABLE
           ------------------------------------------------------------- */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden">
         {/* Table Header (Clean, Light Apple Design) */}
-        <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+        <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
           <div className="col-span-12 sm:col-span-4 lg:col-span-3">Identitas &amp; Dokumen SPJ</div>
           <div className="hidden sm:block sm:col-span-8 lg:col-span-5">Uraian Kegiatan &amp; Pelaksana</div>
           <div className="hidden lg:block lg:col-span-2 text-right">Total Anggaran</div>
@@ -465,15 +465,15 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
 
         {/* List Content */}
         {filteredList.length === 0 ? (
-          <div className="py-14 text-center text-slate-400 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400 border border-slate-200">
+          <div className="py-14 text-center text-slate-400 dark:text-slate-500 space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800">
               <FolderOpen className="w-6 h-6 stroke-1" />
             </div>
             <div className="space-y-1 max-w-sm mx-auto">
-              <p className="font-bold text-slate-800 text-sm">
+              <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">
                 {searchTerm ? "Kegiatan Tidak Ditemukan" : "Belum Ada Daftar Kegiatan"}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {searchTerm
                   ? "Tidak ada kegiatan yang sesuai dengan kata kunci pencarian Anda."
                   : "Mulai buat paket perjalanan dinas baru dengan mengisi form input & kalkulator."}
@@ -491,7 +491,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
             )}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {filteredList.map((item) => {
               const isCurrent = currentLoadedId === item.idKegiatan;
               const participants = (item.rows || [])
@@ -537,7 +537,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                     <div className="col-span-12 sm:col-span-4 lg:col-span-3 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
                         {/* ID Kegiatan Mono Badge */}
-                        <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-white border border-slate-300/80 text-slate-900 shadow-2xs">
+                        <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300/80 dark:border-slate-700 text-slate-900 dark:text-slate-100 shadow-2xs">
                           {item.idKegiatan}
                         </span>
 
@@ -557,8 +557,8 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                             item.kategori === "A"
-                              ? "bg-blue-50 text-blue-700 border border-blue-200"
-                              : "bg-amber-50 text-amber-700 border border-amber-200"
+                              ? "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/70"
+                              : "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70"
                           }`}
                         >
                           {item.kategori === "A" ? "ASN [A]" : "Non-ASN [NA]"}
@@ -566,14 +566,14 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                       </div>
 
                       {/* Tanggal & Nomor SPD */}
-                      <div className="space-y-0.5 text-xs text-slate-600">
-                        <div className="flex items-center gap-1.5 text-slate-700">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <div className="space-y-0.5 text-xs text-slate-600 dark:text-slate-300">
+                        <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                           <span className="font-medium">{formatDateIndo(item.tanggalSpd)}</span>
                         </div>
 
                         {spdRangeText && (
-                          <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-mono">
+                          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-mono">
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
                             <span>{spdRangeText}</span>
                           </div>
@@ -585,14 +585,14 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                         <div className="pt-1 flex flex-wrap gap-1.5 text-[10.5px]">
                           {item.header?.nomorStMaster && (
                             <span
-                              className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 truncate max-w-[170px]"
+                              className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 truncate max-w-[170px]"
                               title={`Nomor ST: ${item.header.nomorStMaster}`}
                             >
                               ST: {item.header.nomorStMaster}
                             </span>
                           )}
                           {item.header?.nomorMak && (
-                            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono border border-slate-200">
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-800">
                               MAK {item.header.nomorMak}
                             </span>
                           )}
@@ -606,20 +606,20 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                     <div className="col-span-12 sm:col-span-8 lg:col-span-5 space-y-2">
                       <div className="space-y-1">
                         <div className="flex items-start gap-2">
-                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug">
                             {item.namaKegiatan || "Perjalanan Dinas Jabatan Inspektorat"}
                           </h4>
                         </div>
 
                         {/* Location Pill */}
-                        <div className="flex items-center gap-2 text-xs text-slate-600 flex-wrap">
-                          <span className="inline-flex items-center gap-1 font-medium text-slate-700 bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/80">
+                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 flex-wrap">
+                          <span className="inline-flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-800">
                             <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                             <span>{lokasiText}</span>
                           </span>
 
                           {isCurrent && (
-                            <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
+                            <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100 px-2 py-0.5 rounded-md">
                               <CheckCircle2 className="w-3 h-3 text-blue-600" />
                               Sedang Dibuka
                             </span>
@@ -629,8 +629,8 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
 
                       {/* Participant Preview Pills */}
                       {participants.length > 0 && (
-                        <div className="pt-1.5 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
-                          <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 mr-1">
+                        <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-1.5">
+                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 mr-1">
                             <Users className="w-3.5 h-3.5 text-blue-600" />
                             <span>Pelaksana ({participants.length}):</span>
                           </span>
@@ -638,21 +638,21 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                           {participants.slice(0, 4).map((p, pIdx) => (
                             <span
                               key={pIdx}
-                              className="inline-flex items-center gap-1 text-[11px] font-medium bg-white hover:bg-blue-50/80 text-slate-700 hover:text-blue-700 px-2 py-0.5 rounded-md border border-slate-200/90 shadow-2xs transition-all cursor-help"
+                              className="inline-flex items-center gap-1 text-[11px] font-medium bg-white dark:bg-slate-900 hover:bg-blue-50/80 text-slate-700 dark:text-slate-300 hover:text-blue-700 px-2 py-0.5 rounded-md border border-slate-200/90 dark:border-slate-800 shadow-2xs transition-all cursor-help"
                               title={
                                 p.details || p.nip
                                   ? `${p.name}${p.details ? `\n${p.details}` : ""}${p.nip ? `\nNIP: ${p.nip}` : ""}${p.biaya ? `\nTotal: Rp ${p.biaya.toLocaleString("id-ID")}` : ""}`
                                   : p.name
                               }
                             >
-                              <User className="w-3 h-3 text-slate-400 shrink-0" />
+                              <User className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
                               <span className="truncate max-w-[130px] sm:max-w-[160px]">{p.name}</span>
                             </span>
                           ))}
 
                           {participants.length > 4 && (
                             <span
-                              className="text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 cursor-help transition-colors"
+                              className="text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/70 hover:bg-blue-100 cursor-help transition-colors"
                               title={
                                 `Peserta lainnya:\n` +
                                 participants
@@ -672,14 +672,14 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                         KOLOM 3: TOTAL ANGGARAN & PERSONIL
                         ------------------------------------------------------------- */}
                     <div className="col-span-6 lg:col-span-2 text-left lg:text-right space-y-1">
-                      <span className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400 block">
+                      <span className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
                         Total Anggaran
                       </span>
-                      <span className="text-sm sm:text-base font-extrabold text-slate-900 font-mono block">
+                      <span className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 font-mono block">
                         Rp {(item.grandTotal || 0).toLocaleString("id-ID")}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
-                        <Users className="w-3 h-3 text-slate-500" />
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                        <Users className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                         <span>
                           {item.header?.spjType && item.header.spjType !== "PERDIN"
                             ? `${item.header.pengadaanItems?.length || item.jumlahPeserta || 1} Item`
@@ -707,7 +707,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(item)}
-                        className="btn-tactile p-2 rounded-xl bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 shadow-2xs cursor-pointer transition-all"
+                        className="btn-tactile p-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-rose-50 text-slate-400 dark:text-slate-500 hover:text-rose-600 border border-slate-200 dark:border-slate-800 hover:border-rose-200 shadow-2xs cursor-pointer transition-all"
                         title="Hapus paket kegiatan ini dari database"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -726,26 +726,26 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
           ------------------------------------------------------------- */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 border border-slate-200 shadow-2xl">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl">
             <div className="flex items-start gap-3.5 text-rose-600">
               <div className="w-10 h-10 rounded-2xl bg-rose-100 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-5 h-5 text-rose-600" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                   Hapus Paket Kegiatan?
                 </h3>
-                <p className="text-xs text-slate-500 font-mono font-bold">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">
                   {deleteTarget.idKegiatan}
                 </p>
               </div>
             </div>
 
-            <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-1.5">
-              <p className="font-bold text-slate-900 leading-snug">
+            <div className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/70 p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+              <p className="font-bold text-slate-900 dark:text-slate-100 leading-snug">
                 &ldquo;{deleteTarget.namaKegiatan}&rdquo;
               </p>
-              <p className="text-slate-500 text-[11px]">
+              <p className="text-slate-500 dark:text-slate-400 text-[11px]">
                 Total <strong>{deleteTarget.jumlahPeserta} orang peserta</strong> dan seluruh rincian transaksi SPJ pada kegiatan ini akan dihapus dari Rekap Perdin dan Google Spreadsheet.
               </p>
             </div>
@@ -755,7 +755,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                 type="button"
                 disabled={isDeleting}
                 onClick={() => setDeleteTarget(null)}
-                className="btn-tactile px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+                className="btn-tactile px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 cursor-pointer disabled:opacity-50"
               >
                 Batal
               </button>

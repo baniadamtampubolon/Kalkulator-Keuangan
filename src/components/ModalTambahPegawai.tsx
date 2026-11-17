@@ -101,33 +101,33 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md transition-all animate-in fade-in duration-200">
       <div className="glass-modal w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
-              <UserPlus className="w-4 h-4 text-slate-700" />
+            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center border border-slate-200 dark:border-slate-800">
+              <UserPlus className="w-4 h-4 text-slate-700 dark:text-slate-300" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-slate-900">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
                 Tambah Pegawai ke Master Data
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Tersimpan otomatis ke database cloud <code>MASTER_PEGAWAI</code>
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer">
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {feedback && (
           <div
-            className="p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 flex items-start gap-2 text-xs animate-in fade-in duration-200"
+            className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/70 text-slate-800 dark:text-slate-200 flex items-start gap-2 text-xs animate-in fade-in duration-200"
           >
             {feedback.type === "success" ? (
-              <CheckCircle2 className="w-4 h-4 text-slate-900 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-4 h-4 text-slate-900 dark:text-slate-100 shrink-0 mt-0.5" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-slate-900 shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 text-slate-900 dark:text-slate-100 shrink-0 mt-0.5" />
             )}
             <div className="flex-1 leading-tight">{feedback.text}</div>
           </div>
@@ -135,7 +135,7 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Nama Lengkap & Gelar *
             </label>
             <input
@@ -149,7 +149,7 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
               NIP (Nomor Induk Pegawai)
             </label>
             <input
@@ -163,7 +163,7 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Golongan Ruang
               </label>
               <select
@@ -182,7 +182,7 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block font-semibold text-slate-700">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300">
                   Pangkat ASN
                 </label>
                 <span className="text-[10px] text-[#0071e3] font-medium flex items-center gap-0.5">
@@ -195,7 +195,7 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
                 value={pangkat}
                 onChange={(e) => handlePangkatChange(e.target.value)}
                 placeholder="Contoh: Penata Muda"
-                className="input-glass w-full h-10 px-3 font-medium bg-slate-50/70"
+                className="input-glass w-full h-10 px-3 font-medium bg-slate-50/70 dark:bg-slate-800/70"
               />
             </div>
           </div>
@@ -203,10 +203,10 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block font-semibold text-slate-700">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300">
                   Jabatan Kedinasan
                 </label>
-                <span className="text-[10px] text-slate-400 font-normal">Isi manual</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">Isi manual</span>
               </div>
               <input
                 type="text"
@@ -218,7 +218,7 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Jenis Kelamin
               </label>
               <select
@@ -232,12 +232,12 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200/80">
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200/80 dark:border-slate-800">
             <button
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-white/60 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-white/60 cursor-pointer disabled:opacity-50"
             >
               Batal
             </button>

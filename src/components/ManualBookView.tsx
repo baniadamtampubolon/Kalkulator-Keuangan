@@ -58,30 +58,30 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="rounded-2xl bg-white border border-slate-200/80 p-6 md:p-8 shadow-xs relative overflow-hidden">
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 md:p-8 shadow-xs relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5 max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold">
               <BookOpen className="w-3.5 h-3.5 text-[#0071e3]" />
               <span>Buku Panduan Penggunaan Resmi</span>
             </div>
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
               Panduan Operasional Kalkulator Keuangan & SPPD
             </h2>
-            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+            <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               Panduan terstruktur cara pengisian data, perhitungan tarif SBM otomatis, pencetakan dokumen resmi, dan setup awal database Google Spreadsheet Inspektorat Kemenko Pangan RI.
             </p>
           </div>
 
           {/* Quick Search Box */}
           <div className="relative w-full md:w-72">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari panduan, topik, atau fitur..."
-              className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all"
+              className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-800 text-xs font-medium placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all"
             />
           </div>
         </div>
@@ -91,8 +91,8 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Sticky Table of Contents Navigation */}
         <div className="lg:col-span-4 sticky top-24 space-y-3">
-          <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-xs">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-2">
+          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 px-2">
               Daftar Isi Panduan
             </h3>
             <nav className="space-y-1">
@@ -106,18 +106,18 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                     onClick={() => scrollToSection(sec.id)}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${isSelected
                         ? "bg-[#0071e3] text-white shadow-xs font-semibold"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
                       }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className={`w-4 h-4 shrink-0 ${isSelected ? "text-white" : "text-slate-400"}`} />
+                      <Icon className={`w-4 h-4 shrink-0 ${isSelected ? "text-white" : "text-slate-400 dark:text-slate-500"}`} />
                       <span className="truncate">{sec.title}</span>
                     </div>
                     {sec.badge && (
                       <span
                         className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${isSelected
                             ? "bg-white/20 text-white"
-                            : "bg-amber-100 text-amber-800 border border-amber-200"
+                            : "bg-amber-100 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70"
                           }`}
                       >
                         {sec.badge}
@@ -130,7 +130,7 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
 
             {/* Quick Action Button to Open Database */}
             {onOpenDatabaseSync && (
-              <div className="mt-4 pt-4 border-t border-slate-100">
+              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={onOpenDatabaseSync}
@@ -149,57 +149,57 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
           {/* SECTION: SETUP AWAL DATABASE CLOUD */}
           <section
             id="setup-database"
-            className="rounded-2xl bg-white border-2 border-[#0071e3]/30 p-6 md:p-8 shadow-xs space-y-5 scroll-mt-24"
+            className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-[#0071e3]/30 p-6 md:p-8 shadow-xs space-y-5 scroll-mt-24"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-[#0071e3]">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/70 flex items-center justify-center text-[#0071e3]">
                   <Database className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                     Tutorial Setup Awal Koneksi Database Cloud
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Panduan menghubungkan web app dengan Google Spreadsheet resmi
                   </p>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold border border-blue-200">
+              <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 dark:text-blue-300 text-[11px] font-bold border border-blue-200 dark:border-blue-800/70">
                 Langkah Awal
               </span>
             </div>
 
             {/* Crucial Note to Contact Admin */}
-            <div className="rounded-xl bg-amber-50 border border-amber-200/80 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-amber-900 font-bold text-xs md:text-sm">
+            <div className="rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/70 p-4 space-y-2">
+              <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-bold text-xs md:text-sm">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>PENTING: CARA MENDAPATKAN LINK DATABASE</span>
               </div>
-              <p className="text-xs text-amber-800 leading-relaxed">
+              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
                 Untuk mendapatkan <strong>Link Web App Google Apps Script</strong> yang terhubung ke Google Spreadsheet resmi Inspektorat, Anda harus <strong>menghubungi Administrator sistem terlebih dahulu</strong>. Administrator akan membagikan link deployment URL yang siap dipakai.
               </p>
             </div>
 
             {/* Step by Step Setup Flow */}
             <div className="space-y-4 pt-1">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                 Langkah-Langkah Menghubungkan Web App ke Database:
               </h4>
 
               <div className="space-y-3">
                 {/* Step 1 */}
-                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800">
                   <span className="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
                     1
                   </span>
                   <div className="space-y-1 text-xs">
-                    <strong className="text-slate-900 block font-semibold">
+                    <strong className="text-slate-900 dark:text-slate-100 block font-semibold">
                       Dapatkan Link Web App dari Administrator
                     </strong>
-                    <p className="text-slate-600">
+                    <p className="text-slate-600 dark:text-slate-300">
                       Minta URL Web App Google Apps Script kepada Administrator sistem. Format link biasanya berawalan:
-                      <code className="mx-1 px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 font-mono text-[11px]">
+                      <code className="mx-1 px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono text-[11px]">
                         https://script.google.com/macros/s/.../exec
                       </code>
                     </p>
@@ -207,22 +207,22 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                 </div>
 
                 {/* Step 2 */}
-                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800">
                   <span className="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
                     2
                   </span>
                   <div className="space-y-1 text-xs">
-                    <strong className="text-slate-900 block font-semibold">
+                    <strong className="text-slate-900 dark:text-slate-100 block font-semibold">
                       Buka Menu Database di Web App
                     </strong>
-                    <p className="text-slate-600">
+                    <p className="text-slate-600 dark:text-slate-300">
                       Klik tombol <strong>Database</strong> di pojok kanan atas layar atau klik tombol di bawah ini:
                     </p>
                     {onOpenDatabaseSync && (
                       <button
                         type="button"
                         onClick={onOpenDatabaseSync}
-                        className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-800 font-semibold text-[11px] shadow-2xs hover:bg-slate-50 cursor-pointer mt-1"
+                        className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-[11px] shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800/80 cursor-pointer mt-1"
                       >
                         <Database className="w-3 h-3 text-[#0071e3]" />
                         <span>Buka Menu Database Sekarang</span>
@@ -232,55 +232,55 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                 </div>
 
                 {/* Step 3 */}
-                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800">
                   <span className="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
                     3
                   </span>
                   <div className="space-y-1 text-xs">
-                    <strong className="text-slate-900 block font-semibold">
+                    <strong className="text-slate-900 dark:text-slate-100 block font-semibold">
                       Masukkan PIN Keamanan Admin
                     </strong>
-                    <p className="text-slate-600">
-                      Masukkan PIN Admin standar: <strong className="font-mono text-slate-900 bg-slate-200 px-1 rounded">311001</strong> untuk membuka akses konfigurasi. PIN ini dirancang untuk melindungi sistem dari perubahan tidak disengaja.
+                    <p className="text-slate-600 dark:text-slate-300">
+                      Masukkan PIN Admin standar: <strong className="font-mono text-slate-900 dark:text-slate-100 bg-slate-200 dark:bg-slate-700 px-1 rounded">311001</strong> untuk membuka akses konfigurasi. PIN ini dirancang untuk melindungi sistem dari perubahan tidak disengaja.
                     </p>
                   </div>
                 </div>
 
                 {/* Step 4 */}
-                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800">
                   <span className="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
                     4
                   </span>
                   <div className="space-y-1 text-xs">
-                    <strong className="text-slate-900 block font-semibold">
+                    <strong className="text-slate-900 dark:text-slate-100 block font-semibold">
                       Tempelkan URL & Uji Koneksi
                     </strong>
-                    <p className="text-slate-600">
+                    <p className="text-slate-600 dark:text-slate-300">
                       Tempelkan (*paste*) URL Web App yang diperoleh dari Administrator ke dalam kolom input yang tersedia, lalu klik tombol <strong>&quot;Uji Koneksi&quot;</strong>.
                     </p>
-                    <p className="text-emerald-700 font-medium pt-0.5">
+                    <p className="text-emerald-700 dark:text-emerald-300 font-medium pt-0.5">
                       ✓ Pastikan indikator status menampilkan tulisan hijau: <em>&quot;Terhubung ke Google Spreadsheet&quot;</em>.
                     </p>
                   </div>
                 </div>
 
                 {/* Step 5 */}
-                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800">
                   <span className="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
                     5
                   </span>
                   <div className="space-y-1 text-xs">
-                    <strong className="text-slate-900 block font-semibold">
+                    <strong className="text-slate-900 dark:text-slate-100 block font-semibold">
                       Simpan URL & Sinkronkan Master Data
                     </strong>
-                    <p className="text-slate-600">
+                    <p className="text-slate-600 dark:text-slate-300">
                       Klik <strong>&quot;Simpan URL & Gunakan&quot;</strong>, kemudian klik tombol <strong>&quot;Sinkronkan Master Data&quot;</strong> untuk memperbarui daftar pegawai terbaru, standar tarif SBM PMK, dan nomor memo.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2">
+              <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70 text-emerald-900 dark:text-emerald-200 text-xs flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>
                   <strong>Setup Selesai:</strong> Setelah langkah di atas dilakukan sekali, aplikasi akan otomatis mengingat koneksi ini dan Anda langsung dapat menggunakan tombol <em>&quot;Simpan ke Google Sheet & Sinkronkan Rekap&quot;</em> setiap saat!
@@ -292,81 +292,81 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
           {/* SECTION: ALUR KERJA & SIKLUS SPJ (START TO FINISH) */}
           <section
             id="alur-kerja"
-            className="rounded-2xl bg-white border-2 border-emerald-500/30 p-6 md:p-8 shadow-xs space-y-5 scroll-mt-24"
+            className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-500/30 p-6 md:p-8 shadow-xs space-y-5 scroll-mt-24"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70 flex items-center justify-center text-emerald-600">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                     Alur Kerja & Siklus Pembuatan SPJ (Dari Awal sampai Selesai)
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Panduan siklus lengkap penyelesaian berkas SPJ hingga pembuatan berkas baru
                   </p>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200">
+              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800/70">
                 Siklus SPJ
               </span>
             </div>
 
-            <div className="space-y-3.5 text-xs text-slate-600 leading-relaxed">
+            <div className="space-y-3.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               <p>
                 Aplikasi ini dirancang dengan siklus bertahap yang jelas agar Anda tidak bingung kapan sebuah tugas SPJ selesai dan bagaimana memulai berkas SPJ baru:
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                 {/* Stage 1 */}
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
                       1
                     </span>
-                    <strong className="text-slate-900 font-semibold">Isi Informasi & Komponen Biaya</strong>
+                    <strong className="text-slate-900 dark:text-slate-100 font-semibold">Isi Informasi & Komponen Biaya</strong>
                   </div>
-                  <p className="text-slate-600 text-[11px] pl-8">
+                  <p className="text-slate-600 dark:text-slate-300 text-[11px] pl-8">
                     Isi narasi kegiatan, pilih provinsi/kota tujuan, nomor ST, dan centang komponen biaya yang diaktifkan (misal: Transport Darat PP, Tiket, Hotel, Uang Harian).
                   </p>
                 </div>
 
                 {/* Stage 2 */}
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
                       2
                     </span>
-                    <strong className="text-slate-900 font-semibold">Input Peserta & Hitung Otomatis</strong>
+                    <strong className="text-slate-900 dark:text-slate-100 font-semibold">Input Peserta & Hitung Otomatis</strong>
                   </div>
-                  <p className="text-slate-600 text-[11px] pl-8">
+                  <p className="text-slate-600 dark:text-slate-300 text-[11px] pl-8">
                     Pilih nama pegawai dari master database. Nominal Uang Harian dan rincian biaya akan terhitung secara otomatis.
                   </p>
                 </div>
 
                 {/* Stage 3 */}
-                <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 space-y-1.5">
+                <div className="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/70 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
                       3
                     </span>
-                    <strong className="text-emerald-900 font-semibold">Klik Simpan Data (Finish Milestone)</strong>
+                    <strong className="text-emerald-900 dark:text-emerald-200 font-semibold">Klik Simpan Data (Finish Milestone)</strong>
                   </div>
-                  <p className="text-emerald-800 text-[11px] pl-8">
+                  <p className="text-emerald-800 dark:text-emerald-300 text-[11px] pl-8">
                     Klik <strong>&quot;Simpan Data&quot;</strong> di bawah tabel. Sistem akan membuka jendela <strong>&quot;SPJ Selesai &amp; Berhasil Disimpan&quot;</strong> yang merangkum total biaya dan 6 dokumen yang siap dicetak.
                   </p>
                 </div>
 
                 {/* Stage 4 */}
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
                       4
                     </span>
-                    <strong className="text-slate-900 font-semibold">Cetak Dokumen atau Buat SPJ Baru</strong>
+                    <strong className="text-slate-900 dark:text-slate-100 font-semibold">Cetak Dokumen atau Buat SPJ Baru</strong>
                   </div>
-                  <p className="text-slate-600 text-[11px] pl-8">
+                  <p className="text-slate-600 dark:text-slate-300 text-[11px] pl-8">
                     Pilih <strong>&quot;Cetak Seluruh Dokumen&quot;</strong> untuk pratinjau/print, atau klik <strong>&quot;➕ Selesai &amp; Buat SPJ Baru&quot;</strong> di navbar/footer untuk mereset form bersih dan auto-increment ID untuk paket berikutnya!
                   </p>
                 </div>
@@ -377,56 +377,56 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
           {/* SECTION 1: GAMBARAN UMUM & FITUR */}
           <section
             id="pendahuluan"
-            className="rounded-2xl bg-white border border-slate-200/80 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
+            className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
           >
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
                 <BookOpen className="w-4 h-4" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">1. Gambaran Umum & Fitur Utama</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">1. Gambaran Umum & Fitur Utama</h3>
             </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               Sistem Otomasi SPPD & Kalkulator Keuangan Perjalanan Dinas merupakan aplikasi web perbendaharaan khusus Inspektorat Kementerian Koordinator Bidang Pangan RI untuk mempermudah perhitungan biaya dinas, penyusunan pertanggungjawaban (SPJ), dan pencetakan dokumen resmi.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                <strong className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1">
+                <strong className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <Calculator className="w-3.5 h-3.5 text-[#0071e3]" />
                   Kalkulasi SBM Otomatis
                 </strong>
-                <p className="text-[11px] text-slate-600">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   Uang Harian dan Pagu Hotel otomatis menyesuaikan standar PMK berdasarkan provinsi dan kota tujuan yang dipilih.
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                <strong className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1">
+                <strong className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <Receipt className="w-3.5 h-3.5 text-[#0071e3]" />
                   Format Titik Ribuan Otomatis
                 </strong>
-                <p className="text-[11px] text-slate-600">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   Setiap nominal yang diketikkan otomatis diberi titik ribuan (misal: <code>1.000.000</code>) agar pengguna tidak bingung menghitung angka nol.
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                <strong className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1">
+                <strong className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <Printer className="w-3.5 h-3.5 text-[#0071e3]" />
                   6 Dokumen Siap Cetak
                 </strong>
-                <p className="text-[11px] text-slate-600">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   Menghasilkan Kwitansi, Memorandum, Daftar Nominatif, Daftar Pengeluaran Riil, Rincian Biaya, dan SPPD Visum sekaligus.
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                <strong className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1">
+                <strong className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <FileSpreadsheet className="w-3.5 h-3.5 text-[#0071e3]" />
                   Database Cloud Google Sheets
                 </strong>
-                <p className="text-[11px] text-slate-600">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   Simpan data SPJ langsung ke Google Spreadsheet instansi dalam 1 klik dan ekspor riwayat rekap perdin ke file Excel.
                 </p>
               </div>
@@ -436,16 +436,16 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
           {/* SECTION 2: PARAMETER & PEJABAT */}
           <section
             id="header-parameter"
-            className="rounded-2xl bg-white border border-slate-200/80 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
+            className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
           >
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
                 <FileText className="w-4 h-4" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">2. Pengisian Header & Parameter Kegiatan</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">2. Pengisian Header & Parameter Kegiatan</h3>
             </div>
 
-            <div className="space-y-2.5 text-xs text-slate-600 leading-relaxed">
+            <div className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               <p>Pada formulir <strong>Input & Kalkulator</strong>, lengkapi kolom-kolom berikut:</p>
               <ul className="list-disc pl-5 space-y-1">
                 <li><strong>Nomor ST:</strong> Masukkan Nomor Surat Tugas (misal: <code>ST-04/INS/KP.01/01/2026</code>). Tersedia opsi nomor ST terpisah untuk Pejabat Eselon dan Staff.</li>
@@ -459,33 +459,33 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
           {/* SECTION 3: PRESET & KOMPONEN BIAYA */}
           <section
             id="preset-komponen"
-            className="rounded-2xl bg-white border border-slate-200/80 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
+            className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
           >
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
                 <Sparkles className="w-4 h-4" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">3. Preset Cepat Skema Biaya</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">3. Preset Cepat Skema Biaya</h3>
             </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               Gunakan tombol preset di bawah judul untuk mengaktifkan kombinasi komponen biaya dalam satu kali klik:
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-1">
-                <span className="font-bold text-slate-900 block">🚗 Standar Darat PP</span>
-                <p className="text-[11px] text-slate-500">Transportasi Darat PP + Uang Harian Biasa (100%).</p>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1">
+                <span className="font-bold text-slate-900 dark:text-slate-100 block">🚗 Standar Darat PP</span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Transportasi Darat PP + Uang Harian Biasa (100%).</p>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-1">
-                <span className="font-bold text-slate-900 block">✈️ Udara + Hotel</span>
-                <p className="text-[11px] text-slate-500">Tiket Pesawat/KA + Hotel + Pengeluaran Riil + UH Biasa.</p>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1">
+                <span className="font-bold text-slate-900 dark:text-slate-100 block">✈️ Udara + Hotel</span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Tiket Pesawat/KA + Hotel + Pengeluaran Riil + UH Biasa.</p>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-1">
-                <span className="font-bold text-slate-900 block">🏢 Fullboard Meeting</span>
-                <p className="text-[11px] text-slate-500">Paket Pertemuan Menginap + UH Fullboard/Halfday + Tiket.</p>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1">
+                <span className="font-bold text-slate-900 dark:text-slate-100 block">🏢 Fullboard Meeting</span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Paket Pertemuan Menginap + UH Fullboard/Halfday + Tiket.</p>
               </div>
             </div>
           </section>
@@ -493,30 +493,30 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
           {/* SECTION 4: RINCIAN PESERTA & SBM */}
           <section
             id="rincian-biaya"
-            className="rounded-2xl bg-white border border-slate-200/80 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
+            className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
           >
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
                 <Calculator className="w-4 h-4" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">4. Rincian Peserta & Perhitungan Biaya</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">4. Rincian Peserta & Perhitungan Biaya</h3>
             </div>
 
-            <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                <strong className="text-slate-800 font-semibold block">Pilih Pegawai dari Master:</strong>
+            <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+                <strong className="text-slate-800 dark:text-slate-200 font-semibold block">Pilih Pegawai dari Master:</strong>
                 <p>Klik dropdown pada kolom <strong>Nama Pegawai</strong>. Data NIP, Golongan, dan Jabatan otomatis terisi dari database.</p>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                <strong className="text-slate-800 font-semibold block">Uang Harian Fleksibel (Editable):</strong>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+                <strong className="text-slate-800 dark:text-slate-200 font-semibold block">Uang Harian Fleksibel (Editable):</strong>
                 <p>
                   Nominal Uang Harian otomatis diambil dari SBM PMK, namun <strong>tetap dapat diedit secara bebas</strong> jika ada pemotongan uang makan. Setiap nominal yang diketikkan otomatis diformat dengan tanda titik ribuan standar Indonesia.
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                <strong className="text-slate-800 font-semibold block">Modal Input Khusus:</strong>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+                <strong className="text-slate-800 dark:text-slate-200 font-semibold block">Modal Input Khusus:</strong>
                 <ul className="list-disc pl-4 space-y-1 pt-1 text-[11px]">
                   <li><strong>Tiket (Ikon Pesawat):</strong> Input No Tiket, Maskapai, Kode Booking, Fare Pergi & Pulang, dan Status Boarding Pass.</li>
                   <li><strong>Hotel (Ikon Hotel):</strong> Input Nama Hotel, No Kamar, No Folio, Malam & Tarif per malam.</li>
@@ -530,20 +530,20 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
           {/* SECTION 5: PRATINJAU & CETAK DOKUMEN */}
           <section
             id="cetak-dokumen"
-            className="rounded-2xl bg-white border border-slate-200/80 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
+            className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
           >
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
                 <Printer className="w-4 h-4" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">5. Pratinjau & Pencetakan Dokumen Resmi</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">5. Pratinjau & Pencetakan Dokumen Resmi</h3>
             </div>
 
-            <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
+            <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               <p>
                 Buka tab dokumen pada navigasi atas untuk melihat tampilan dokumen yang siap dicetak. Tersedia 6 format dokumen resmi:
               </p>
-              <ol className="list-decimal pl-5 space-y-1 font-medium text-slate-700">
+              <ol className="list-decimal pl-5 space-y-1 font-medium text-slate-700 dark:text-slate-300">
                 <li><strong>Kwitansi:</strong> Format tanda bukti penerimaan lengkap dengan 4 tanda tangan.</li>
                 <li><strong>Memorandum:</strong> Nota dinas laporan pertanggungjawaban kegiatan ke Pimpinan.</li>
                 <li><strong>Nominatif:</strong> Tabel horizontal landscape seluruh peserta dengan font Tahoma dan border reguler 1px yang rapi.</li>
@@ -552,7 +552,7 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                 <li><strong>Lampiran SPPD:</strong> Visum stempel keberangkatan dan kepulangan instansi tujuan.</li>
               </ol>
 
-              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 space-y-1">
+              <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/70 text-blue-900 dark:text-blue-200 space-y-1">
                 <strong>Tips Cetak PDF Browser:</strong>
                 <p className="text-[11px]">
                   Pilih kertas <strong>A4</strong>, margin <strong>None / Default</strong>, dan centang <strong>Background graphics</strong> agar border dan tabel tercetak jelas. Untuk dokumen Nominatif, pilih orientasi <strong>Landscape</strong>.
@@ -564,17 +564,17 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
           {/* SECTION 6: SIMPAN & REKAP PERDIN */}
           <section
             id="rekap-perdin"
-            className="rounded-2xl bg-white border border-slate-200/80 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
+            className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
           >
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
                 <FileSpreadsheet className="w-4 h-4" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">6. Simpan ke Google Sheet & Rekap Perdin</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">6. Simpan ke Google Sheet & Rekap Perdin</h3>
             </div>
 
-            <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
-              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-1">
+            <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70 text-emerald-900 dark:text-emerald-200 space-y-1">
                 <strong className="block font-bold">Tombol All-in-One: Simpan & Sinkronkan</strong>
                 <p className="text-[11px]">
                   Pada tab <strong>Rekap Perdin</strong>, klik tombol hijau <strong>&quot;Simpan ke Google Sheet & Sinkronkan Rekap&quot;</strong>. Sistem akan langsung mengunggah baris peserta ke Google Spreadsheet dan menyegarkan tabel riwayat perdin sekaligus.
@@ -595,18 +595,18 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
           {/* SECTION 7: TANYA JAWAB (FAQ) */}
           <section
             id="faq"
-            className="rounded-2xl bg-white border border-slate-200/80 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
+            className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 md:p-8 shadow-xs space-y-4 scroll-mt-24"
           >
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
                 <HelpCircle className="w-4 h-4" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">7. Tanya Jawab (FAQ)</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">7. Tanya Jawab (FAQ)</h3>
             </div>
 
-            <div className="space-y-3 text-xs text-slate-600">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                <strong className="text-slate-900 block font-semibold">
+            <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1">
+                <strong className="text-slate-900 dark:text-slate-100 block font-semibold">
                   Q: Apakah saya harus memasukkan link Apps Script setiap kali membuka web app?
                 </strong>
                 <p>
@@ -614,8 +614,8 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                <strong className="text-slate-900 block font-semibold">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1">
+                <strong className="text-slate-900 dark:text-slate-100 block font-semibold">
                   Q: Bagaimana jika Uang Harian dipotong karena disediakan konsumsi panitia?
                 </strong>
                 <p>
@@ -623,8 +623,8 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                <strong className="text-slate-900 block font-semibold">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 space-y-1">
+                <strong className="text-slate-900 dark:text-slate-100 block font-semibold">
                   Q: Siapa yang berhak membuka menu Database (PIN Admin)?
                 </strong>
                 <p>
@@ -636,8 +636,8 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
 
           {/* Quick Navigation Footer inside Manual Book */}
           {onNavigateToTab && (
-            <div className="rounded-2xl bg-slate-100 border border-slate-200 p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <span className="text-xs text-slate-700 font-medium text-center sm:text-left">
+            <div className="rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span className="text-xs text-slate-700 dark:text-slate-300 font-medium text-center sm:text-left">
                 Siap membuat perhitungan perjalanan dinas atau mengecek arsip SPJ?
               </span>
               <div className="flex items-center gap-2">
@@ -652,7 +652,7 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigateToTab("rekap")}
-                  className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold border border-slate-300 shadow-2xs cursor-pointer"
+                  className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-300 dark:border-slate-700 shadow-2xs cursor-pointer"
                 >
                   <span>Buka Rekap Perdin</span>
                   <ArrowRight className="w-3.5 h-3.5" />
