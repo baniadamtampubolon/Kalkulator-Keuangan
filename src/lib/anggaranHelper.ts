@@ -270,3 +270,106 @@ export function exportAnggaranToExcel(data: AnggaranData, filename?: string): vo
   XLSX.writeFile(wb, actualFilename);
 }
 
+/**
+ * Look up Pagu for an Akun MAK and Item Detail directly from Monitoring Anggaran (16 Segmen).
+ */
+export function findPaguForMemorandum(
+  nomorKomp?: string,
+  nomorMak?: string,
+  itemDetail?: string
+): { paguAkun: number | null; paguItem: number | null } {
+  const data = loadAnggaranData();
+  const rows = data.rows || [];
+  if (rows.length === 0) return { paguAkun: null, paguItem: null };
+
+  const byId = new Map<string, AnggaranRow>();
+  rows.forEach((r) => byId.set(r.id, r));
+
+  const cleanKomp = (nomorKomp || "")
+    .replace(/^(CL|WA)\./i, "")
+    .replace(/^MAK\./i, "")
+    .trim()
+    .toUpperCase();
+  const cleanMak = (nomorMak || "524111").trim().toUpperCase();
+  const targetAkunNoPrefix = cleanKomp
+    ? cleanKomp.endsWith(`.${cleanMak}`) || cleanKomp === cleanMak
+      ? cleanKomp
+      : `${cleanKomp}.${cleanMak}`
+    : "";
+
+  const rawItem = (itemDetail || "").trim();
+  const cleanItemCode = (
+    rawItem.includes(".")
+      ? rawItem.split(".")[0].trim()
+      : rawItem.match(/^\d+/)?.[0] || rawItem
+  ).toUpperCase();
+
+  const buildCanonicalAkunCode = (akunRow: AnggaranRow): string => {
+    const ancestors: AnggaranRow[] = [];
+    let curr: AnggaranRow | undefined = akunRow;
+    while (curr) {
+      ancestors.unshift(curr);
+      curr = curr.parentId ? byId.get(curr.parentId) : undefined;
+    }
+    const keg = ancestors.find((a) => a.type === "kegiatan")?.kode || "";
+    const ro = ancestors.find((a) => a.type === "ro")?.kode || "";
+    const sub = ancestors.find((a) => a.type === "subkomponen")?.kode || "";
+    const komp = ancestors.find((a) => a.type === "komponen")?.kode || "";
+    const midSub = sub || komp;
+    return [keg, ro, midSub, akunRow.kode]
+      .filter(Boolean)
+      .join(".")
+      .replace(/^(CL|WA)\./i, "")
+      .toUpperCase();
+  };
+
+  let matchedAkunRow: AnggaranRow | undefined;
+
+  if (targetAkunNoPrefix) {
+    matchedAkunRow = rows.find(
+      (r) => r.type === "akun" && buildCanonicalAkunCode(r) === targetAkunNoPrefix
+    );
+  }
+
+  let matchedItemRow: AnggaranRow | undefined;
+  if (cleanItemCode) {
+    if (matchedAkunRow) {
+      matchedItemRow = rows.find(
+        (r) =>
+          r.type === "item" &&
+          r.parentId === matchedAkunRow!.id &&
+          r.kode.trim().toUpperCase() === cleanItemCode
+      );
+    }
+
+    if (!matchedItemRow) {
+      matchedItemRow = rows.find((r) => {
+        if (r.type !== "item" || r.kode.trim().toUpperCase() !== cleanItemCode) {
+          return false;
+        }
+        if (!cleanMak) return true;
+        const parentAkun = r.parentId ? byId.get(r.parentId) : undefined;
+        return parentAkun?.kode.trim().toUpperCase() === cleanMak;
+      });
+    }
+
+    if (!matchedItemRow) {
+      matchedItemRow = rows.find(
+        (r) => r.type === "item" && r.kode.trim().toUpperCase() === cleanItemCode
+      );
+    }
+
+    if (matchedItemRow && !matchedAkunRow && matchedItemRow.parentId) {
+      const parent = byId.get(matchedItemRow.parentId);
+      if (parent && parent.type === "akun") {
+        matchedAkunRow = parent;
+      }
+    }
+  }
+
+  return {
+    paguAkun: matchedAkunRow ? Number(matchedAkunRow.pagu) || 0 : null,
+    paguItem: matchedItemRow ? Number(matchedItemRow.pagu) || 0 : null,
+  };
+}
+

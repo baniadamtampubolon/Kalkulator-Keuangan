@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HeaderData, ParticipantRow } from "@/lib/types";
 import { Printer, Edit3, RotateCcw } from "lucide-react";
 import { parseMakHierarchy } from "@/data/mak_akun";
 import { terbilang } from "@/lib/terbilang";
 import { getDefaultMemoNumber } from "@/lib/calc";
 import { calculatePengadaanTotals, getSpjTypeMeta } from "@/lib/pengadaanHelper";
+import { findPaguForMemorandum } from "@/lib/anggaranHelper";
 
 interface MemorandumDocProps {
   header: HeaderData;
@@ -21,6 +22,29 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
+  const [paguInfo, setPaguInfo] = useState<{
+    paguAkun: number | null;
+    paguItem: number | null;
+  }>({ paguAkun: null, paguItem: null });
+
+  useEffect(() => {
+    const refreshPagu = () => {
+      try {
+        const res = findPaguForMemorandum(
+          header.nomorKomp,
+          header.nomorMak,
+          header.itemDetail
+        );
+        setPaguInfo(res);
+      } catch {
+        setPaguInfo({ paguAkun: null, paguItem: null });
+      }
+    };
+
+    Promise.resolve().then(refreshPagu);
+    window.addEventListener("storage", refreshPagu);
+    return () => window.removeEventListener("storage", refreshPagu);
+  }, [header.nomorKomp, header.nomorMak, header.itemDetail]);
 
   // Format dates
   const formatDateIndo = (dStr: string) => {
@@ -599,8 +623,11 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                     contentEditable={true}
                     suppressContentEditableWarning={true}
                     className="border-r border-black p-2 text-right font-sans min-w-[120px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
-                    title="Klik langsung untuk memasukkan nominal Pagu"
+                    title="Otomatis dari Monitoring Anggaran (klik untuk edit manual)"
                   >
+                    {paguInfo.paguAkun !== null && paguInfo.paguAkun > 0
+                      ? `Rp${paguInfo.paguAkun.toLocaleString("id-ID")}`
+                      : ""}
                   </td>
                   <td 
                     contentEditable={true}
@@ -646,8 +673,11 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                     contentEditable={true}
                     suppressContentEditableWarning={true}
                     className="border-r border-black p-2 text-right font-sans min-w-[120px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
-                    title="Klik langsung untuk memasukkan nominal Pagu"
+                    title="Otomatis dari Monitoring Anggaran (klik untuk edit manual)"
                   >
+                    {paguInfo.paguItem !== null && paguInfo.paguItem > 0
+                      ? `Rp${paguInfo.paguItem.toLocaleString("id-ID")}`
+                      : ""}
                   </td>
                   <td 
                     contentEditable={true}
@@ -710,9 +740,9 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                       contentEditable={true}
                       suppressContentEditableWarning={true}
                       className="border-r border-black p-2 text-center min-w-[150px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
-                      title="Klik langsung untuk memasukkan Rekening / Keterangan Transfer"
+                      title="Nomor ST / Keterangan Transfer (klik untuk edit)"
                     >
-                      {header.pengadaanTax?.rekeningTransfer || ""}
+                      {header.nomorStMaster || header.pengadaanTax?.rekeningTransfer || ""}
                     </td>
                     <td
                       contentEditable={true}
@@ -736,8 +766,9 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                         contentEditable={true}
                         suppressContentEditableWarning={true}
                         className="border-r border-black p-2 text-center min-w-[150px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
-                        title="Klik langsung untuk memasukkan Rekening / Keterangan Transfer"
+                        title="Nomor ST / Keterangan Transfer (klik untuk edit)"
                       >
+                        {r.nomorSt || header.nomorStStaff || header.nomorStMaster || ""}
                       </td>
                       <td
                         contentEditable={true}
@@ -759,20 +790,6 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                     Rp{netTransferTotal.toLocaleString("id-ID")}
                   </td>
                 </tr>
-
-                {/* Footer Baris ST */}
-                {!isPengadaan && (
-                  <tr className="border-b border-black">
-                    <td
-                      colSpan={3}
-                      contentEditable={true}
-                      suppressContentEditableWarning={true}
-                      className="p-2 text-left text-xs font-normal cursor-text hover:bg-blue-50/40"
-                    >
-                      ST: {header.nomorStMaster || rows[0]?.nomorSt || header.nomorStStaff || "-"}
-                    </td>
-                  </tr>
-                )}
 
                 {/* Footer Baris Perihal */}
                 <tr>
