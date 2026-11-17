@@ -116,10 +116,13 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
     return mergeAndSortMemoList(rawMemoList, customList);
   }, [rawMemoList, customList]);
 
-  // Map kegiatan by nomor memo for quick cross-referencing
+  // Map kegiatan by nomor memo and ID Kegiatan for reliable cross-referencing
   const kegiatanByMemoMap = useMemo(() => {
     const map = new Map<string, SavedKegiatan>();
     for (const k of savedKegiatanList) {
+      if (k.idKegiatan) {
+        map.set(`id-${k.idKegiatan.toLowerCase()}`, k);
+      }
       const memoStr = (k.header?.nomorMemo || "").trim();
       if (memoStr) {
         map.set(memoStr.toLowerCase(), k);
@@ -132,6 +135,16 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
     }
     return map;
   }, [savedKegiatanList]);
+
+  const resolveLinkedKegiatan = useMemo(() => {
+    return (m: NomorMemo, seq: number, formatLower: string): SavedKegiatan | undefined => {
+      return (
+        kegiatanByMemoMap.get(formatLower) ||
+        (seq > 0 ? kegiatanByMemoMap.get(`seq-${seq}`) : undefined) ||
+        (m.id_kegiatan_ref ? kegiatanByMemoMap.get(`id-${m.id_kegiatan_ref.toLowerCase()}`) : undefined)
+      );
+    };
+  }, [kegiatanByMemoMap]);
 
   // Statistics calculation
   const stats = useMemo(() => {
@@ -159,7 +172,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
       }
 
       const format = (m.format_lengkap || m.noMemo || `M.${seq}`).toLowerCase();
-      const linked = kegiatanByMemoMap.get(format) || (seq > 0 ? kegiatanByMemoMap.get(`seq-${seq}`) : undefined);
+      const linked = resolveLinkedKegiatan(m, seq, format);
       const rawNom = m.nominal ? Number(String(m.nominal).replace(/\D/g, "")) : (linked?.grandTotal || 0);
       if (!isNaN(rawNom) && rawNom > 0) {
         totalBiaya += rawNom;
@@ -181,7 +194,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
       nextSeq,
       nextMemoStr,
     };
-  }, [fullMemoList, kegiatanByMemoMap]);
+  }, [fullMemoList, resolveLinkedKegiatan]);
 
   // Filtered List
   const filteredList = useMemo(() => {
@@ -194,12 +207,19 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
       const mak = (m.MAK || m.mak || "").toLowerCase();
       const idRef = (m.id_kegiatan_ref || "").toLowerCase();
       const tgl = formatMemoDate(m.tanggal_memo || m.tanggal).toLowerCase();
+      const linked = resolveLinkedKegiatan(m, seq, format);
+      const judulKegiatan = (
+        linked?.namaKegiatan ||
+        linked?.header?.keteranganKegiatan ||
+        ""
+      ).toLowerCase();
 
       // Search term
       if (term) {
         const matchesTerm =
           format.includes(term) ||
           perihal.includes(term) ||
+          judulKegiatan.includes(term) ||
           mak.includes(term) ||
           idRef.includes(term) ||
           tgl.includes(term) ||
@@ -225,28 +245,25 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
       }
 
       // SPJ Linked filter
-      const hasSpj =
-        kegiatanByMemoMap.has(format) ||
-        (seq > 0 && kegiatanByMemoMap.has(`seq-${seq}`)) ||
-        Boolean(m.id_kegiatan_ref);
+      const hasSpj = Boolean(linked) || Boolean(m.id_kegiatan_ref);
 
       if (spjFilter === "WITH_SPJ" && !hasSpj) return false;
       if (spjFilter === "WITHOUT_SPJ" && hasSpj) return false;
 
       return true;
     });
-  }, [fullMemoList, searchTerm, statusFilter, bulanFilter, spjFilter, kegiatanByMemoMap]);
+  }, [fullMemoList, searchTerm, statusFilter, bulanFilter, spjFilter, resolveLinkedKegiatan]);
 
   // Total Biaya untuk entri yang sedang tampil (Filtered)
   const filteredTotalBiaya = useMemo(() => {
     return filteredList.reduce((acc, m) => {
       const seq = extractMemoSeqNumber(m);
       const format = (m.format_lengkap || m.noMemo || `M.${seq}`).toLowerCase();
-      const linked = kegiatanByMemoMap.get(format) || (seq > 0 ? kegiatanByMemoMap.get(`seq-${seq}`) : undefined);
+      const linked = resolveLinkedKegiatan(m, seq, format);
       const rawNom = m.nominal ? Number(String(m.nominal).replace(/\D/g, "")) : (linked?.grandTotal || 0);
       return acc + (isNaN(rawNom) ? 0 : rawNom);
     }, 0);
-  }, [filteredList, kegiatanByMemoMap]);
+  }, [filteredList, resolveLinkedKegiatan]);
 
   // Handle Copy to Clipboard
   const handleCopyMemo = (memoStr: string) => {
@@ -435,72 +452,72 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
         </div>
 
         {/* ========================================================================= */}
-        {/* 2. STATISTIK KENDALI PENOMORAN & AKUMULASI BIAYA                          */}
+        {/* 2. COMPACT STATISTIK STRIP (Clean, Rapi, Tanpa Kotak Warna Berlebihan)    */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
-          {/* Total Register */}
-          <div className="p-3.5 bg-slate-50/80 dark:bg-slate-800/70 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
-              Total Memo Terdaftar
+        <div className="bg-slate-50/70 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/70 dark:divide-slate-800">
+          <div className="px-3.5 py-2.5 space-y-0.5">
+            <span className="text-[10.5px] font-medium text-slate-500 dark:text-slate-400 block">
+              Total Register
             </span>
-            <div className="flex items-baseline justify-between">
-              <span className="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 font-mono">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono">
                 {stats.total}
               </span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Buku Register</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">memo</span>
             </div>
           </div>
 
-          {/* Nomor Terpakai */}
-          <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/50 rounded-xl border border-emerald-200/80 dark:border-emerald-800/70 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-emerald-800 dark:text-emerald-300 tracking-wider flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              <span>Nomor Terpakai</span>
+          <div className="px-3.5 py-2.5 space-y-0.5">
+            <span className="text-[10.5px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>Terpakai</span>
             </span>
-            <div className="flex items-baseline justify-between">
-              <span className="text-xl md:text-2xl font-black text-emerald-700 dark:text-emerald-300 font-mono">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base font-bold text-emerald-700 dark:text-emerald-300 font-mono">
                 {stats.terpakaiCount}
               </span>
-              <span className="text-[11px] text-emerald-600 font-semibold font-mono">
-                {stats.total > 0 ? Math.round((stats.terpakaiCount / stats.total) * 100) : 0}%
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                ({stats.total > 0 ? Math.round((stats.terpakaiCount / stats.total) * 100) : 0}%)
               </span>
             </div>
           </div>
 
-          {/* Total Biaya Terdata */}
-          <div className="p-3.5 bg-purple-50/70 rounded-xl border border-purple-200/80 space-y-1 col-span-2 sm:col-span-1">
-            <span className="text-[10px] uppercase font-bold text-purple-900 tracking-wider flex items-center gap-1">
-              <Coins className="w-3 h-3 text-purple-600" />
+          <div className="px-3.5 py-2.5 space-y-0.5 col-span-2 sm:col-span-1">
+            <span className="text-[10.5px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <Coins className="w-3 h-3 text-slate-400" />
               <span>Total Biaya Terdata</span>
             </span>
-            <div className="flex items-baseline justify-between min-w-0">
-              <span className="text-base md:text-lg font-black text-purple-950 font-mono truncate" title={`Rp${stats.totalBiaya.toLocaleString("id-ID")}`}>
-                Rp{stats.totalBiaya.toLocaleString("id-ID")}
-              </span>
-            </div>
+            <span
+              className="text-sm font-bold text-slate-900 dark:text-slate-100 font-mono block truncate"
+              title={`Rp${stats.totalBiaya.toLocaleString("id-ID")}`}
+            >
+              Rp{stats.totalBiaya.toLocaleString("id-ID")}
+            </span>
           </div>
 
-          {/* Nomor Terakhir Terdaftar */}
-          <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/50 rounded-xl border border-blue-200/80 dark:border-blue-800/70 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-blue-800 dark:text-blue-300 tracking-wider flex items-center gap-1">
-              <Clock className="w-3 h-3 text-blue-600" />
+          <div className="px-3.5 py-2.5 space-y-0.5">
+            <span className="text-[10.5px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <Clock className="w-3 h-3 text-slate-400" />
               <span>Nomor Terakhir</span>
             </span>
-            <div className="flex items-baseline justify-between min-w-0">
-              <span className="text-xs md:text-sm font-bold text-blue-900 dark:text-blue-200 font-mono truncate" title={stats.latestMemoStr}>
-                {stats.latestMemoStr}
-              </span>
-            </div>
+            <span
+              className="text-xs font-bold text-[#0071e3] dark:text-blue-400 font-mono block truncate"
+              title={stats.latestMemoStr}
+            >
+              {stats.latestMemoStr}
+            </span>
           </div>
 
-          {/* Estimasi Nomor Berikutnya */}
-          <div className="p-3.5 bg-amber-50/70 dark:bg-amber-950/50 rounded-xl border border-amber-200/80 dark:border-amber-800/70 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-amber-900 dark:text-amber-200 tracking-wider flex items-center gap-1">
-              <ArrowRight className="w-3 h-3 text-amber-600" />
+          <div className="px-3.5 py-2.5 space-y-0.5">
+            <span className="text-[10.5px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <ArrowRight className="w-3 h-3 text-amber-500" />
               <span>Nomor Berikutnya</span>
             </span>
-            <div className="flex items-baseline justify-between min-w-0">
-              <span className="text-xs md:text-sm font-bold text-amber-950 font-mono truncate" title={stats.nextMemoStr}>
+            <div className="flex items-center justify-between gap-1 min-w-0">
+              <span
+                className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono truncate"
+                title={stats.nextMemoStr}
+              >
                 {stats.nextMemoStr}
               </span>
               <button
@@ -508,7 +525,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                 onClick={() => {
                   if (onSelectMemo) onSelectMemo(stats.nextMemoStr);
                 }}
-                className="text-[10.5px] font-bold text-amber-700 dark:text-amber-300 hover:text-amber-900 underline cursor-pointer shrink-0 ml-1"
+                className="text-[11px] font-semibold text-[#0071e3] dark:text-blue-400 hover:underline cursor-pointer shrink-0"
                 title="Langsung gunakan nomor urut berikutnya di kalkulator"
               >
                 Gunakan
@@ -521,8 +538,8 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
       {/* ========================================================================= */}
       {/* 3. CONTROL PANEL: FILTER, SEARCH & VIEW TOGGLE                            */}
       {/* ========================================================================= */}
-      <section className="form-card p-4 space-y-3">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <section className="form-card p-3.5 space-y-2.5">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
           {/* Search Box */}
           <div className="relative flex-1 min-w-[240px]">
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -530,8 +547,8 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Cari nomor memo (contoh: 320, M.21), perihal, atau MAK..."
-              className="input-human w-full h-10 pl-9 pr-8 text-xs font-medium"
+              placeholder="Cari nomor memo, judul kegiatan, perihal, ID KEG, atau MAK..."
+              className="input-human w-full h-9 pl-9 pr-8 text-xs font-medium"
             />
             {searchTerm && (
               <button
@@ -649,21 +666,18 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
         </div>
       ) : viewMode === "table" ? (
         /* -------------------------------------------------------------
-           VIEW A: SPREADSHEET TABLE VIEW (Mac/Excel Style)
+           VIEW A: CLEAN 5-COLUMN SPREADSHEET VIEW (Wide Judul Kegiatan, Zero Pill Bloat)
            ------------------------------------------------------------- */
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider text-[10.5px] font-bold select-none">
-                  <th className="py-3 px-3.5 text-center w-14">No</th>
-                  <th className="py-3 px-3.5 w-52">Nomor Memorandum</th>
-                  <th className="py-3 px-3.5 w-36">Tanggal</th>
-                  <th className="py-3 px-3.5 min-w-[260px]">Perihal / Uraian Pengajuan</th>
-                  <th className="py-3 px-3.5 w-44">Pembebanan MAK</th>
-                  <th className="py-3 px-3.5 text-right w-36">Biaya (Rp)</th>
-                  <th className="py-3 px-3.5 text-center w-24">Status</th>
-                  <th className="py-3 px-3.5 text-right w-44">Aksi Cepat</th>
+                <tr className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10.5px] font-bold select-none">
+                  <th className="py-2.5 px-3 text-center w-12">No</th>
+                  <th className="py-2.5 px-3.5 w-60">Nomor Memo &amp; Dokumen</th>
+                  <th className="py-2.5 px-3.5 min-w-[320px]">Judul Kegiatan &amp; Perihal</th>
+                  <th className="py-2.5 px-3.5 text-right w-40">Biaya &amp; Status</th>
+                  <th className="py-2.5 px-3.5 text-right w-32">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
@@ -674,14 +688,23 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                   const tglDisplay = formatMemoDate(memo.tanggal_memo || memo.tanggal);
                   const isUsed = Boolean(
                     (memo.status && String(memo.status).toUpperCase().includes("TERPAKAI")) ||
-                    (memo.perihal && String(memo.perihal).trim().length > 0)
+                    (memo.perihal && String(memo.perihal).trim().length > 0) ||
+                    (memo.id_kegiatan_ref && String(memo.id_kegiatan_ref).trim().length > 0)
                   );
-                  const makDisplay = memo.MAK || memo.mak || "-";
+                  const makDisplay = (memo.MAK || memo.mak || "").trim();
 
-                  // Check if there is an active/saved SPJ kegiatan matching this memo
-                  const linkedKegiatan =
-                    kegiatanByMemoMap.get(formatLengkap.toLowerCase()) ||
-                    (seq > 0 ? kegiatanByMemoMap.get(`seq-${seq}`) : undefined);
+                  const linkedKegiatan = resolveLinkedKegiatan(memo, seq, formatLengkap.toLowerCase());
+                  const judulKegiatan = (
+                    linkedKegiatan?.namaKegiatan ||
+                    linkedKegiatan?.header?.keteranganKegiatan ||
+                    ""
+                  ).trim();
+                  const perihalText = (memo.perihal || "").trim();
+                  const primaryTitle = judulKegiatan || perihalText;
+                  const showSubPerihal =
+                    Boolean(judulKegiatan) &&
+                    Boolean(perihalText) &&
+                    perihalText.toLowerCase() !== judulKegiatan.toLowerCase();
 
                   const rawNominal = memo.nominal
                     ? typeof memo.nominal === "number"
@@ -693,17 +716,17 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                   return (
                     <tr
                       key={formatLengkap + idx}
-                      className="hover:bg-blue-50/40 transition-colors group"
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors align-top group"
                     >
                       {/* No. Urut */}
-                      <td className="py-3 px-3.5 text-center font-mono font-bold text-slate-500 dark:text-slate-400">
+                      <td className="py-3 px-3 text-center font-mono font-bold text-slate-400 dark:text-slate-500">
                         {seq > 0 ? seq : idx + 1}
                       </td>
 
-                      {/* Nomor Memorandum */}
-                      <td className="py-3 px-3.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs tracking-tight">
+                      {/* Nomor Memorandum, Tanggal, MAK, SPJ Ref */}
+                      <td className="py-3 px-3.5 space-y-1 whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          <span className="font-mono font-bold text-[#0071e3] dark:text-blue-400 text-xs tracking-tight">
                             {formatLengkap}
                           </span>
                           <button
@@ -713,114 +736,115 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                             title="Salin nomor memorandum ke clipboard"
                           >
                             {isCopied ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <Check className="w-3 h-3 text-emerald-600" />
                             ) : (
-                              <Copy className="w-3.5 h-3.5" />
+                              <Copy className="w-3 h-3" />
                             )}
                           </button>
                         </div>
 
-                        {linkedKegiatan && (
-                          <div className="pt-1">
-                            <span
-                              className="inline-flex items-center gap-1 text-[9.5px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-100/80 border border-emerald-200 dark:border-emerald-800/70 px-1.5 py-0.5 rounded cursor-pointer hover:bg-emerald-200/80 transition-colors"
-                              title={`Terhubung ke Berkas SPJ ID: ${linkedKegiatan.idKegiatan}. Klik untuk membuka berkas ini.`}
-                              onClick={() => {
-                                if (onLoadKegiatan) onLoadKegiatan(linkedKegiatan);
-                              }}
-                            >
-                              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-                              <span>SPJ: {linkedKegiatan.idKegiatan}</span>
-                            </span>
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Tanggal Memo */}
-                      <td className="py-3 px-3.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
                           <Calendar className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
                           <span>{tglDisplay}</span>
-                        </div>
-                      </td>
-
-                      {/* Perihal / Uraian */}
-                      <td className="py-3 px-3.5 text-slate-800 dark:text-slate-200 leading-relaxed">
-                        <p className="line-clamp-2" title={memo.perihal}>
-                          {memo.perihal || <span className="text-slate-400 dark:text-slate-500 italic">Belum ada keterangan perihal</span>}
-                        </p>
-                      </td>
-
-                      {/* MAK */}
-                      <td className="py-3 px-3.5 font-mono text-[11px] text-slate-600 dark:text-slate-300">
-                        <span className="truncate block max-w-[170px]" title={makDisplay}>
-                          {makDisplay}
-                        </span>
-                      </td>
-
-                      {/* Biaya / Nominal */}
-                      <td className="py-3 px-3.5 text-right whitespace-nowrap">
-                        {nominalDisplay > 0 ? (
-                          <div className="space-y-0.5">
-                            <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-xs block">
-                              Rp{nominalDisplay.toLocaleString("id-ID")}
-                            </span>
-                            {linkedKegiatan && rawNominal === 0 && (
-                              <span className="text-[9.5px] text-emerald-600 font-medium block">
-                                Dari SPJ Riil
+                          {makDisplay && makDisplay !== "-" && (
+                            <>
+                              <span className="text-slate-300 dark:text-slate-700">·</span>
+                              <span className="font-mono" title={`MAK: ${makDisplay}`}>
+                                {makDisplay.length > 14 ? `MAK ${makDisplay.slice(-6)}` : `MAK ${makDisplay}`}
                               </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 dark:text-slate-500 font-mono text-xs">-</span>
+                            </>
+                          )}
+                        </div>
+
+                        {linkedKegiatan && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onLoadKegiatan) onLoadKegiatan(linkedKegiatan);
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                            title={`Terhubung ke Berkas ${linkedKegiatan.idKegiatan}. Klik untuk membuka di editor.`}
+                          >
+                            <CheckCircle2 className="w-3 h-3 shrink-0" />
+                            <span className="font-mono">{linkedKegiatan.idKegiatan}</span>
+                          </button>
                         )}
                       </td>
 
-                      {/* Status */}
-                      <td className="py-3 px-3.5 text-center whitespace-nowrap">
+                      {/* Judul Kegiatan & Perihal (Tampil Penuh, Bersih) */}
+                      <td className="py-3 px-3.5 space-y-1 leading-snug">
+                        {primaryTitle ? (
+                          <>
+                            <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 leading-snug">
+                              {primaryTitle}
+                            </p>
+                            {showSubPerihal && (
+                              <p className="text-[11.5px] text-slate-500 dark:text-slate-400">
+                                {perihalText}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-slate-400 dark:text-slate-500 italic text-xs">
+                            Belum ada keterangan kegiatan / perihal
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Biaya & Status */}
+                      <td className="py-3 px-3.5 text-right whitespace-nowrap space-y-1">
+                        {nominalDisplay > 0 ? (
+                          <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-xs block">
+                            Rp{nominalDisplay.toLocaleString("id-ID")}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 dark:text-slate-500 font-mono text-xs block">-</span>
+                        )}
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border ${
+                          className={`inline-flex items-center justify-end gap-1.5 text-[11px] font-semibold ${
                             isUsed
-                              ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70"
-                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                              ? "text-emerald-700 dark:text-emerald-400"
+                              : "text-slate-400 dark:text-slate-500"
                           }`}
                         >
-                          {isUsed ? "TERPAKAI" : "TERSEDIA"}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isUsed ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                            }`}
+                          />
+                          <span>{isUsed ? "Terpakai" : "Tersedia"}</span>
                         </span>
                       </td>
 
                       {/* Aksi Cepat */}
                       <td className="py-3 px-3.5 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Gunakan Nomor Ini */}
+                        <div className="flex items-center justify-end gap-1">
                           {onSelectMemo && (
                             <button
                               type="button"
                               onClick={() => onSelectMemo(formatLengkap, memo.perihal)}
-                              className="btn-tactile inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-[11px] font-semibold cursor-pointer shadow-2xs"
+                              className="btn-tactile inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-[11px] font-semibold cursor-pointer"
                               title="Pilih nomor memorandum ini untuk pengajuan SPJ saat ini"
                             >
                               <span>Gunakan</span>
                             </button>
                           )}
 
-                          {/* Buka SPJ Kegiatan jika ada */}
                           {linkedKegiatan && onLoadKegiatan && (
                             <button
                               type="button"
                               onClick={() => onLoadKegiatan(linkedKegiatan)}
-                              className="p-1 rounded-lg text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 border border-emerald-200 dark:border-emerald-800/70 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors cursor-pointer"
                               title="Buka Berkas SPJ ini di Kalkulator"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </button>
                           )}
 
-                          {/* Edit Memo */}
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(memo)}
-                            className="p-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent hover:border-slate-200 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                             title="Edit data nomor memo"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -831,15 +855,15 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                   );
                 })}
               </tbody>
-              <tfoot className="bg-slate-50/90 dark:bg-slate-800/70 border-t-2 border-slate-200 dark:border-slate-800 font-sans text-xs">
+              <tfoot className="bg-slate-50/90 dark:bg-slate-800/70 border-t border-slate-200 dark:border-slate-800 font-sans text-xs">
                 <tr>
-                  <td colSpan={5} className="py-3 px-3.5 text-right font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
+                  <td colSpan={3} className="py-2.5 px-3.5 text-right font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider text-[11px]">
                     Total Biaya Terdata ({filteredList.length} memo):
                   </td>
-                  <td className="py-3 px-3.5 text-right font-mono font-black text-slate-900 dark:text-slate-100 text-xs whitespace-nowrap">
+                  <td className="py-2.5 px-3.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100 text-xs whitespace-nowrap">
                     Rp{filteredTotalBiaya.toLocaleString("id-ID")}
                   </td>
-                  <td colSpan={2}></td>
+                  <td />
                 </tr>
               </tfoot>
             </table>
@@ -847,9 +871,9 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
         </div>
       ) : (
         /* -------------------------------------------------------------
-           VIEW B: CARD GRID VIEW (Modern Cards)
+           VIEW B: CLEAN CARD GRID VIEW
            ------------------------------------------------------------- */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {filteredList.map((memo, idx) => {
             const seq = extractMemoSeqNumber(memo);
             const formatLengkap = memo.format_lengkap || memo.noMemo || `M.${seq}/INS/PPK/XI/2026`;
@@ -857,13 +881,23 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             const tglDisplay = formatMemoDate(memo.tanggal_memo || memo.tanggal);
             const isUsed = Boolean(
               (memo.status && String(memo.status).toUpperCase().includes("TERPAKAI")) ||
-              (memo.perihal && String(memo.perihal).trim().length > 0)
+              (memo.perihal && String(memo.perihal).trim().length > 0) ||
+              (memo.id_kegiatan_ref && String(memo.id_kegiatan_ref).trim().length > 0)
             );
-            const makDisplay = memo.MAK || memo.mak || "-";
+            const makDisplay = (memo.MAK || memo.mak || "").trim();
 
-            const linkedKegiatan =
-              kegiatanByMemoMap.get(formatLengkap.toLowerCase()) ||
-              (seq > 0 ? kegiatanByMemoMap.get(`seq-${seq}`) : undefined);
+            const linkedKegiatan = resolveLinkedKegiatan(memo, seq, formatLengkap.toLowerCase());
+            const judulKegiatan = (
+              linkedKegiatan?.namaKegiatan ||
+              linkedKegiatan?.header?.keteranganKegiatan ||
+              ""
+            ).trim();
+            const perihalText = (memo.perihal || "").trim();
+            const primaryTitle = judulKegiatan || perihalText;
+            const showSubPerihal =
+              Boolean(judulKegiatan) &&
+              Boolean(perihalText) &&
+              perihalText.toLowerCase() !== judulKegiatan.toLowerCase();
 
             const rawNominal = memo.nominal
               ? typeof memo.nominal === "number"
@@ -875,19 +909,19 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             return (
               <div
                 key={formatLengkap + idx}
-                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-3 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-2.5 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between"
               >
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs">
+                      <div className="flex items-center gap-1">
+                        <span className="font-mono font-bold text-[#0071e3] dark:text-blue-400 text-xs">
                           {formatLengkap}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleCopyMemo(formatLengkap)}
-                          className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                          className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                           title="Salin nomor memo"
                         >
                           {isCopied ? (
@@ -897,74 +931,67 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                           )}
                         </button>
                       </div>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">No. Urut #{seq > 0 ? seq : idx + 1}</span>
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-slate-400" />
+                          <span>{tglDisplay}</span>
+                        </span>
+                        {makDisplay && makDisplay !== "-" && (
+                          <span className="font-mono">· MAK {makDisplay}</span>
+                        )}
+                      </div>
                     </div>
 
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                        isUsed
-                          ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                      className={`inline-flex items-center gap-1 text-[11px] font-semibold ${
+                        isUsed ? "text-emerald-700 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"
                       }`}
                     >
-                      {isUsed ? "TERPAKAI" : "TERSEDIA"}
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isUsed ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                        }`}
+                      />
+                      <span>{isUsed ? "Terpakai" : "Tersedia"}</span>
                     </span>
                   </div>
 
-                  {/* Tanggal & MAK */}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-                      <span>{tglDisplay}</span>
-                    </span>
-                    {makDisplay !== "-" && (
-                      <span className="font-mono text-slate-600 dark:text-slate-300 truncate max-w-[160px]" title={makDisplay}>
-                        {makDisplay}
-                      </span>
+                  {/* Judul Kegiatan & Perihal (Penuh, Clean) */}
+                  <div className="space-y-1 pt-1">
+                    {primaryTitle ? (
+                      <>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-snug">
+                          {primaryTitle}
+                        </p>
+                        {showSubPerihal && (
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                            {perihalText}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Belum ada perihal</p>
                     )}
                   </div>
 
-                  {/* Nominal Biaya */}
-                  {nominalDisplay > 0 ? (
-                    <div className="flex items-center justify-between text-xs py-1.5 px-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-200/70 dark:border-slate-800">
-                      <span className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] flex items-center gap-1.5">
-                        <Coins className="w-3.5 h-3.5 text-amber-600" />
-                        <span>Biaya:</span>
-                      </span>
-                      <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-xs">
-                        Rp{nominalDisplay.toLocaleString("id-ID")}
-                        {linkedKegiatan && rawNominal === 0 && (
-                          <span className="text-[9.5px] font-normal text-emerald-600 ml-1">(SPJ Riil)</span>
-                        )}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between text-xs py-1 px-3 text-slate-400 dark:text-slate-500 text-[11px]">
-                      <span>Biaya Pengajuan:</span>
-                      <span className="font-mono">-</span>
-                    </div>
-                  )}
-
-                  {/* Perihal */}
-                  <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-3 leading-relaxed pt-1">
-                    {memo.perihal || <span className="text-slate-400 dark:text-slate-500 italic">Belum ada perihal</span>}
-                  </p>
-
-                  {/* Linked Kegiatan */}
-                  {linkedKegiatan && (
-                    <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70 text-emerald-900 dark:text-emerald-200 text-[10.5px] flex items-center justify-between">
-                      <span className="font-medium truncate">SPJ: {linkedKegiatan.namaKegiatan}</span>
-                      {onLoadKegiatan && (
-                        <button
-                          type="button"
-                          onClick={() => onLoadKegiatan(linkedKegiatan)}
-                          className="text-emerald-700 dark:text-emerald-300 font-bold underline shrink-0 cursor-pointer"
-                        >
-                          Buka
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  {/* Biaya & Linked SPJ Row */}
+                  <div className="flex items-center justify-between pt-1 text-xs">
+                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                      {nominalDisplay > 0 ? `Rp${nominalDisplay.toLocaleString("id-ID")}` : "-"}
+                    </span>
+                    {linkedKegiatan && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onLoadKegiatan) onLoadKegiatan(linkedKegiatan);
+                        }}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span className="font-mono">{linkedKegiatan.idKegiatan}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Footer Actions */}
@@ -982,7 +1009,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                     <button
                       type="button"
                       onClick={() => onSelectMemo(formatLengkap, memo.perihal)}
-                      className="btn-tactile inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer shadow-2xs"
+                      className="btn-tactile inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer"
                     >
                       <span>Gunakan Nomor</span>
                       <ArrowRight className="w-3 h-3" />

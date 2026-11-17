@@ -211,6 +211,7 @@ export function exportMemoListToExcel(
     "No. Urut",
     "Format Lengkap Nomor Memorandum",
     "Tanggal Memo",
+    "Judul Kegiatan",
     "Perihal / Uraian Pengajuan",
     "MAK / Komponen",
     "Biaya / Nominal (Rp)",
@@ -226,15 +227,18 @@ export function exportMemoListToExcel(
     const mak = m.MAK || m.mak || "-";
 
     const linked = kegiatanMap
-      ? kegiatanMap.get(format.toLowerCase()) || (seq > 0 ? kegiatanMap.get(`seq-${seq}`) : undefined)
+      ? kegiatanMap.get(format.toLowerCase()) ||
+        (seq > 0 ? kegiatanMap.get(`seq-${seq}`) : undefined) ||
+        (m.id_kegiatan_ref ? kegiatanMap.get(`id-${m.id_kegiatan_ref.toLowerCase()}`) : undefined)
       : undefined;
 
+    const judulKegiatan = linked?.namaKegiatan || linked?.header?.keteranganKegiatan || perihal;
     const rawNom = m.nominal ? Number(String(m.nominal).replace(/\D/g, "")) : (linked?.grandTotal || 0);
     const nominal = rawNom > 0 ? rawNom : "";
     const status = m.status || (perihal !== "-" && perihal ? "TERPAKAI" : "TERSEDIA");
     const idRef = m.id_kegiatan_ref || linked?.idKegiatan || "-";
 
-    return [seq > 0 ? seq : "-", format, tgl, perihal, mak, nominal, status, idRef];
+    return [seq > 0 ? seq : "-", format, tgl, judulKegiatan, perihal, mak, nominal, status, idRef];
   });
 
   const ws = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
@@ -244,7 +248,8 @@ export function exportMemoListToExcel(
     { wch: 10 }, // No. Urut
     { wch: 28 }, // Format Lengkap
     { wch: 18 }, // Tanggal
-    { wch: 55 }, // Perihal
+    { wch: 55 }, // Judul Kegiatan
+    { wch: 42 }, // Perihal
     { wch: 30 }, // MAK
     { wch: 16 }, // Nominal
     { wch: 14 }, // Status
