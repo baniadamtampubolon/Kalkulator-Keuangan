@@ -379,7 +379,7 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
               key={activeRow.id || index}
               orientation="portrait"
               printableWidthMm={isBundleMode ? 174 : 170}
-              printableHeightMm={260}
+              printableHeightMm={256}
               isBundleMode={isBundleMode}
             >
               <div

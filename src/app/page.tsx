@@ -1138,7 +1138,7 @@ export default function Home() {
 
   return (
     <>
-      <div className={`min-h-screen flex flex-row bg-slate-100/60 dark:bg-slate-950 ${bundleDocsToPrint ? "no-print" : ""}`}>
+      <div className={`app-shell-print-root min-h-screen flex flex-row bg-slate-100/60 dark:bg-slate-950 ${bundleDocsToPrint ? "no-print" : ""}`}>
         {/* Classic macOS / Safari-style Sidebar on the Left */}
       <ClassicSidebar
         isOpen={isSidebarOpen}
@@ -1165,7 +1165,7 @@ export default function Home() {
       />
 
       {/* Main Workspace (Full width when sidebar is collapsed, or flex-1 alongside) */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+      <div className="app-workspace-print-root flex-1 flex flex-col min-w-0 transition-all duration-300">
         {/* Top Navbar (Main Course Tabs Only) */}
         <Navbar
           activeTab={activeTab}
@@ -1187,7 +1187,7 @@ export default function Home() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-4 space-y-6 pb-12">
+        <main className="app-main-print-root flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-4 space-y-6 pb-12">
           {/* Tab Beranda (Landing Page Pemilihan Jenis SPJ) */}
           {activeTab === "beranda" && (
             <LandingHomeView

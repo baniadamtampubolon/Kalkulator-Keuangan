@@ -440,13 +440,42 @@ body {
    Print Specific Styling (@media print)
    ========================================================================== */
 @media print {
+  html,
   body {
     background: #ffffff !important;
+    background-color: #ffffff !important;
     background-image: none !important;
     color: #000000 !important;
     font-size: 11pt !important;
     line-height: 1.35 !important;
     font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  .app-shell-print-root,
+  .app-workspace-print-root,
+  .app-main-print-root {
+    display: block !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    background-image: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-main-print-root > *,
+  .autofit-page-wrapper {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    margin-block-start: 0 !important;
+    margin-block-end: 0 !important;
   }
 
   .no-print, nav, button, .app-header, .tabs-header {

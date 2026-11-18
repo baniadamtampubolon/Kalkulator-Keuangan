@@ -292,7 +292,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
         <PrintAutoFitSheet
           orientation="portrait"
           printableWidthMm={isBundleMode ? 174 : 170}
-          printableHeightMm={260}
+          printableHeightMm={256}
           isBundleMode={isBundleMode}
         >
           <div
@@ -407,7 +407,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
         <PrintAutoFitSheet
           orientation="portrait"
           printableWidthMm={isBundleMode ? 174 : 170}
-          printableHeightMm={260}
+          printableHeightMm={256}
           isBundleMode={isBundleMode}
         >
           <div
@@ -572,7 +572,7 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
         <PrintAutoFitSheet
           orientation="portrait"
           printableWidthMm={isBundleMode ? 174 : 170}
-          printableHeightMm={260}
+          printableHeightMm={256}
           isBundleMode={isBundleMode}
         >
           <div

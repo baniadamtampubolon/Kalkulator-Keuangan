@@ -105,8 +105,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
             }`}
             body {
               background: #ffffff !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
+              background-color: #ffffff !important;
             }
             .sppd-sheet {
               width: 100% !important;
@@ -264,7 +263,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
               key={r.id || index}
               orientation="portrait"
               printableWidthMm={isBundleMode ? 174 : 170}
-              printableHeightMm={260}
+              printableHeightMm={256}
               isBundleMode={isBundleMode}
             >
               <div
@@ -326,7 +325,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                 {/* ROW 1: Pejabat Pembuat Komitmen */}
                 <div className="flex border-b border-black py-2">
                   <div className="w-8 shrink-0 text-left font-normal">1</div>
-                  <div className="w-72 shrink-0 text-left pr-2">
+                  <div className="w-56 shrink-0 text-left pr-2">
                     Pejabat Pembuat Komitmen
                   </div>
                   <div className="flex-1 flex items-start">
@@ -344,7 +343,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                 {/* ROW 2: Nama / NIP Pegawai */}
                 <div className="flex border-b border-black py-2">
                   <div className="w-8 shrink-0 text-left font-normal">2</div>
-                  <div className="w-72 shrink-0 text-left pr-2">
+                  <div className="w-56 shrink-0 text-left pr-2">
                     <div>Nama / NIP Pegawai yang melaksanakan</div>
                     <div>perjalanan dinas</div>
                   </div>
@@ -375,7 +374,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                 {/* ROW 3: Pangkat & Golongan, Jabatan / Instansi, Tingkat Biaya */}
                 <div className="flex border-b border-black py-2">
                   <div className="w-8 shrink-0 text-left font-normal">3</div>
-                  <div className="w-72 shrink-0 text-left pr-2 space-y-1">
+                  <div className="w-56 shrink-0 text-left pr-2 space-y-1">
                     <div className="flex">
                       <span className="w-5">a</span>
                       <span>Pangkat dan Golongan</span>
@@ -426,7 +425,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                 {/* ROW 4: Maksud Perjalanan Dinas */}
                 <div className="flex border-b border-black py-2">
                   <div className="w-8 shrink-0 text-left font-normal">4</div>
-                  <div className="w-72 shrink-0 text-left pr-2">
+                  <div className="w-56 shrink-0 text-left pr-2">
                     Maksud Perjalanan Dinas
                   </div>
                   <div className="flex-1 flex items-start">
@@ -444,7 +443,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                 {/* ROW 5: Alat angkutan yang dipergunakan */}
                 <div className="flex border-b border-black py-2">
                   <div className="w-8 shrink-0 text-left font-normal">5</div>
-                  <div className="w-72 shrink-0 text-left pr-2">
+                  <div className="w-56 shrink-0 text-left pr-2">
                     Alat angkutan yang dipergunakan
                   </div>
                   <div className="flex-1 flex items-start">
@@ -462,7 +461,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                 {/* ROW 6: Tempat Berangkat & Tempat Tujuan */}
                 <div className="flex border-b border-black py-2">
                   <div className="w-8 shrink-0 text-left font-normal">6</div>
-                  <div className="w-72 shrink-0 text-left pr-2 space-y-1">
+                  <div className="w-56 shrink-0 text-left pr-2 space-y-1">
                     <div className="flex">
                       <span className="w-5">a.</span>
                       <span>Tempat berangkat</span>
@@ -507,7 +506,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                 {/* ROW 7: Lamanya Perjalanan Dinas, Tgl Berangkat, Tgl Harus Kembali */}
                 <div className="flex border-b border-black py-2">
                   <div className="w-8 shrink-0 text-left font-normal">7</div>
-                  <div className="w-72 shrink-0 text-left pr-2 space-y-1">
+                  <div className="w-56 shrink-0 text-left pr-2 space-y-1">
                     <div className="flex">
                       <span className="w-5">a</span>
                       <span>Lamanya perjalanan dinas</span>
@@ -558,26 +557,26 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                 {/* ROW 8: Pengikut (Dikosongkan sesuai permintaan) */}
                 <div className="flex border-b border-black py-2">
                   <div className="w-8 shrink-0 text-left font-normal">8</div>
-                  <div className="w-72 shrink-0 text-left pr-2 space-y-1">
+                  <div className="w-56 shrink-0 text-left pr-2 space-y-1">
                     <div>Pengikut :</div>
                     <div className="pl-4">1</div>
                     <div className="pl-4">2</div>
                   </div>
-                  <div className="flex-1 flex flex-col space-y-1">
+                  <div className="flex-1 min-w-0 flex flex-col space-y-1">
                     <div className="flex w-full">
                       <div className="w-4 shrink-0"></div>
-                      <div className="w-44 text-left">Tanggal Lahir</div>
-                      <div className="flex-1 text-left">Hubungan keluarga/keterangan</div>
+                      <div className="w-[42%] shrink-0 text-left pr-2">Tanggal Lahir</div>
+                      <div className="flex-1 min-w-0 text-left">Hubungan keluarga/keterangan</div>
                     </div>
                     <div className="flex w-full">
                       <span className="w-4 shrink-0">:</span>
-                      <div className="w-44"></div>
-                      <div className="flex-1"></div>
+                      <div className="w-[42%] shrink-0"></div>
+                      <div className="flex-1 min-w-0"></div>
                     </div>
                     <div className="flex w-full">
                       <span className="w-4 shrink-0">:</span>
-                      <div className="w-44"></div>
-                      <div className="flex-1"></div>
+                      <div className="w-[42%] shrink-0"></div>
+                      <div className="flex-1 min-w-0"></div>
                     </div>
                   </div>
                 </div>
@@ -585,7 +584,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                 {/* ROW 9: Pembebanan Anggaran */}
                 <div className="flex border-b border-black py-2">
                   <div className="w-8 shrink-0 text-left font-normal">9</div>
-                  <div className="w-72 shrink-0 text-left pr-2 space-y-1">
+                  <div className="w-56 shrink-0 text-left pr-2 space-y-1">
                     <div>Pembebanan anggaran :</div>
                     <div className="flex">
                       <span className="w-5">a</span>
@@ -624,7 +623,7 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                 {/* ROW 10: Keterangan lain - lain */}
                 <div className="flex border-b border-black py-2">
                   <div className="w-8 shrink-0 text-left font-normal">10</div>
-                  <div className="w-72 shrink-0 text-left pr-2">
+                  <div className="w-56 shrink-0 text-left pr-2">
                     Keterangan lain - lain
                   </div>
                   <div className="flex-1 flex items-start">
@@ -641,8 +640,8 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
               </div>
 
               {/* BOTTOM SIGNATURE BLOCK (RIGHT-ALIGNED) */}
-              <div className="mt-8 flex justify-end">
-                <div className="w-80 text-left space-y-0.5">
+              <div className="mt-6 flex justify-end">
+                <div className="w-72 text-left space-y-0.5">
                   <div className="flex items-center">
                     <span className="w-28">Dikeluarkan di</span>
                     <span className="w-4">:</span>

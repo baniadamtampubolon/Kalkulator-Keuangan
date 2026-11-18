@@ -107,8 +107,8 @@ function measureSheetForA4(
     const safeScale = Math.max(minScale, Math.floor(bestScale * 995) / 1000);
     const finalRes = checkFits(safeScale);
     const scaledHeightMm = Math.min(
-      printableHeightMm + 1.5,
-      (finalRes.hPx / PX_PER_MM) * safeScale + 1.5
+      printableHeightMm + 0.5,
+      (finalRes.hPx / PX_PER_MM) * safeScale + 0.5
     );
 
     return {
@@ -152,7 +152,7 @@ export const PrintAutoFitSheet: React.FC<PrintAutoFitSheetProps> = ({
     printableWidthMm ??
     (orientation === "landscape" ? 277 : isBundleMode ? 174 : 170);
   const effectiveHeightMm =
-    printableHeightMm ?? (orientation === "landscape" ? 188 : 260);
+    printableHeightMm ?? (orientation === "landscape" ? 186 : 256);
 
   const recalculate = useCallback(() => {
     const wrapper = wrapperRef.current;
