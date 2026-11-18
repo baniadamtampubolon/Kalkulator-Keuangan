@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Navbar, ActiveTab } from "@/components/Navbar";
 import { HeaderForm } from "@/components/HeaderForm";
 import { ChecklistFilter } from "@/components/ChecklistFilter";
@@ -81,6 +81,12 @@ import pegawaiRaw from "@/data/pegawai.json";
 import sbmRaw from "@/data/sbm.json";
 import memoRaw from "@/data/nomor_memo.json";
 
+// Runtime tracker agar async Cloud sync tidak bentrok dengan closure React & tanpa memicu react-hooks/immutability
+const cloudSyncRuntime = {
+  lastSyncAt: 0,
+  isEditingExisting: false,
+};
+
 export default function Home() {
   // Master data with runtime state (SSR-safe initial seed)
   const [pegawaiList, setPegawaiList] = useState<Pegawai[]>(pegawaiRaw as Pegawai[]);
@@ -91,48 +97,11 @@ export default function Home() {
   const [isDbModalOpen, setIsDbModalOpen] = useState<boolean>(false);
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState<boolean>(false);
   const [isConfirmNewModalOpen, setIsConfirmNewModalOpen] = useState<boolean>(false);
+  const [pendingNewSpjType, setPendingNewSpjType] = useState<SpjDocType | null>(null);
   const [isBundleModalOpen, setIsBundleModalOpen] = useState<boolean>(false);
   const [bundleDocsToPrint, setBundleDocsToPrint] = useState<BundleDocId[] | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [totalKegiatanCount, setTotalKegiatanCount] = useState<number>(0);
-
-  // Asynchronous client-side cache hydration & Google Sheets background sync
-  useEffect(() => {
-    let isMounted = true;
-
-    // 0. Auto-heal: Bersihkan cache usang versi lama secara otomatis tanpa campur tangan user
-    checkAndAutoMigrateCache();
-
-    // 1. Hydrate from localStorage cache asynchronously after initial render
-    Promise.resolve().then(() => {
-      const cached = getCachedMasterData();
-      if (isMounted && cached) {
-        if (cached.pegawai && cached.pegawai.length > 0) setPegawaiList(cached.pegawai);
-        if (cached.sbm && cached.sbm.length > 0) setSbmList(cached.sbm);
-        if (cached.memo && cached.memo.length > 0) setMemoList(cached.memo);
-      }
-    });
-
-    // 2. Fetch latest data from Google Sheets Cloud
-    fetchMasterDataFromSheet().then((res) => {
-      if (isMounted && res.success && res.data) {
-        if (res.data.pegawai && res.data.pegawai.length > 0) setPegawaiList(res.data.pegawai);
-        if (res.data.sbm && res.data.sbm.length > 0) setSbmList(res.data.sbm);
-        if (res.data.memo && res.data.memo.length > 0) setMemoList(res.data.memo);
-      }
-    });
-
-    // 3. Fetch latest kegiatan list from Google Sheets Cloud for cross-device synchronization
-    fetchKegiatanFromSheet().then((res) => {
-      if (isMounted && res.success && res.data) {
-        setTotalKegiatanCount(res.data.length);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Safely hydrate saved kegiatan & memo counts on client mount and when updated
   useEffect(() => {
@@ -292,6 +261,145 @@ export default function Home() {
 
     return [initialRow];
   });
+
+  // Sinkronisasi data terbaru dari Cloud (dipakai saat buka halaman, klik dari Beranda, pindah tab, fokus jendela, dan setelah simpan)
+  const syncCloudState = useCallback(
+    async (opts?: { syncFreshDraftIds?: boolean; force?: boolean }) => {
+      const now = Date.now();
+      if (!opts?.force && now - cloudSyncRuntime.lastSyncAt < 4000) {
+        return;
+      }
+      cloudSyncRuntime.lastSyncAt = now;
+
+      try {
+        const [masterRes, kegRes] = await Promise.all([
+          fetchMasterDataFromSheet(),
+          fetchKegiatanFromSheet(),
+        ]);
+
+        let latestMemoPool: NomorMemo[] = [];
+        if (masterRes.success && masterRes.data) {
+          if (masterRes.data.pegawai && masterRes.data.pegawai.length > 0) {
+            setPegawaiList(masterRes.data.pegawai);
+          }
+          if (masterRes.data.sbm && masterRes.data.sbm.length > 0) {
+            setSbmList(masterRes.data.sbm);
+          }
+          if (masterRes.data.memo && masterRes.data.memo.length > 0) {
+            const merged = mergeAndSortMemoList(masterRes.data.memo);
+            latestMemoPool = merged;
+            setMemoList(merged);
+          }
+        }
+
+        const latestKegiatanList = kegRes.success && kegRes.data ? kegRes.data : getSavedKegiatanList();
+        if (kegRes.success && kegRes.data) {
+          setTotalKegiatanCount(kegRes.data.length);
+        }
+
+        // Jika user sedang membuka draft baru yang belum disimpan, perbarui ID/Memo/SPD dari data Cloud terbaru
+        if (opts?.syncFreshDraftIds && !cloudSyncRuntime.isEditingExisting) {
+          setHeader((prev) => {
+            const isBlankTitle = !prev.keteranganKegiatan || prev.keteranganKegiatan.trim() === "";
+            const tgl = prev.tanggalSpd || new Date().toISOString().split("T")[0];
+            const kat = prev.kategoriSpj || "A";
+            const idExistsInCloud = latestKegiatanList.some(
+              (k) => k.idKegiatan && prev.idKegiatan && k.idKegiatan.toLowerCase() === prev.idKegiatan.toLowerCase()
+            );
+
+            let nextId = prev.idKegiatan;
+            let nextNo = prev.noKegiatanUrut;
+            if (isBlankTitle || idExistsInCloud) {
+              nextNo = getNextNoKegiatan(tgl, kat);
+              nextId = generateIdKegiatan(tgl, nextNo, kat);
+            }
+
+            let nextMemo = prev.nomorMemo;
+            const pool = latestMemoPool.length > 0 ? latestMemoPool : mergeAndSortMemoList([]);
+            const memoStr = (prev.nomorMemo || "").trim();
+            const memoUrutMatch = memoStr.match(/\bM\.?\s*(\d+)/i);
+            const memoUrut = memoUrutMatch ? memoUrutMatch[1] : "";
+            const memoCollides =
+              Boolean(memoUrut) &&
+              pool.some(
+                (m) =>
+                  String(m.nomor_urut || m.nomor || "").trim() === memoUrut &&
+                  (String(m.status || "").toUpperCase() === "TERPAKAI" || Boolean(m.id_kegiatan_ref))
+              );
+
+            if (isBlankTitle || !memoStr || memoStr.toLowerCase().includes("xxx") || memoCollides) {
+              nextMemo = generateNextMemoNumber(pool, undefined, prev.tanggalMemo || tgl).nextMemoNumber;
+            }
+
+            if (nextId === prev.idKegiatan && nextNo === prev.noKegiatanUrut && nextMemo === prev.nomorMemo) {
+              return prev;
+            }
+
+            return {
+              ...prev,
+              noKegiatanUrut: nextNo,
+              idKegiatan: nextId,
+              nomorMemo: nextMemo,
+            };
+          });
+
+          const latestSpd = getLatestRegisteredSpdNumber();
+          if (latestSpd > 0) {
+            setRows((prevRows) => {
+              if (
+                prevRows.length === 1 &&
+                (!prevRows[0].nama || prevRows[0].nama.trim() === "") &&
+                (!prevRows[0].namaExternal || prevRows[0].namaExternal.trim() === "")
+              ) {
+                const parsed = parseSpdNumber(prevRows[0].nomorSpd);
+                if (parsed.num <= latestSpd) {
+                  return [{ ...prevRows[0], nomorSpd: formatSpdNumber(latestSpd + 1) }];
+                }
+              }
+              return prevRows;
+            });
+          }
+        }
+      } catch {
+        // Ignore transient offline errors
+      }
+    },
+    []
+  );
+
+  // Hydrate initial master & cloud data on mount, plus auto-refresh when tab regains focus
+  useEffect(() => {
+    let active = true;
+    checkAndAutoMigrateCache();
+
+    Promise.resolve().then(() => {
+      if (!active) return;
+      const cached = getCachedMasterData();
+      if (cached) {
+        if (cached.pegawai && cached.pegawai.length > 0) setPegawaiList(cached.pegawai);
+        if (cached.sbm && cached.sbm.length > 0) setSbmList(cached.sbm);
+        if (cached.memo && cached.memo.length > 0) setMemoList(mergeAndSortMemoList(cached.memo));
+      }
+      void syncCloudState({ syncFreshDraftIds: true, force: true });
+    });
+
+    const handleVisibilityOrFocus = () => {
+      if (typeof document === "undefined" || document.visibilityState === "visible") {
+        void syncCloudState({
+          syncFreshDraftIds: !cloudSyncRuntime.isEditingExisting,
+        });
+      }
+    };
+
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+
+    return () => {
+      active = false;
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+    };
+  }, [syncCloudState]);
 
   // Sync initial row nomorSpd with database continuation on client mount and whenever cloud data arrives
   useEffect(() => {
@@ -533,12 +641,24 @@ export default function Home() {
   const isSaved = Boolean(savedSnapshot);
   const hasChanges = isSaved && currentSnapshot !== savedSnapshot;
 
+  // Helper navigasi tab sekaligus refresh ringan data Cloud saat membuka Beranda / Daftar Kegiatan / Daftar Memo
+  const handleNavigateTab = useCallback(
+    (tab: ActiveTab) => {
+      setActiveTab(tab);
+      if (tab === "beranda" || tab === "kegiatan" || tab === "daftar-memo") {
+        void syncCloudState({ syncFreshDraftIds: tab === "beranda" });
+      }
+    },
+    [syncCloudState]
+  );
+
   // Edit kegiatan from Daftar Kegiatan
   const handleEditKegiatan = (kegiatan: SavedKegiatan) => {
     const normalizedHeader: HeaderData = {
       ...kegiatan.header,
       spjType: kegiatan.header.spjType || "PERDIN",
     };
+    cloudSyncRuntime.isEditingExisting = true;
     setHeader(normalizedHeader);
     setRows(kegiatan.rows);
     if (kegiatan.activeCols) setActiveCols(kegiatan.activeCols);
@@ -620,11 +740,14 @@ export default function Home() {
     }
   };
 
-  // Start fresh kegiatan with clean state and next sequential ID (Sharing MASTER_MEMO pool)
+  // Start fresh kegiatan with clean state and next sequential ID (Sharing MASTER_MEMO pool & immediate Cloud refresh)
   const handleCreateNewKegiatan = (overrideType?: SpjDocType) => {
+    cloudSyncRuntime.isEditingExisting = false;
     setEditingOriginalId(null);
     setEditingOriginalTitle(null);
     setEditingOriginalMemo(null);
+    setPendingNewSpjType(null);
+    setSaveFeedback(null);
     const today = new Date().toISOString().split("T")[0];
     const nextNo = getNextNoKegiatan(today, "A");
     const newId = generateIdKegiatan(today, nextNo, "A");
@@ -731,9 +854,11 @@ export default function Home() {
     setIsCloudSynced(false);
     setLastCloudSyncTime(null);
     setActiveTab("input");
+    // Segera tarik ID, Memo & SPD terbaru dari Cloud agar tidak bentrok dengan user lain
+    void syncCloudState({ syncFreshDraftIds: true, force: true });
   };
 
-  // Safe Request to Create New Kegiatan (Checks for unsaved changes)
+  // Safe Request to Create New Kegiatan (Checks for unsaved changes without clobbering active SPJ type if cancelled)
   const handleRequestCreateNew = (overrideType?: SpjDocType) => {
     const isPengadaan = Boolean(header.spjType && header.spjType !== "PERDIN");
     const hasValidData = isPengadaan
@@ -742,7 +867,7 @@ export default function Home() {
           Boolean((r.nama && r.nama.trim() !== "") || (r.namaExternal && r.namaExternal.trim() !== ""))
         );
     if (hasChanges || (!isSaved && hasValidData)) {
-      if (overrideType) handleSwitchSpjType(overrideType);
+      setPendingNewSpjType(overrideType || null);
       setIsConfirmNewModalOpen(true);
     } else {
       handleCreateNewKegiatan(overrideType);
@@ -911,6 +1036,7 @@ export default function Home() {
         setSavedBatchId(idKegiatan);
         setSavedSnapshot(JSON.stringify({ header: updatedHeader, rows }));
 
+        const isNewRecord = !oldBatchId;
         const sheetRes = await savePerdinToGoogleSheet(
           updatedHeader,
           [syntheticRow],
@@ -921,13 +1047,57 @@ export default function Home() {
             activeUh,
             oldNamaKegiatan: oldNama,
             oldNomorMemo: oldMemo,
+            isNewRecord,
           }
         );
 
-        // Perbarui state memoList dari gabungan bersama
+        const finalServerId = sheetRes.idKegiatan || idKegiatan;
+        const finalServerMemo = sheetRes.assignedNomorMemo || updatedHeader.nomorMemo;
+        const idNumMatch = finalServerId.match(/^KEG-\d{4}-(\d+)-/);
+        const finalHeader: HeaderData = {
+          ...updatedHeader,
+          idKegiatan: finalServerId,
+          noKegiatanUrut: idNumMatch ? idNumMatch[1] : updatedHeader.noKegiatanUrut,
+          nomorMemo: finalServerMemo,
+        };
+
+        if (sheetRes.success && (finalServerId !== idKegiatan || finalServerMemo !== updatedHeader.nomorMemo)) {
+          saveKegiatanRecord(
+            {
+              idKegiatan: finalServerId,
+              kategori: "A",
+              namaKegiatan: finalHeader.keteranganKegiatan || spjMeta.label,
+              tanggalSpd: today,
+              kotaTujuan: spjMeta.shortLabel,
+              provinsiTujuan: "DKI JAKARTA",
+              jumlahPeserta: items.length,
+              grandTotal: calc.subTotalBruto,
+              header: finalHeader,
+              rows: [syntheticRow],
+              activeCols,
+              activeUh,
+              updatedAt: new Date().toISOString(),
+            },
+            idKegiatan,
+            updatedHeader.keteranganKegiatan || undefined,
+            updatedHeader.nomorMemo || undefined
+          );
+          setTotalKegiatanCount(getSavedKegiatanList().length);
+        }
+
+        cloudSyncRuntime.isEditingExisting = true;
+        setHeader(finalHeader);
+        setEditingOriginalId(finalServerId);
+        setEditingOriginalTitle(finalHeader.keteranganKegiatan || null);
+        setEditingOriginalMemo(finalHeader.nomorMemo || null);
+        setSavedBatchId(finalServerId);
+        setSavedSnapshot(JSON.stringify({ header: finalHeader, rows }));
+
+        // Perbarui state memoList dari gabungan bersama & segera refresh Cloud agar daftar lain ter-update
         setMemoList((prev) => mergeAndSortMemoList(prev));
 
         if (sheetRes.success) {
+          void syncCloudState({ force: true, syncFreshDraftIds: false });
           setIsCloudSynced(true);
           setLastCloudSyncTime(
             new Date().toLocaleTimeString("id-ID", {
@@ -936,11 +1106,16 @@ export default function Home() {
               second: "2-digit",
             })
           );
+          const reassignNote = sheetRes.wasAutoReassigned
+            ? ` (Nomor otomatis disesuaikan ke ${finalServerId} · ${finalServerMemo} agar tidak bentrok dengan user lain)`
+            : "";
           setSaveFeedback({
             type: "success",
-            text: isUpdate
-              ? `Data ${spjMeta.label} berhasil diperbarui di ${targetRekapSheetName} & MASTER_MEMO (Database Cloud)!`
-              : `Data ${spjMeta.label} berhasil disimpan ke ${targetRekapSheetName} & MASTER_MEMO (Database Cloud)!`,
+            text:
+              (isUpdate
+                ? `Data ${spjMeta.label} berhasil diperbarui di ${targetRekapSheetName} & MASTER_MEMO (Database Cloud)!`
+                : `Data ${spjMeta.label} berhasil disimpan ke ${targetRekapSheetName} & MASTER_MEMO (Database Cloud)!`) +
+              reassignNote,
           });
         } else {
           setIsCloudSynced(false);
@@ -1069,6 +1244,7 @@ export default function Home() {
       setSavedSnapshot(JSON.stringify({ header: updatedHeader, rows: validRows }));
 
       // 3. Kirim data transaksi dan baris rekap ke Google Spreadsheet Cloud
+      const isNewRecord = !oldBatchId;
       const sheetRes = await savePerdinToGoogleSheet(
         updatedHeader,
         validRows,
@@ -1079,12 +1255,87 @@ export default function Home() {
           activeUh,
           oldNamaKegiatan: oldNama,
           oldNomorMemo: oldMemo,
+          isNewRecord,
         }
       );
+
+      const finalServerId = sheetRes.idKegiatan || idKegiatan;
+      const finalServerMemo = sheetRes.assignedNomorMemo || updatedHeader.nomorMemo;
+      const idNumMatch = finalServerId.match(/^KEG-\d{4}-(\d+)-/);
+      const finalHeader: HeaderData = {
+        ...updatedHeader,
+        idKegiatan: finalServerId,
+        noKegiatanUrut: idNumMatch ? idNumMatch[1] : updatedHeader.noKegiatanUrut,
+        nomorMemo: finalServerMemo,
+      };
+      const serverSpdArr = sheetRes.assignedSpdNumbers;
+      const validIdsSet = new Set(validRows.map((v) => v.id));
+      let validCursor = 0;
+      const finalRows =
+        serverSpdArr && serverSpdArr.length === validRows.length
+          ? rows.map((r) => {
+              if (!validIdsSet.has(r.id)) return r;
+              const srvSpd = serverSpdArr[validCursor++];
+              return srvSpd ? { ...r, nomorSpd: srvSpd } : r;
+            })
+          : rows;
+      const finalValidRows = finalRows.filter((r) => validIdsSet.has(r.id));
+
+      if (
+        sheetRes.success &&
+        (finalServerId !== idKegiatan ||
+          finalServerMemo !== updatedHeader.nomorMemo ||
+          sheetRes.wasAutoReassigned)
+      ) {
+        saveKegiatanRecord(
+          {
+            idKegiatan: finalServerId,
+            kategori: (finalHeader.kategoriSpj === "NA" || (finalHeader.kategoriSpj as string) === "B" ? "NA" : "A") as "A" | "NA" | "B",
+            namaKegiatan: finalHeader.keteranganKegiatan || "Kegiatan Tanpa Judul",
+            tanggalSpd: finalHeader.tanggalSpd || today,
+            kotaTujuan: finalHeader.isMultiProvinsi
+              ? [...(finalHeader.kotaTujuanList || []), ...(finalHeader.kotaTujuanList2 || [])].filter(Boolean).join(", ")
+              : finalHeader.kotaTujuanList?.[0] || "",
+            provinsiTujuan:
+              finalHeader.isMultiProvinsi && finalHeader.provinsiTujuan2
+                ? `${finalHeader.provinsiTujuan} & ${finalHeader.provinsiTujuan2}`
+                : finalHeader.provinsiTujuan || "",
+            jumlahPeserta: finalValidRows.length,
+            grandTotal: finalValidRows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0),
+            header: finalHeader,
+            rows: finalValidRows,
+            activeCols,
+            activeUh,
+            updatedAt: new Date().toISOString(),
+          },
+          idKegiatan,
+          updatedHeader.keteranganKegiatan || undefined,
+          updatedHeader.nomorMemo || undefined
+        );
+        saveOrUpdateRekapLocal(
+          finalHeader,
+          finalValidRows,
+          finalServerId,
+          idKegiatan,
+          updatedHeader.keteranganKegiatan || undefined,
+          updatedHeader.nomorMemo || undefined
+        );
+        setTotalKegiatanCount(getSavedKegiatanList().length);
+      }
+
+      cloudSyncRuntime.isEditingExisting = true;
+      setHeader(finalHeader);
+      setRows(finalRows);
+      setEditingOriginalId(finalServerId);
+      setEditingOriginalTitle(finalHeader.keteranganKegiatan || null);
+      setEditingOriginalMemo(finalHeader.nomorMemo || null);
+      setSavedBatchId(finalServerId);
+      setSavedSnapshot(JSON.stringify({ header: finalHeader, rows: finalValidRows }));
 
       setMemoList((prev) => mergeAndSortMemoList(prev));
 
       if (sheetRes.success) {
+        void syncCloudState({ force: true, syncFreshDraftIds: false });
         setIsCloudSynced(true);
         setLastCloudSyncTime(
           new Date().toLocaleTimeString("id-ID", {
@@ -1093,11 +1344,16 @@ export default function Home() {
             second: "2-digit",
           })
         );
+        const reassignNote = sheetRes.wasAutoReassigned
+          ? ` (Nomor otomatis disesuaikan ke ${finalServerId} · ${finalServerMemo} agar tidak bentrok dengan user lain)`
+          : "";
         setSaveFeedback({
           type: "success",
-          text: isUpdate
-            ? "Data SPJ berhasil diperbarui di Rekap Perdin & tersinkron ke Google Spreadsheet!"
-            : "Data SPJ berhasil disimpan ke Rekap Perdin & tersinkron ke Google Spreadsheet!",
+          text:
+            (isUpdate
+              ? "Data SPJ berhasil diperbarui di Rekap Perdin & tersinkron ke Google Spreadsheet!"
+              : "Data SPJ berhasil disimpan ke Rekap Perdin & tersinkron ke Google Spreadsheet!") +
+            reassignNote,
         });
       } else {
         setIsCloudSynced(false);
@@ -1145,7 +1401,7 @@ export default function Home() {
         onToggle={() => setIsSidebarOpen((prev) => !prev)}
         activeTab={activeTab}
         onSelectTab={(tab: ActiveTab) => {
-          setActiveTab(tab);
+          handleNavigateTab(tab);
           if (typeof window !== "undefined" && window.innerWidth < 1024) {
             setIsSidebarOpen(false);
           }
@@ -1169,7 +1425,7 @@ export default function Home() {
         {/* Top Navbar (Main Course Tabs Only) */}
         <Navbar
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleNavigateTab}
           onPrint={() => {
             syncAllAutoFitSheets();
             window.print();
@@ -1204,11 +1460,11 @@ export default function Home() {
                   handleRequestCreateNew(type);
                 } else {
                   handleSwitchSpjType(type);
-                  setActiveTab("input");
+                  handleNavigateTab("input");
                 }
               }}
-              onContinueCurrentWork={() => setActiveTab("input")}
-              onNavigateTab={(tab) => setActiveTab(tab)}
+              onContinueCurrentWork={() => handleNavigateTab("input")}
+              onNavigateTab={(tab) => handleNavigateTab(tab)}
               onOpenDbModal={() => setIsDbModalOpen(true)}
             />
           )}
@@ -1224,7 +1480,7 @@ export default function Home() {
                 <div className="flex items-center gap-2.5">
                   <button
                     type="button"
-                    onClick={() => setActiveTab("beranda")}
+                    onClick={() => handleNavigateTab("beranda")}
                     className="btn-tactile inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer transition-all"
                     title="Kembali ke Halaman Utama (Landing Page)"
                   >
@@ -1264,7 +1520,7 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setActiveTab("beranda")}
+                  onClick={() => handleNavigateTab("beranda")}
                   className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-blue-600 hover:bg-black dark:hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer transition-all"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
@@ -1272,7 +1528,7 @@ export default function Home() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setActiveTab("input")}
+                  onClick={() => handleNavigateTab("input")}
                   className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer transition-all"
                 >
                   <span>Ke Input &amp; Kalkulator</span>
@@ -1469,10 +1725,7 @@ export default function Home() {
               }}
               onLoadKegiatan={handleEditKegiatan}
               onRefreshMemo={async () => {
-                const res = await fetchMasterDataFromSheet();
-                if (res.success && res.data?.memo) {
-                  setMemoList(res.data.memo);
-                }
+                await syncCloudState({ force: true, syncFreshDraftIds: false });
               }}
             />
           )}
@@ -1519,7 +1772,7 @@ export default function Home() {
         rows={rows}
         isCloudSynced={isCloudSynced}
         lastCloudSyncTime={lastCloudSyncTime}
-        onNavigateToTab={(tab) => setActiveTab(tab)}
+        onNavigateToTab={(tab) => handleNavigateTab(tab)}
         onPrintAll={handlePrintAllFromModal}
         onCreateNewKegiatan={() => {
           setIsCompletionModalOpen(false);
@@ -1530,15 +1783,22 @@ export default function Home() {
       {/* Safety Confirmation Modal: Buat SPJ Baru */}
       <ModalConfirmNewSpj
         isOpen={isConfirmNewModalOpen}
-        onClose={() => setIsConfirmNewModalOpen(false)}
-        onConfirmNew={() => {
+        onClose={() => {
           setIsConfirmNewModalOpen(false);
-          handleCreateNewKegiatan();
+          setPendingNewSpjType(null);
+        }}
+        onConfirmNew={() => {
+          const nextType = pendingNewSpjType || undefined;
+          setIsConfirmNewModalOpen(false);
+          setPendingNewSpjType(null);
+          handleCreateNewKegiatan(nextType);
         }}
         onSaveAndNew={async () => {
+          const nextType = pendingNewSpjType || undefined;
           setIsConfirmNewModalOpen(false);
+          setPendingNewSpjType(null);
           await handleSaveOrUpdateData();
-          handleCreateNewKegiatan();
+          handleCreateNewKegiatan(nextType);
         }}
         hasUnsavedChanges={hasChanges || (!isSaved && rows.some((r) => Boolean(r.nama && r.nama.trim() !== "")))}
       />

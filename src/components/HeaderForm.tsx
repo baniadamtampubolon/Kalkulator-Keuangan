@@ -33,9 +33,12 @@ import {
   Wand2,
   CheckCircle2,
   FolderKanban,
-  Sparkles,
+  RefreshCw,
   AlertTriangle,
   BookmarkCheck,
+  PenLine,
+  Edit3,
+  Hash,
 } from "lucide-react";
 
 interface HeaderFormProps {
@@ -378,20 +381,20 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               1
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2.5 flex-wrap">
                 <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                  Informasi & Narasi Kegiatan
+                  Informasi &amp; Narasi Kegiatan
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                  Wajib Diisi
-                </span>
+                <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">·</span>
                 {editingOriginalId ? (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/70">
-                    Mengedit: {editingOriginalId}
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#0071e3] dark:text-blue-400">
+                    <Edit3 className="w-3 h-3" />
+                    <span>Mengedit {editingOriginalId}</span>
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                    Draft Baru
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    <PenLine className="w-3 h-3" />
+                    <span>Draft baru · Wajib diisi</span>
                   </span>
                 )}
               </div>
@@ -428,50 +431,51 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
         {/* Sub-panel Identitas Berkas SPJ & Klasifikasi Kegiatan */}
         <div className="space-y-2">
-          <div className="p-2.5 sm:p-3 bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 rounded-xl flex flex-col lg:flex-row lg:items-center justify-between gap-3 transition-all">
+          <div className="px-3 py-2.5 bg-slate-50/70 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 rounded-xl flex flex-col lg:flex-row lg:items-center justify-between gap-3 transition-all">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 shadow-2xs">
-                <FolderKanban className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-                    ID Kegiatan
-                  </span>
-                  <span className={`px-2.5 py-0.5 rounded-lg font-mono font-bold text-xs border shadow-2xs ${
+              <Hash className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+              <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap text-xs">
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  ID Kegiatan
+                </span>
+                <span
+                  className={`font-mono font-bold text-xs sm:text-[13px] ${
                     conflictingKegiatan
-                      ? "bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200 border-amber-300"
+                      ? "text-amber-700 dark:text-amber-300"
                       : isEditingCurrent
-                      ? "bg-blue-50 dark:bg-blue-950/50 text-[#0071e3] border-blue-200 dark:border-blue-800/70"
-                      : "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800"
-                  }`}>
-                    {currentId}
+                      ? "text-[#0071e3] dark:text-blue-400"
+                      : "text-slate-900 dark:text-slate-100"
+                  }`}
+                >
+                  {currentId}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                  {(header.kategoriSpj || "A") === "A" ? "ASN" : "Non ASN"}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">·</span>
+                {conflictingKegiatan ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>ID sudah terpakai</span>
                   </span>
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/60 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-300/50">
-                    {(header.kategoriSpj || "A") === "A" ? "Kategori A • ASN" : "Kategori NA • Non-ASN"}
+                ) : isEditingCurrent ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#0071e3] dark:text-blue-400">
+                    <Edit3 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Mode edit</span>
                   </span>
-                  {conflictingKegiatan ? (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:text-amber-300 border border-amber-300 flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3 text-amber-600" />
-                      ID Sudah Terpakai
-                    </span>
-                  ) : isEditingCurrent ? (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-[#0071e3] border border-blue-200 dark:border-blue-800/70">
-                      Mode Edit
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                      ID Siap Digunakan
-                    </span>
-                  )}
-                </div>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Siap digunakan</span>
+                  </span>
+                )}
               </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0 flex-wrap">
-              {/* Segmented Control Kategori A / NA */}
-              <div className="inline-flex rounded-lg bg-slate-200/60 dark:bg-slate-700 p-0.5 text-xs font-medium border border-slate-300/40">
+              {/* Segmented Control ASN / Non ASN */}
+              <div className="inline-flex rounded-lg bg-slate-200/70 dark:bg-slate-700/80 p-0.5 text-xs font-medium border border-slate-300/40 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={() => updateIdKegiatan(header.tanggalSpd, header.noKegiatanUrut, "A")}
@@ -482,7 +486,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   }`}
                   title="Pilih ASN jika peserta memiliki NIP dan pangkat/jabatan"
                 >
-                  ASN [A]
+                  ASN
                 </button>
                 <button
                   type="button"
@@ -492,16 +496,16 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                       ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs"
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
                   }`}
-                  title="Pilih Non-ASN jika peserta adalah eksternal / narasumber"
+                  title="Pilih Non ASN jika peserta adalah eksternal / narasumber"
                 >
-                  Non-ASN [NA]
+                  Non ASN
                 </button>
               </div>
 
               {/* No Urut Input with Auto Button */}
               <div className="flex items-center gap-1.5">
-                <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-lg px-2 py-1 shadow-2xs">
-                  <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">No:</span>
+                <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 rounded-lg px-2 py-1 shadow-2xs">
+                  <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">No</span>
                   <input
                     type="text"
                     maxLength={3}
@@ -518,11 +522,11 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 <button
                   type="button"
                   onClick={() => updateIdKegiatan(header.tanggalSpd, nextAvailableNo, header.kategoriSpj)}
-                  className="btn-tactile inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/50 hover:bg-[#0071e3] text-[#0071e3] hover:text-white border border-blue-200/80 dark:border-blue-800/70 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+                  className="btn-tactile inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
                   title={`Gunakan nomor urut berikutnya (${nextAvailableNo})`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Auto ({nextAvailableNo})</span>
+                  <RefreshCw className="w-3 h-3 text-[#0071e3] dark:text-blue-400" />
+                  <span>Otomatis ({nextAvailableNo})</span>
                 </button>
               </div>
             </div>
@@ -546,7 +550,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                 onClick={() => updateIdKegiatan(header.tanggalSpd, nextAvailableNo, header.kategoriSpj)}
                 className="btn-tactile inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs cursor-pointer shadow-xs transition-all shrink-0"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 <span>Ganti ke No. {nextAvailableNo}</span>
               </button>
             </div>
@@ -667,11 +671,12 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               2
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                  Destinasi & Pengaturan Perjalanan
+                  Destinasi &amp; Pengaturan Perjalanan
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">·</span>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                   Tarif SBM PMK
                 </span>
               </div>
@@ -1060,11 +1065,12 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               3
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                  Penomoran Dokumen & Surat Tugas (ST)
+                  Penomoran Dokumen &amp; Surat Tugas (ST)
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">·</span>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                   Dasar Hukum SPJ
                 </span>
               </div>
@@ -1304,11 +1310,12 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               4
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                  Pembebanan Anggaran & Pertanggungjawaban SPJ
+                  Pembebanan Anggaran &amp; Pertanggungjawaban SPJ
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">·</span>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                   Standar DIPA Terisi Otomatis
                 </span>
               </div>
@@ -1544,11 +1551,12 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               5
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                  Pejabat Penandatangan & Verifikasi
+                  Pejabat Penandatangan &amp; Verifikasi
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">·</span>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                   Tanda Tangan Dokumen
                 </span>
               </div>

@@ -307,17 +307,91 @@ function doPost(e) {
     // 2. SIMPAN TRANSAKSI PERJALANAN DINAS & 48 KOLOM
     if (action === 'SAVE_PERDIN') {
       const header = payload.header || {};
-      const participants = payload.participants || [];
+      const participants = Array.isArray(payload.participants) ? payload.participants : [];
+      const isNewRecord = payload.isNewRecord === true || !header.oldIdKegiatan;
 
-      // 1. Simpan / Perbarui nomor memorandum di MASTER_MEMO (9 Kolom Baku)
+      const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
       const memoSheet = getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
-      const assignedMemo = upsertMemo(memoSheet, header.nomorMemo, {
+      const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
+      const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
+
+      // Parse fullSnapshot agar ID/Memo/SPD hasil resolusi atomik server tersinkron di payload_json
+      let snapshotObj = payload.fullSnapshot || null;
+      if (!snapshotObj && header.payload_json) {
+        try {
+          snapshotObj = JSON.parse(header.payload_json);
+        } catch (e) {}
+      }
+
+      // 0a. Resolusi ID Kegiatan atomik di dalam LockService (cegah 2 user menimpa ID yang sama)
+      const requestedIdKegiatan = String(header.idKegiatan || '').trim();
+      const idResolution = resolveUniqueIdKegiatan(
+        kegiatanSheet,
+        memoSheet,
+        requestedIdKegiatan,
+        isNewRecord,
+        header.oldIdKegiatan
+      );
+      const finalIdKegiatan = idResolution.idKegiatan;
+      const idWasReassigned = idResolution.reassigned;
+      header.idKegiatan = finalIdKegiatan;
+
+      // 1. Simpan / Perbarui nomor memorandum di MASTER_MEMO (9 Kolom Baku) dengan proteksi tabrakan
+      const memoRes = upsertMemo(memoSheet, header.nomorMemo, {
         tanggal: header.tanggalMemo || header.tanggalSpd || '',
         perihal: header.keteranganKegiatan || header.keteranganMemo || header.perihal || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
         nominal: header.grandTotal || 0,
         mak: header.kodeMak || '524111',
-        idKegiatan: header.idKegiatan || ''
-      });
+        idKegiatan: finalIdKegiatan,
+        isNewRecord: isNewRecord,
+        oldNomorMemo: header.oldNomorMemo || ''
+      }, true);
+      const assignedMemo = typeof memoRes === 'object' ? memoRes.memoStr : memoRes;
+      const memoWasReassigned = typeof memoRes === 'object' ? Boolean(memoRes.reassigned) : false;
+
+      // 1b. Resolusi SPD otomatis bila isNewRecord & SPD sudah dipakai kegiatan lain (cegah tabrakan SPD antar user)
+      let spdWasReassigned = false;
+      const spjTypeCheck = String(header.spjType || payload.spjType || 'PERDIN').trim().toUpperCase();
+      const assignedSpdNumbers = [];
+      if (isNewRecord && spjTypeCheck === 'PERDIN' && participants.length > 0) {
+        const usedSpdMap = collectUsedSpdNumbers(pesertaSheet, finalIdKegiatan);
+        let nextSpdNum = Math.max(getLatestSpdNumberFromSheet(ss), usedSpdMap.maxNum) + 1;
+
+        participants.forEach(function(p, idx) {
+          const rawSpd = String(p.nomorSpd || '').trim();
+          const parsedSpd = parseInt(rawSpd.replace(/\D/g, ''), 10);
+          const isValidNum = !isNaN(parsedSpd) && parsedSpd > 0;
+          if (!isValidNum || usedSpdMap.used[parsedSpd]) {
+            const newSpdStr = nextSpdNum < 10 ? '0' + nextSpdNum : String(nextSpdNum);
+            if (rawSpd !== newSpdStr) spdWasReassigned = true;
+            p.nomorSpd = newSpdStr;
+            usedSpdMap.used[nextSpdNum] = true;
+            nextSpdNum++;
+          } else {
+            usedSpdMap.used[parsedSpd] = true;
+          }
+          assignedSpdNumbers.push(String(p.nomorSpd || ''));
+          if (snapshotObj && Array.isArray(snapshotObj.rows) && snapshotObj.rows[idx]) {
+            snapshotObj.rows[idx].nomorSpd = p.nomorSpd;
+          }
+        });
+      } else {
+        participants.forEach(function(p) {
+          assignedSpdNumbers.push(String(p.nomorSpd || ''));
+        });
+      }
+
+      // Sinkronkan perubahan atomik ID / Memo ke snapshotObj
+      const finalNomorMemo = assignedMemo || header.nomorMemo || '';
+      if (snapshotObj) {
+        snapshotObj.idKegiatan = finalIdKegiatan;
+        if (snapshotObj.header) {
+          snapshotObj.header.idKegiatan = finalIdKegiatan;
+          snapshotObj.header.nomorMemo = finalNomorMemo;
+          const idMatch = finalIdKegiatan.match(/^KEG-\d{4}-(\d+)-/);
+          if (idMatch) snapshotObj.header.noKegiatanUrut = idMatch[1];
+        }
+      }
 
       // 2. Simpan / Perbarui Item Detail DIPA ke MASTER_MAK jika ada
       if (header.itemDetail && String(header.itemDetail).trim() !== '') {
@@ -331,13 +405,10 @@ function doPost(e) {
       }
 
       // 3. Simpan/Update DB_KEGIATAN dengan Header-Aware Mapping
-      const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
-      const pesertaSheet = getOrCreateSheet(ss, SHEET_NAMES.PESERTA, DEFAULT_HEADERS.PESERTA);
-      const rekapSheet = getOrCreateSheet(ss, SHEET_NAMES.REKAP, DEFAULT_HEADERS.REKAP);
 
       // Ambil No SPM manual yang sudah ada di spreadsheet (jika ada) agar tidak tertimpa/terhapus saat simpan
       let existingManualSpm = '';
-      if (rekapSheet.getLastRow() >= 2) {
+      if (!isNewRecord && rekapSheet.getLastRow() >= 2) {
         const rData = rekapSheet.getDataRange().getValues();
         const rHeaders = rData[0] || DEFAULT_HEADERS.REKAP;
         const spmCol = rHeaders.indexOf('No SPM') !== -1 ? rHeaders.indexOf('No SPM') : 2;
@@ -354,16 +425,16 @@ function doPost(e) {
         }
       }
 
-      if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
+      if (!isNewRecord && header.oldIdKegiatan && header.oldIdKegiatan !== finalIdKegiatan) {
         deleteRowsByColumnValue(kegiatanSheet, 'id_kegiatan', header.oldIdKegiatan);
       }
 
       const rawKotaTujuan = header.kotaTujuanList;
       const kotaTujuanListStr = typeof rawKotaTujuan === 'string' ? rawKotaTujuan : JSON.stringify(rawKotaTujuan || []);
 
-      const payloadJsonStr = header.payload_json || (payload.fullSnapshot ? JSON.stringify(payload.fullSnapshot) : '');
-      const finalNomorMemo = assignedMemo || header.nomorMemo || '';
+      const payloadJsonStr = snapshotObj ? JSON.stringify(snapshotObj) : (header.payload_json || '');
       const finalNoSpmToUse = header.noSpm || existingManualSpm || '';
+      const wasAutoReassigned = Boolean(idWasReassigned || memoWasReassigned || spdWasReassigned);
 
       const kegiatanData = {
         id_kegiatan: header.idKegiatan || '',
@@ -407,12 +478,12 @@ function doPost(e) {
         updated_at: new Date()
       };
 
-      // Cari data kegiatan sebelumnya di DB_KEGIATAN jika ini adalah update/edit
-      let prevNamaFromDb = (header.oldNamaKegiatan || '').trim();
-      let prevMemoFromDb = (header.oldNomorMemo || '').trim();
-      const targetSearchId = (header.oldIdKegiatan || header.idKegiatan || '').trim();
+      // Cari data kegiatan sebelumnya di DB_KEGIATAN HANYA jika ini adalah update/edit (!isNewRecord)
+      let prevNamaFromDb = !isNewRecord ? (header.oldNamaKegiatan || '').trim() : '';
+      let prevMemoFromDb = !isNewRecord ? (header.oldNomorMemo || '').trim() : '';
+      const targetSearchId = !isNewRecord ? (header.oldIdKegiatan || header.idKegiatan || '').trim() : '';
 
-      if (kegiatanSheet.getLastRow() >= 2 && targetSearchId) {
+      if (!isNewRecord && kegiatanSheet.getLastRow() >= 2 && targetSearchId) {
         const kegData = kegiatanSheet.getDataRange().getValues();
         const kegHeaders = kegData[0] || [];
         const colKegId = kegHeaders.indexOf('id_kegiatan');
@@ -434,11 +505,11 @@ function doPost(e) {
         }
       }
 
-      upsertRowByHeaderObject(kegiatanSheet, 'id_kegiatan', header.idKegiatan, kegiatanData, DEFAULT_HEADERS.KEGIATAN);
+      upsertRowByHeaderObject(kegiatanSheet, 'id_kegiatan', finalIdKegiatan, kegiatanData, DEFAULT_HEADERS.KEGIATAN);
 
       // Bersihkan baris lama di DB_PESERTA sebelum menulis data baru
-      deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.idKegiatan);
-      if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
+      deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', finalIdKegiatan);
+      if (!isNewRecord && header.oldIdKegiatan && header.oldIdKegiatan !== finalIdKegiatan) {
         deleteRowsByColumnValue(pesertaSheet, 'id_kegiatan', header.oldIdKegiatan);
       }
 
@@ -447,14 +518,14 @@ function doPost(e) {
       allPengadaanSheets.forEach(function(sName) {
         const sObj = ss.getSheetByName(sName);
         if (sObj && sObj.getLastRow() >= 2) {
-          deleteRowsByColumnValue(sObj, 'id_kegiatan', header.idKegiatan);
-          if (header.oldIdKegiatan && header.oldIdKegiatan !== header.idKegiatan) {
+          deleteRowsByColumnValue(sObj, 'id_kegiatan', finalIdKegiatan);
+          if (!isNewRecord && header.oldIdKegiatan && header.oldIdKegiatan !== finalIdKegiatan) {
             deleteRowsByColumnValue(sObj, 'id_kegiatan', header.oldIdKegiatan);
           }
-          if (finalNomorMemo) {
+          if (!isNewRecord && finalNomorMemo) {
             deleteRowsByColumnValue(sObj, 'Nomor Memo', finalNomorMemo);
           }
-          if (prevMemoFromDb || header.oldNomorMemo) {
+          if (!isNewRecord && (prevMemoFromDb || header.oldNomorMemo)) {
             deleteRowsByColumnValue(sObj, 'Nomor Memo', prevMemoFromDb || header.oldNomorMemo);
           }
         }
@@ -467,12 +538,12 @@ function doPost(e) {
       if (targetPengadaanSheetName) {
         // Pastikan tidak ada sisa baris di REKAP_PERDIN_48KOLOM jika sebelumnya pernah tersimpan di sana
         deleteRekapRowsByKeys(rekapSheet, {
-          idKegiatan: header.idKegiatan,
-          oldIdKegiatan: header.oldIdKegiatan,
+          idKegiatan: finalIdKegiatan,
+          oldIdKegiatan: !isNewRecord ? header.oldIdKegiatan : '',
           nomorMemo: finalNomorMemo,
-          oldNomorMemo: prevMemoFromDb || header.oldNomorMemo,
+          oldNomorMemo: !isNewRecord ? (prevMemoFromDb || header.oldNomorMemo) : '',
           namaKegiatan: header.namaKegiatan,
-          oldNamaKegiatan: prevNamaFromDb || header.oldNamaKegiatan,
+          oldNamaKegiatan: !isNewRecord ? (prevNamaFromDb || header.oldNamaKegiatan) : '',
           participantNames: []
         });
 
@@ -572,8 +643,11 @@ function doPost(e) {
         return createJsonResponse({
           status: 'success',
           message: 'Data ' + jenisSpjLabel + ' berhasil disimpan ke sheet ' + targetPengadaanSheetName + ' & berbagi nomor di MASTER_MEMO.',
-          idKegiatan: header.idKegiatan,
+          idKegiatan: finalIdKegiatan,
+          assignedIdKegiatan: finalIdKegiatan,
           assignedNomorMemo: finalNomorMemo,
+          assignedSpdNumbers: assignedSpdNumbers,
+          wasAutoReassigned: wasAutoReassigned,
           sheetName: targetPengadaanSheetName,
           latestSpdNumber: getLatestSpdNumberFromSheet(ss)
         });
@@ -588,12 +662,12 @@ function doPost(e) {
 
       // Bersihkan baris lama di REKAP_PERDIN_48KOLOM berdasarkan ID Kegiatan, Nomor Memo, dan Judul Kegiatan
       deleteRekapRowsByKeys(rekapSheet, {
-        idKegiatan: header.idKegiatan,
-        oldIdKegiatan: header.oldIdKegiatan,
+        idKegiatan: finalIdKegiatan,
+        oldIdKegiatan: !isNewRecord ? header.oldIdKegiatan : '',
         nomorMemo: finalNomorMemo,
-        oldNomorMemo: prevMemoFromDb || header.oldNomorMemo,
+        oldNomorMemo: !isNewRecord ? (prevMemoFromDb || header.oldNomorMemo) : '',
         namaKegiatan: header.namaKegiatan,
-        oldNamaKegiatan: prevNamaFromDb || header.oldNamaKegiatan,
+        oldNamaKegiatan: !isNewRecord ? (prevNamaFromDb || header.oldNamaKegiatan) : '',
         participantNames: validParticipants.map(function(p) {
           return String(p.nama || p.spjExtra?.namaExternal || p.namaExternal || '').trim();
         })
@@ -757,8 +831,11 @@ function doPost(e) {
       return createJsonResponse({
         status: 'success',
         message: 'Data perjalanan dinas dan 48 kolom rekap berhasil disimpan ke Google Spreadsheet.',
-        idKegiatan: header.idKegiatan,
+        idKegiatan: finalIdKegiatan,
+        assignedIdKegiatan: finalIdKegiatan,
         assignedNomorMemo: finalNomorMemo,
+        assignedSpdNumbers: assignedSpdNumbers,
+        wasAutoReassigned: wasAutoReassigned,
         latestSpdNumber: latestSpd
       });
     }
@@ -1096,10 +1173,99 @@ function upsertPegawai(sheet, idPegawai, namaLengkap, nip, rowData) {
 /**
  * Helper: Simpan / Perbarui Baris Memorandum di MASTER_MEMO (9 Kolom Baku)
  */
-function upsertMemo(sheet, nomorMemo, info) {
-  if (!sheet) return '';
+function resolveUniqueIdKegiatan(kegiatanSheet, memoSheet, requestedId, isNewRecord, oldIdKegiatan) {
+  const existingIds = {};
+  if (kegiatanSheet && kegiatanSheet.getLastRow() >= 2) {
+    const kData = kegiatanSheet.getDataRange().getValues();
+    const kHeaders = kData[0] || [];
+    const colId = kHeaders.indexOf('id_kegiatan');
+    if (colId !== -1) {
+      for (let i = 1; i < kData.length; i++) {
+        const val = String(kData[i][colId] || '').trim();
+        if (val) existingIds[val.toLowerCase()] = true;
+      }
+    }
+  }
+  if (memoSheet && memoSheet.getLastRow() >= 2) {
+    const mData = memoSheet.getDataRange().getValues();
+    const mHeaders = mData[0] || [];
+    const colRef = mHeaders.indexOf('id_kegiatan_ref') !== -1 ? mHeaders.indexOf('id_kegiatan_ref') : 5;
+    for (let i = 1; i < mData.length; i++) {
+      const val = String(mData[i][colRef] || '').trim();
+      if (val) existingIds[val.toLowerCase()] = true;
+    }
+  }
+
+  const req = String(requestedId || '').trim();
+  const oldReq = String(oldIdKegiatan || '').trim();
+  const isCollisionOnNew = isNewRecord && req && Boolean(existingIds[req.toLowerCase()]);
+  const isCollisionOnRename = !isNewRecord && req && req.toLowerCase() !== oldReq.toLowerCase() && Boolean(existingIds[req.toLowerCase()]);
+
+  if (req && !isCollisionOnNew && !isCollisionOnRename) {
+    return { idKegiatan: req, reassigned: false };
+  }
+
+  const match = req.match(/^KEG-(\d{4})-(\d+)-(A|NA|B)$/i);
+  const now = new Date();
+  const defaultYymm = String(now.getFullYear()).slice(-2) + String(now.getMonth() + 1).padStart(2, '0');
+  const yymm = match ? match[1] : defaultYymm;
+  const kat = match ? match[3].toUpperCase() : 'A';
+  const monthPrefix = ('KEG-' + yymm + '-').toLowerCase();
+
+  let maxNo = 0;
+  Object.keys(existingIds).forEach(function(k) {
+    if (k.indexOf(monthPrefix) === 0) {
+      const m = k.match(/^keg-\d{4}-(\d+)-/i);
+      if (m) {
+        const n = parseInt(m[1], 10);
+        if (!isNaN(n) && n > maxNo) maxNo = n;
+      }
+    }
+  });
+
+  let nextNo = maxNo + 1;
+  let candidate = 'KEG-' + yymm + '-' + String(nextNo).padStart(3, '0') + '-' + kat;
+  while (existingIds[candidate.toLowerCase()]) {
+    nextNo++;
+    candidate = 'KEG-' + yymm + '-' + String(nextNo).padStart(3, '0') + '-' + kat;
+  }
+
+  return { idKegiatan: candidate, reassigned: candidate !== req };
+}
+
+function collectUsedSpdNumbers(pesertaSheet, excludeIdKegiatan) {
+  const used = {};
+  let maxNum = 0;
+  if (!pesertaSheet || pesertaSheet.getLastRow() < 2) {
+    return { used: used, maxNum: 0 };
+  }
+  const pData = pesertaSheet.getDataRange().getValues();
+  const pHeaders = pData[0] || [];
+  const colSpd = pHeaders.indexOf('nomor_spd') !== -1 ? pHeaders.indexOf('nomor_spd') : 4;
+  const colKeg = pHeaders.indexOf('id_kegiatan') !== -1 ? pHeaders.indexOf('id_kegiatan') : 1;
+  const excludeLower = String(excludeIdKegiatan || '').trim().toLowerCase();
+
+  for (let i = 1; i < pData.length; i++) {
+    const rowKeg = String(pData[i][colKeg] || '').trim().toLowerCase();
+    const rawSpd = String(pData[i][colSpd] || '').trim();
+    const num = parseInt(rawSpd.replace(/\D/g, ''), 10);
+    if (!isNaN(num) && num > 0) {
+      if (num > maxNum) maxNum = num;
+      if (!excludeLower || rowKeg !== excludeLower) {
+        used[num] = true;
+      }
+    }
+  }
+  return { used: used, maxNum: maxNum };
+}
+
+function upsertMemo(sheet, nomorMemo, info, returnDetailed) {
+  if (!sheet) return returnDetailed ? { memoStr: '', reassigned: false } : '';
   let memoStr = String(nomorMemo || '').trim();
   const infoIdKgt = String(info.idKegiatan || '').trim();
+  const isNewRecord = Boolean(info.isNewRecord);
+  const oldNomorMemoLower = String(info.oldNomorMemo || '').trim().toLowerCase();
+  let reassigned = false;
 
   const lastRow = sheet.getLastRow();
   const data = lastRow >= 1 ? sheet.getDataRange().getValues() : [];
@@ -1156,6 +1322,28 @@ function upsertMemo(sheet, nomorMemo, info) {
     const nextNum = maxSeq > 0 ? maxSeq + 1 : 321;
     targetNum = String(nextNum);
     memoStr = 'M.' + targetNum + '/INS/PPK/' + romanMonth + '/' + memoYear;
+  } else if (lastRow >= 2) {
+    // Cek proteksi tabrakan memo: apakah targetNum sudah TERPAKAI oleh kegiatan LAIN?
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rowUrut = String(colUrut !== -1 ? row[colUrut] : row[1] || '').trim();
+      const rowRef = String(colRef !== -1 ? row[colRef] : row[5] || '').trim();
+      const rowStatus = String(colStatus !== -1 ? row[colStatus] : row[6] || '').trim().toUpperCase();
+      const rowPerihal = String(colPerihal !== -1 ? row[colPerihal] : row[4] || '').trim();
+
+      if (rowUrut === targetNum) {
+        const ownedBySameId = !isNewRecord && infoIdKgt && rowRef && rowRef.toLowerCase() === infoIdKgt.toLowerCase();
+        const isEmptyUnusedSlot = !rowRef && rowStatus !== 'TERPAKAI' && !rowPerihal;
+        if (!ownedBySameId && !isEmptyUnusedSlot) {
+          // Tabrakan terdeteksi! Alokasikan nomor urut baru agar data user sebelumnya aman
+          const nextNum = maxSeq > 0 ? maxSeq + 1 : 321;
+          targetNum = String(nextNum);
+          memoStr = 'M.' + targetNum + '/INS/PPK/' + romanMonth + '/' + memoYear;
+          reassigned = true;
+        }
+        break;
+      }
+    }
   }
 
   // Ekstrak tahun anggaran
@@ -1165,19 +1353,25 @@ function upsertMemo(sheet, nomorMemo, info) {
     targetYear = yearMatch[1];
   }
 
-  // 3. Cek apakah baris memo sudah ada di MASTER_MEMO (Cocokkan via id_kegiatan_ref, format_lengkap, atau nomor_urut)
-  if (lastRow >= 2) {
+  // 3. Cek apakah baris memo sudah ada di MASTER_MEMO
+  if (lastRow >= 2 && !reassigned) {
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       const rowRef = String(colRef !== -1 ? row[colRef] : row[5] || '').trim();
       const rowFormat = String(colFormat !== -1 ? row[colFormat] : row[2] || '').trim().toLowerCase();
       const rowUrut = String(colUrut !== -1 ? row[colUrut] : row[1] || '').trim();
+      const rowStatus = String(colStatus !== -1 ? row[colStatus] : row[6] || '').trim().toUpperCase();
 
-      const isMatchRef = infoIdKgt && rowRef && rowRef.toLowerCase() === infoIdKgt.toLowerCase();
-      const isMatchFormat = rowFormat && (rowFormat === memoStr.toLowerCase() || (targetNum && rowFormat.startsWith('m.' + targetNum.toLowerCase())));
       const isMatchUrut = targetNum && rowUrut && rowUrut === targetNum;
+      const isMatchOldOnEdit = !isNewRecord && oldNomorMemoLower && rowFormat === oldNomorMemoLower && (!rowRef || rowRef.toLowerCase() === infoIdKgt.toLowerCase());
+      const isMatchOwnedRef = !isNewRecord && infoIdKgt && rowRef && rowRef.toLowerCase() === infoIdKgt.toLowerCase() && (isMatchUrut || !targetNum);
 
-      if (isMatchRef || isMatchFormat || isMatchUrut) {
+      // Saat isNewRecord, hanya boleh claim baris jika rowUrut === targetNum DAN slot masih kosong belum terpakai
+      const canClaim = isNewRecord
+        ? (isMatchUrut && !rowRef && rowStatus !== 'TERPAKAI')
+        : (isMatchOwnedRef || isMatchOldOnEdit || (isMatchUrut && (!rowRef || rowRef.toLowerCase() === infoIdKgt.toLowerCase())));
+
+      if (canClaim) {
         const rowNum = i + 1;
         if (colTahun !== -1) sheet.getRange(rowNum, colTahun + 1).setValue(targetYear);
         if (colUrut !== -1) sheet.getRange(rowNum, colUrut + 1).setValue(Number(targetNum));
@@ -1190,12 +1384,12 @@ function upsertMemo(sheet, nomorMemo, info) {
           sheet.getRange(rowNum, colNominal + 1).setValue(info.nominal);
         }
         if (colMak !== -1 && info.mak) sheet.getRange(rowNum, colMak + 1).setValue(info.mak);
-        return memoStr;
+        return returnDetailed ? { memoStr: memoStr, reassigned: reassigned } : memoStr;
       }
     }
   }
 
-  // 4. Jika belum ada di MASTER_MEMO, tambahkan baris baru
+  // 4. Jika belum ada di MASTER_MEMO (atau dialokasikan nomor baru), tambahkan baris baru
   const newRow = [
     targetYear,
     Number(targetNum),
@@ -1208,7 +1402,7 @@ function upsertMemo(sheet, nomorMemo, info) {
     info.mak || ''
   ];
   sheet.appendRow(newRow);
-  return memoStr;
+  return returnDetailed ? { memoStr: memoStr, reassigned: reassigned } : memoStr;
 }
 
 /**
@@ -1465,8 +1659,9 @@ function deleteRekapRowsByKeys(sheet, criteria) {
       }
     }
 
-    // 3. Nama Kegiatan match (Judul Lama atau Judul Baru)
-    if (!shouldDelete && rowKeg !== '') {
+    // 3. Nama Kegiatan match HANYA jika rowId kosong atau milik kegiatan ini (cegah hapus kegiatan lain yang judulnya kebetulan sama)
+    const isSameOrEmptyId = rowId === '' || (curId && rowId === curId) || (oldId && rowId === oldId);
+    if (!shouldDelete && rowKeg !== '' && isSameOrEmptyId) {
       if (oldKeg && rowKeg === oldKeg) {
         shouldDelete = true;
       } else if (curKeg && rowKeg === curKeg) {
@@ -1474,8 +1669,8 @@ function deleteRekapRowsByKeys(sheet, criteria) {
       }
     }
 
-    // 4. Participant match when old title or memo was altered
-    if (!shouldDelete && participantNames.length > 0 && rowName !== '') {
+    // 4. Participant match when old title or memo was altered (and not belonging to another ID)
+    if (!shouldDelete && participantNames.length > 0 && rowName !== '' && isSameOrEmptyId) {
       const isParticipantMatch = participantNames.indexOf(rowName) !== -1;
       if (isParticipantMatch) {
         if (oldKeg && (rowKeg === oldKeg || rowKeg.indexOf(oldKeg) !== -1 || oldKeg.indexOf(rowKeg) !== -1)) {

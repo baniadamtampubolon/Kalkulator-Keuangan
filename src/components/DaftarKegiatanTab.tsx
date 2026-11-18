@@ -346,8 +346,8 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
               title="Filter kategori ASN / Non-ASN"
             >
               <option value="ALL">Semua Kategori ({kegiatanList.length})</option>
-              <option value="A">ASN [A] ({countAsn})</option>
-              <option value="NA">Non-ASN [NA] ({countNonAsn})</option>
+              <option value="A">ASN ({countAsn})</option>
+              <option value="NA">Non ASN ({countNonAsn})</option>
             </select>
 
             {/* Compact Sort Selector */}

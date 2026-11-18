@@ -385,13 +385,13 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
                 <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                   Identitas Kegiatan &amp; Memorandum ({spjMeta.label})
                 </h2>
-                <span className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-md border ${spjMeta.badgeColor}`}>
-                  {spjMeta.shortLabel}
-                </span>
                 {header.idKegiatan && (
-                  <span className="text-[10.5px] font-mono font-bold px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800">
-                    {header.idKegiatan}
-                  </span>
+                  <>
+                    <span className="text-slate-300 dark:text-slate-700">·</span>
+                    <span className="text-xs font-mono font-bold text-[#0071e3] dark:text-blue-400">
+                      {header.idKegiatan}
+                    </span>
+                  </>
                 )}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{spjMeta.description}</p>

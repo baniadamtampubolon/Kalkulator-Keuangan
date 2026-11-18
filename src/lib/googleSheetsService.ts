@@ -1493,8 +1493,16 @@ export async function savePerdinToGoogleSheet(
     activeUh?: Record<string, boolean>;
     oldNamaKegiatan?: string;
     oldNomorMemo?: string;
+    isNewRecord?: boolean;
   }
-): Promise<{ success: boolean; message: string; idKegiatan?: string }> {
+): Promise<{
+  success: boolean;
+  message: string;
+  idKegiatan?: string;
+  assignedNomorMemo?: string;
+  assignedSpdNumbers?: string[];
+  wasAutoReassigned?: boolean;
+}> {
   const url = customUrl || getGasApiUrl();
 
   const idKegiatan =
@@ -1555,8 +1563,11 @@ export async function savePerdinToGoogleSheet(
     updatedAt: new Date().toISOString(),
   };
 
+  const isNewRecord = options?.isNewRecord ?? !oldIdKegiatan;
+
   const payload = {
     action: "SAVE_PERDIN",
+    isNewRecord,
     spjType,
     pengadaan: isPengadaan
       ? {
@@ -1715,37 +1726,52 @@ export async function savePerdinToGoogleSheet(
     })),
   };
 
-  // Cadangan offline di browser
-  if (typeof window !== "undefined") {
+  // Helper untuk sinkronisasi cadangan offline browser dengan ID/Memo final (authoritative dari Server bila online)
+  const persistLocalBackup = (
+    finalId: string,
+    finalMemo: string,
+    finalSpdNumbers?: string[]
+  ) => {
+    if (typeof window === "undefined") return;
     try {
-      localStorage.setItem(`draft_perdin_${idKegiatan}`, JSON.stringify(payload));
+      const reconciledParticipants =
+        finalSpdNumbers && finalSpdNumbers.length === validParticipants.length
+          ? validParticipants.map((p, idx) => ({ ...p, nomorSpd: finalSpdNumbers[idx] || p.nomorSpd }))
+          : validParticipants;
+
+      localStorage.setItem(
+        `draft_perdin_${finalId}`,
+        JSON.stringify({
+          ...payload,
+          header: { ...payload.header, idKegiatan: finalId, nomorMemo: finalMemo },
+        })
+      );
 
       // Jika nomor memo diisi, simpan / perbarui statusnya di cache Master Memo lokal & Custom Memo bersama
-      if (header.nomorMemo) {
-        const memoNumMatch = header.nomorMemo.match(/\bM\.?(\d+)/i) || header.nomorMemo.match(/(\d+)/);
+      if (finalMemo) {
+        const memoNumMatch = finalMemo.match(/\bM\.?(\d+)/i) || finalMemo.match(/(\d+)/);
         const numStr = memoNumMatch ? memoNumMatch[1] : "";
         const memoRomanMonth = getMonthRoman(header.tanggalMemo) || "XI";
         const memoYear = Number(header.tanggalMemo ? new Date(header.tanggalMemo).getFullYear() : 2026) || 2026;
         const memoEntry: NomorMemo = {
           tahun_anggaran: memoYear,
           nomor_urut: numStr,
-          format_lengkap: header.nomorMemo,
+          format_lengkap: finalMemo,
           tanggal_memo: header.tanggalMemo || "",
           perihal:
             (header.keteranganKegiatan && header.keteranganKegiatan.trim()) ||
             header.keteranganMemo ||
             "Perjalanan Dinas",
-          id_kegiatan_ref: idKegiatan,
+          id_kegiatan_ref: finalId,
           status: "TERPAKAI",
           nominal: grandTotal,
           MAK: header.nomorMak || "524111",
-          noMemo: header.nomorMemo,
+          noMemo: finalMemo,
           tanggal: header.tanggalMemo || "",
           mak: header.nomorMak || "524111",
           bulanRomawi: memoRomanMonth,
         };
 
-        // Simpan ke daftar memo kustom bersama agar seluruh 5 jenis SPJ berbagi urutan nomor memo secara instan
         saveCustomMemo(memoEntry);
 
         const rawCache = localStorage.getItem(STORAGE_KEY_MASTER_CACHE);
@@ -1754,8 +1780,8 @@ export async function savePerdinToGoogleSheet(
           if (cached && Array.isArray(cached.memo)) {
             const existingIdx = cached.memo.findIndex(
               (m) =>
-                (m.format_lengkap && m.format_lengkap === header.nomorMemo) ||
-                (m.noMemo && m.noMemo === header.nomorMemo) ||
+                (m.format_lengkap && m.format_lengkap === finalMemo) ||
+                (m.noMemo && m.noMemo === finalMemo) ||
                 (numStr && (m.nomor_urut === numStr || m.nomor === numStr))
             );
 
@@ -1770,7 +1796,7 @@ export async function savePerdinToGoogleSheet(
       }
 
       // Perbarui nomor SPD tertinggi ke storage lokal dari peserta yang valid
-      const maxSpd = validParticipants.reduce((max, p) => {
+      const maxSpd = reconciledParticipants.reduce((max, p) => {
         const parsed = parseSpdNumber(p.nomorSpd);
         return Math.max(max, parsed.num);
       }, 0);
@@ -1780,13 +1806,15 @@ export async function savePerdinToGoogleSheet(
     } catch {
       // ignore
     }
-  }
+  };
 
   if (!url) {
+    persistLocalBackup(idKegiatan, header.nomorMemo || "");
     return {
       success: true,
       message: "Data disimpan di memori lokal browser (URL Google Apps Script belum diset).",
       idKegiatan,
+      assignedNomorMemo: header.nomorMemo || "",
     };
   }
 
@@ -1795,6 +1823,26 @@ export async function savePerdinToGoogleSheet(
     if (json.status === "success") {
       const jsonObj = json as unknown as Record<string, unknown>;
       const jsonDataObj = (json.data as unknown as Record<string, unknown> | undefined);
+
+      const serverIdKegiatan = String(
+        jsonObj.assignedIdKegiatan || jsonObj.idKegiatan || jsonDataObj?.assignedIdKegiatan || jsonDataObj?.idKegiatan || idKegiatan
+      ).trim();
+      const serverNomorMemo = String(
+        jsonObj.assignedNomorMemo || jsonDataObj?.assignedNomorMemo || header.nomorMemo || ""
+      ).trim();
+      const rawSpdArr = jsonObj.assignedSpdNumbers || jsonDataObj?.assignedSpdNumbers;
+      const serverSpdNumbers = Array.isArray(rawSpdArr)
+        ? rawSpdArr.map((x) => String(x || ""))
+        : undefined;
+      const wasAutoReassigned = Boolean(
+        jsonObj.wasAutoReassigned ||
+          jsonDataObj?.wasAutoReassigned ||
+          (serverIdKegiatan && serverIdKegiatan !== idKegiatan) ||
+          (serverNomorMemo && header.nomorMemo && serverNomorMemo !== header.nomorMemo)
+      );
+
+      persistLocalBackup(serverIdKegiatan, serverNomorMemo, serverSpdNumbers);
+
       const cloudSpd = Number(jsonObj.latestSpdNumber || jsonDataObj?.latestSpdNumber);
       if (!isNaN(cloudSpd) && cloudSpd > 0) {
         saveLatestRegisteredSpdNumber(cloudSpd);
@@ -1802,12 +1850,17 @@ export async function savePerdinToGoogleSheet(
       return {
         success: true,
         message: json.message || "Data transaksi dan 48 kolom rekap berhasil disimpan ke Google Spreadsheet.",
-        idKegiatan,
+        idKegiatan: serverIdKegiatan,
+        assignedNomorMemo: serverNomorMemo,
+        assignedSpdNumbers: serverSpdNumbers,
+        wasAutoReassigned,
       };
     } else {
+      persistLocalBackup(idKegiatan, header.nomorMemo || "");
       return { success: false, message: json.message || "Terjadi kesalahan saat menyimpan ke spreadsheet." };
     }
   } catch (err: unknown) {
+    persistLocalBackup(idKegiatan, header.nomorMemo || "");
     const errMsg = err instanceof Error ? err.message : String(err);
     return {
       success: false,

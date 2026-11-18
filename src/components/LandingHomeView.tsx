@@ -92,12 +92,17 @@ const SPJ_SQUARE_BLOCKS: SpjSquareBlock[] = [
 
 export const LandingHomeView: React.FC<LandingHomeViewProps> = ({
   currentSpjType,
+  currentLoadedId,
+  currentTitle,
   totalKegiatanCount,
   memoCount,
   onSelectSpjToWork,
+  onContinueCurrentWork,
   onNavigateTab,
   onOpenDbModal,
 }) => {
+  const hasActiveWork = Boolean(currentLoadedId || (currentTitle && currentTitle.trim() !== ""));
+
   return (
     <div className="min-h-[calc(100vh-9rem)] flex flex-col justify-center py-8 sm:py-12 px-2">
       <div className="max-w-6xl w-full mx-auto space-y-10 sm:space-y-12">
@@ -131,7 +136,7 @@ export const LandingHomeView: React.FC<LandingHomeViewProps> = ({
               <button
                 key={block.type}
                 type="button"
-                onClick={() => onSelectSpjToWork(block.type, false)}
+                onClick={() => onSelectSpjToWork(block.type, true)}
                 className={`group relative sm:aspect-square min-h-[200px] rounded-3xl bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800/95 backdrop-blur-xl p-6 flex flex-col justify-between text-left border transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl dark:hover:shadow-black/40 cursor-pointer ${
                   isSelected
                     ? `${block.activeRing} shadow-md`
@@ -169,7 +174,30 @@ export const LandingHomeView: React.FC<LandingHomeViewProps> = ({
         </div>
 
         {/* =====================================================================
-            3. MINIMALIST SECONDARY NAVIGATION PILLS
+            3. ACTIVE DRAFT RESUME LINK (Only shown when a draft/edit is open)
+           ===================================================================== */}
+        {hasActiveWork && (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={onContinueCurrentWork}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 shadow-2xs cursor-pointer transition-all"
+            >
+              <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+              <span>
+                Lanjutkan SPJ aktif:{" "}
+                <strong className="font-mono text-slate-900 dark:text-slate-100">
+                  {currentLoadedId || "Draft"}
+                </strong>
+                {currentTitle ? ` — ${currentTitle.slice(0, 48)}${currentTitle.length > 48 ? "…" : ""}` : ""}
+              </span>
+              <ArrowUpRight className="w-3.5 h-3.5 text-[#0071e3] dark:text-blue-400 shrink-0" />
+            </button>
+          </div>
+        )}
+
+        {/* =====================================================================
+            4. MINIMALIST SECONDARY NAVIGATION PILLS
            ===================================================================== */}
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-2">
           <button
