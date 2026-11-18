@@ -313,7 +313,7 @@ function doPost(e) {
       const memoSheet = getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
       const assignedMemo = upsertMemo(memoSheet, header.nomorMemo, {
         tanggal: header.tanggalMemo || header.tanggalSpd || '',
-        perihal: header.keteranganMemo || header.perihal || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
+        perihal: header.keteranganKegiatan || header.keteranganMemo || header.perihal || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
         nominal: header.grandTotal || 0,
         mak: header.kodeMak || '524111',
         idKegiatan: header.idKegiatan || ''
@@ -888,12 +888,61 @@ function doPost(e) {
         }
       });
 
+      // Hapus juga dari MASTER_MEMO jika diminta (default: true)
+      if (payload.deleteMemo !== false) {
+        const memoSheet = ss.getSheetByName(SHEET_NAMES.MEMO);
+        if (memoSheet && memoSheet.getLastRow() >= 2) {
+          if (idKegiatan) {
+            deleteRowsByColumnValue(memoSheet, 'id_kegiatan_ref', idKegiatan);
+          }
+          if (nomorMemo) {
+            deleteRowsByColumnValue(memoSheet, 'format_lengkap', nomorMemo);
+            deleteRowsByColumnValue(memoSheet, 'noMemo', nomorMemo);
+          }
+        }
+      }
+
       pruneGhostRows(rekapSheet);
       logAction(ss, 'DELETE_KEGIATAN', idKegiatan || namaKegiatan, 'Menghapus paket kegiatan ' + (namaKegiatan || idKegiatan));
 
       return createJsonResponse({
         status: 'success',
         message: 'Paket kegiatan ' + (idKegiatan || namaKegiatan) + ' berhasil dihapus dari Google Spreadsheet.'
+      });
+    }
+
+    // 4B. HAPUS NOMOR MEMORANDUM DARI MASTER_MEMO
+    if (action === 'DELETE_MEMO') {
+      const nomorMemo = String(payload.nomorMemo || payload.formatLengkap || '').trim();
+      const nomorUrut = String(payload.nomorUrut || '').trim();
+      const idKegiatanRef = String(payload.idKegiatanRef || '').trim();
+
+      if (!nomorMemo && !nomorUrut && !idKegiatanRef) {
+        return createJsonResponse({ status: 'error', message: 'Nomor Memorandum wajib disertakan.' });
+      }
+
+      const memoSheet = getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
+      if (memoSheet && memoSheet.getLastRow() >= 2) {
+        if (nomorMemo) {
+          deleteRowsByColumnValue(memoSheet, 'format_lengkap', nomorMemo);
+          deleteRowsByColumnValue(memoSheet, 'noMemo', nomorMemo);
+          const seqMatch = nomorMemo.match(/\bM\.?\s*(\d+)/i) || nomorMemo.match(/(\d+)/);
+          if (seqMatch) {
+            deleteRowsByColumnValue(memoSheet, 'nomor_urut', seqMatch[1]);
+          }
+        }
+        if (nomorUrut) {
+          deleteRowsByColumnValue(memoSheet, 'nomor_urut', nomorUrut);
+        }
+        if (idKegiatanRef) {
+          deleteRowsByColumnValue(memoSheet, 'id_kegiatan_ref', idKegiatanRef);
+        }
+      }
+
+      logAction(ss, 'DELETE_MEMO', nomorMemo || nomorUrut, 'Menghapus nomor memorandum ' + (nomorMemo || nomorUrut));
+      return createJsonResponse({
+        status: 'success',
+        message: 'Nomor memorandum ' + (nomorMemo || nomorUrut) + ' berhasil dihapus dari MASTER_MEMO.'
       });
     }
 

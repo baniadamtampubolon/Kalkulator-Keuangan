@@ -8,6 +8,47 @@ import { getSavedKegiatanList } from "./kegiatanHelper";
 import * as XLSX from "xlsx";
 
 export const STORAGE_KEY_CUSTOM_MEMOS = "perdin_custom_memo_entries";
+export const STORAGE_KEY_DELETED_MEMOS = "perdin_deleted_memo_keys";
+
+export function getDeletedMemoKeys(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DELETED_MEMOS);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? new Set(parsed.map((x) => String(x).toLowerCase())) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function unmarkMemoAsDeleted(memo: NomorMemo): void {
+  if (typeof window === "undefined") return;
+  try {
+    const keys = getDeletedMemoKeys();
+    const seq = extractMemoSeqNumber(memo);
+    const fmt = (memo.format_lengkap || memo.noMemo || "").trim().toLowerCase();
+    if (fmt) keys.delete(fmt);
+    if (seq > 0) keys.delete(`seq-${seq}`);
+    localStorage.setItem(STORAGE_KEY_DELETED_MEMOS, JSON.stringify(Array.from(keys)));
+  } catch {
+    // ignore
+  }
+}
+
+export function markMemoAsDeleted(formatOrSeq: string | number): void {
+  if (typeof window === "undefined") return;
+  try {
+    const keys = getDeletedMemoKeys();
+    const str = String(formatOrSeq).trim().toLowerCase();
+    const seq = typeof formatOrSeq === "number" ? formatOrSeq : extractMemoSeqNumber(str);
+    if (str) keys.add(str);
+    if (seq > 0) keys.add(`seq-${seq}`);
+    localStorage.setItem(STORAGE_KEY_DELETED_MEMOS, JSON.stringify(Array.from(keys)));
+  } catch {
+    // ignore
+  }
+}
 
 /**
  * Konversi tanggal memo dari format serial Excel (contoh: 46084), ISO string (2026-03-03), atau teks bebas ke Bahasa Indonesia
@@ -109,6 +150,7 @@ export function saveCustomMemo(memo: NomorMemo): void {
       updated = [memo, ...current];
     }
 
+    unmarkMemoAsDeleted(memo);
     localStorage.setItem(STORAGE_KEY_CUSTOM_MEMOS, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent("memo-list-updated", { detail: { memo, list: updated } }));
   } catch (err) {
@@ -117,24 +159,27 @@ export function saveCustomMemo(memo: NomorMemo): void {
 }
 
 /**
- * Hapus nomor memo kustom dari localStorage
+ * Hapus nomor memo dari localStorage & tandai terhapus agar tidak muncul kembali dari cache statis
  */
 export function deleteCustomMemo(formatOrSeq: string | number): void {
   if (typeof window === "undefined") return;
   try {
     const current = getCustomMemoList();
     const str = String(formatOrSeq).trim();
-    const num = parseInt(str.replace(/\D/g, ""), 10);
+    const num = typeof formatOrSeq === "number" ? formatOrSeq : extractMemoSeqNumber(str);
 
     const updated = current.filter((m) => {
       const f = (m.format_lengkap || m.noMemo || "").trim();
-      if (f && f === str) return false;
-      if (num && extractMemoSeqNumber(m) === num) return false;
+      if (f && f.toLowerCase() === str.toLowerCase()) return false;
+      if (num > 0 && extractMemoSeqNumber(m) === num) return false;
       return true;
     });
 
+    markMemoAsDeleted(str);
     localStorage.setItem(STORAGE_KEY_CUSTOM_MEMOS, JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent("memo-list-updated", { detail: { list: updated } }));
+    window.dispatchEvent(
+      new CustomEvent("memo-list-updated", { detail: { deleted: str, seq: num, list: updated } })
+    );
   } catch (err) {
     console.error("Gagal menghapus custom memo:", err);
   }
@@ -146,6 +191,7 @@ export function deleteCustomMemo(formatOrSeq: string | number): void {
 export function mergeAndSortMemoList(baseList: NomorMemo[], customList?: NomorMemo[]): NomorMemo[] {
   const customs = customList !== undefined ? customList : getCustomMemoList();
   const savedKegiatan = typeof window !== "undefined" ? getSavedKegiatanList() : [];
+  const deletedKeys = getDeletedMemoKeys();
   const seenKodes = new Set<string>();
   const seenSeqs = new Set<number>();
   const merged: NomorMemo[] = [];
@@ -154,6 +200,7 @@ export function mergeAndSortMemoList(baseList: NomorMemo[], customList?: NomorMe
     const seq = extractMemoSeqNumber(entry);
     const key = (entry.format_lengkap || entry.noMemo || (seq > 0 ? `SEQ-${seq}` : "")).trim().toLowerCase();
     if (!key) return;
+    if (deletedKeys.has(key) || (seq > 0 && deletedKeys.has(`seq-${seq}`))) return;
     if (seenKodes.has(key)) return;
     if (seq > 0 && seenSeqs.has(seq)) return;
     seenKodes.add(key);

@@ -126,7 +126,7 @@ export default function Home() {
     };
   }, []);
 
-  // Safely hydrate saved kegiatan count on client mount
+  // Safely hydrate saved kegiatan & memo counts on client mount and when updated
   useEffect(() => {
     const updateCount = () => {
       try {
@@ -135,9 +135,22 @@ export default function Home() {
         // ignore
       }
     };
+    const updateMemo = () => {
+      try {
+        setMemoList((prev) => mergeAndSortMemoList(prev));
+      } catch {
+        // ignore
+      }
+    };
     updateCount();
     window.addEventListener("storage", updateCount);
-    return () => window.removeEventListener("storage", updateCount);
+    window.addEventListener("kegiatan-list-updated", updateCount);
+    window.addEventListener("memo-list-updated", updateMemo);
+    return () => {
+      window.removeEventListener("storage", updateCount);
+      window.removeEventListener("kegiatan-list-updated", updateCount);
+      window.removeEventListener("memo-list-updated", updateMemo);
+    };
   }, []);
 
 

@@ -65,6 +65,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
 
   // Modal Delete State
   const [deleteTarget, setDeleteTarget] = useState<SavedKegiatan | null>(null);
+  const [alsoDeleteMemo, setAlsoDeleteMemo] = useState<boolean>(true);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [notification, setNotification] = useState<{
     type: "success" | "info";
@@ -220,13 +221,14 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
     deleteKegiatanRecord(target.idKegiatan);
     setKegiatanList((prev) => prev.filter((k) => k.idKegiatan !== target.idKegiatan));
 
-    // 2. Hapus dari Google Spreadsheet Cloud
+    // 2. Hapus dari Google Spreadsheet Cloud (dan opsional bersihkan nomor memo)
     try {
       const cloudRes = await deleteKegiatanFromGoogleSheet(
         target.idKegiatan,
         target.namaKegiatan,
         undefined,
-        target.header?.nomorMemo
+        target.header?.nomorMemo,
+        alsoDeleteMemo
       );
       setNotification({
         type: "success",
@@ -804,9 +806,28 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                 &ldquo;{deleteTarget.namaKegiatan}&rdquo;
               </p>
               <p className="text-slate-500 dark:text-slate-400 text-[11px]">
-                Total <strong>{deleteTarget.jumlahPeserta} orang peserta</strong> dan seluruh rincian transaksi SPJ pada kegiatan ini akan dihapus dari Rekap Perdin dan Google Spreadsheet.
+                Total <strong>{deleteTarget.jumlahPeserta} {deleteTarget.header?.spjType && deleteTarget.header.spjType !== "PERDIN" ? "item" : "orang peserta"}</strong> dan seluruh rincian transaksi SPJ pada kegiatan ini akan dihapus dari Rekap dan Google Spreadsheet.
               </p>
             </div>
+
+            {deleteTarget.header?.nomorMemo && (
+              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 text-xs cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={alsoDeleteMemo}
+                  onChange={(e) => setAlsoDeleteMemo(e.target.checked)}
+                  className="mt-0.5 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <div className="space-y-0.5">
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 block">
+                    Hapus juga nomor memorandum terkait
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block">
+                    {deleteTarget.header.nomorMemo} (dari Buku Kendali &amp; MASTER_MEMO)
+                  </span>
+                </div>
+              </label>
+            )}
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <button

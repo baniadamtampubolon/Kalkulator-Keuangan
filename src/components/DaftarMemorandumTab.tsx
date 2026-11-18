@@ -11,6 +11,7 @@ import {
   exportMemoListToExcel,
 } from "@/lib/memoHelper";
 import { getSavedKegiatanList } from "@/lib/kegiatanHelper";
+import { deleteMemoFromGoogleSheet } from "@/lib/googleSheetsService";
 import { LIST_NOMOR_KOMPONEN } from "@/data/mak_akun";
 import { getMonthRoman } from "@/lib/calc";
 import {
@@ -25,6 +26,8 @@ import {
   Clock,
   Calendar,
   Edit3,
+  Trash2,
+  AlertTriangle,
   Table,
   LayoutGrid,
   X,
@@ -63,6 +66,13 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
   // Modal State: Create or Edit Memo
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMemo, setEditingMemo] = useState<NomorMemo | null>(null);
+  const [deleteTargetMemo, setDeleteTargetMemo] = useState<{
+    memo: NomorMemo;
+    formatLengkap: string;
+    judul: string;
+    linkedKegiatan?: SavedKegiatan;
+  } | null>(null);
+  const [isDeletingMemo, setIsDeletingMemo] = useState<boolean>(false);
   const [modalForm, setModalForm] = useState<{
     nomorUrut: string;
     prefix: string;
@@ -375,6 +385,34 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
     setIsModalOpen(false);
     setToastMessage(`Nomor memorandum ${formatLengkap} berhasil disimpan!`);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleConfirmDeleteMemo = async () => {
+    if (!deleteTargetMemo) return;
+    const target = deleteTargetMemo;
+    setIsDeletingMemo(true);
+    try {
+      const res = await deleteMemoFromGoogleSheet(
+        target.formatLengkap,
+        target.linkedKegiatan?.idKegiatan || target.memo.id_kegiatan_ref
+      );
+      setCustomList(getCustomMemoList());
+      setToastMessage(
+        res.success
+          ? `Nomor memorandum ${target.formatLengkap} berhasil dihapus.`
+          : `Nomor memorandum ${target.formatLengkap} dihapus dari tampilan lokal (${res.message}).`
+      );
+      if (onRefreshMemo) {
+        await onRefreshMemo();
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setToastMessage(`Gagal menghapus memo: ${msg}`);
+    } finally {
+      setIsDeletingMemo(false);
+      setDeleteTargetMemo(null);
+      setTimeout(() => setToastMessage(null), 3500);
+    }
   };
 
   return (
@@ -849,6 +887,22 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setDeleteTargetMemo({
+                                memo,
+                                formatLengkap,
+                                judul: primaryTitle || perihalText || "Tanpa Keterangan",
+                                linkedKegiatan,
+                              })
+                            }
+                            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                            title="Hapus nomor memorandum ini dari Buku Kendali & MASTER_MEMO"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -996,14 +1050,32 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
 
                 {/* Footer Actions */}
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEditModal(memo)}
-                    className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 font-medium flex items-center gap-1 cursor-pointer"
-                  >
-                    <Edit3 className="w-3 h-3" />
-                    <span>Edit</span>
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditModal(memo)}
+                      className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 font-medium flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDeleteTargetMemo({
+                          memo,
+                          formatLengkap,
+                          judul: primaryTitle || perihalText || "Tanpa Keterangan",
+                          linkedKegiatan,
+                        })
+                      }
+                      className="text-[11px] text-slate-400 dark:text-slate-500 hover:text-rose-600 font-medium flex items-center gap-1 cursor-pointer"
+                      title="Hapus nomor memorandum"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Hapus</span>
+                    </button>
+                  </div>
 
                   {onSelectMemo && (
                     <button
@@ -1201,6 +1273,65 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 6. MODAL KONFIRMASI HAPUS NOMOR MEMORANDUM                                */}
+      {/* ========================================================================= */}
+      {deleteTargetMemo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-start gap-3.5 text-rose-600">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  Hapus Nomor Memorandum?
+                </h3>
+                <p className="text-xs font-mono font-bold text-[#0071e3] dark:text-blue-400">
+                  {deleteTargetMemo.formatLengkap}
+                </p>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/70 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+              <p className="font-semibold text-slate-900 dark:text-slate-100 leading-snug">
+                {deleteTargetMemo.judul}
+              </p>
+              {deleteTargetMemo.linkedKegiatan ? (
+                <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                  Catatan: Memo ini terhubung dengan berkas{" "}
+                  <strong className="font-mono">{deleteTargetMemo.linkedKegiatan.idKegiatan}</strong>. Menghapus entri ini hanya menghapus nomor memo dari Buku Kendali &amp; MASTER_MEMO (berkas SPJ di Daftar Kegiatan tetap ada).
+                </p>
+              ) : (
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Nomor memorandum ini tidak terhubung dengan berkas SPJ aktif dan akan dihapus permanen dari Buku Kendali &amp; sheet MASTER_MEMO.
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                disabled={isDeletingMemo}
+                onClick={() => setDeleteTargetMemo(null)}
+                className="btn-tactile px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingMemo}
+                onClick={handleConfirmDeleteMemo}
+                className="btn-tactile px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer shadow-sm disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                {isDeletingMemo && <RotateCw className="w-3.5 h-3.5 animate-spin" />}
+                <span>{isDeletingMemo ? "Menghapus..." : "Ya, Hapus Memo"}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

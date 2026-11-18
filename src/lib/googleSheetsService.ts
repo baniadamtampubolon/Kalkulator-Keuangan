@@ -4,7 +4,7 @@ import { buildRekapFromSavedKegiatanList, buildRekapPengadaanFromSavedKegiatanLi
 import { getMonthRoman } from "./calc";
 import { parseSpdNumber, saveLatestRegisteredSpdNumber } from "./spdHelper";
 import { calculatePengadaanTotals } from "./pengadaanHelper";
-import { saveCustomMemo } from "./memoHelper";
+import { saveCustomMemo, deleteCustomMemo, extractMemoSeqNumber } from "./memoHelper";
 import { ItemDetailItem, LIST_ITEM_DETAIL, getItemDetailByKode, getKomponenName } from "@/data/mak_akun";
 
 export interface GasApiResponse<T = unknown> {
@@ -1731,7 +1731,10 @@ export async function savePerdinToGoogleSheet(
           nomor_urut: numStr,
           format_lengkap: header.nomorMemo,
           tanggal_memo: header.tanggalMemo || "",
-          perihal: header.keteranganMemo || header.keteranganKegiatan || "Perjalanan Dinas",
+          perihal:
+            (header.keteranganKegiatan && header.keteranganKegiatan.trim()) ||
+            header.keteranganMemo ||
+            "Perjalanan Dinas",
           id_kegiatan_ref: idKegiatan,
           status: "TERPAKAI",
           nominal: grandTotal,
@@ -1874,15 +1877,96 @@ export async function syncAllRekapToGoogleSheet(
   }
 }
 
+function removeMemoFromMasterCache(nomorMemo?: string, idKegiatanRef?: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const rawCache = localStorage.getItem(STORAGE_KEY_MASTER_CACHE);
+    if (!rawCache) return;
+    const cached = JSON.parse(rawCache) as MasterSyncData;
+    if (!cached || !Array.isArray(cached.memo)) return;
+
+    const targetMemo = (nomorMemo || "").trim().toLowerCase();
+    const targetSeq = targetMemo ? extractMemoSeqNumber(targetMemo) : 0;
+    const targetRef = (idKegiatanRef || "").trim().toLowerCase();
+
+    cached.memo = cached.memo.filter((m) => {
+      const mFmt = (m.format_lengkap || m.noMemo || "").trim().toLowerCase();
+      const mSeq = extractMemoSeqNumber(m);
+      const mRef = (m.id_kegiatan_ref || "").trim().toLowerCase();
+      if (targetMemo && mFmt && mFmt === targetMemo) return false;
+      if (targetSeq > 0 && mSeq === targetSeq) return false;
+      if (targetRef && mRef && mRef === targetRef) return false;
+      return true;
+    });
+
+    localStorage.setItem(STORAGE_KEY_MASTER_CACHE, JSON.stringify(cached));
+  } catch {
+    // ignore
+  }
+}
+
 /**
- * Hapus seluruh data sebuah paket kegiatan dari Google Spreadsheet (DB_KEGIATAN, DB_PESERTA, REKAP_PERDIN_48KOLOM)
+ * Hapus sebuah nomor memorandum dari localStorage & tab MASTER_MEMO di Google Spreadsheet
+ */
+export async function deleteMemoFromGoogleSheet(
+  nomorMemo: string,
+  idKegiatanRef?: string,
+  customUrl?: string
+): Promise<{ success: boolean; message: string }> {
+  // 1. Bersihkan langsung dari local storage & master cache
+  if (nomorMemo) {
+    deleteCustomMemo(nomorMemo);
+  }
+  removeMemoFromMasterCache(nomorMemo, idKegiatanRef);
+
+  const url = customUrl || getGasApiUrl();
+  if (!url) {
+    return {
+      success: true,
+      message: "Nomor memorandum berhasil dihapus dari penyimpanan lokal.",
+    };
+  }
+
+  try {
+    const seq = nomorMemo ? extractMemoSeqNumber(nomorMemo) : 0;
+    const payload = {
+      action: "DELETE_MEMO",
+      nomorMemo: nomorMemo || "",
+      nomorUrut: seq > 0 ? String(seq) : "",
+      idKegiatanRef: idKegiatanRef || "",
+    };
+
+    const json = await executeGasRequest("POST", payload, url);
+    return {
+      success: json.status === "success",
+      message: json.message || `Nomor memorandum ${nomorMemo} berhasil dihapus dari Google Spreadsheet.`,
+    };
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      message: `Dihapus dari lokal, gagal hapus dari cloud: ${errMsg}`,
+    };
+  }
+}
+
+/**
+ * Hapus seluruh data sebuah paket kegiatan dari Google Spreadsheet (DB_KEGIATAN, DB_PESERTA, REKAP_PERDIN_48KOLOM, & opsional MASTER_MEMO)
  */
 export async function deleteKegiatanFromGoogleSheet(
   idKegiatan: string,
   namaKegiatan?: string,
   customUrl?: string,
-  nomorMemo?: string
+  nomorMemo?: string,
+  deleteMemo = true
 ): Promise<{ success: boolean; message: string }> {
+  if (deleteMemo) {
+    if (nomorMemo) {
+      deleteCustomMemo(nomorMemo);
+    }
+    removeMemoFromMasterCache(nomorMemo, idKegiatan);
+  }
+
   const url = customUrl || getGasApiUrl();
   if (!url) {
     return { success: false, message: "URL Web App Google Apps Script belum diset." };
@@ -1894,6 +1978,7 @@ export async function deleteKegiatanFromGoogleSheet(
       idKegiatan,
       namaKegiatan: namaKegiatan || "",
       nomorMemo: nomorMemo || "",
+      deleteMemo,
     };
 
     const json = await executeGasRequest("POST", payload, url);
