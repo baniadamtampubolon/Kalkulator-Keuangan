@@ -12,6 +12,7 @@ interface NominatifDocProps {
   setRows?: React.Dispatch<React.SetStateAction<ParticipantRow[]>>;
   activeCols: Record<ActiveCostKey, boolean>;
   activeUh: Record<ActiveUhKey, boolean>;
+  isBundleMode?: boolean;
 }
 
 export const NominatifDoc: React.FC<NominatifDocProps> = ({
@@ -19,6 +20,7 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
   rows,
   activeCols,
   activeUh,
+  isBundleMode = false,
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
@@ -137,10 +139,10 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page {
+            ${isBundleMode ? "" : `@page {
               size: A4 landscape !important;
               margin: 8mm 10mm 8mm 10mm !important;
-            }
+            }`}
             body {
               background: #ffffff !important;
             }

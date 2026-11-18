@@ -15,6 +15,7 @@ import {
   Home as HomeIcon,
   FolderKanban,
   ArrowRight,
+  Layers,
 } from "lucide-react";
 import { SpjDocType } from "@/lib/types";
 import { getSpjTypeMeta } from "@/lib/pengadaanHelper";
@@ -38,6 +39,7 @@ interface NavbarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   onPrint: () => void;
+  onOpenBundlePrint?: () => void;
   onToggleSidebar?: () => void;
   isSidebarOpen?: boolean;
   onCreateNewKegiatan?: () => void;
@@ -53,6 +55,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   onPrint,
+  onOpenBundlePrint,
   onToggleSidebar,
   isSidebarOpen = false,
   onCreateNewKegiatan,
@@ -213,11 +216,38 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               )}
 
+              {/* Cetak Bundel (Checklist Multi-Dokumen) */}
+              {onOpenBundlePrint && (
+                <button
+                  type="button"
+                  onClick={onOpenBundlePrint}
+                  className="btn-tactile flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-black dark:hover:bg-slate-700 text-white text-xs font-semibold border border-slate-800 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
+                  title="Pilih & cetak gabungan beberapa dokumen SPJ (Kwitansi s.d SPPD) sekaligus dalam 1 file PDF"
+                >
+                  <Layers className="w-3.5 h-3.5 text-blue-300" />
+                  <span>Cetak Bundel</span>
+                </button>
+              )}
+
               {/* Cetak PDF Primary Action */}
               <button
                 type="button"
-                onClick={onPrint}
+                onClick={() => {
+                  const isDocTab =
+                    activeTab === "kwitansi" ||
+                    activeTab === "memorandum" ||
+                    activeTab === "nominatif" ||
+                    activeTab === "rincian" ||
+                    activeTab === "riil" ||
+                    activeTab === "spd";
+                  if (!isDocTab && onOpenBundlePrint) {
+                    onOpenBundlePrint();
+                  } else {
+                    onPrint();
+                  }
+                }}
                 className="btn-tactile flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+                title="Cetak dokumen yang sedang dibuka (atau pilih bundel dokumen)"
               >
                 <Printer className="w-3.5 h-3.5 text-white" />
                 <span>Cetak PDF</span>

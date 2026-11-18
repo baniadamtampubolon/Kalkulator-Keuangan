@@ -22,6 +22,11 @@ import { DaftarMemorandumTab } from "@/components/DaftarMemorandumTab";
 import { ModalDatabaseSync } from "@/components/ModalDatabaseSync";
 import { ModalSelesaiSpj } from "@/components/ModalSelesaiSpj";
 import { ModalConfirmNewSpj } from "@/components/ModalConfirmNewSpj";
+import {
+  ModalCetakBundel,
+  BundlePrintContainer,
+  BundleDocId,
+} from "@/components/ModalCetakBundel";
 import { ClassicSidebar } from "@/components/ClassicSidebar";
 import { ManualBookView } from "@/components/ManualBookView";
 import { Footer } from "@/components/Footer";
@@ -85,6 +90,8 @@ export default function Home() {
   const [isDbModalOpen, setIsDbModalOpen] = useState<boolean>(false);
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState<boolean>(false);
   const [isConfirmNewModalOpen, setIsConfirmNewModalOpen] = useState<boolean>(false);
+  const [isBundleModalOpen, setIsBundleModalOpen] = useState<boolean>(false);
+  const [bundleDocsToPrint, setBundleDocsToPrint] = useState<BundleDocId[] | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [totalKegiatanCount, setTotalKegiatanCount] = useState<number>(0);
 
@@ -742,10 +749,27 @@ export default function Home() {
   };
 
   const handlePrintAllFromModal = () => {
-    setActiveTab("kwitansi");
-    setTimeout(() => {
-      window.print();
-    }, 350);
+    setIsCompletionModalOpen(false);
+    setIsBundleModalOpen(true);
+  };
+
+  const handleStartBundlePrint = (selectedDocs: BundleDocId[]) => {
+    if (!selectedDocs || selectedDocs.length === 0) return;
+    setIsBundleModalOpen(false);
+    setBundleDocsToPrint(selectedDocs);
+
+    if (typeof window !== "undefined") {
+      const cleanup = () => {
+        setBundleDocsToPrint(null);
+        window.removeEventListener("afterprint", cleanup);
+      };
+      window.addEventListener("afterprint", cleanup);
+
+      // Beri waktu 150ms bagi DOM bundel & CSS Named Pages untuk ter-render penuh
+      setTimeout(() => {
+        window.print();
+      }, 150);
+    }
   };
 
   const handleSaveOrUpdateData = async () => {
@@ -1111,8 +1135,9 @@ export default function Home() {
   const activeCount = isPengadaan ? pengadaanItemsActive.length : rows.length;
 
   return (
-    <div className="min-h-screen flex flex-row bg-slate-100/60 dark:bg-slate-950">
-      {/* Classic macOS / Safari-style Sidebar on the Left */}
+    <>
+      <div className={`min-h-screen flex flex-row bg-slate-100/60 dark:bg-slate-950 ${bundleDocsToPrint ? "no-print" : ""}`}>
+        {/* Classic macOS / Safari-style Sidebar on the Left */}
       <ClassicSidebar
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen((prev) => !prev)}
@@ -1144,6 +1169,7 @@ export default function Home() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           onPrint={() => window.print()}
+          onOpenBundlePrint={() => setIsBundleModalOpen(true)}
           onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
           isSidebarOpen={isSidebarOpen}
           onCreateNewKegiatan={handleRequestCreateNew}
@@ -1334,7 +1360,7 @@ export default function Home() {
           {/* Tab 1: Kwitansi */}
           {activeTab === "kwitansi" &&
             (isPengadaan ? (
-              <KuitansiPengadaanDoc header={header} />
+              <KuitansiPengadaanDoc header={header} isBundleMode={Boolean(bundleDocsToPrint)} />
             ) : (
               <KwitansiDoc
                 header={header}
@@ -1343,6 +1369,7 @@ export default function Home() {
                 setRows={setRows}
                 activeCols={activeCols}
                 activeUh={activeUh}
+                isBundleMode={Boolean(bundleDocsToPrint)}
               />
             ))}
 
@@ -1353,13 +1380,14 @@ export default function Home() {
               setHeader={setHeader}
               rows={rows}
               setRows={setRows}
+              isBundleMode={Boolean(bundleDocsToPrint)}
             />
           )}
 
           {/* Tab 3: Nominatif */}
           {activeTab === "nominatif" &&
             (isPengadaan ? (
-              <NominatifPengadaanDoc header={header} />
+              <NominatifPengadaanDoc header={header} isBundleMode={Boolean(bundleDocsToPrint)} />
             ) : (
               <NominatifDoc
                 header={header}
@@ -1368,6 +1396,7 @@ export default function Home() {
                 setRows={setRows}
                 activeCols={activeCols}
                 activeUh={activeUh}
+                isBundleMode={Boolean(bundleDocsToPrint)}
               />
             ))}
 
@@ -1380,6 +1409,7 @@ export default function Home() {
               setRows={setRows}
               activeCols={activeCols}
               activeUh={activeUh}
+              isBundleMode={Boolean(bundleDocsToPrint)}
             />
           )}
 
@@ -1391,6 +1421,7 @@ export default function Home() {
               rows={rows}
               setRows={setRows}
               activeCols={activeCols}
+              isBundleMode={Boolean(bundleDocsToPrint)}
             />
           )}
 
@@ -1402,6 +1433,7 @@ export default function Home() {
               rows={rows}
               setRows={setRows}
               pegawaiList={pegawaiList}
+              isBundleMode={Boolean(bundleDocsToPrint)}
             />
           )}
 
@@ -1505,6 +1537,32 @@ export default function Home() {
         }}
         hasUnsavedChanges={hasChanges || (!isSaved && rows.some((r) => Boolean(r.nama && r.nama.trim() !== "")))}
       />
+
+      {/* Modal Cetak Bundel (Checklist Dokumen 1-Klik) */}
+      <ModalCetakBundel
+        key={currentSpjType}
+        isOpen={isBundleModalOpen}
+        onClose={() => setIsBundleModalOpen(false)}
+        spjType={currentSpjType}
+        header={header}
+        rows={rows}
+        onStartPrintBundle={handleStartBundlePrint}
+      />
     </div>
+
+    {/* Container Khusus Print Bundel (Di luar flex-row agar lebar A4/Landscape akurat & CSS Named Pages bekerja) */}
+    {bundleDocsToPrint && (
+      <BundlePrintContainer
+        selectedDocs={bundleDocsToPrint}
+        spjType={currentSpjType}
+        header={header}
+        rows={rows}
+        activeCols={activeCols}
+        activeUh={activeUh}
+        pegawaiList={pegawaiList}
+        onCloseBundle={() => setBundleDocsToPrint(null)}
+      />
+    )}
+    </>
   );
 }

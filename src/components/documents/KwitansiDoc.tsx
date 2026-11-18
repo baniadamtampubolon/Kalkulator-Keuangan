@@ -12,11 +12,13 @@ interface KwitansiDocProps {
   setRows?: React.Dispatch<React.SetStateAction<ParticipantRow[]>>;
   activeCols?: Record<ActiveCostKey, boolean>;
   activeUh?: Record<ActiveUhKey, boolean>;
+  isBundleMode?: boolean;
 }
 
 export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
   header,
   rows,
+  isBundleMode = false,
 }) => {
   // Mode: "all" for bulk view/print, or a specific index
   const [viewMode, setViewMode] = useState<"all" | number>("all");
@@ -66,10 +68,10 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page {
+            ${isBundleMode ? "" : `@page {
               size: A4 portrait !important;
               margin: 18mm 20mm 18mm 20mm !important;
-            }
+            }`}
             body {
               background: #ffffff !important;
             }

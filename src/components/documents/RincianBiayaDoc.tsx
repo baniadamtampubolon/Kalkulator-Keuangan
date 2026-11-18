@@ -12,6 +12,7 @@ interface RincianBiayaDocProps {
   setRows?: React.Dispatch<React.SetStateAction<ParticipantRow[]>>;
   activeCols: Record<ActiveCostKey, boolean>;
   activeUh: Record<ActiveUhKey, boolean>;
+  isBundleMode?: boolean;
 }
 
 export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
@@ -19,6 +20,7 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
   rows,
   activeCols,
   activeUh,
+  isBundleMode = false,
 }) => {
   // Mode: "all" for bulk view/print, or a specific index
   const [viewMode, setViewMode] = useState<"all" | number>("all");
@@ -55,10 +57,10 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page {
+            ${isBundleMode ? "" : `@page {
               size: A4 portrait !important;
               margin: 15mm 20mm 15mm 20mm !important;
-            }
+            }`}
             body {
               background: #ffffff !important;
             }

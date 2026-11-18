@@ -11,12 +11,14 @@ interface SppdDepanDocProps {
   rows: ParticipantRow[];
   setRows?: React.Dispatch<React.SetStateAction<ParticipantRow[]>>;
   pegawaiList?: Pegawai[];
+  isBundleMode?: boolean;
 }
 
 export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
   header,
   rows,
   pegawaiList = [],
+  isBundleMode = false,
 }) => {
   const [viewMode, setViewMode] = useState<"all" | number>("all");
   const [isEditMode, setIsEditMode] = useState(false);
@@ -96,10 +98,10 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page {
+            ${isBundleMode ? "" : `@page {
               size: A4 portrait !important;
               margin: 15mm 20mm 15mm 20mm !important;
-            }
+            }`}
             body {
               background: #ffffff !important;
               -webkit-print-color-adjust: exact !important;

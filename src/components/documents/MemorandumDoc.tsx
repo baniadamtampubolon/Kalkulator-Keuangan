@@ -14,11 +14,13 @@ interface MemorandumDocProps {
   setHeader?: React.Dispatch<React.SetStateAction<HeaderData>>;
   rows: ParticipantRow[];
   setRows?: React.Dispatch<React.SetStateAction<ParticipantRow[]>>;
+  isBundleMode?: boolean;
 }
 
 export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
   header,
   rows,
+  isBundleMode = false,
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
@@ -186,10 +188,10 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page {
+            ${isBundleMode ? "" : `@page {
               size: A4 portrait !important;
               margin: 15mm 20mm 15mm 20mm !important;
-            }
+            }`}
             body {
               background: #ffffff !important;
             }

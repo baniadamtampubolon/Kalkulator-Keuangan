@@ -8,9 +8,13 @@ import { Printer, Edit3, RotateCcw } from "lucide-react";
 
 interface KuitansiPengadaanDocProps {
   header: HeaderData;
+  isBundleMode?: boolean;
 }
 
-export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({ header }) => {
+export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({
+  header,
+  isBundleMode = false,
+}) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
   const [useNetAmount, setUseNetAmount] = useState(false);
@@ -76,10 +80,10 @@ export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({ head
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page {
+            ${isBundleMode ? "" : `@page {
               size: A4 portrait !important;
               margin: 18mm 20mm 18mm 20mm !important;
-            }
+            }`}
             body {
               background: #ffffff !important;
             }

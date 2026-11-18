@@ -13,9 +13,13 @@ import { Printer, Edit3, RotateCcw } from "lucide-react";
 
 interface NominatifPengadaanDocProps {
   header: HeaderData;
+  isBundleMode?: boolean;
 }
 
-export const NominatifPengadaanDoc: React.FC<NominatifPengadaanDocProps> = ({ header }) => {
+export const NominatifPengadaanDoc: React.FC<NominatifPengadaanDocProps> = ({
+  header,
+  isBundleMode = false,
+}) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
 
@@ -83,10 +87,10 @@ export const NominatifPengadaanDoc: React.FC<NominatifPengadaanDocProps> = ({ he
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page {
+            ${isBundleMode ? "" : `@page {
               size: A4 landscape !important;
               margin: 12mm 15mm 12mm 15mm !important;
-            }
+            }`}
             body {
               background: #ffffff !important;
             }

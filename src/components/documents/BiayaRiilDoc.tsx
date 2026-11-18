@@ -10,6 +10,7 @@ interface BiayaRiilDocProps {
   rows: ParticipantRow[];
   setRows?: React.Dispatch<React.SetStateAction<ParticipantRow[]>>;
   activeCols?: Record<ActiveCostKey, boolean>;
+  isBundleMode?: boolean;
 }
 
 export const BiayaRiilDoc: React.FC<BiayaRiilDocProps> = ({
@@ -30,6 +31,7 @@ export const BiayaRiilDoc: React.FC<BiayaRiilDocProps> = ({
     representatif: false,
     belanjaBahan: false,
   },
+  isBundleMode = false,
 }) => {
   // Mode: "all" for bulk view/print, or a specific index
   const [viewMode, setViewMode] = useState<"all" | number>("all");
@@ -66,10 +68,10 @@ export const BiayaRiilDoc: React.FC<BiayaRiilDocProps> = ({
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page {
+            ${isBundleMode ? "" : `@page {
               size: A4 portrait !important;
               margin: 20mm 20mm 20mm 20mm !important;
-            }
+            }`}
             body {
               background: #ffffff !important;
             }
