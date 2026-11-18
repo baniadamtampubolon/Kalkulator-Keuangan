@@ -21,6 +21,7 @@ import {
   getSavedKegiatanList,
 } from "@/lib/kegiatanHelper";
 import { getMonthRoman, updateMemoNumberWithDate, getDefaultMemoNumber, parseMemoNumberParts } from "@/lib/calc";
+import { getMemoAssignStatus } from "@/lib/memoHelper";
 import { ModalTambahPegawai } from "./ModalTambahPegawai";
 import {
   MapPin,
@@ -30,7 +31,9 @@ import {
   Plus,
   Trash2,
   UserPlus,
-  Wand2,
+  Check,
+  Loader2,
+  Clock,
   CheckCircle2,
   FolderKanban,
   RefreshCw,
@@ -49,7 +52,10 @@ interface HeaderFormProps {
   pegawaiList: Pegawai[];
   onAddPegawai: (newPeg: Pegawai) => void;
   onApplyStToAll: (stNumber: string) => void;
-  onGenerateMemoNumber: () => void;
+  onGenerateMemoNumber: () => void | Promise<void>;
+  isReservingMemo?: boolean;
+  memoReserveFeedback?: { type: "success" | "error" | "info"; text: string } | null;
+  onClearMemoFeedback?: () => void;
   onOpenDaftarKegiatan?: () => void;
   onOpenDaftarMemo?: () => void;
   onCreateNewKegiatan?: () => void;
@@ -65,6 +71,9 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   onAddPegawai,
   onApplyStToAll,
   onGenerateMemoNumber,
+  isReservingMemo = false,
+  memoReserveFeedback = null,
+  onClearMemoFeedback,
   onOpenDaftarKegiatan,
   onOpenDaftarMemo,
   onCreateNewKegiatan,
@@ -189,6 +198,21 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
   const memoParts = React.useMemo(() => {
     return parseMemoNumberParts(header.nomorMemo, header.tanggalMemo);
   }, [header.nomorMemo, header.tanggalMemo]);
+
+  // Cek apakah nomor memo saat ini sudah dikunci/terdaftar untuk SPJ ini atau dipakai SPJ lain
+  const memoAssignState = React.useMemo(
+    () =>
+      getMemoAssignStatus({
+        memoList,
+        seqNumber: memoParts.seqNumber,
+        nomorMemo: header.nomorMemo,
+        reservedMemo: header.reservedMemo,
+        idKegiatan: header.idKegiatan,
+        romanMonth: currentMemoRomanMonth,
+        year: currentMemoYear,
+      }),
+    [memoList, memoParts.seqNumber, header.nomorMemo, header.reservedMemo, header.idKegiatan, currentMemoRomanMonth, currentMemoYear]
+  );
 
   const handleChange = <K extends keyof HeaderData>(field: K, value: HeaderData[K]) => {
     // Otomatis sinkronkan bulan Romawi dan tahun pada nomor memo saat tanggalMemo berubah
@@ -1081,9 +1105,9 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
 
         <div className="form-group-panel space-y-4">
           {/* Sub-panel 1: Tanggal SPD, Memo & Nomor Memo */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 text-xs">
             {/* Tanggal SPD */}
-            <div className="space-y-1">
+            <div className="space-y-1 lg:col-span-3">
               <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <span>Tanggal SPD</span>
                 <span className="text-red-500 font-bold">*</span>
@@ -1102,7 +1126,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
             </div>
 
             {/* Tanggal Memo */}
-            <div className="space-y-1">
+            <div className="space-y-1 lg:col-span-3">
               <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                 <span>Tanggal Memo</span>
                 <span className="text-red-500 font-bold">*</span>
@@ -1116,16 +1140,16 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
               <span className="text-[10px] text-slate-400 dark:text-slate-500">Tanggal pengantar nota dinas</span>
             </div>
 
-            {/* Nomor Memorandum + Ambil Nomor */}
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
+            {/* Nomor Memorandum + Gunakan Nomor (Assign ke Database) */}
+            <div className="space-y-1 sm:col-span-2 lg:col-span-6">
+              <label className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
                   <span>Nomor Memorandum</span>
                   {onOpenDaftarMemo && (
                     <button
                       type="button"
                       onClick={onOpenDaftarMemo}
-                      className="text-[10.5px] text-[#0071e3] hover:text-[#0077ed] font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                      className="text-[11px] text-[#0071e3] hover:text-[#0077ed] font-medium inline-flex items-center gap-1 cursor-pointer transition-colors"
                       title="Buka Buku Register & Daftar Nomor Memorandum"
                     >
                       <BookmarkCheck className="w-3 h-3" />
@@ -1134,7 +1158,7 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   )}
                 </div>
                 {latestMemoInfo?.lastMemoStr && (
-                  <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500 font-mono hidden sm:inline" title={`Nomor terakhir terdaftar di database master: ${latestMemoInfo.lastMemoStr}`}>
+                  <span className="text-[10.5px] font-normal text-slate-400 dark:text-slate-500 font-mono truncate" title={`Nomor terakhir terpakai di database: ${latestMemoInfo.lastMemoStr}`}>
                     Terakhir: {latestMemoInfo.lastMemoStr}
                   </span>
                 )}
@@ -1146,35 +1170,54 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                   <input
                     type="text"
                     value={header.nomorMemo}
-                    onChange={(e) => handleChange("nomorMemo", e.target.value)}
+                    onChange={(e) => {
+                      if (onClearMemoFeedback) onClearMemoFeedback();
+                      handleChange("nomorMemo", e.target.value);
+                    }}
                     placeholder={`M.xxx/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}`}
                     className="input-human flex-1 h-9.5 px-3 font-mono text-xs font-semibold"
                   />
                   <button
                     type="button"
+                    disabled={isReservingMemo}
                     onClick={onGenerateMemoNumber}
-                    className="btn-tactile px-3 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
-                    title="Ambil nomor urut berikutnya"
+                    className={`btn-tactile px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs transition-all disabled:opacity-60 ${
+                      memoAssignState.isLockedSelf
+                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        : "bg-[#0071e3] hover:bg-[#0077ed] text-white"
+                    }`}
+                    title="Gunakan & catat nomor memorandum ini ke database Cloud"
                   >
-                    <Wand2 className="w-3.5 h-3.5" />
-                    <span>Ambil No</span>
+                    {isReservingMemo ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5" />
+                    )}
+                    <span>
+                      {isReservingMemo
+                        ? "Menyimpan..."
+                        : memoAssignState.isLockedSelf
+                        ? "Digunakan"
+                        : "Gunakan Nomor"}
+                    </span>
                   </button>
                 </div>
               ) : (
                 /* Mode Standar: Segmented Input (M. [ xxx ] /INS/PPK/IX/2026) */
                 <div className="flex gap-1.5 items-stretch">
-                  <div className="flex-1 flex items-stretch h-9.5 rounded-lg border border-slate-300 dark:border-slate-700 focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500 overflow-hidden bg-white dark:bg-slate-900 shadow-2xs transition-all">
+                  <div className="flex-1 flex items-stretch h-9.5 rounded-lg border border-slate-300 dark:border-slate-700 focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500 overflow-hidden bg-white dark:bg-slate-900 shadow-2xs transition-all min-w-0">
                     {/* Prefix M. */}
                     <div className="flex items-center px-2.5 bg-slate-50 dark:bg-slate-800/70 border-r border-slate-200 dark:border-slate-800 select-none text-slate-500 dark:text-slate-400 font-mono text-xs font-medium">
                       M.
                     </div>
 
-                    {/* Middle: Sequence number input (xxx / 321) */}
+                    {/* Middle: Sequence number input (xxx / 493) */}
                     <input
                       type="text"
                       value={memoParts.seqNumber}
                       onFocus={(e) => e.target.select()}
                       onChange={(e) => {
+                        if (onClearMemoFeedback) onClearMemoFeedback();
                         const val = e.target.value;
                         const formatted = `M.${val || "xxx"}/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}`;
                         handleChange("nomorMemo", formatted);
@@ -1185,13 +1228,13 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                         }
                       }}
                       placeholder="xxx"
-                      className="w-16 sm:w-20 px-2 text-center font-mono font-semibold text-xs text-blue-600 bg-white dark:bg-slate-900 focus:outline-none focus:bg-blue-50/20 transition-colors"
-                      title="Ketik nomor urut memorandum (misal: 391 atau xxx)"
+                      className="w-16 sm:w-20 px-2 text-center font-mono font-semibold text-xs text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900 focus:outline-none focus:bg-blue-50/20 transition-colors"
+                      title="Ketik nomor urut memorandum (misal: 493) lalu klik Gunakan Nomor"
                     />
 
-                    {/* Suffix: /INS/PPK/IX/2026 */}
-                    <div 
-                      className="flex items-center px-2.5 bg-slate-50 dark:bg-slate-800/70 border-l border-slate-200 dark:border-slate-800 select-none flex-1 truncate text-slate-500 dark:text-slate-400 font-mono text-xs"
+                    {/* Suffix: /INS/PPK/XI/2026 */}
+                    <div
+                      className="flex items-center px-2.5 bg-slate-50 dark:bg-slate-800/70 border-l border-slate-200 dark:border-slate-800 select-none flex-1 truncate text-slate-500 dark:text-slate-400 font-mono text-xs min-w-0"
                       title={`Bulan Romawi (${currentMemoRomanMonth}) dan Tahun (${currentMemoYear}) sinkron otomatis dari Tanggal Memo`}
                     >
                       <span className="truncate">
@@ -1200,22 +1243,91 @@ export const HeaderForm: React.FC<HeaderFormProps> = ({
                     </div>
                   </div>
 
-                  {/* Button Ambil No */}
+                  {/* Button Gunakan Nomor */}
                   <button
                     type="button"
+                    disabled={isReservingMemo}
                     onClick={onGenerateMemoNumber}
-                    className="btn-tactile px-3 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
-                    title="Ambil nomor urut berikutnya dari database master"
+                    className={`btn-tactile px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs transition-all disabled:opacity-60 ${
+                      memoAssignState.isLockedSelf
+                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        : "bg-[#0071e3] hover:bg-[#0077ed] text-white"
+                    }`}
+                    title={
+                      memoAssignState.isLockedSelf
+                        ? "Nomor ini sudah tercatat dipakai di database untuk SPJ ini"
+                        : "Gunakan & kunci nomor memorandum ini langsung ke database Cloud"
+                    }
                   >
-                    <Wand2 className="w-3.5 h-3.5" />
-                    <span>Ambil No</span>
+                    {isReservingMemo ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5" />
+                    )}
+                    <span>
+                      {isReservingMemo
+                        ? "Menyimpan..."
+                        : memoAssignState.isLockedSelf
+                        ? "Digunakan"
+                        : "Gunakan Nomor"}
+                    </span>
                   </button>
                 </div>
               )}
 
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
-                Bulan & tahun otomatis mengikuti tanggal memo
-              </span>
+              {/* Status Ketersediaan & Konfirmasi Database Real-time */}
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-0.5 text-[10.5px]">
+                {memoReserveFeedback ? (
+                  <span
+                    className={`inline-flex items-center gap-1 font-medium ${
+                      memoReserveFeedback.type === "error"
+                        ? "text-red-600 dark:text-red-400"
+                        : memoReserveFeedback.type === "info"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-emerald-700 dark:text-emerald-400"
+                    }`}
+                  >
+                    {memoReserveFeedback.type === "error" ? (
+                      <AlertTriangle className="w-3 h-3 shrink-0" />
+                    ) : (
+                      <CheckCircle2 className="w-3 h-3 shrink-0" />
+                    )}
+                    <span>{memoReserveFeedback.text}</span>
+                  </span>
+                ) : memoAssignState.conflictOwner ? (
+                  <span className="inline-flex items-center gap-1 font-medium text-amber-700 dark:text-amber-400">
+                    <AlertTriangle className="w-3 h-3 shrink-0" />
+                    <span>
+                      No. {memoParts.seqNumber} sudah dipakai ({memoAssignState.conflictOwner}). Klik <strong>Gunakan Nomor</strong> untuk alih ke tersedia berikutnya.
+                    </span>
+                  </span>
+                ) : memoAssignState.isLockedSelf ? (
+                  <span className="inline-flex items-center gap-1 font-medium text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle2 className="w-3 h-3 shrink-0" />
+                    <span>Nomor tercatat terpakai untuk SPJ ini di database</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                    <Clock className="w-3 h-3 shrink-0" />
+                    <span>Bulan &amp; tahun otomatis · Klik &ldquo;Gunakan Nomor&rdquo; untuk mengunci</span>
+                  </span>
+                )}
+
+                <span className="text-slate-500 dark:text-slate-400 font-mono">
+                  Tersedia berikutnya:{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onClearMemoFeedback) onClearMemoFeedback();
+                      handleChange("nomorMemo", memoAssignState.nextAvailStr);
+                    }}
+                    className="font-semibold text-[#0071e3] dark:text-blue-400 hover:underline cursor-pointer"
+                    title={`Isi dengan ${memoAssignState.nextAvailStr}`}
+                  >
+                    M.{memoAssignState.nextAvailNum}
+                  </button>
+                </span>
+              </div>
             </div>
           </div>
 

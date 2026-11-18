@@ -221,6 +221,83 @@ export async function testGasConnection(customUrl?: string): Promise<{ success: 
 /**
  * Tarik Master Data (Pegawai, SBM, Memo) dari Google Spreadsheet
  */
+/**
+ * Normalisasi baris mentah MASTER_MEMO dari Google Apps Script menjadi daftar NomorMemo kanonik.
+ */
+export function normalizeMemoRows(rawMemo: Array<Record<string, unknown>>): NomorMemo[] {
+  return rawMemo
+    .map((m, idx) => {
+      const tahunAnggaran = (m.tahun_anggaran as string | number) || (m.tahun as string | number) || 2026;
+      const nomorUrut = String(m.nomor_urut || m.nomor || m["No."] || m["No"] || idx + 1).trim();
+      const formatLengkap = String(
+        m.format_lengkap || m["No Memo"] || m["No. Memo"] || m.noMemo || m.nomor_memo || ""
+      ).trim();
+      const tanggalMemo = String(m.tanggal_memo || m.Tanggal || m.tanggal || "").trim();
+      const perihal = String(m.perihal || m.Perihal || "").trim();
+      const idKegiatanRef = String(m.id_kegiatan_ref || m.id_kegiatan || "").trim();
+      const status = String(m.status || (perihal ? "TERPAKAI" : "")).trim();
+      const nominal = String(m.nominal || m.Nominal || "").trim();
+      const mak = String(m.MAK || m.mak || "").trim();
+
+      const headerNoMemoVal = String(m["No. Memo"] || "").trim();
+      let parsedPrefix = "M.";
+      let parsedNomor = nomorUrut;
+      let parsedUnit = "/INS/PPK/";
+      let parsedBulan = "XI";
+      let parsedTahun = String(tahunAnggaran);
+
+      const candidateStr = formatLengkap || (headerNoMemoVal.includes("/") ? headerNoMemoVal : "");
+      if (candidateStr) {
+        const match =
+          candidateStr.match(/^([A-Za-z]+\.)?\s*(\d+)\s*(\/.*?\/)([IVXLCDM]+)\/(\d{4})/i) ||
+          candidateStr.match(/^([A-Za-z]+\.)?\s*(\d+)\s*(\/[^\/]+\/)?([A-Za-z]+)?(\/\d{4})?/);
+        if (match) {
+          if (match[1]) parsedPrefix = match[1];
+          if (match[2]) parsedNomor = match[2];
+          if (match[3]) parsedUnit = match[3];
+          if (match[4]) parsedBulan = match[4];
+          if (match[5]) parsedTahun = match[5].replace(/\//g, "").trim();
+        }
+      }
+
+      const rawNomor = String(
+        m.nomor || m.nomor_urut || m["_col_2"] || m["col_2"] || (!headerNoMemoVal.includes("/") && headerNoMemoVal !== "M." ? headerNoMemoVal : "")
+      ).trim();
+
+      const finalNomor = parsedNomor || (rawNomor.match(/^\d+$/) ? rawNomor : "");
+      const finalPrefix = String(m.prefix || (headerNoMemoVal === "M." ? "M." : "") || parsedPrefix || "M.");
+      const finalUnit = String(m.unit || m["_col_3"] || m["col_3"] || parsedUnit || "/INS/PPK/");
+      const finalBulan = String(m.bulanRomawi || m.bulan_romawi || m["_col_4"] || m["col_4"] || parsedBulan || "XI");
+      const finalTahun = String(m.tahun || m["_col_5"] || m["col_5"] || parsedTahun || "/2026");
+
+      const cleanUnit = finalUnit.startsWith("/") ? finalUnit : `/${finalUnit}/`;
+      const cleanTahun = finalTahun.startsWith("/") ? finalTahun : `/${finalTahun}`;
+      const constructedFull = candidateStr || (finalNomor ? `${finalPrefix}${finalNomor}${cleanUnit}${finalBulan}${cleanTahun}` : "");
+
+      return {
+        tahun_anggaran: tahunAnggaran,
+        nomor_urut: finalNomor || nomorUrut,
+        format_lengkap: constructedFull,
+        tanggal_memo: tanggalMemo,
+        perihal,
+        id_kegiatan_ref: idKegiatanRef,
+        status,
+        nominal,
+        MAK: mak,
+        no: nomorUrut,
+        prefix: finalPrefix,
+        nomor: finalNomor || nomorUrut,
+        unit: cleanUnit,
+        bulanRomawi: finalBulan,
+        tahun: cleanTahun,
+        noMemo: constructedFull,
+        tanggal: tanggalMemo,
+        mak,
+      };
+    })
+    .filter((m) => m.nomor !== "" || m.noMemo !== "" || m.perihal !== "");
+}
+
 export async function fetchMasterDataFromSheet(
   customUrl?: string
 ): Promise<{ success: boolean; data?: MasterSyncData; message?: string }> {
@@ -275,81 +352,7 @@ export async function fetchMasterDataFromSheet(
         }))
         .filter((s) => s.provinsi !== "");
 
-      const normalizedMemo: NomorMemo[] = rawMemo
-        .map((m, idx) => {
-          const tahunAnggaran = (m.tahun_anggaran as string | number) || (m.tahun as string | number) || 2026;
-          const nomorUrut = String(m.nomor_urut || m.nomor || m["No."] || m["No"] || idx + 1).trim();
-          const formatLengkap = String(
-            m.format_lengkap || m["No Memo"] || m["No. Memo"] || m.noMemo || m.nomor_memo || ""
-          ).trim();
-          const tanggalMemo = String(m.tanggal_memo || m.Tanggal || m.tanggal || "").trim();
-          const perihal = String(m.perihal || m.Perihal || "").trim();
-          const idKegiatanRef = String(m.id_kegiatan_ref || m.id_kegiatan || "").trim();
-          const status = String(m.status || (perihal ? "TERPAKAI" : "")).trim();
-          const nominal = String(m.nominal || m.Nominal || "").trim();
-          const mak = String(m.MAK || m.mak || "").trim();
-
-          // Deteksi komponen format memo
-          const headerNoMemoVal = String(m["No. Memo"] || "").trim();
-          let parsedPrefix = "M.";
-          let parsedNomor = nomorUrut;
-          let parsedUnit = "/INS/PPK/";
-          let parsedBulan = "XI";
-          let parsedTahun = String(tahunAnggaran);
-
-          const candidateStr = formatLengkap || (headerNoMemoVal.includes("/") ? headerNoMemoVal : "");
-          if (candidateStr) {
-            const match =
-              candidateStr.match(/^([A-Za-z]+\.)?\s*(\d+)\s*(\/.*?\/)([IVXLCDM]+)\/(\d{4})/i) ||
-              candidateStr.match(/^([A-Za-z]+\.)?\s*(\d+)\s*(\/[^\/]+\/)?([A-Za-z]+)?(\/\d{4})?/);
-            if (match) {
-              if (match[1]) parsedPrefix = match[1];
-              if (match[2]) parsedNomor = match[2];
-              if (match[3]) parsedUnit = match[3];
-              if (match[4]) parsedBulan = match[4];
-              if (match[5]) parsedTahun = match[5].replace(/\//g, "").trim();
-            }
-          }
-
-          const rawNomor = String(
-            m.nomor || m.nomor_urut || m["_col_2"] || m["col_2"] || (!headerNoMemoVal.includes("/") && headerNoMemoVal !== "M." ? headerNoMemoVal : "")
-          ).trim();
-
-          const finalNomor = parsedNomor || (rawNomor.match(/^\d+$/) ? rawNomor : "");
-          const finalPrefix = String(m.prefix || (headerNoMemoVal === "M." ? "M." : "") || parsedPrefix || "M.");
-          const finalUnit = String(m.unit || m["_col_3"] || m["col_3"] || parsedUnit || "/INS/PPK/");
-          const finalBulan = String(m.bulanRomawi || m.bulan_romawi || m["_col_4"] || m["col_4"] || parsedBulan || "XI");
-          const finalTahun = String(m.tahun || m["_col_5"] || m["col_5"] || parsedTahun || "/2026");
-
-          const cleanUnit = finalUnit.startsWith("/") ? finalUnit : `/${finalUnit}/`;
-          const cleanTahun = finalTahun.startsWith("/") ? finalTahun : `/${finalTahun}`;
-          const constructedFull = candidateStr || (finalNomor ? `${finalPrefix}${finalNomor}${cleanUnit}${finalBulan}${cleanTahun}` : "");
-
-          return {
-            // Canonical Google Sheets 9 columns
-            tahun_anggaran: tahunAnggaran,
-            nomor_urut: finalNomor || nomorUrut,
-            format_lengkap: constructedFull,
-            tanggal_memo: tanggalMemo,
-            perihal,
-            id_kegiatan_ref: idKegiatanRef,
-            status,
-            nominal,
-            MAK: mak,
-
-            // Legacy & UI aliases
-            no: nomorUrut,
-            prefix: finalPrefix,
-            nomor: finalNomor || nomorUrut,
-            unit: cleanUnit,
-            bulanRomawi: finalBulan,
-            tahun: cleanTahun,
-            noMemo: constructedFull,
-            tanggal: tanggalMemo,
-            mak,
-          };
-        })
-        .filter((m) => m.nomor !== "" || m.noMemo !== "" || m.perihal !== "");
+      const normalizedMemo: NomorMemo[] = normalizeMemoRows(rawMemo);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const normalizedMak: ItemDetailItem[] = ((json.data as any).mak || [])
@@ -1568,6 +1571,7 @@ export async function savePerdinToGoogleSheet(
   const payload = {
     action: "SAVE_PERDIN",
     isNewRecord,
+    reservedMemo: header.reservedMemo || "",
     spjType,
     pengadaan: isPengadaan
       ? {
@@ -1999,6 +2003,163 @@ export async function deleteMemoFromGoogleSheet(
     return {
       success: false,
       message: `Dihapus dari lokal, gagal hapus dari cloud: ${errMsg}`,
+    };
+  }
+}
+
+export interface ReserveMemoResult {
+  success: boolean;
+  offlineFallback?: boolean;
+  assignedNomorMemo: string;
+  assignedIdKegiatan: string;
+  nextAvailableMemo?: string;
+  wasReassigned?: boolean;
+  memoList?: NomorMemo[];
+  message: string;
+}
+
+/**
+ * Reservasi / assign langsung nomor memorandum ke MASTER_MEMO di Cloud (LockService atomik)
+ * agar status langsung TERPAKAI dan nomor berikutnya langsung terupdate bagi semua user.
+ */
+export async function reserveMemoInGoogleSheet(params: {
+  nomorMemo: string;
+  idKegiatan: string;
+  oldIdKegiatan?: string;
+  oldNomorMemo?: string;
+  reservedMemo?: string;
+  tanggalMemo: string;
+  perihal: string;
+  nominal: number;
+  mak: string;
+  isNewRecord: boolean;
+  customUrl?: string;
+}): Promise<ReserveMemoResult> {
+  const url = params.customUrl || getGasApiUrl();
+  const cleanTglMemo = cleanIsoDate(params.tanggalMemo);
+
+  const persistLocalMemoReservation = (
+    finalMemo: string,
+    finalId: string,
+    serverMemos?: NomorMemo[]
+  ) => {
+    if (typeof window === "undefined") return;
+    try {
+      const numMatch = finalMemo.match(/\bM\.?\s*(\d+)/i) || finalMemo.match(/(\d+)/);
+      const numStr = numMatch ? numMatch[1] : "";
+      const romanMonth = getMonthRoman(cleanTglMemo) || "XI";
+      const memoYear = Number(cleanTglMemo.slice(0, 4)) || 2026;
+      const entry: NomorMemo = {
+        tahun_anggaran: memoYear,
+        nomor_urut: numStr,
+        format_lengkap: finalMemo,
+        tanggal_memo: cleanTglMemo,
+        perihal: params.perihal || "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas",
+        id_kegiatan_ref: finalId,
+        status: "TERPAKAI",
+        nominal: params.nominal || 0,
+        MAK: params.mak || "524111",
+        noMemo: finalMemo,
+        tanggal: cleanTglMemo,
+        mak: params.mak || "524111",
+        bulanRomawi: romanMonth,
+      };
+      saveCustomMemo(entry);
+
+      const rawCache = localStorage.getItem(STORAGE_KEY_MASTER_CACHE);
+      const cached: MasterSyncData = rawCache ? JSON.parse(rawCache) : {};
+      if (serverMemos && serverMemos.length > 0) {
+        cached.memo = serverMemos;
+      } else {
+        const list = Array.isArray(cached.memo) ? [...cached.memo] : [];
+        const existingIdx = list.findIndex(
+          (m) =>
+            (m.format_lengkap && m.format_lengkap === finalMemo) ||
+            (numStr && String(m.nomor_urut || m.nomor || "").trim() === numStr)
+        );
+        if (existingIdx >= 0) {
+          list[existingIdx] = { ...list[existingIdx], ...entry };
+        } else {
+          list.push(entry);
+        }
+        cached.memo = list;
+      }
+      localStorage.setItem(STORAGE_KEY_MASTER_CACHE, JSON.stringify(cached));
+      window.dispatchEvent(new CustomEvent("memo-list-updated"));
+    } catch {
+      // ignore local storage errors
+    }
+  };
+
+  if (!url) {
+    persistLocalMemoReservation(params.nomorMemo, params.idKegiatan);
+    return {
+      success: true,
+      offlineFallback: true,
+      assignedNomorMemo: params.nomorMemo,
+      assignedIdKegiatan: params.idKegiatan,
+      message: `Nomor ${params.nomorMemo} dicatat di memori lokal (URL Cloud belum diset).`,
+    };
+  }
+
+  try {
+    const json = await executeGasRequest<unknown>(
+      "POST",
+      {
+        action: "RESERVE_MEMO",
+        nomorMemo: params.nomorMemo,
+        idKegiatan: params.idKegiatan,
+        oldIdKegiatan: params.oldIdKegiatan || "",
+        oldNomorMemo: params.oldNomorMemo || "",
+        reservedMemo: params.reservedMemo || "",
+        tanggalMemo: cleanTglMemo,
+        perihal: params.perihal || "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas",
+        nominal: params.nominal || 0,
+        mak: params.mak || "524111",
+        isNewRecord: params.isNewRecord,
+      },
+      url
+    );
+
+    const jsonObj = json as unknown as Record<string, unknown>;
+    if (json.status === "success") {
+      const assignedMemo = String(jsonObj.assignedNomorMemo || params.nomorMemo).trim();
+      const assignedId = String(jsonObj.assignedIdKegiatan || params.idKegiatan).trim();
+      const nextAvailableMemo = jsonObj.nextAvailableMemo ? String(jsonObj.nextAvailableMemo).trim() : undefined;
+      const wasReassigned = Boolean(jsonObj.wasReassigned);
+      const rawServerMemos = Array.isArray(jsonObj.memo)
+        ? (jsonObj.memo as Array<Record<string, unknown>>).map(cleanObjectKeys)
+        : undefined;
+      const normalizedServerMemos = rawServerMemos ? normalizeMemoRows(rawServerMemos) : undefined;
+
+      persistLocalMemoReservation(assignedMemo, assignedId, normalizedServerMemos);
+
+      return {
+        success: true,
+        assignedNomorMemo: assignedMemo,
+        assignedIdKegiatan: assignedId,
+        nextAvailableMemo,
+        wasReassigned,
+        memoList: normalizedServerMemos,
+        message:
+          json.message ||
+          `Nomor memorandum ${assignedMemo} resmi dipakai & tercatat di database.`,
+      };
+    }
+
+    return {
+      success: false,
+      assignedNomorMemo: params.nomorMemo,
+      assignedIdKegiatan: params.idKegiatan,
+      message: json.message || "Gagal mengunci nomor memorandum di database Cloud.",
+    };
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      assignedNomorMemo: params.nomorMemo,
+      assignedIdKegiatan: params.idKegiatan,
+      message: `Gagal terhubung ke Cloud saat mengunci nomor memorandum: ${errMsg}`,
     };
   }
 }

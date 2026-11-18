@@ -215,6 +215,7 @@ export interface HeaderData {
   tanggalSpd: string;
   tanggalMemo: string;
   nomorMemo: string;
+  reservedMemo?: string;
   nomorStMaster: string;
   nomorStStaff?: string;
   useDifferentStPejabat?: boolean;

@@ -325,12 +325,14 @@ function doPost(e) {
 
       // 0a. Resolusi ID Kegiatan atomik di dalam LockService (cegah 2 user menimpa ID yang sama)
       const requestedIdKegiatan = String(header.idKegiatan || '').trim();
+      const reservedMemoToken = String(payload.reservedMemo || header.reservedMemo || '').trim();
       const idResolution = resolveUniqueIdKegiatan(
         kegiatanSheet,
         memoSheet,
         requestedIdKegiatan,
         isNewRecord,
-        header.oldIdKegiatan
+        header.oldIdKegiatan,
+        reservedMemoToken
       );
       const finalIdKegiatan = idResolution.idKegiatan;
       const idWasReassigned = idResolution.reassigned;
@@ -344,7 +346,8 @@ function doPost(e) {
         mak: header.kodeMak || '524111',
         idKegiatan: finalIdKegiatan,
         isNewRecord: isNewRecord,
-        oldNomorMemo: header.oldNomorMemo || ''
+        oldNomorMemo: header.oldNomorMemo || '',
+        reservedMemo: reservedMemoToken
       }, true);
       const assignedMemo = typeof memoRes === 'object' ? memoRes.memoStr : memoRes;
       const memoWasReassigned = typeof memoRes === 'object' ? Boolean(memoRes.reassigned) : false;
@@ -1023,6 +1026,76 @@ function doPost(e) {
       });
     }
 
+    // 4c. RESERVASI / ASSIGN NOMOR MEMORANDUM LANGSUNG SAAT USER KLIK "GUNAKAN NOMOR"
+    if (action === 'RESERVE_MEMO') {
+      const memoSheet = getOrCreateSheet(ss, SHEET_NAMES.MEMO, DEFAULT_HEADERS.MEMO);
+      const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
+
+      const isNewRecord = payload.isNewRecord !== false && !payload.oldIdKegiatan;
+      const reservedMemoToken = String(payload.reservedMemo || '').trim();
+      const idResolution = resolveUniqueIdKegiatan(
+        kegiatanSheet,
+        memoSheet,
+        String(payload.idKegiatan || '').trim(),
+        isNewRecord,
+        payload.oldIdKegiatan || '',
+        reservedMemoToken
+      );
+      const finalIdKegiatan = idResolution.idKegiatan;
+
+      const memoRes = upsertMemo(memoSheet, payload.nomorMemo || '', {
+        tanggal: payload.tanggalMemo || '',
+        perihal: payload.perihal || 'Permintaan Pembayaran Langsung (LS) Perjalanan Dinas',
+        nominal: payload.nominal !== undefined && payload.nominal !== null ? payload.nominal : 0,
+        mak: payload.mak || '524111',
+        idKegiatan: finalIdKegiatan,
+        isNewRecord: isNewRecord,
+        oldNomorMemo: payload.oldNomorMemo || '',
+        reservedMemo: reservedMemoToken
+      }, true);
+
+      const assignedMemo = typeof memoRes === 'object' ? memoRes.memoStr : memoRes;
+      const memoWasReassigned = typeof memoRes === 'object' ? Boolean(memoRes.reassigned) : false;
+
+      // Hitung daftar memo terbaru & nomor berikutnya yang tersedia setelah reservasi ini
+      const updatedMemos = sheetToObjects(memoSheet);
+      let maxSeq = 0;
+      updatedMemos.forEach(function(m) {
+        const n = parseInt(String(m.nomor_urut || '').replace(/\D/g, ''), 10);
+        if (!isNaN(n) && n > maxSeq && n < 2000) maxSeq = n;
+      });
+      const nextAvailableNum = maxSeq > 0 ? maxSeq + 1 : 321;
+
+      let romanMonth = 'XI';
+      let memoYear = '2026';
+      if (payload.tanggalMemo) {
+        try {
+          const d = new Date(payload.tanggalMemo);
+          if (!isNaN(d.getTime())) {
+            const romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+            romanMonth = romans[d.getMonth()] || 'XI';
+            memoYear = String(d.getFullYear());
+          }
+        } catch (e) {}
+      }
+      const nextAvailableMemo = 'M.' + nextAvailableNum + '/INS/PPK/' + romanMonth + '/' + memoYear;
+
+      logAction(ss, 'RESERVE_MEMO', finalIdKegiatan, 'Menggunakan/mengunci nomor memo ' + assignedMemo);
+
+      return createJsonResponse({
+        status: 'success',
+        message: memoWasReassigned
+          ? 'Nomor sebelumnya sudah dipakai user lain. Otomatis dialihkan & dikunci ke ' + assignedMemo
+          : 'Nomor memorandum ' + assignedMemo + ' resmi digunakan & tercatat di database.',
+        assignedNomorMemo: assignedMemo,
+        assignedIdKegiatan: finalIdKegiatan,
+        nextAvailableUrut: nextAvailableNum,
+        nextAvailableMemo: nextAvailableMemo,
+        wasReassigned: Boolean(memoWasReassigned || idResolution.reassigned),
+        memo: updatedMemos
+      });
+    }
+
     // 5. RESET SELURUH DATA TRANSAKSI TESTING (BERSIH TOTAL BARIS 2 KE BAWAH)
     if (action === 'RESET_TRANSAKSI') {
       const kegiatanSheet = getOrCreateSheet(ss, SHEET_NAMES.KEGIATAN, DEFAULT_HEADERS.KEGIATAN);
@@ -1173,8 +1246,12 @@ function upsertPegawai(sheet, idPegawai, namaLengkap, nip, rowData) {
 /**
  * Helper: Simpan / Perbarui Baris Memorandum di MASTER_MEMO (9 Kolom Baku)
  */
-function resolveUniqueIdKegiatan(kegiatanSheet, memoSheet, requestedId, isNewRecord, oldIdKegiatan) {
-  const existingIds = {};
+function resolveUniqueIdKegiatan(kegiatanSheet, memoSheet, requestedId, isNewRecord, oldIdKegiatan, reservedMemoToken) {
+  const savedKegiatanIds = {};
+  const memoClaimedByOther = {};
+  const reqLower = String(requestedId || '').trim().toLowerCase();
+  const reservedLower = String(reservedMemoToken || '').trim().toLowerCase();
+
   if (kegiatanSheet && kegiatanSheet.getLastRow() >= 2) {
     const kData = kegiatanSheet.getDataRange().getValues();
     const kHeaders = kData[0] || [];
@@ -1182,7 +1259,7 @@ function resolveUniqueIdKegiatan(kegiatanSheet, memoSheet, requestedId, isNewRec
     if (colId !== -1) {
       for (let i = 1; i < kData.length; i++) {
         const val = String(kData[i][colId] || '').trim();
-        if (val) existingIds[val.toLowerCase()] = true;
+        if (val) savedKegiatanIds[val.toLowerCase()] = true;
       }
     }
   }
@@ -1190,11 +1267,24 @@ function resolveUniqueIdKegiatan(kegiatanSheet, memoSheet, requestedId, isNewRec
     const mData = memoSheet.getDataRange().getValues();
     const mHeaders = mData[0] || [];
     const colRef = mHeaders.indexOf('id_kegiatan_ref') !== -1 ? mHeaders.indexOf('id_kegiatan_ref') : 5;
+    const colFmt = mHeaders.indexOf('format_lengkap') !== -1 ? mHeaders.indexOf('format_lengkap') : 2;
     for (let i = 1; i < mData.length; i++) {
       const val = String(mData[i][colRef] || '').trim();
-      if (val) existingIds[val.toLowerCase()] = true;
+      const fmt = String(mData[i][colFmt] || '').trim().toLowerCase();
+      if (val) {
+        const valLower = val.toLowerCase();
+        // Jika baris memo ini persis reservasi milik draft aktif (reservedMemoToken cocok), jangan anggap tabrakan
+        const isSelfReservation = Boolean(reservedLower && valLower === reqLower && fmt === reservedLower);
+        if (!isSelfReservation) {
+          memoClaimedByOther[valLower] = true;
+        }
+      }
     }
   }
+
+  const existingIds = {};
+  Object.keys(savedKegiatanIds).forEach(function(k) { existingIds[k] = true; });
+  Object.keys(memoClaimedByOther).forEach(function(k) { existingIds[k] = true; });
 
   const req = String(requestedId || '').trim();
   const oldReq = String(oldIdKegiatan || '').trim();
@@ -1265,6 +1355,7 @@ function upsertMemo(sheet, nomorMemo, info, returnDetailed) {
   const infoIdKgt = String(info.idKegiatan || '').trim();
   const isNewRecord = Boolean(info.isNewRecord);
   const oldNomorMemoLower = String(info.oldNomorMemo || '').trim().toLowerCase();
+  const reservedMemoLower = String(info.reservedMemo || '').trim().toLowerCase();
   let reassigned = false;
 
   const lastRow = sheet.getLastRow();
@@ -1332,7 +1423,15 @@ function upsertMemo(sheet, nomorMemo, info, returnDetailed) {
       const rowPerihal = String(colPerihal !== -1 ? row[colPerihal] : row[4] || '').trim();
 
       if (rowUrut === targetNum) {
-        const ownedBySameId = !isNewRecord && infoIdKgt && rowRef && rowRef.toLowerCase() === infoIdKgt.toLowerCase();
+        const rowFmt = String(colFormat !== -1 ? row[colFormat] : row[2] || '').trim().toLowerCase();
+        const isDraftReservationOwner = Boolean(
+          reservedMemoLower &&
+          infoIdKgt &&
+          rowRef &&
+          rowRef.toLowerCase() === infoIdKgt.toLowerCase() &&
+          rowFmt === reservedMemoLower
+        );
+        const ownedBySameId = (!isNewRecord && infoIdKgt && rowRef && rowRef.toLowerCase() === infoIdKgt.toLowerCase()) || isDraftReservationOwner;
         const isEmptyUnusedSlot = !rowRef && rowStatus !== 'TERPAKAI' && !rowPerihal;
         if (!ownedBySameId && !isEmptyUnusedSlot) {
           // Tabrakan terdeteksi! Alokasikan nomor urut baru agar data user sebelumnya aman
@@ -1365,10 +1464,18 @@ function upsertMemo(sheet, nomorMemo, info, returnDetailed) {
       const isMatchUrut = targetNum && rowUrut && rowUrut === targetNum;
       const isMatchOldOnEdit = !isNewRecord && oldNomorMemoLower && rowFormat === oldNomorMemoLower && (!rowRef || rowRef.toLowerCase() === infoIdKgt.toLowerCase());
       const isMatchOwnedRef = !isNewRecord && infoIdKgt && rowRef && rowRef.toLowerCase() === infoIdKgt.toLowerCase() && (isMatchUrut || !targetNum);
+      const isDraftReservationOwner = Boolean(
+        reservedMemoLower &&
+        infoIdKgt &&
+        rowRef &&
+        rowRef.toLowerCase() === infoIdKgt.toLowerCase() &&
+        rowFormat === reservedMemoLower &&
+        isMatchUrut
+      );
 
-      // Saat isNewRecord, hanya boleh claim baris jika rowUrut === targetNum DAN slot masih kosong belum terpakai
+      // Saat isNewRecord, hanya boleh claim baris jika slot kosong belum terpakai ATAU merupakan reservasi milik draft aktif sendiri
       const canClaim = isNewRecord
-        ? (isMatchUrut && !rowRef && rowStatus !== 'TERPAKAI')
+        ? ((isMatchUrut && !rowRef && rowStatus !== 'TERPAKAI') || isDraftReservationOwner)
         : (isMatchOwnedRef || isMatchOldOnEdit || (isMatchUrut && (!rowRef || rowRef.toLowerCase() === infoIdKgt.toLowerCase())));
 
       if (canClaim) {

@@ -38,6 +38,7 @@ import {
   fetchMasterDataFromSheet,
   fetchKegiatanFromSheet,
   savePerdinToGoogleSheet,
+  reserveMemoInGoogleSheet,
   checkAndAutoMigrateCache,
 } from "@/lib/googleSheetsService";
 import { saveOrUpdateRekapLocal } from "@/lib/rekapHelper";
@@ -201,6 +202,11 @@ export default function Home() {
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
   const [savedBatchId, setSavedBatchId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isReservingMemo, setIsReservingMemo] = useState<boolean>(false);
+  const [memoReserveFeedback, setMemoReserveFeedback] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
   const [isCloudSynced, setIsCloudSynced] = useState<boolean>(false);
   const [lastCloudSyncTime, setLastCloudSyncTime] = useState<string | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<{
@@ -297,9 +303,12 @@ export default function Home() {
           setTotalKegiatanCount(kegRes.data.length);
         }
 
-        // Jika user sedang membuka draft baru yang belum disimpan, perbarui ID/Memo/SPD dari data Cloud terbaru
+        // Jika user sedang membuka draft baru yang belum disimpan & belum mengunci memo di Cloud, perbarui ID/Memo/SPD dari data Cloud terbaru
         if (opts?.syncFreshDraftIds && !cloudSyncRuntime.isEditingExisting) {
           setHeader((prev) => {
+            if (prev.reservedMemo && prev.reservedMemo === prev.nomorMemo) {
+              return prev;
+            }
             const isBlankTitle = !prev.keteranganKegiatan || prev.keteranganKegiatan.trim() === "";
             const tgl = prev.tanggalSpd || new Date().toISOString().split("T")[0];
             const kat = prev.kategoriSpj || "A";
@@ -582,15 +591,91 @@ export default function Home() {
     );
   };
 
-  // Handle Next Memo Number Generation (Berbagi Nomor Memorandum di seluruh 5 jenis SPJ)
-  const handleGenerateMemoNumber = () => {
-    const sharedPool = mergeAndSortMemoList(memoList);
-    const { nextMemoNumber } = generateNextMemoNumber(
-      sharedPool,
-      header.nomorMemo,
-      header.tanggalMemo
-    );
-    setHeader((prev) => ({ ...prev, nomorMemo: nextMemoNumber }));
+  // Reservasi / Assign Langsung Nomor Memorandum ke Database Cloud saat klik "Gunakan Nomor"
+  const handleGenerateMemoNumber = async () => {
+    if (isReservingMemo) return;
+    setIsReservingMemo(true);
+    setMemoReserveFeedback(null);
+
+    try {
+      const today = header.tanggalSpd || new Date().toISOString().split("T")[0];
+      const spjTypeNow = header.spjType || "PERDIN";
+      const spjMetaNow = getSpjTypeMeta(spjTypeNow);
+      const isPengadaanNow = spjTypeNow !== "PERDIN";
+
+      const targetId =
+        header.idKegiatan ||
+        generateIdKegiatan(today, header.noKegiatanUrut || "001", header.kategoriSpj || "A");
+
+      const currentPool = mergeAndSortMemoList(memoList);
+      let requestedMemo = (header.nomorMemo || "").trim();
+      if (!requestedMemo || requestedMemo.toLowerCase().includes("xxx")) {
+        requestedMemo = generateNextMemoNumber(currentPool, undefined, header.tanggalMemo || today).nextMemoNumber;
+      }
+
+      const itemsNow =
+        isPengadaanNow
+          ? header.pengadaanItems && header.pengadaanItems.length > 0
+            ? header.pengadaanItems
+            : getDefaultPengadaanItems(spjTypeNow)
+          : [];
+      const currentGrandTotal = isPengadaanNow
+        ? calculatePengadaanTotals(itemsNow, header.pengadaanTax).subTotalBruto
+        : rows.reduce((acc, r) => acc + (r.totalJumlah || 0), 0);
+
+      const perihalText =
+        (header.keteranganKegiatan && header.keteranganKegiatan.trim()) ||
+        (header.keteranganMemo && header.keteranganMemo.trim()) ||
+        spjMetaNow.defaultPerihalMemo ||
+        "Permintaan Pembayaran Langsung (LS) Perjalanan Dinas";
+
+      const res = await reserveMemoInGoogleSheet({
+        nomorMemo: requestedMemo,
+        idKegiatan: targetId,
+        oldIdKegiatan: editingOriginalId || savedBatchId || "",
+        oldNomorMemo: editingOriginalMemo || "",
+        reservedMemo: header.reservedMemo || "",
+        tanggalMemo: header.tanggalMemo || today,
+        perihal: perihalText,
+        nominal: currentGrandTotal,
+        mak: header.nomorMak || spjMetaNow.defaultMak || "524111",
+        isNewRecord: !(editingOriginalId || savedBatchId),
+      });
+
+      if (res.success) {
+        if (res.memoList && res.memoList.length > 0) {
+          setMemoList(mergeAndSortMemoList(res.memoList));
+        } else {
+          setMemoList((prev) => mergeAndSortMemoList(prev));
+        }
+
+        const assignedMemo = res.assignedNomorMemo;
+        const assignedId = res.assignedIdKegiatan || targetId;
+        const idNumMatch = assignedId.match(/^KEG-\d{4}-(\d+)-/);
+
+        setHeader((prev) => ({
+          ...prev,
+          idKegiatan: assignedId,
+          noKegiatanUrut: idNumMatch ? idNumMatch[1] : prev.noKegiatanUrut,
+          nomorMemo: assignedMemo,
+          reservedMemo: res.offlineFallback ? prev.reservedMemo : assignedMemo,
+        }));
+
+        setMemoReserveFeedback({
+          type: res.wasReassigned ? "info" : "success",
+          text: res.nextAvailableMemo
+            ? `${res.message} Nomor berikutnya tersedia: ${res.nextAvailableMemo}.`
+            : res.message,
+        });
+      } else {
+        setMemoReserveFeedback({
+          type: "error",
+          text: res.message,
+        });
+      }
+    } finally {
+      setIsReservingMemo(false);
+    }
   };
 
   // Handle Add New Pegawai to master list
@@ -657,8 +742,10 @@ export default function Home() {
     const normalizedHeader: HeaderData = {
       ...kegiatan.header,
       spjType: kegiatan.header.spjType || "PERDIN",
+      reservedMemo: kegiatan.header.nomorMemo || kegiatan.header.reservedMemo,
     };
     cloudSyncRuntime.isEditingExisting = true;
+    setMemoReserveFeedback(null);
     setHeader(normalizedHeader);
     setRows(kegiatan.rows);
     if (kegiatan.activeCols) setActiveCols(kegiatan.activeCols);
@@ -748,6 +835,7 @@ export default function Home() {
     setEditingOriginalMemo(null);
     setPendingNewSpjType(null);
     setSaveFeedback(null);
+    setMemoReserveFeedback(null);
     const today = new Date().toISOString().split("T")[0];
     const nextNo = getNextNoKegiatan(today, "A");
     const newId = generateIdKegiatan(today, nextNo, "A");
@@ -837,6 +925,7 @@ export default function Home() {
       jenisPengajuan: "RAMPUNG",
       tanggalSpd: today,
       tanggalMemo: today,
+      reservedMemo: undefined,
       pengadaanItems: currentType === "PERDIN" ? undefined : getDefaultPengadaanItems(currentType),
       pengadaanTax:
         currentType === "PERDIN"
@@ -1059,6 +1148,7 @@ export default function Home() {
           idKegiatan: finalServerId,
           noKegiatanUrut: idNumMatch ? idNumMatch[1] : updatedHeader.noKegiatanUrut,
           nomorMemo: finalServerMemo,
+          reservedMemo: finalServerMemo,
         };
 
         if (sheetRes.success && (finalServerId !== idKegiatan || finalServerMemo !== updatedHeader.nomorMemo)) {
@@ -1267,6 +1357,7 @@ export default function Home() {
         idKegiatan: finalServerId,
         noKegiatanUrut: idNumMatch ? idNumMatch[1] : updatedHeader.noKegiatanUrut,
         nomorMemo: finalServerMemo,
+        reservedMemo: finalServerMemo,
       };
       const serverSpdArr = sheetRes.assignedSpdNumbers;
       const validIdsSet = new Set(validRows.map((v) => v.id));
@@ -1561,8 +1652,11 @@ export default function Home() {
                 memoList={memoList}
                 pegawaiList={pegawaiList}
                 onGenerateMemoNumber={handleGenerateMemoNumber}
-                onOpenDaftarKegiatan={() => setActiveTab("kegiatan")}
-                onOpenDaftarMemo={() => setActiveTab("daftar-memo")}
+                isReservingMemo={isReservingMemo}
+                memoReserveFeedback={memoReserveFeedback}
+                onClearMemoFeedback={() => setMemoReserveFeedback(null)}
+                onOpenDaftarKegiatan={() => handleNavigateTab("kegiatan")}
+                onOpenDaftarMemo={() => handleNavigateTab("daftar-memo")}
                 onCreateNewKegiatan={handleRequestCreateNew}
                 editingOriginalId={editingOriginalId}
                 isSaved={isSaved}
@@ -1573,7 +1667,7 @@ export default function Home() {
                 saveFeedback={saveFeedback}
                 onSaveOrUpdate={handleSaveOrUpdateData}
                 onClearFeedback={() => setSaveFeedback(null)}
-                onNavigateTab={(tab) => setActiveTab(tab)}
+                onNavigateTab={(tab) => handleNavigateTab(tab)}
               />
             ) : (
               <div className="space-y-6">
@@ -1586,8 +1680,11 @@ export default function Home() {
                   onAddPegawai={handleAddPegawai}
                   onApplyStToAll={handleApplyStToAll}
                   onGenerateMemoNumber={handleGenerateMemoNumber}
-                  onOpenDaftarKegiatan={() => setActiveTab("kegiatan")}
-                  onOpenDaftarMemo={() => setActiveTab("daftar-memo")}
+                  isReservingMemo={isReservingMemo}
+                  memoReserveFeedback={memoReserveFeedback}
+                  onClearMemoFeedback={() => setMemoReserveFeedback(null)}
+                  onOpenDaftarKegiatan={() => handleNavigateTab("kegiatan")}
+                  onOpenDaftarMemo={() => handleNavigateTab("daftar-memo")}
                   onCreateNewKegiatan={handleRequestCreateNew}
                   editingOriginalId={editingOriginalId}
                 />

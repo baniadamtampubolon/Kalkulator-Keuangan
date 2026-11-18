@@ -37,6 +37,7 @@ import {
   parseMemoNumberParts,
   updateMemoNumberWithDate,
 } from "@/lib/calc";
+import { getMemoAssignStatus } from "@/lib/memoHelper";
 import { terbilang } from "@/lib/terbilang";
 import {
   FileText,
@@ -45,7 +46,10 @@ import {
   Plus,
   Copy,
   Trash2,
-  Wand2,
+  Check,
+  Loader2,
+  Clock,
+  AlertTriangle,
   BookmarkCheck,
   FolderKanban,
   CheckCircle2,
@@ -64,7 +68,10 @@ interface PengadaanSpjFormProps {
   setHeader: React.Dispatch<React.SetStateAction<HeaderData>>;
   memoList: NomorMemo[];
   pegawaiList: Pegawai[];
-  onGenerateMemoNumber: () => void;
+  onGenerateMemoNumber: () => void | Promise<void>;
+  isReservingMemo?: boolean;
+  memoReserveFeedback?: { type: "success" | "error" | "info"; text: string } | null;
+  onClearMemoFeedback?: () => void;
   onOpenDaftarKegiatan?: () => void;
   onOpenDaftarMemo?: () => void;
   onCreateNewKegiatan?: () => void;
@@ -86,6 +93,9 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
   memoList,
   pegawaiList,
   onGenerateMemoNumber,
+  isReservingMemo = false,
+  memoReserveFeedback = null,
+  onClearMemoFeedback,
   onOpenDaftarKegiatan,
   onOpenDaftarMemo,
   onCreateNewKegiatan,
@@ -190,6 +200,20 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
     }
     return String(new Date().getFullYear());
   }, [header.tanggalMemo]);
+
+  const memoAssignState = useMemo(
+    () =>
+      getMemoAssignStatus({
+        memoList,
+        seqNumber: memoParts.seqNumber,
+        nomorMemo: header.nomorMemo,
+        reservedMemo: header.reservedMemo,
+        idKegiatan: header.idKegiatan,
+        romanMonth: currentMemoRomanMonth,
+        year: currentMemoYear,
+      }),
+    [memoList, memoParts.seqNumber, header.nomorMemo, header.reservedMemo, header.idKegiatan, currentMemoRomanMonth, currentMemoYear]
+  );
 
   const handleChangeHeader = <K extends keyof HeaderData>(field: K, value: HeaderData[K]) => {
     if (field === "tanggalMemo" && typeof value === "string") {
@@ -497,13 +521,18 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
 
               {/* Nomor Memorandum Segmented Input (Consistent with HeaderForm) */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                    Nomor Memorandum (Buku Kendali Bersama)
+                    Nomor Memorandum
                   </label>
+                  {memoAssignState.lastUsedMemoStr && (
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-mono truncate">
+                      Terakhir: {memoAssignState.lastUsedMemoStr}
+                    </span>
+                  )}
                 </div>
                 <div className="flex gap-1.5 items-stretch">
-                  <div className="flex-1 flex items-stretch h-9.5 rounded-xl border border-slate-300 dark:border-slate-700 focus-within:ring-2 focus-within:ring-slate-900/15 focus-within:border-slate-900 overflow-hidden bg-white dark:bg-slate-900 shadow-2xs transition-all">
+                  <div className="flex-1 flex items-stretch h-9.5 rounded-xl border border-slate-300 dark:border-slate-700 focus-within:ring-2 focus-within:ring-slate-900/15 focus-within:border-slate-900 overflow-hidden bg-white dark:bg-slate-900 shadow-2xs transition-all min-w-0">
                     <span className="px-2.5 text-xs font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-r border-slate-300 dark:border-slate-700 flex items-center select-none">
                       M.
                     </span>
@@ -512,27 +541,94 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
                       value={memoParts.seqNumber === "xxx" ? "" : memoParts.seqNumber}
                       onFocus={(e) => e.target.select()}
                       onChange={(e) => {
+                        if (onClearMemoFeedback) onClearMemoFeedback();
                         const num = e.target.value.trim() || "xxx";
                         const newMemo = `M.${num}/INS/PPK/${currentMemoRomanMonth}/${currentMemoYear}`;
                         handleChangeHeader("nomorMemo", newMemo);
                       }}
                       placeholder="xxx"
-                      className="w-16 sm:w-20 px-2 text-xs font-mono font-bold text-center text-[#0071e3] bg-[#f1f3f5] focus:bg-white focus:outline-none transition-colors"
-                      title="Ketik nomor urut memorandum atau klik Ambil No"
+                      className="w-16 sm:w-20 px-2 text-xs font-mono font-bold text-center text-[#0071e3] dark:text-blue-400 bg-[#f1f3f5] dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 focus:outline-none transition-colors"
+                      title="Ketik nomor urut memorandum lalu klik Gunakan Nomor"
                     />
-                    <span className="px-2.5 text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-l border-slate-300 dark:border-slate-700 flex items-center flex-1 truncate select-none">
+                    <span className="px-2.5 text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-l border-slate-300 dark:border-slate-700 flex items-center flex-1 truncate select-none min-w-0">
                       /INS/PPK/<strong className="text-slate-800 dark:text-slate-200 font-semibold">{currentMemoRomanMonth}</strong>/{currentMemoYear}
                     </span>
                   </div>
                   <button
                     type="button"
+                    disabled={isReservingMemo}
                     onClick={onGenerateMemoNumber}
-                    className="btn-tactile px-3 py-1.5 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
-                    title="Ambil nomor urut berikutnya dari database master"
+                    className={`btn-tactile px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs transition-all disabled:opacity-60 ${
+                      memoAssignState.isLockedSelf
+                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        : "bg-[#0071e3] hover:bg-[#0077ed] text-white"
+                    }`}
+                    title="Gunakan & kunci nomor memorandum ini langsung ke database Cloud"
                   >
-                    <Wand2 className="w-3.5 h-3.5" />
-                    <span>Ambil No</span>
+                    {isReservingMemo ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5" />
+                    )}
+                    <span>
+                      {isReservingMemo
+                        ? "Menyimpan..."
+                        : memoAssignState.isLockedSelf
+                        ? "Digunakan"
+                        : "Gunakan Nomor"}
+                    </span>
                   </button>
+                </div>
+
+                {/* Status Ketersediaan & Konfirmasi Database Real-time */}
+                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-0.5 text-[10.5px]">
+                  {memoReserveFeedback ? (
+                    <span
+                      className={`inline-flex items-center gap-1 font-medium ${
+                        memoReserveFeedback.type === "error"
+                          ? "text-red-600 dark:text-red-400"
+                          : memoReserveFeedback.type === "info"
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-emerald-700 dark:text-emerald-400"
+                      }`}
+                    >
+                      {memoReserveFeedback.type === "error" ? (
+                        <AlertTriangle className="w-3 h-3 shrink-0" />
+                      ) : (
+                        <CheckCircle2 className="w-3 h-3 shrink-0" />
+                      )}
+                      <span>{memoReserveFeedback.text}</span>
+                    </span>
+                  ) : memoAssignState.conflictOwner ? (
+                    <span className="inline-flex items-center gap-1 font-medium text-amber-700 dark:text-amber-400">
+                      <AlertTriangle className="w-3 h-3 shrink-0" />
+                      <span>No. {memoParts.seqNumber} sudah dipakai ({memoAssignState.conflictOwner}). Klik Gunakan Nomor.</span>
+                    </span>
+                  ) : memoAssignState.isLockedSelf ? (
+                    <span className="inline-flex items-center gap-1 font-medium text-emerald-700 dark:text-emerald-400">
+                      <CheckCircle2 className="w-3 h-3 shrink-0" />
+                      <span>Tercatat terpakai untuk SPJ ini</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                      <Clock className="w-3 h-3 shrink-0" />
+                      <span>Klik &ldquo;Gunakan Nomor&rdquo; untuk kunci di database</span>
+                    </span>
+                  )}
+
+                  <span className="text-slate-500 dark:text-slate-400 font-mono">
+                    Tersedia berikutnya:{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onClearMemoFeedback) onClearMemoFeedback();
+                        handleChangeHeader("nomorMemo", memoAssignState.nextAvailStr);
+                      }}
+                      className="font-semibold text-[#0071e3] dark:text-blue-400 hover:underline cursor-pointer"
+                    >
+                      M.{memoAssignState.nextAvailNum}
+                    </button>
+                  </span>
                 </div>
               </div>
 
@@ -781,7 +877,7 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
               className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-blue-600 dark:text-blue-400 text-xs font-semibold border border-blue-200 dark:border-blue-900/60 shadow-2xs cursor-pointer"
               title="Isi contoh data standar Excel SPJ 2026 sebagai referensi"
             >
-              <Wand2 className="w-3.5 h-3.5" />
+              <FileSpreadsheet className="w-3.5 h-3.5" />
               <span>Contoh Data</span>
             </button>
             <button

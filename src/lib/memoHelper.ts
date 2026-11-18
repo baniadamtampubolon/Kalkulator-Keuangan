@@ -310,3 +310,78 @@ export function exportMemoListToExcel(
   XLSX.writeFile(wb, `${fileNamePrefix}_${today}.xlsx`);
 }
 
+export interface MemoAssignStatus {
+  isLockedSelf: boolean;
+  conflictOwner: string;
+  lastUsedMemoStr: string | null;
+  nextAvailNum: number;
+  nextAvailStr: string;
+}
+
+/**
+ * Hitung status keterpakaian nomor memo aktif & nomor tersedia berikutnya untuk dropdown/input form.
+ */
+export function getMemoAssignStatus(params: {
+  memoList: NomorMemo[];
+  seqNumber: string;
+  nomorMemo?: string;
+  reservedMemo?: string;
+  idKegiatan?: string;
+  romanMonth: string;
+  year: string;
+}): MemoAssignStatus {
+  const { memoList, seqNumber, nomorMemo, reservedMemo, idKegiatan, romanMonth, year } = params;
+  let maxNum = 0;
+  let lastUsedMemoStr = "";
+
+  for (const m of memoList || []) {
+    const numVal = extractMemoSeqNumber(m);
+    const isUsed = Boolean(
+      (m.status && String(m.status).trim().toUpperCase().includes("TERPAKAI")) ||
+        (m.id_kegiatan_ref && String(m.id_kegiatan_ref).trim().length > 0) ||
+        (m.perihal && String(m.perihal).trim().length > 0) ||
+        (m.tanggal_memo && String(m.tanggal_memo).trim().length > 0) ||
+        (m.noMemo && m.tanggal)
+    );
+    if (isUsed && numVal > maxNum) {
+      maxNum = numVal;
+      lastUsedMemoStr =
+        m.format_lengkap ||
+        m.noMemo ||
+        `M.${numVal}${m.unit || "/INS/PPK/"}${m.bulanRomawi || romanMonth}${m.tahun || `/${year}`}`;
+    }
+  }
+
+  const nextAvailNum = (maxNum || 320) + 1;
+  const nextAvailStr = `M.${nextAvailNum}/INS/PPK/${romanMonth}/${year}`;
+  const isLockedSelf = Boolean(reservedMemo && nomorMemo && reservedMemo === nomorMemo);
+
+  let conflictOwner = "";
+  if (seqNumber && seqNumber !== "xxx") {
+    const match = (memoList || []).find(
+      (m) => String(extractMemoSeqNumber(m)) === String(seqNumber).trim()
+    );
+    if (match) {
+      const ref = String(match.id_kegiatan_ref || "").trim();
+      const isUsed =
+        String(match.status || "").toUpperCase().includes("TERPAKAI") ||
+        Boolean(ref) ||
+        Boolean(match.perihal && String(match.perihal).trim() !== "");
+      const ownedBySelf =
+        (idKegiatan && ref && ref.toLowerCase() === idKegiatan.toLowerCase()) ||
+        isLockedSelf;
+      if (isUsed && !ownedBySelf) {
+        conflictOwner = ref || "kegiatan lain";
+      }
+    }
+  }
+
+  return {
+    isLockedSelf,
+    conflictOwner,
+    lastUsedMemoStr: lastUsedMemoStr || null,
+    nextAvailNum,
+    nextAvailStr,
+  };
+}
+
