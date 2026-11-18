@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { HeaderData, ParticipantRow, Pegawai } from "@/lib/types";
 import { Printer, Edit3, RotateCcw } from "lucide-react";
 import { getPangkatByGolongan } from "@/data/pangkatGolongan";
+import { PrintAutoFitSheet } from "./PrintAutoFitSheet";
 
 interface SppdDepanDocProps {
   header: HeaderData;
@@ -108,18 +109,13 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
               print-color-adjust: exact !important;
             }
             .sppd-sheet {
-              page-break-after: always !important;
-              break-after: page !important;
               width: 100% !important;
               max-width: none !important;
+              min-height: 0 !important;
               padding: 0 !important;
               margin: 0 !important;
               box-shadow: none !important;
               border: none !important;
-            }
-            .sppd-sheet:last-child {
-              page-break-after: auto !important;
-              break-after: auto !important;
             }
             .no-print {
               display: none !important;
@@ -264,10 +260,16 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
           const nomorStDisplay = r.nomorSt || header.nomorStStaff || header.nomorStMaster || "-";
 
           return (
-            <div
+            <PrintAutoFitSheet
               key={r.id || index}
-              className="sppd-sheet bg-white text-black shadow-lg rounded-sm border border-slate-200 mx-auto max-w-[210mm] min-h-[297mm] p-[16mm_20mm] font-sans text-[12.5px] leading-relaxed"
+              orientation="portrait"
+              printableWidthMm={isBundleMode ? 174 : 170}
+              printableHeightMm={260}
+              isBundleMode={isBundleMode}
             >
+              <div
+                className="sppd-sheet bg-white text-black shadow-lg rounded-sm border border-slate-200 mx-auto max-w-[210mm] min-h-[297mm] p-[16mm_20mm] font-sans text-[12.5px] leading-relaxed"
+              >
               {/* TOP HEADER: LEFT AGENCY & RIGHT SPD NUMBER */}
               <div className="flex justify-between items-start mb-6 text-[11px] leading-tight">
                 {/* Left: Ministry header */}
@@ -695,7 +697,8 @@ export const SppdDepanDoc: React.FC<SppdDepanDocProps> = ({
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
+            </PrintAutoFitSheet>
           );
         })}
       </div>

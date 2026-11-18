@@ -18,6 +18,7 @@ import { BiayaRiilDoc } from "./documents/BiayaRiilDoc";
 import { SppdDepanDoc } from "./documents/SppdDepanDoc";
 import { KuitansiPengadaanDoc } from "./documents/KuitansiPengadaanDoc";
 import { NominatifPengadaanDoc } from "./documents/NominatifPengadaanDoc";
+import { syncAllAutoFitSheets } from "./documents/PrintAutoFitSheet";
 import {
   X,
   Printer,
@@ -461,7 +462,10 @@ export const BundlePrintContainer: React.FC<BundlePrintContainerProps> = ({
           <div className="flex items-center justify-center gap-2 pt-1">
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={() => {
+                syncAllAutoFitSheets();
+                window.print();
+              }}
               className="btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -479,7 +483,7 @@ export const BundlePrintContainer: React.FC<BundlePrintContainerProps> = ({
       </div>
 
       {/* Print-Only Bundled Documents Flow */}
-      <div className="hidden print:block w-full bg-white text-black">
+      <div className="bundle-print-host w-full bg-white text-black">
         {selectedDocs.map((docId, idx) => {
           const isLandscape = docId === "nominatif";
           const orientationClass = isLandscape

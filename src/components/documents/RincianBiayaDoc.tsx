@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { HeaderData, ParticipantRow, ActiveCostKey, ActiveUhKey } from "@/lib/types";
 import { terbilang } from "@/lib/terbilang";
 import { Printer, Edit3, RotateCcw } from "lucide-react";
+import { PrintAutoFitSheet } from "./PrintAutoFitSheet";
 
 interface RincianBiayaDocProps {
   header: HeaderData;
@@ -65,18 +66,12 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
               background: #ffffff !important;
             }
             .rincian-sheet {
-              page-break-after: always !important;
-              break-after: page !important;
               width: 100% !important;
               max-width: none !important;
               padding: 0 !important;
               margin: 0 !important;
               box-shadow: none !important;
               border: none !important;
-            }
-            .rincian-sheet:last-child {
-              page-break-after: auto !important;
-              break-after: auto !important;
             }
             .no-print {
               display: none !important;
@@ -380,15 +375,21 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
           const calculatedTotal = lineItems.reduce((acc, it) => acc + it.amount, 0);
 
           return (
-            <div
+            <PrintAutoFitSheet
               key={activeRow.id || index}
-              style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-              contentEditable={isEditMode}
-              suppressContentEditableWarning={true}
-              className={`rincian-sheet bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs font-sans leading-normal space-y-6 transition-all ${
-                isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
-              }`}
+              orientation="portrait"
+              printableWidthMm={isBundleMode ? 174 : 170}
+              printableHeightMm={260}
+              isBundleMode={isBundleMode}
             >
+              <div
+                style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
+                contentEditable={isEditMode}
+                suppressContentEditableWarning={true}
+                className={`rincian-sheet bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs font-sans leading-normal space-y-6 transition-all ${
+                  isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
+                }`}
+              >
               {/* Kop Header */}
               <div className="text-center space-y-1">
                 <h2 className="font-bold text-xs md:text-sm tracking-tight uppercase text-black">
@@ -439,9 +440,9 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
                       <tr key={item.no} className="text-black">
                         <td className="py-1.5 align-top">{item.no}</td>
                         <td className="py-1.5 align-top">
-                          <div className="flex justify-between pr-8">
-                            <span>{item.title}</span>
-                            {item.detail && <span>{item.detail}</span>}
+                          <div className="flex items-start justify-between gap-4 pr-4">
+                            <span className="shrink-0 whitespace-nowrap">{item.title}</span>
+                            {item.detail && <span className="text-right">{item.detail}</span>}
                           </div>
                         </td>
                         <td className="py-1.5 align-top font-mono">
@@ -566,7 +567,8 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
+            </PrintAutoFitSheet>
           );
         })}
       </div>

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { HeaderData, ParticipantRow, ActiveCostKey, ActiveUhKey } from "@/lib/types";
 import { terbilang } from "@/lib/terbilang";
 import { Printer, Edit3, RotateCcw } from "lucide-react";
+import { PrintAutoFitSheet } from "./PrintAutoFitSheet";
 
 interface NominatifDocProps {
   header: HeaderData;
@@ -178,6 +179,22 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
               background: transparent !important;
             }
           }
+          .autofit-measurer-host .print-page-landscape table {
+            font-family: Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif !important;
+            font-size: ${isVeryDense ? "6.5pt" : isDense ? "7.2pt" : "8pt"} !important;
+            line-height: 1.15 !important;
+          }
+          .autofit-measurer-host .print-page-landscape th,
+          .autofit-measurer-host .print-page-landscape td {
+            font-family: Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif !important;
+            padding: ${isVeryDense ? "1px 1.5px" : isDense ? "1.5px 2px" : "2px 3px"} !important;
+          }
+          .autofit-measurer-host .print-page-landscape td.tabular-nums,
+          .autofit-measurer-host .print-page-landscape td.text-right,
+          .autofit-measurer-host .print-page-landscape .whitespace-nowrap {
+            white-space: nowrap !important;
+            word-break: keep-all !important;
+          }
           [contenteditable="true"]:hover {
             outline: 1px dashed rgba(59, 130, 246, 0.4);
             border-radius: 2px;
@@ -256,14 +273,21 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
       )}
 
       {/* Nominatif Document Sheet (Landscape Print-ready with Tahoma Font) */}
-      <div
-        style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-        contentEditable={isEditMode}
-        suppressContentEditableWarning={true}
-        className={`print-page print-page-landscape bg-white text-black p-4 md:p-6 rounded-2xl shadow-md border border-slate-200 mx-auto w-full max-w-[1240px] text-xs leading-normal space-y-3 transition-all ${
-          isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
-        }`}
+      <PrintAutoFitSheet
+        orientation="landscape"
+        printableWidthMm={277}
+        printableHeightMm={188}
+        isBundleMode={isBundleMode}
+        noBreakAfter={true}
       >
+        <div
+          style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
+          contentEditable={isEditMode}
+          suppressContentEditableWarning={true}
+          className={`print-page print-page-landscape bg-white text-black p-4 md:p-6 rounded-2xl shadow-md border border-slate-200 mx-auto w-full max-w-[1240px] text-xs leading-normal space-y-3 transition-all ${
+            isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
+          }`}
+        >
         {/* Document Title Header */}
         <div className="text-center space-y-1 px-2" style={{ fontFamily: "Tahoma, Geneva, sans-serif" }}>
           <h1 className="text-xs md:text-sm font-black tracking-wide uppercase text-black">
@@ -635,7 +659,8 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
             </div>
           );
         })()}
-      </div>
+        </div>
+      </PrintAutoFitSheet>
     </div>
   );
 };

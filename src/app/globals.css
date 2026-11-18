@@ -465,14 +465,21 @@ body {
   .print-page-riil,
   .kwitansi-sheet,
   .rincian-sheet,
-  .riil-sheet {
+  .riil-sheet,
+  .sppd-sheet {
     width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
     background: #ffffff !important;
     font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif !important;
+  }
+
+  .overflow-x-auto {
+    overflow: visible !important;
   }
 
   table {
@@ -484,4 +491,109 @@ body {
   table, th, td {
     border-color: #000000 !important;
   }
+
+  /* Auto-Fit A4 Sheet Wrapper & Proportional Scaler */
+  .autofit-page-wrapper {
+    width: 100% !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .autofit-page-wrapper:last-child,
+  .autofit-page-wrapper[data-no-break-after="true"] {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .autofit-page-wrapper[data-autofit-scaled="true"] {
+    height: var(--autofit-h) !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  .autofit-page-wrapper[data-autofit-scaled="true"] > .autofit-scaler {
+    width: var(--autofit-w) !important;
+    max-width: none !important;
+    transform: scale(var(--autofit-scale)) !important;
+    transform-origin: top left !important;
+  }
+
+  .bundle-print-host {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    visibility: visible !important;
+  }
+}
+
+@media screen {
+  .bundle-print-host {
+    position: fixed;
+    left: -99999px;
+    top: 0;
+    width: 210mm;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+/* Offscreen DOM Measurer replicating @media print typography & resets */
+.autofit-measurer-host {
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+  background: #ffffff;
+  color: #000000;
+  font-size: 11pt;
+  line-height: 1.35;
+  font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif;
+}
+
+.autofit-measurer-host .autofit-measurer-box {
+  background: #ffffff;
+  color: #000000;
+  font-size: 11pt;
+  line-height: 1.35;
+  font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif;
+}
+
+.autofit-measurer-host .no-print {
+  display: none !important;
+}
+
+.autofit-measurer-host .overflow-x-auto {
+  overflow: visible !important;
+}
+
+.autofit-measurer-host .print-page,
+.autofit-measurer-host .print-page-kwitansi,
+.autofit-measurer-host .print-page-memo,
+.autofit-measurer-host .print-page-landscape,
+.autofit-measurer-host .print-page-rincian,
+.autofit-measurer-host .print-page-riil,
+.autofit-measurer-host .kwitansi-sheet,
+.autofit-measurer-host .rincian-sheet,
+.autofit-measurer-host .riil-sheet,
+.autofit-measurer-host .sppd-sheet {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  background: #ffffff !important;
+  font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif !important;
+}
+
+.autofit-measurer-host table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif !important;
 }

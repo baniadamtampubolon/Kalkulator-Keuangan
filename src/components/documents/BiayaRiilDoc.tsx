@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { HeaderData, ParticipantRow, ActiveCostKey } from "@/lib/types";
 import { Printer, Edit3, RotateCcw } from "lucide-react";
+import { PrintAutoFitSheet } from "./PrintAutoFitSheet";
 
 interface BiayaRiilDocProps {
   header: HeaderData;
@@ -76,18 +77,12 @@ export const BiayaRiilDoc: React.FC<BiayaRiilDocProps> = ({
               background: #ffffff !important;
             }
             .riil-sheet {
-              page-break-after: always !important;
-              break-after: page !important;
               width: 100% !important;
               max-width: none !important;
               padding: 0 !important;
               margin: 0 !important;
               box-shadow: none !important;
               border: none !important;
-            }
-            .riil-sheet:last-child {
-              page-break-after: auto !important;
-              break-after: auto !important;
             }
             .no-print {
               display: none !important;
@@ -268,15 +263,21 @@ export const BiayaRiilDoc: React.FC<BiayaRiilDocProps> = ({
           const totalRiil = items.reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
 
           return (
-            <div
+            <PrintAutoFitSheet
               key={activeRow.id || index}
-              style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-              contentEditable={isEditMode}
-              suppressContentEditableWarning={true}
-              className={`riil-sheet bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs font-sans leading-relaxed space-y-6 transition-all ${
-                isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
-              }`}
+              orientation="portrait"
+              printableWidthMm={isBundleMode ? 174 : 170}
+              printableHeightMm={isBundleMode ? 260 : 250}
+              isBundleMode={isBundleMode}
             >
+              <div
+                style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
+                contentEditable={isEditMode}
+                suppressContentEditableWarning={true}
+                className={`riil-sheet bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs font-sans leading-relaxed space-y-6 transition-all ${
+                  isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
+                }`}
+              >
               {/* Header Kop */}
               <div className="text-center space-y-1">
                 <h2 className="font-bold text-xs md:text-sm tracking-tight uppercase text-black">
@@ -419,7 +420,8 @@ export const BiayaRiilDoc: React.FC<BiayaRiilDocProps> = ({
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
+            </PrintAutoFitSheet>
           );
         })}
       </div>

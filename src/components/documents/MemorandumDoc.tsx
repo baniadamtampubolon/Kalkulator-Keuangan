@@ -8,6 +8,7 @@ import { terbilang } from "@/lib/terbilang";
 import { getDefaultMemoNumber } from "@/lib/calc";
 import { calculatePengadaanTotals, getSpjTypeMeta } from "@/lib/pengadaanHelper";
 import { findPaguForMemorandum } from "@/lib/anggaranHelper";
+import { PrintAutoFitSheet } from "./PrintAutoFitSheet";
 
 interface MemorandumDocProps {
   header: HeaderData;
@@ -203,10 +204,6 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
               box-shadow: none !important;
               border: none !important;
             }
-            .memo-page-1, .memo-page-2 {
-              page-break-after: always !important;
-              break-after: page !important;
-            }
             .no-print {
               display: none !important;
             }
@@ -292,14 +289,20 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
         {/* ========================================================================= */}
         {/* HALAMAN 1: MEMORANDUM DINAS                                               */}
         {/* ========================================================================= */}
-        <div
-          style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-          contentEditable={isEditMode}
-          suppressContentEditableWarning={true}
-          className={`print-page print-page-memo memo-page-1 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-5 transition-all ${
-            isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
-          }`}
+        <PrintAutoFitSheet
+          orientation="portrait"
+          printableWidthMm={isBundleMode ? 174 : 170}
+          printableHeightMm={260}
+          isBundleMode={isBundleMode}
         >
+          <div
+            style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
+            contentEditable={isEditMode}
+            suppressContentEditableWarning={true}
+            className={`print-page print-page-memo memo-page-1 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-5 transition-all ${
+              isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
+            }`}
+          >
           {/* Header Kop Garuda & Instansi */}
           <div className="flex items-center gap-4 border-b-2 border-black pb-3">
             {/* Official Garuda / Kemenko Pangan Logo */}
@@ -395,19 +398,26 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </PrintAutoFitSheet>
 
         {/* ========================================================================= */}
         {/* HALAMAN 2: LAMPIRAN SURAT (PEMBEBANAN ANGGARAN & 4 TTD)                   */}
         {/* ========================================================================= */}
-        <div
-          style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-          contentEditable={isEditMode}
-          suppressContentEditableWarning={true}
-          className={`print-page print-page-memo memo-page-2 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-6 transition-all ${
-            isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
-          }`}
+        <PrintAutoFitSheet
+          orientation="portrait"
+          printableWidthMm={isBundleMode ? 174 : 170}
+          printableHeightMm={260}
+          isBundleMode={isBundleMode}
         >
+          <div
+            style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
+            contentEditable={isEditMode}
+            suppressContentEditableWarning={true}
+            className={`print-page print-page-memo memo-page-2 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-6 transition-all ${
+              isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
+            }`}
+          >
           {/* Header Lampiran Surat */}
           <div className="space-y-1.5 pt-2">
             <h2 className="font-bold text-xs md:text-sm tracking-wide uppercase text-black">
@@ -553,19 +563,26 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </PrintAutoFitSheet>
 
         {/* ========================================================================= */}
         {/* HALAMAN 3: LAPORAN MEMORANDUM & RINCIAN TRANSFER                         */}
         {/* ========================================================================= */}
-        <div
-          style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-          contentEditable={isEditMode}
-          suppressContentEditableWarning={true}
-          className={`print-page print-page-memo memo-page-3 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-6 transition-all ${
-            isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
-          }`}
+        <PrintAutoFitSheet
+          orientation="portrait"
+          printableWidthMm={isBundleMode ? 174 : 170}
+          printableHeightMm={260}
+          isBundleMode={isBundleMode}
         >
+          <div
+            style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
+            contentEditable={isEditMode}
+            suppressContentEditableWarning={true}
+            className={`print-page print-page-memo memo-page-3 bg-white text-black p-8 md:p-12 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-6 transition-all ${
+              isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
+            }`}
+          >
           {/* Header Title & Subtitle */}
           <div className="text-center space-y-2 pt-2">
             <h2 className="font-bold text-sm md:text-base tracking-wide uppercase text-black">
@@ -808,7 +825,8 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
               </tbody>
             </table>
           </div>
-        </div>
+          </div>
+        </PrintAutoFitSheet>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   getSpjTypeMeta,
 } from "@/lib/pengadaanHelper";
 import { Printer, Edit3, RotateCcw } from "lucide-react";
+import { PrintAutoFitSheet } from "./PrintAutoFitSheet";
 
 interface NominatifPengadaanDocProps {
   header: HeaderData;
@@ -188,14 +189,21 @@ export const NominatifPengadaanDoc: React.FC<NominatifPengadaanDocProps> = ({
       )}
 
       {/* Landscape Printable Sheet */}
-      <div
-        style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-        contentEditable={isEditMode}
-        suppressContentEditableWarning={true}
-        className={`print-page print-page-landscape bg-white text-black p-6 md:p-10 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[1120px] text-xs leading-snug space-y-6 transition-all ${
-          isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
-        }`}
+      <PrintAutoFitSheet
+        orientation="landscape"
+        printableWidthMm={isBundleMode ? 277 : 267}
+        printableHeightMm={isBundleMode ? 188 : 180}
+        isBundleMode={isBundleMode}
+        noBreakAfter={true}
       >
+        <div
+          style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
+          contentEditable={isEditMode}
+          suppressContentEditableWarning={true}
+          className={`print-page print-page-landscape bg-white text-black p-6 md:p-10 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[1120px] text-xs leading-snug space-y-6 transition-all ${
+            isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
+          }`}
+        >
         {/* Title Block */}
         <div className="text-center space-y-1">
           <h1 className="font-bold text-sm md:text-base tracking-wide uppercase text-black">
@@ -434,7 +442,8 @@ export const NominatifPengadaanDoc: React.FC<NominatifPengadaanDocProps> = ({
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </PrintAutoFitSheet>
     </div>
   );
 };

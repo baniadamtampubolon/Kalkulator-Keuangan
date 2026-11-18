@@ -5,6 +5,7 @@ import { HeaderData } from "@/lib/types";
 import { terbilang } from "@/lib/terbilang";
 import { calculatePengadaanTotals, getSpjTypeMeta } from "@/lib/pengadaanHelper";
 import { Printer, Edit3, RotateCcw } from "lucide-react";
+import { PrintAutoFitSheet } from "./PrintAutoFitSheet";
 
 interface KuitansiPengadaanDocProps {
   header: HeaderData;
@@ -209,14 +210,21 @@ export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({
       )}
 
       {/* Kuitansi Sheet */}
-      <div
-        style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-        contentEditable={isEditMode}
-        suppressContentEditableWarning={true}
-        className={`kwitansi-sheet bg-white text-black p-10 md:p-14 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-12 transition-all ${
-          isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
-        }`}
+      <PrintAutoFitSheet
+        orientation="portrait"
+        printableWidthMm={isBundleMode ? 174 : 170}
+        printableHeightMm={isBundleMode ? 260 : 254}
+        isBundleMode={isBundleMode}
+        noBreakAfter={true}
       >
+        <div
+          style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
+          contentEditable={isEditMode}
+          suppressContentEditableWarning={true}
+          className={`kwitansi-sheet bg-white text-black p-10 md:p-14 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-12 transition-all ${
+            isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
+          }`}
+        >
         {/* Top Header: Instansi Name on Left + Box Table on Right */}
         <div className="flex justify-between items-start pt-2">
           <div className="w-1/2 pt-4">
@@ -350,7 +358,8 @@ export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </PrintAutoFitSheet>
     </div>
   );
 };

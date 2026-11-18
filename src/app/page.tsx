@@ -13,6 +13,7 @@ import { BiayaRiilDoc } from "@/components/documents/BiayaRiilDoc";
 import { SppdDepanDoc } from "@/components/documents/SppdDepanDoc";
 import { KuitansiPengadaanDoc } from "@/components/documents/KuitansiPengadaanDoc";
 import { NominatifPengadaanDoc } from "@/components/documents/NominatifPengadaanDoc";
+import { syncAllAutoFitSheets } from "@/components/documents/PrintAutoFitSheet";
 import { PengadaanSpjForm } from "@/components/PengadaanSpjForm";
 import { LandingHomeView } from "@/components/LandingHomeView";
 import { RekapPerdinTab } from "@/components/RekapPerdinTab";
@@ -765,10 +766,11 @@ export default function Home() {
       };
       window.addEventListener("afterprint", cleanup);
 
-      // Beri waktu 150ms bagi DOM bundel & CSS Named Pages untuk ter-render penuh
+      // Beri waktu 180ms bagi DOM bundel & auto-fit CSS untuk ter-render penuh
       setTimeout(() => {
+        syncAllAutoFitSheets();
         window.print();
-      }, 150);
+      }, 180);
     }
   };
 
@@ -1168,7 +1170,10 @@ export default function Home() {
         <Navbar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          onPrint={() => window.print()}
+          onPrint={() => {
+            syncAllAutoFitSheets();
+            window.print();
+          }}
           onOpenBundlePrint={() => setIsBundleModalOpen(true)}
           onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
           isSidebarOpen={isSidebarOpen}

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { HeaderData, ParticipantRow, ActiveCostKey, ActiveUhKey } from "@/lib/types";
 import { terbilang, formatRupiah } from "@/lib/terbilang";
 import { Printer, Edit3, RotateCcw } from "lucide-react";
+import { PrintAutoFitSheet } from "./PrintAutoFitSheet";
 
 interface KwitansiDocProps {
   header: HeaderData;
@@ -76,18 +77,12 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
               background: #ffffff !important;
             }
             .kwitansi-sheet {
-              page-break-after: always !important;
-              break-after: page !important;
               width: 100% !important;
               max-width: none !important;
               padding: 0 !important;
               margin: 0 !important;
               box-shadow: none !important;
               border: none !important;
-            }
-            .kwitansi-sheet:last-child {
-              page-break-after: auto !important;
-              break-after: auto !important;
             }
             .no-print {
               display: none !important;
@@ -199,15 +194,21 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
             : `Perjalanan Dinas dalam rangka penugasan di ${lokasiTujuanRow}`;
 
           return (
-            <div
+            <PrintAutoFitSheet
               key={activeRow.id || index}
-              style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
-              contentEditable={isEditMode}
-              suppressContentEditableWarning={true}
-              className={`kwitansi-sheet bg-white text-black p-10 md:p-14 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-12 transition-all ${
-                isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
-              }`}
+              orientation="portrait"
+              printableWidthMm={isBundleMode ? 174 : 170}
+              printableHeightMm={isBundleMode ? 260 : 254}
+              isBundleMode={isBundleMode}
             >
+              <div
+                style={{ fontFamily: "Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif" }}
+                contentEditable={isEditMode}
+                suppressContentEditableWarning={true}
+                className={`kwitansi-sheet bg-white text-black p-10 md:p-14 rounded-2xl shadow-md border border-slate-200 mx-auto max-w-[860px] text-xs leading-relaxed space-y-12 transition-all ${
+                  isEditMode ? "ring-2 ring-slate-300 ring-offset-2" : ""
+                }`}
+              >
               {/* Top Header: Instansi Name on Left + Box Table on Right */}
               <div className="flex justify-between items-start pt-2">
                 {/* Left: Instansi Header */}
@@ -350,7 +351,8 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
                   );
                 })()}
               </div>
-            </div>
+              </div>
+            </PrintAutoFitSheet>
           );
         })}
       </div>
