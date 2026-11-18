@@ -390,7 +390,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
             <button
               type="button"
               onClick={onCreateNewKegiatan}
-              className="btn-tactile inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer transition-all"
+              className="btn-tactile inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer transition-all"
               title="Mulai membuat berkas SPJ baru"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -408,42 +408,42 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
                 label: "Semua Jenis",
                 count: kegiatanList.length,
                 icon: Layers,
-                accent: "text-slate-900 dark:text-white border-slate-900 dark:border-blue-400",
+                accent: "text-slate-900 dark:text-white border-slate-900 dark:border-slate-100",
               },
               {
                 id: "PERDIN",
                 label: "Perjalanan Dinas",
                 count: countPerdin,
                 icon: Briefcase,
-                accent: "text-[#0071e3] dark:text-blue-400 border-[#0071e3] dark:border-blue-400",
+                accent: "text-slate-900 dark:text-white border-slate-900 dark:border-slate-100",
               },
               {
                 id: "KONSUMSI",
                 label: "SPJ Konsumsi",
                 count: countKonsumsi,
                 icon: UtensilsCrossed,
-                accent: "text-emerald-600 dark:text-emerald-400 border-emerald-600 dark:border-emerald-400",
+                accent: "text-slate-900 dark:text-white border-slate-900 dark:border-slate-100",
               },
               {
                 id: "SEWA",
                 label: "Sewa Kendaraan",
                 count: countSewa,
                 icon: Car,
-                accent: "text-violet-600 dark:text-violet-400 border-violet-600 dark:border-violet-400",
+                accent: "text-slate-900 dark:text-white border-slate-900 dark:border-slate-100",
               },
               {
                 id: "DIKLAT",
                 label: "SPJ Narsum",
                 count: countDiklat,
                 icon: Mic,
-                accent: "text-rose-600 dark:text-rose-400 border-rose-600 dark:border-rose-400",
+                accent: "text-slate-900 dark:text-white border-slate-900 dark:border-slate-100",
               },
               {
                 id: "ATK",
                 label: "ATK & Semkit",
                 count: countAtk,
                 icon: Package,
-                accent: "text-amber-600 dark:text-amber-400 border-amber-600 dark:border-amber-400",
+                accent: "text-slate-900 dark:text-white border-slate-900 dark:border-slate-100",
               },
             ] as const
           ).map((tab) => {

@@ -9,7 +9,6 @@ import {
   RefreshCw,
   Save,
   Link2,
-  ShieldCheck,
   Zap,
   RotateCcw,
   CloudDownload,
@@ -252,9 +251,6 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                   {isConnected ? "Terhubung" : "Belum Terhubung"}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Penyimpanan transaksi dinas & sinkronisasi Rekap 48 Kolom
-              </p>
             </div>
           </div>
           <button
@@ -309,12 +305,12 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                   URL Web App Google Apps Script
                 </label>
                 {isUnlocked ? (
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 inline-flex items-center gap-1">
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 inline-flex items-center gap-1">
                     <Unlock className="w-2.5 h-2.5" />
                     Admin Terbuka
                   </span>
                 ) : (
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1">
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1">
                     <Lock className="w-2.5 h-2.5 text-slate-600 dark:text-slate-300" />
                     Terkunci PIN
                   </span>
@@ -397,13 +393,13 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
               </button>
             </div>
             {!isUnlocked ? (
-              <p className="text-[10.5px] text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/50 border border-amber-200/60 rounded-lg p-2 leading-relaxed flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <span>URL Web App dikunci dengan PIN Admin untuk melindungi endpoint database dari salah ketik atau pengubahan yang tidak disengaja.</span>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Lock className="w-3 h-3 text-slate-400 shrink-0" />
+                <span>Endpoint Web App terkunci PIN Admin.</span>
               </p>
             ) : (
-              <p className="text-[10.5px] text-slate-400 dark:text-slate-500 leading-relaxed">
-                Pastikan deployment Web App di Google Apps Script memiliki akses &ldquo;Anyone&rdquo;. Klik &quot;Kunci URL&quot; setelah selesai mengubah.
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                Pastikan deployment Apps Script memiliki akses &ldquo;Anyone&rdquo;.
               </p>
             )}
           </div>
@@ -474,36 +470,20 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
 
           {/* Purge Cache & Resync Section */}
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5 font-semibold text-xs text-slate-800 dark:text-slate-200">
-                <RotateCcw className="w-3.5 h-3.5 text-[#0071e3]" />
-                <span>Pemulihan Data & Reset Cache Browser</span>
-              </div>
-              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">
-                Gunakan ini jika browser masih menampilkan nomor SPD atau data lama. Fitur ini akan menghapus cache lokal (localStorage) dan memuat data segar langsung dari Google Spreadsheet.
-              </p>
+            <div className="flex items-center gap-2 font-semibold text-xs text-slate-800 dark:text-slate-200">
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <span>Reset Cache Lokal &amp; Sinkron Ulang</span>
             </div>
             <button
               type="button"
               onClick={handlePurgeCacheAndReload}
               disabled={isSyncing}
-              className="btn-tactile px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-medium inline-flex items-center gap-1.5 shrink-0 disabled:opacity-50 cursor-pointer shadow-2xs"
+              className="btn-tactile px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-medium inline-flex items-center gap-1.5 shrink-0 disabled:opacity-50 cursor-pointer"
               title="Hapus cache lokal & unduh ulang seluruh data dari cloud"
             >
               {isSyncing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />}
-              <span>Bersihkan Cache & Sinkron Ulang</span>
+              <span>Bersihkan Cache &amp; Sinkron Ulang</span>
             </button>
-          </div>
-
-          {/* Quick Info & Guide */}
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-800 text-slate-600 dark:text-slate-300 flex items-start gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0 mt-0.5" />
-            <div className="space-y-0.5 text-[10.5px] leading-relaxed">
-              <span className="font-semibold text-slate-700 dark:text-slate-300">Keamanan Transaksi & Sinkronisasi:</span>
-              <p className="text-slate-500 dark:text-slate-400">
-                Penyimpanan ke Google Sheets menggunakan penguncian transaksi (LockService) untuk mencegah tumpang tindih data. Data master juga dicadangkan otomatis ke penyimpanan lokal browser.
-              </p>
-            </div>
           </div>
         </div>
 

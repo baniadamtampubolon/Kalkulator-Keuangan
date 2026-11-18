@@ -1534,7 +1534,7 @@ export default function Home() {
         />
 
         {/* Main Content Area */}
-        <main className="app-main-print-root flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-4 space-y-6 pb-12">
+        <main className="app-main-print-root flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 space-y-7 pb-14">
           {/* Tab Beranda (Landing Page Pemilihan Jenis SPJ) */}
           {activeTab === "beranda" && (
             <LandingHomeView
@@ -1567,21 +1567,10 @@ export default function Home() {
             activeTab !== "panduan" &&
             activeTab !== "monitoring" &&
             activeTab !== "daftar-memo" && (
-              <div className="no-print bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 dark:border-slate-800 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => handleNavigateTab("beranda")}
-                    className="btn-tactile inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer transition-all"
-                    title="Kembali ke Halaman Utama (Landing Page)"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>Beranda</span>
-                  </button>
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                    Jenis SPJ Aktif:
-                  </span>
-                </div>
+              <div className="no-print bg-white dark:bg-slate-900 rounded-2xl px-4 py-3 border border-slate-200/90 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                  Jenis SPJ
+                </span>
 
                 <div className="flex flex-wrap items-center gap-1.5">
                   {SPJ_TYPE_LIST.map((item) => {
@@ -1591,10 +1580,10 @@ export default function Home() {
                         key={item.id}
                         type="button"
                         onClick={() => handleSwitchSpjType(item.id)}
-                        className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                        className={`btn-tactile px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer border ${
                           isSelected
-                            ? "bg-slate-900 dark:bg-blue-600 text-white border-slate-900 dark:border-blue-600 shadow-xs"
-                            : "bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-slate-700"
+                            ? "bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-800 dark:border-slate-100 font-semibold"
+                            : "bg-slate-50/70 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-700 font-medium"
                         }`}
                       >
                         {item.label}
@@ -1607,39 +1596,35 @@ export default function Home() {
 
           {/* Secondary Management Tabs: Return Bar to Beranda / Input */}
           {(activeTab === "kegiatan" || activeTab === "rekap" || activeTab === "panduan" || activeTab === "monitoring" || activeTab === "daftar-memo") && (
-            <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-2xs backdrop-blur-md no-print animate-fade-in">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 no-print animate-fade-in">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleNavigateTab("beranda")}
-                  className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-blue-600 hover:bg-black dark:hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer transition-all"
+                  className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer transition-all"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Beranda Pilihan SPJ</span>
+                  <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Beranda</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleNavigateTab("input")}
-                  className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer transition-all"
+                  className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium border border-slate-200/80 dark:border-slate-700 cursor-pointer transition-all"
                 >
-                  <span>Ke Input &amp; Kalkulator</span>
+                  <span>Input &amp; Kalkulator</span>
                 </button>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                <span className="hidden sm:inline">Layar Penuh</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span className="font-semibold text-slate-700 dark:text-slate-200">
-                  {activeTab === "kegiatan"
-                    ? "Daftar Riwayat Kegiatan"
-                    : activeTab === "rekap"
-                    ? "Rekap Kegiatan (5 Modul SPJ)"
-                    : activeTab === "monitoring"
-                    ? "Monitoring Anggaran (16 Segmen)"
-                    : activeTab === "daftar-memo"
-                    ? "Buku Kendali & Daftar Memorandum Terdaftar"
-                    : "Buku Panduan & Tutorial"}
-                </span>
-              </div>
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                {activeTab === "kegiatan"
+                  ? "Daftar Riwayat Kegiatan"
+                  : activeTab === "rekap"
+                  ? "Rekap Kegiatan"
+                  : activeTab === "monitoring"
+                  ? "Monitoring Anggaran"
+                  : activeTab === "daftar-memo"
+                  ? "Daftar Memorandum"
+                  : "Buku Panduan"}
+              </span>
             </div>
           )}
 
@@ -1657,7 +1642,6 @@ export default function Home() {
                 onClearMemoFeedback={() => setMemoReserveFeedback(null)}
                 onOpenDaftarKegiatan={() => handleNavigateTab("kegiatan")}
                 onOpenDaftarMemo={() => handleNavigateTab("daftar-memo")}
-                onCreateNewKegiatan={handleRequestCreateNew}
                 editingOriginalId={editingOriginalId}
                 isSaved={isSaved}
                 hasChanges={hasChanges}
@@ -1670,7 +1654,7 @@ export default function Home() {
                 onNavigateTab={(tab) => handleNavigateTab(tab)}
               />
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-7">
                 <HeaderForm
                   header={header}
                   setHeader={handleSetHeader}
@@ -1685,7 +1669,6 @@ export default function Home() {
                   onClearMemoFeedback={() => setMemoReserveFeedback(null)}
                   onOpenDaftarKegiatan={() => handleNavigateTab("kegiatan")}
                   onOpenDaftarMemo={() => handleNavigateTab("daftar-memo")}
-                  onCreateNewKegiatan={handleRequestCreateNew}
                   editingOriginalId={editingOriginalId}
                 />
 

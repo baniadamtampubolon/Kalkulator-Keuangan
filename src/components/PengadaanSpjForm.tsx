@@ -60,7 +60,6 @@ import {
   RefreshCw,
   Receipt,
   FileSpreadsheet,
-  Info,
 } from "lucide-react";
 
 interface PengadaanSpjFormProps {
@@ -74,7 +73,6 @@ interface PengadaanSpjFormProps {
   onClearMemoFeedback?: () => void;
   onOpenDaftarKegiatan?: () => void;
   onOpenDaftarMemo?: () => void;
-  onCreateNewKegiatan?: () => void;
   editingOriginalId?: string | null;
   isSaved: boolean;
   hasChanges: boolean;
@@ -98,7 +96,6 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
   onClearMemoFeedback,
   onOpenDaftarKegiatan,
   onOpenDaftarMemo,
-  onCreateNewKegiatan,
   editingOriginalId,
   isSaved,
   hasChanges,
@@ -401,24 +398,21 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
         {/* Header Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-slate-800 flex items-center justify-center font-bold text-xs shadow-2xs">
+            <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-semibold text-xs">
               1
             </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  Identitas Kegiatan &amp; Memorandum ({spjMeta.label})
-                </h2>
-                {header.idKegiatan && (
-                  <>
-                    <span className="text-slate-300 dark:text-slate-700">·</span>
-                    <span className="text-xs font-mono font-bold text-[#0071e3] dark:text-blue-400">
-                      {header.idKegiatan}
-                    </span>
-                  </>
-                )}
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{spjMeta.description}</p>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Identitas Kegiatan &amp; Memorandum ({spjMeta.label})
+              </h2>
+              {header.idKegiatan && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">·</span>
+                  <span className="text-xs font-mono font-semibold text-[#0071e3] dark:text-blue-400">
+                    {header.idKegiatan}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
@@ -427,7 +421,7 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
               <button
                 type="button"
                 onClick={onOpenDaftarKegiatan}
-                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200/90 dark:border-slate-800 shadow-2xs cursor-pointer"
+                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-medium border border-slate-200/90 dark:border-slate-700 cursor-pointer"
               >
                 <FolderKanban className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>Daftar Kegiatan</span>
@@ -437,57 +431,41 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
               <button
                 type="button"
                 onClick={onOpenDaftarMemo}
-                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200/90 dark:border-slate-800 shadow-2xs cursor-pointer"
+                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-medium border border-slate-200/90 dark:border-slate-700 cursor-pointer"
               >
                 <BookmarkCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>Daftar Memo ({memoList.length})</span>
-              </button>
-            )}
-            {onCreateNewKegiatan && (
-              <button
-                type="button"
-                onClick={onCreateNewKegiatan}
-                className="btn-tactile inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs cursor-pointer"
-                title="Reset form dan buat berkas SPJ baru"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>SPJ Baru</span>
               </button>
             )}
           </div>
         </div>
 
         {/* Sub-grid 1A: Uraian Kegiatan + Tanggal & Nomor Memo */}
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Uraian Pembayaran / Kegiatan */}
-            <div className="lg:col-span-7 flex flex-col justify-between space-y-1.5">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                    <span>Uraian Kegiatan / Untuk Pembayaran (Kuitansi, Nominatif &amp; Memo)</span>
-                    <span className="text-red-500 font-bold">*</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => handleChangeHeader("keteranganKegiatan", spjMeta.defaultUraianKegiatan)}
-                    className="text-[11px] font-semibold text-[#0071e3] hover:underline cursor-pointer"
-                    title="Isi dengan contoh kalimat baku"
-                  >
-                    Isi Kalimat Baku
-                  </button>
-                </div>
-                <textarea
-                  rows={4}
-                  value={header.keteranganKegiatan}
-                  onChange={(e) => handleChangeHeader("keteranganKegiatan", e.target.value)}
-                  placeholder={spjMeta.defaultUraianKegiatan}
-                  className="input-clean w-full p-3 text-xs leading-relaxed resize-none"
-                />
+            <div className="lg:col-span-7 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                  <span>Uraian Kegiatan / Untuk Pembayaran</span>
+                  <span className="text-red-500 font-bold">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => handleChangeHeader("keteranganKegiatan", spjMeta.defaultUraianKegiatan)}
+                  className="text-[11px] font-medium text-[#0071e3] hover:underline cursor-pointer"
+                  title="Isi dengan contoh kalimat baku"
+                >
+                  Isi Kalimat Baku
+                </button>
               </div>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                Uraian ini tercetak otomatis pada baris &ldquo;Untuk Pembayaran&rdquo; Kuitansi, Judul Daftar Nominatif, dan Memorandum.
-              </p>
+              <textarea
+                rows={4}
+                value={header.keteranganKegiatan}
+                onChange={(e) => handleChangeHeader("keteranganKegiatan", e.target.value)}
+                placeholder={spjMeta.defaultUraianKegiatan}
+                className="input-clean w-full p-3 text-xs leading-relaxed resize-none"
+              />
             </div>
 
             {/* Tanggal & Nomor Memorandum */}
@@ -612,7 +590,7 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
                   ) : (
                     <span className="inline-flex items-center gap-1 text-slate-400 dark:text-slate-500">
                       <Clock className="w-3 h-3 shrink-0" />
-                      <span>Klik &ldquo;Gunakan Nomor&rdquo; untuk kunci di database</span>
+                      <span>Belum dikunci di database</span>
                     </span>
                   )}
 
@@ -677,17 +655,12 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
         </div>
 
         {/* Sub-grid 1B: Pembebanan Anggaran DIPA */}
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-3.5">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-            <div className="flex items-center gap-2">
-              <Landmark className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                Pembebanan Anggaran DIPA (Sub Kegiatan, Komponen, Akun MAK &amp; Item Detail POK)
-              </h3>
-            </div>
-            <span className="text-[10.5px] font-medium text-slate-500 dark:text-slate-400 hidden sm:inline">
-              Tercetak pada Kuitansi &amp; Memorandum Hal. 2
-            </span>
+        <div className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 space-y-4">
+          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <Landmark className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+            <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+              Pembebanan Anggaran DIPA
+            </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -795,13 +768,10 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
           </div>
 
           {/* Baris 2 Pembebanan: Kode Item Detail & Keterangan Item Detail */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                <span>Kode Item Detail (POK)</span>
-                <span className="text-[10.5px] font-normal text-slate-400 dark:text-slate-500">
-                  (contoh: {spjMeta.defaultItemDetail})
-                </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-1">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                Kode Item Detail (POK)
               </label>
               <input
                 type="text"
@@ -819,23 +789,20 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
                   }));
                 }}
                 placeholder={spjMeta.defaultItemDetail}
-                className="input-clean w-full h-9 px-3 text-xs font-mono font-bold"
+                className="input-clean w-full h-10 px-3 text-xs font-mono font-semibold"
               />
             </div>
 
-            <div className="space-y-1 md:col-span-2">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                <span>Keterangan / Uraian Item Detail DIPA</span>
-                <span className="text-[10.5px] font-normal text-slate-400 dark:text-slate-500">
-                  (otomatis terisi saat pilih DIPA atau ketik manual)
-                </span>
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                Uraian Item Detail DIPA
               </label>
               <input
                 type="text"
                 value={header.keteranganItemDetail || ""}
                 onChange={(e) => handleChangeHeader("keteranganItemDetail", e.target.value)}
                 placeholder={spjMeta.defaultKeteranganItemDetail}
-                className="input-clean w-full h-9 px-3 text-xs font-medium"
+                className="input-clean w-full h-10 px-3 text-xs font-medium"
               />
             </div>
           </div>
@@ -847,18 +814,13 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
          ===================================================================== */}
       <section className="form-card p-5 sm:p-6 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-slate-800 flex items-center justify-center font-bold text-xs shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-semibold text-xs">
               2
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Rincian Item Daftar Nominatif &amp; Perhitungan Pajak ({spjMeta.shortLabel})
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Menghitung otomatis Sub Total Bruto, PPN (11/111 atau Faktur), DPP, Potongan PPh 22 / PPh 23, dan Jumlah Bersih
-              </p>
-            </div>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Rincian Item &amp; Perhitungan Pajak ({spjMeta.shortLabel})
+            </h2>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -1150,45 +1112,6 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
                 </select>
               </div>
             </div>
-
-            {/* Info Box Dasar Pajak */}
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/90 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
-              <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
-                <Info className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
-                <span>Ketentuan Dasar Pemotongan Pajak:</span>
-              </div>
-              {spjType === "KONSUMSI" && (
-                <ul className="list-disc list-inside space-y-0.5 pl-1">
-                  <li>
-                    <strong>Ada Invoice / Berbadan Hukum (CV, PT):</strong> Dikenakan <strong>PPh 23 (2%)</strong> dari DPP, serta <strong>PPN (11/111)</strong> jika di atas Rp 2 Juta.
-                  </li>
-                  <li>
-                    <strong>Bon Biasa (Non Badan Hukum):</strong> Di bawah Rp 2 Juta <strong>Tanpa Pajak</strong>; di atas Rp 2 Juta dikenakan <strong>PPN (11/111) + PPh 22 (1,5%)</strong>.
-                  </li>
-                </ul>
-              )}
-              {spjType === "ATK" && (
-                <ul className="list-disc list-inside space-y-0.5 pl-1">
-                  <li>
-                    <strong>Pembelian Semkit &amp; ATK:</strong> Menggunakan <strong>PPN Include (11/111)</strong> (atau nominal dari Faktur Pajak) dan dipotong <strong>PPh 22 (1,5%)</strong> dari DPP (Sub Total dikurangi PPN).
-                  </li>
-                </ul>
-              )}
-              {spjType === "SEWA" && (
-                <ul className="list-disc list-inside space-y-0.5 pl-1">
-                  <li>
-                    <strong>Sewa Kendaraan / Mobil:</strong> Jika penyedia memiliki NPWP dikenakan <strong>PPh 23 (2%)</strong>; jika tidak memiliki NPWP dikenakan <strong>PPh 23 (4%)</strong>.
-                  </li>
-                </ul>
-              )}
-              {spjType === "DIKLAT" && (
-                <ul className="list-disc list-inside space-y-0.5 pl-1">
-                  <li>
-                    <strong>Biaya Narasumber / Diklat:</strong> Sesuaikan potongan PPh atau pilih Tanpa PPN &amp; Tanpa PPh (0%) untuk PNBP Instansi.
-                  </li>
-                </ul>
-              )}
-            </div>
           </div>
 
           {/* Kanan: Ringkasan Kalkulasi Real-Time */}
@@ -1252,34 +1175,28 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
               3
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Pejabat Penandatangan &amp; Penerima Pembayaran
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Pilih nama penerima dari database pegawai atau aktifkan mode Pihak Ketiga jika dibayarkan langsung ke penyedia/rekanan
-              </p>
             </div>
           </div>
           <Users2 className="w-4 h-4 text-slate-400 dark:text-slate-500 hidden sm:block" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Kolom 1: PPK */}
-          <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-3">
-            <div className="border-b border-slate-100 dark:border-slate-800 pb-2">
-              <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
+          <div className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 space-y-3.5">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 block">
                 Pejabat Pembuat Komitmen (PPK)
               </span>
-              <span className="text-[10.5px] text-slate-400 dark:text-slate-500">
-                Penandatangan Kuitansi &amp; Memorandum
-              </span>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">Nama PPK</label>
               <select
                 value={header.ppkNama}
                 onChange={(e) => handleSelectPpk(e.target.value)}
-                className="input-clean w-full h-9.5 px-3 text-xs font-semibold cursor-pointer"
+                className="input-clean w-full h-10 px-3 text-xs font-medium cursor-pointer"
               >
                 {pegawaiList.map((p, idx) => (
                   <option key={`${p.nama}-${idx}`} value={p.nama}>
@@ -1288,28 +1205,25 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
                 ))}
               </select>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">NIP PPK</label>
               <input
                 type="text"
                 value={header.ppkNip}
                 onChange={(e) => handleChangeHeader("ppkNip", e.target.value)}
-                className="input-clean w-full h-9 px-3 text-xs font-mono font-medium"
+                className="input-clean w-full h-10 px-3 text-xs font-mono font-medium"
               />
             </div>
           </div>
 
           {/* Kolom 2: Bendahara & Verifikator */}
-          <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-3">
-            <div className="border-b border-slate-100 dark:border-slate-800 pb-2">
-              <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
+          <div className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 space-y-3.5">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 block">
                 Bendahara &amp; Petugas Verifikasi
               </span>
-              <span className="text-[10.5px] text-slate-400 dark:text-slate-500">
-                Penandatangan Lunas Bayar &amp; Lembar Verifikasi
-              </span>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
                 Bendahara Pengeluaran
               </label>
@@ -1317,17 +1231,17 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
                 type="text"
                 value={header.bendahara}
                 onChange={(e) => handleChangeHeader("bendahara", e.target.value)}
-                className="input-clean w-full h-9.5 px-3 text-xs font-medium"
+                className="input-clean w-full h-10 px-3 text-xs font-medium"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-                Petugas Verifikasi (Memorandum Hal. 2)
+                Petugas Verifikasi
               </label>
               <select
                 value={header.petugasVerifikasi}
                 onChange={(e) => handleChangeHeader("petugasVerifikasi", e.target.value)}
-                className="input-clean w-full h-9 px-3 text-xs font-medium cursor-pointer"
+                className="input-clean w-full h-10 px-3 text-xs font-medium cursor-pointer"
               >
                 <option value="Noviarty Ningsi Sumirat, S.E, NIP. 19811112201001 2 001">
                   Noviarty Ningsi Sumirat, S.E
@@ -1340,16 +1254,11 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
           </div>
 
           {/* Kolom 3: Penanggung Jawab Kegiatan / Yang Menerima */}
-          <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-3">
-            <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-              <div>
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
-                  Yang Menerima / Penanggung Jawab
-                </span>
-                <span className="text-[10.5px] text-slate-400 dark:text-slate-500">
-                  Penerima Kuitansi &amp; TTD Daftar Nominatif
-                </span>
-              </div>
+          <div className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 space-y-3.5">
+            <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 block">
+                Penerima / Penanggung Jawab
+              </span>
               <button
                 type="button"
                 onClick={() => handleUpdateTax({ isPenerimaCustom: !tax.isPenerimaCustom })}
@@ -1493,48 +1402,33 @@ export const PengadaanSpjForm: React.FC<PengadaanSpjFormProps> = ({
               <CheckCircle2 className="w-5 h-5" />
             )}
           </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                {!isSaved
-                  ? `Data ${spjMeta.shortLabel} Belum Disimpan ke Database Cloud`
-                  : hasChanges
-                  ? "Terdapat Perubahan Data yang Belum Diupdate ke Cloud"
-                  : !isCloudSynced
-                  ? "Data Tersimpan di Lokal, Belum Tersinkron ke Cloud"
-                  : `Data Terupdate di Database Cloud (${targetRekapSheetName})`}
-              </span>
-              <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  !isSaved
-                    ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                    : hasChanges
-                    ? "bg-amber-100 dark:bg-amber-900/70 text-amber-800 dark:text-amber-200 animate-pulse"
-                    : !isCloudSynced
-                    ? "bg-amber-100 dark:bg-amber-900/70 text-amber-800 dark:text-amber-200"
-                    : "bg-emerald-100 dark:bg-emerald-900/70 text-emerald-800 dark:text-emerald-200"
-                }`}
-              >
-                {!isSaved
-                  ? "Draft"
-                  : hasChanges
-                  ? "Perlu Update"
-                  : !isCloudSynced
-                  ? "Lokal Saja"
-                  : "Tersinkron Cloud"}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-slate-800 dark:text-slate-100">
               {!isSaved
-                ? `Klik tombol 'Simpan ke Cloud' agar data ${spjMeta.label} masuk ke sheet ${targetRekapSheetName} & MASTER_MEMO.`
+                ? `Draft ${spjMeta.shortLabel} belum tersimpan di Cloud`
                 : hasChanges
-                ? `Perubahan pada rincian/identitas telah dideteksi. Klik 'Update Data Cloud' untuk memperbarui ${targetRekapSheetName}.`
+                ? "Terdapat perubahan belum diupdate"
                 : !isCloudSynced
-                ? "Koneksi ke Google Sheets belum selesai atau URL GAS belum terpasang. Klik 'Kirim Ulang ke Cloud'."
-                : `Seluruh rincian ${spjMeta.label}, nilai pajak, dan nomor memorandum telah aman tersimpan di Google Sheets${
-                    lastCloudSyncTime ? ` (pukul ${lastCloudSyncTime})` : ""
-                  }.`}
-            </p>
+                ? "Tersimpan lokal, belum tersinkron Cloud"
+                : `Terupdate di Cloud (${targetRekapSheetName})${lastCloudSyncTime ? ` · ${lastCloudSyncTime}` : ""}`}
+            </span>
+            <span
+              className={`text-[10.5px] font-medium px-2 py-0.5 rounded-md ${
+                !isSaved
+                  ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                  : hasChanges || !isCloudSynced
+                  ? "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-200"
+                  : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-200 border border-emerald-200"
+              }`}
+            >
+              {!isSaved
+                ? "Draft"
+                : hasChanges
+                ? "Perlu Update"
+                : !isCloudSynced
+                ? "Lokal Saja"
+                : "Tersinkron"}
+            </span>
           </div>
         </div>
 

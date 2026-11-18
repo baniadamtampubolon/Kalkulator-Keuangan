@@ -426,21 +426,16 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({
       </div>
 
       {/* Consolidated Toolbar */}
-      <div className="glass-base rounded-2xl p-4 md:p-5 space-y-3.5">
+      <div className="glass-base rounded-2xl p-5 md:p-6 space-y-4">
         {/* Row 1: Header Title & Primary Document Actions */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-200/70 dark:border-slate-800">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                {currentRekapMeta.label}
-              </h2>
-              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800">
-                {currentRekapMeta.sheetName}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {currentRekapMeta.description} • Terintegrasi dengan Google Spreadsheet Cloud
-            </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3.5 border-b border-slate-200/70 dark:border-slate-800">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-xs md:text-sm font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
+              {currentRekapMeta.label}
+            </h2>
+            <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+              {currentRekapMeta.sheetName}
+            </span>
           </div>
 
           {/* Primary Action Buttons (Sinkron Data/Tabel & Ekspor) */}
@@ -450,7 +445,7 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({
                 type="button"
                 onClick={handleSyncToSpreadsheet}
                 disabled={isSyncing || cloudRows.length === 0}
-                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer disabled:opacity-50 shadow-2xs transition-all"
+                className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold cursor-pointer disabled:opacity-50 transition-all"
                 title="Sinkronkan data dan seluruh tabel Rekap Perdin dengan Google Spreadsheet Cloud"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
@@ -461,9 +456,9 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({
             <button
               type="button"
               onClick={handleExportExcel}
-              className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-2xs"
+              className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 text-xs font-semibold cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3.5 h-3.5 text-emerald-600" />
               <span>Ekspor Excel</span>
             </button>
           </div>

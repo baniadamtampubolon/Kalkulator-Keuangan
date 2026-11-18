@@ -14,7 +14,6 @@ import {
   FileSpreadsheet,
   ListOrdered,
   FileCheck,
-  Sparkles,
   ArrowRight,
   X,
   MapPin,
@@ -49,16 +48,6 @@ export const ModalSelesaiSpj: React.FC<ModalSelesaiSpjProps> = ({
 
   const isPengadaan = Boolean(header.spjType && header.spjType !== "PERDIN");
   const spjMeta = getSpjTypeMeta(header.spjType);
-  const targetRekapSheetName =
-    header.spjType === "KONSUMSI"
-      ? "REKAP_SPJ_KONSUMSI"
-      : header.spjType === "SEWA"
-      ? "REKAP_SPJ_SEWA_KENDARAAN"
-      : header.spjType === "DIKLAT"
-      ? "REKAP_SPJ_NARSUM"
-      : header.spjType === "ATK"
-      ? "REKAP_SPJ_ATK_SEMKIT"
-      : "REKAP_PERDIN_48KOLOM";
   const pengadaanCalc = calculatePengadaanTotals(header.pengadaanItems || [], header.pengadaanTax);
 
   const validRows = rows.filter(
@@ -114,53 +103,43 @@ export const ModalSelesaiSpj: React.FC<ModalSelesaiSpjProps> = ({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Milestone Celebration Header */}
-        <div className="text-center space-y-2 pt-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white shadow-lg shadow-emerald-500/20 mb-1 ring-4 ring-emerald-100 animate-bounce-short">
-            <Sparkles className="w-8 h-8" />
+        {/* Milestone Header */}
+        <div className="text-center space-y-2.5 pt-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 mb-1">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {isCloudSynced
-              ? `SPJ ${spjMeta.shortLabel} Tersinkron ke Database Cloud!`
-              : `SPJ ${spjMeta.shortLabel} Tersimpan di Lokal`}
+              ? `SPJ ${spjMeta.shortLabel} Tersimpan ke Cloud`
+              : `SPJ ${spjMeta.shortLabel} Tersimpan Lokal`}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto">
-            {isCloudSynced ? (
-              <>
-                Semua data <span className="font-semibold text-slate-900 dark:text-slate-100">{spjMeta.label}</span> telah tersimpan ke{" "}
-                <span className="font-semibold text-slate-900 dark:text-slate-100">Daftar Kegiatan</span>,{" "}
-                <span className="font-semibold text-slate-900 dark:text-slate-100">{targetRekapSheetName}</span>, dan{" "}
-                <span className="font-semibold text-slate-900 dark:text-slate-100">MASTER_MEMO</span> di Google Spreadsheet
-                {lastCloudSyncTime ? ` (pukul ${lastCloudSyncTime})` : ""}.
-              </>
-            ) : (
-              <>
-                Data <span className="font-semibold text-slate-900 dark:text-slate-100">{spjMeta.label}</span> telah tersimpan di penyimpanan lokal browser, namun belum berhasil dikirim ke Google Spreadsheet. Anda dapat menekan tombol <span className="font-semibold">Kirim Ulang ke Cloud</span> pada halaman form.
-              </>
-            )}
-          </p>
+          {lastCloudSyncTime && isCloudSynced && (
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Disinkronkan pukul {lastCloudSyncTime}
+            </p>
+          )}
         </div>
 
         {/* SPJ Summary Card (Stage Summary) */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-slate-800/80 dark:to-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-3">
+        <div className="bg-slate-50/80 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-200/60 dark:border-slate-800">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-600 text-white font-mono shadow-xs">
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-800 dark:bg-slate-700 text-white font-mono">
                 {header.idKegiatan || "KEG-BARU"}
               </span>
-              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+              <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
                 Kategori {header.kategoriSpj || "A"}
               </span>
             </div>
             <div
-              className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+              className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-md ${
                 isCloudSynced
-                  ? "text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/70"
-                  : "text-amber-800 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/70"
+                  ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80"
+                  : "text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80"
               }`}
             >
               <CheckCircle2 className={`w-3.5 h-3.5 ${isCloudSynced ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`} />
-              <span>{isCloudSynced ? "Status: Tersinkron Cloud & Valid" : "Status: Tersimpan Lokal"}</span>
+              <span>{isCloudSynced ? "Tersinkron Cloud" : "Tersimpan Lokal"}</span>
             </div>
           </div>
 

@@ -140,21 +140,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   Go SPJ
                 </button>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                   Inspektorat
                 </span>
                 {!isBeranda && currentLoadedId && (
                   <span
-                    className={`hidden md:inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                    className={`hidden md:inline-flex items-center gap-1.5 text-[10.5px] font-mono font-semibold px-2 py-0.5 rounded-md border ${
                       hasChanges
-                        ? "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700"
-                        : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700"
+                        ? "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                     }`}
                     title={hasChanges ? "Ada perubahan belum disimpan" : "Tersimpan di database"}
                   >
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
-                        hasChanges ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
+                        hasChanges ? "bg-amber-500" : "bg-emerald-500"
                       }`}
                     />
                     {currentLoadedId}
@@ -190,8 +190,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           ) : (
             <div className="flex flex-wrap items-center gap-2">
               {/* Live Metrics Pill */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 text-xs shadow-2xs">
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${spjMeta.badgeColor}`}>
+              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 text-xs">
+                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
                   {spjMeta.shortLabel}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
@@ -208,7 +208,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={onCreateNewKegiatan}
-                  className="btn-tactile flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer"
+                  className="btn-tactile flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
                   title="Mulai membuat berkas SPJ baru (reset form bersih & auto-increment ID)"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -221,7 +221,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={onOpenBundlePrint}
-                  className="btn-tactile flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-black dark:hover:bg-slate-700 text-white text-xs font-semibold border border-slate-800 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
+                  className="btn-tactile flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-semibold border border-slate-200/90 dark:border-slate-700 transition-all cursor-pointer"
                   title="Pilih & cetak gabungan beberapa dokumen SPJ (Kwitansi s.d SPPD) sekaligus dalam 1 file PDF"
                 >
                   <Layers className="w-3.5 h-3.5 text-blue-300" />

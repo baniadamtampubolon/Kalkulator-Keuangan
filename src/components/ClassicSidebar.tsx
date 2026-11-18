@@ -152,10 +152,10 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
               <button
                 type="button"
                 onClick={onCreateNewKegiatan}
-                className="btn-tactile w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs cursor-pointer transition-all"
+                className="btn-tactile w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 text-xs font-semibold shadow-2xs cursor-pointer transition-all"
                 title="Mulai membuat berkas SPJ baru (reset & auto ID)"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-slate-500" />
                 <span>Buat SPJ Baru</span>
               </button>
             </div>
@@ -185,17 +185,17 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
           <div className="space-y-1">
             <div className="flex items-center justify-between px-2 pb-1 text-slate-500">
               <div className="flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-blue-600" />
+                <Layers className="w-3.5 h-3.5 text-slate-400" />
                 <span className="text-[11px] font-semibold tracking-tight text-slate-700 dark:text-slate-300">
                   {docTabs.length} Dokumen SPJ
                 </span>
               </div>
               {currentLoadedId ? (
                 <span
-                  className={`text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                  className={`text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-md border ${
                     hasChanges
-                      ? "bg-amber-50 text-amber-800 border-amber-300"
-                      : "bg-blue-50 text-blue-700 border-blue-200"
+                      ? "bg-amber-50/70 text-amber-800 border-amber-200/80"
+                      : "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                   }`}
                   title={hasChanges ? "Perubahan belum disimpan" : "ID Kegiatan aktif"}
                 >
@@ -265,10 +265,10 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
 
                 {mounted && totalKegiatanCount > 0 && (
                   <span
-                    className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full font-mono ${
+                    className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md font-mono ${
                       activeTab === "kegiatan"
                         ? "bg-white/20 text-white"
-                        : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                        : "bg-slate-200/70 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
                     {totalKegiatanCount}
@@ -305,10 +305,10 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
 
                   <div className="flex items-center gap-1.5 shrink-0">
                     <span
-                      className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full font-mono ${
+                      className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md font-mono ${
                         activeTab === "rekap"
                           ? "bg-white/20 text-white"
-                          : "bg-slate-200/90 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                          : "bg-slate-200/70 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                       }`}
                     >
                       5
@@ -392,10 +392,10 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
 
                 {mounted && memoCount > 0 && (
                   <span
-                    className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full font-mono ${
+                    className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md font-mono ${
                       activeTab === "daftar-memo"
                         ? "bg-white/20 text-white"
-                        : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                        : "bg-slate-200/70 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
                     {memoCount}
@@ -421,10 +421,10 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                   title="Buka Pengaturan Integrasi Database Cloud"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <Cloud className="w-4 h-4 text-blue-500 shrink-0" />
+                    <Cloud className="w-4 h-4 text-slate-500 shrink-0" />
                     <span className="truncate">Database Spreadsheet</span>
                   </div>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Online Sync" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600/80 shrink-0" title="Online Sync" />
                 </button>
               )}
             </nav>
@@ -449,7 +449,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Bookmark
                     className={`w-4 h-4 shrink-0 ${
-                      activeTab === "panduan" ? "text-white" : "text-amber-500"
+                      activeTab === "panduan" ? "text-white" : "text-slate-500"
                     }`}
                   />
                   <span className="truncate">Buku Panduan (Manual)</span>

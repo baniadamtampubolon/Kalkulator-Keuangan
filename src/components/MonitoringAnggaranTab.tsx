@@ -15,7 +15,6 @@ import {
 } from "@/lib/anggaranHelper";
 import { CurrencyInput } from "./CurrencyInput";
 import {
-  TrendingUp,
   Search,
   ChevronDown,
   ChevronRight,
@@ -453,31 +452,22 @@ export const MonitoringAnggaranTab: React.FC = () => {
       )}
 
       {/* Top Header Card (Official Government Style) */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden">
         {/* Kop Atas */}
-        <div className="px-6 py-5 border-b border-slate-200/80 dark:border-slate-800 bg-linear-to-r from-blue-50/50 via-white to-slate-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-100/80 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[11px] font-bold tracking-wide uppercase">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>Sistem Akuntansi Instansi (SAKTI) • BAS 16 Segmen</span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              {data.meta.judul}
-            </h1>
-            <p className="text-xs text-slate-500 font-medium">
-              {data.meta.subjudul}
-            </p>
-          </div>
+        <div className="px-6 py-5 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+            {data.meta.judul}
+          </h1>
 
           <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
             {/* Edit Periode Button */}
             <button
               type="button"
               onClick={() => setShowEditMeta(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium transition-all cursor-pointer"
               title="Ubah Periode Laporan"
             >
-              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+              <Calendar className="w-3.5 h-3.5 text-slate-400" />
               <span>Periode: {data.meta.periode}</span>
               <Edit2 className="w-3 h-3 text-slate-400" />
             </button>
@@ -486,10 +476,10 @@ export const MonitoringAnggaranTab: React.FC = () => {
             <button
               type="button"
               onClick={() => exportAnggaranToExcel(data)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
               title="Unduh format Excel (.xlsx)"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
               <span>Ekspor Excel</span>
             </button>
 
@@ -497,10 +487,10 @@ export const MonitoringAnggaranTab: React.FC = () => {
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer shadow-2xs no-print"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium transition-all cursor-pointer no-print"
               title="Cetak Laporan"
             >
-              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              <Printer className="w-3.5 h-3.5 text-slate-500" />
               <span>Cetak</span>
             </button>
 
@@ -508,7 +498,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowResetConfirm(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold transition-all cursor-pointer border border-rose-200 dark:border-rose-900"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-rose-50/70 dark:bg-slate-800 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-medium transition-all cursor-pointer border border-slate-200 dark:border-slate-700 hover:border-rose-200"
               title="Kembalikan data ke awal dari file Excel"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -518,21 +508,21 @@ export const MonitoringAnggaranTab: React.FC = () => {
         </div>
 
         {/* Info Lembaga & Satker Details Bar */}
-        <div className="px-6 py-3 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] grid grid-cols-1 sm:grid-cols-3 gap-3 border-b border-slate-200/60 dark:border-slate-800">
+        <div className="px-6 py-3 bg-slate-50/60 dark:bg-slate-800/40 text-[11px] grid grid-cols-1 sm:grid-cols-3 gap-4 border-b border-slate-200/60 dark:border-slate-800">
           <div>
-            <span className="text-slate-400 block font-medium">Kementerian:</span>
+            <span className="text-slate-400 block font-medium">Kementerian</span>
             <span className="font-semibold text-slate-800 dark:text-slate-200">
               [{data.meta.kementerianKode}] {data.meta.kementerianNama}
             </span>
           </div>
           <div>
-            <span className="text-slate-400 block font-medium">Unit Organisasi:</span>
+            <span className="text-slate-400 block font-medium">Unit Organisasi</span>
             <span className="font-semibold text-slate-800 dark:text-slate-200">
               [{data.meta.unitOrganisasiKode}] {data.meta.unitOrganisasiNama}
             </span>
           </div>
           <div>
-            <span className="text-slate-400 block font-medium">Satuan Kerja (Satker):</span>
+            <span className="text-slate-400 block font-medium">Satuan Kerja (Satker)</span>
             <span className="font-semibold text-slate-800 dark:text-slate-200">
               [{data.meta.satkerKode}] {data.meta.satkerNama}
             </span>
@@ -543,108 +533,86 @@ export const MonitoringAnggaranTab: React.FC = () => {
         {totalRow && (
           <div className="p-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {/* Total Pagu */}
-            <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/60">
-              <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider block">
+            <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Total Pagu Revisi
               </span>
-              <p className="text-lg sm:text-xl font-extrabold text-blue-950 dark:text-blue-100 mt-1">
+              <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1.5 tabular-nums">
                 {formatRupiah(totalRow.pagu)}
               </p>
-              <span className="text-[10px] text-blue-500 font-medium mt-0.5 block">
-                {selectedProgram === "WA"
-                  ? "Program WA (Dukungan Manajemen - Inspektorat)"
-                  : selectedProgram === "CL"
-                  ? "Program CL (Tata Niaga & Distribusi Pangan)"
-                  : "DIPA TA 2026 Kemenko Pangan (WA + CL)"}
-              </span>
             </div>
 
             {/* Realisasi Periode Lalu */}
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+            <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Periode Lalu
               </span>
-              <p className="text-lg sm:text-xl font-extrabold text-slate-800 dark:text-slate-200 mt-1">
+              <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1.5 tabular-nums">
                 {formatRupiah(totalRow.realLalu)}
               </p>
-              <span className="text-[10px] text-slate-400 font-medium mt-0.5 block">
-                Realisasi s.d. Bulan Lalu
-              </span>
             </div>
 
             {/* Realisasi Periode Ini */}
-            <div className="p-4 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60">
-              <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block">
+            <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Bulan Ini ({data.meta.periode.split(" ")[0]})
               </span>
-              <p className="text-lg sm:text-xl font-extrabold text-amber-950 dark:text-amber-100 mt-1">
+              <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1.5 tabular-nums">
                 {formatRupiah(totalRow.realIni)}
               </p>
-              <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium mt-0.5 block">
-                Realisasi berjalan
-              </span>
             </div>
 
             {/* Total Realisasi & % Serapan */}
-            <div className="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/60">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
+            <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                   Total Realisasi
                 </span>
-                <span className="text-xs font-black px-1.5 py-0.5 rounded-full bg-emerald-200/80 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
+                <span className="text-xs font-semibold font-mono text-emerald-700 dark:text-emerald-400 tabular-nums">
                   {formatPercent(totalRow.persen)}
                 </span>
               </div>
-              <p className="text-lg sm:text-xl font-extrabold text-emerald-950 dark:text-emerald-100 mt-1">
+              <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1.5 tabular-nums">
                 {formatRupiah(totalRow.realSd)}
               </p>
               {/* Progress Bar */}
-              <div className="w-full bg-emerald-200/60 dark:bg-emerald-950 h-2 rounded-full mt-2 overflow-hidden">
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
                 <div
-                  className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                  className="bg-emerald-600 h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, Math.max(0, totalRow.persen > 1 ? totalRow.persen : totalRow.persen * 100))}%` }}
                 />
               </div>
             </div>
 
             {/* Sisa Anggaran */}
-            <div className="p-4 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/60 col-span-2 md:col-span-4 lg:col-span-1">
-              <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider block">
+            <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 col-span-2 md:col-span-4 lg:col-span-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Sisa Anggaran
               </span>
-              <p className="text-lg sm:text-xl font-extrabold text-indigo-950 dark:text-indigo-100 mt-1">
+              <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1.5 tabular-nums">
                 {formatRupiah(totalRow.sisa)}
               </p>
-              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium mt-0.5 block">
-                Ketersediaan dana efektif
-              </span>
             </div>
           </div>
         )}
       </div>
 
       {/* Program Selector Tabs (WA vs CL vs All) */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-2 shadow-xs flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3">
-          Filter Program:
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-2.5 flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider px-2.5">
+          Program
         </span>
         <button
           type="button"
           onClick={() => setSelectedProgram("all")}
-          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer flex items-center gap-2 border ${
             selectedProgram === "all"
-              ? "bg-[#0071e3] text-white shadow-xs"
-              : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+              ? "bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-800 font-semibold"
+              : "bg-slate-50/70 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
           }`}
         >
-          <span>Semua Program (Gabungan Satker)</span>
-          <span
-            className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
-              selectedProgram === "all"
-                ? "bg-white/20 text-white"
-                : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-            }`}
-          >
+          <span>Semua Program</span>
+          <span className="text-[11px] font-mono opacity-75">
             Rp 10,86 M
           </span>
         </button>
@@ -652,20 +620,14 @@ export const MonitoringAnggaranTab: React.FC = () => {
         <button
           type="button"
           onClick={() => setSelectedProgram("WA")}
-          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer flex items-center gap-2 border ${
             selectedProgram === "WA"
-              ? "bg-[#0071e3] text-white shadow-xs"
-              : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+              ? "bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-800 font-semibold"
+              : "bg-slate-50/70 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
           }`}
         >
-          <span>Program WA — Inspektorat (Files 7, 9, 10)</span>
-          <span
-            className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
-              selectedProgram === "WA"
-                ? "bg-white/20 text-white"
-                : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-            }`}
-          >
+          <span>Program WA — Inspektorat</span>
+          <span className="text-[11px] font-mono opacity-75">
             Rp 1,17 M
           </span>
         </button>
@@ -673,36 +635,30 @@ export const MonitoringAnggaranTab: React.FC = () => {
         <button
           type="button"
           onClick={() => setSelectedProgram("CL")}
-          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer flex items-center gap-2 border ${
             selectedProgram === "CL"
-              ? "bg-[#0071e3] text-white shadow-xs"
-              : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+              ? "bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-800 font-semibold"
+              : "bg-slate-50/70 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
           }`}
         >
-          <span>Program CL — Tata Niaga &amp; Pangan (File 6)</span>
-          <span
-            className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
-              selectedProgram === "CL"
-                ? "bg-white/20 text-white"
-                : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-            }`}
-          >
+          <span>Program CL — Tata Niaga &amp; Pangan</span>
+          <span className="text-[11px] font-mono opacity-75">
             Rp 9,69 M
           </span>
         </button>
       </div>
 
       {/* Action Bar & Quick Filter Controls */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Search Input */}
-        <div className="relative w-full md:w-96">
+        <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari kode MAK, komponen, MBG, perdin, dll..."
-            className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-100/80 dark:bg-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 border border-transparent dark:border-slate-700 transition-all"
+            placeholder="Cari kode MAK, komponen, perdin..."
+            className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-slate-400 border border-slate-200/80 dark:border-slate-700 transition-all"
           />
           {searchQuery && (
             <button
@@ -720,10 +676,10 @@ export const MonitoringAnggaranTab: React.FC = () => {
           <button
             type="button"
             onClick={() => setSelectedFilter("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer border ${
               selectedFilter === "all"
-                ? "bg-blue-600 text-white shadow-2xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                ? "bg-slate-800 text-white border-slate-800 font-semibold"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200/80 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
             }`}
           >
             Semua Akun
@@ -731,21 +687,21 @@ export const MonitoringAnggaranTab: React.FC = () => {
           <button
             type="button"
             onClick={() => setSelectedFilter("524")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer border ${
               selectedFilter === "524"
-                ? "bg-blue-600 text-white shadow-2xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                ? "bg-slate-800 text-white border-slate-800 font-semibold"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200/80 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
             }`}
           >
-            <span>Perjalanan Dinas (524xxx)</span>
+            Perjalanan Dinas (524xxx)
           </button>
           <button
             type="button"
             onClick={() => setSelectedFilter("521")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer border ${
               selectedFilter === "521"
-                ? "bg-blue-600 text-white shadow-2xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                ? "bg-slate-800 text-white border-slate-800 font-semibold"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200/80 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
             }`}
           >
             Bahan &amp; Honor (521xxx)
@@ -753,10 +709,10 @@ export const MonitoringAnggaranTab: React.FC = () => {
           <button
             type="button"
             onClick={() => setSelectedFilter("522")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer border ${
               selectedFilter === "522"
-                ? "bg-blue-600 text-white shadow-2xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                ? "bg-slate-800 text-white border-slate-800 font-semibold"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200/80 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
             }`}
           >
             Sewa &amp; Jasa (522xxx)
@@ -808,36 +764,36 @@ export const MonitoringAnggaranTab: React.FC = () => {
                 const childrenCount = childrenMap.get(row.id)?.length || 0;
 
                 // Level-specific styles and badges
-                let rowBg = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors";
+                let rowBg = "hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors";
                 const fontStyle = "text-slate-800 dark:text-slate-200";
                 let badgeColor = "";
 
                 if (row.type === "total") {
-                  rowBg = "bg-blue-100/70 dark:bg-blue-950/60 font-black text-blue-900 dark:text-blue-200 border-y-2 border-blue-300 dark:border-blue-800";
+                  rowBg = "bg-slate-100 dark:bg-slate-800/90 font-bold text-slate-900 dark:text-white border-y border-slate-300 dark:border-slate-700";
                 } else if (row.type === "program") {
-                  rowBg = "bg-slate-100/70 dark:bg-slate-800/60 font-bold text-slate-900 dark:text-white";
-                  badgeColor = "bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300";
+                  rowBg = "bg-slate-50/90 dark:bg-slate-800/60 font-semibold text-slate-900 dark:text-white";
+                  badgeColor = "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200";
                 } else if (row.type === "kegiatan") {
-                  rowBg = "bg-slate-50 dark:bg-slate-800/40 font-bold text-slate-900 dark:text-white";
-                  badgeColor = "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300";
+                  rowBg = "bg-slate-50/50 dark:bg-slate-800/40 font-semibold text-slate-900 dark:text-white";
+                  badgeColor = "bg-slate-100 text-slate-700 border border-slate-200/80 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
                 } else if (row.type === "kro") {
                   rowBg = "bg-white dark:bg-slate-900 font-semibold text-slate-800 dark:text-slate-200";
-                  badgeColor = "bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-300";
+                  badgeColor = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
                 } else if (row.type === "ro") {
-                  rowBg = "bg-white dark:bg-slate-900 font-semibold text-slate-800 dark:text-slate-200";
-                  badgeColor = "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-300";
+                  rowBg = "bg-white dark:bg-slate-900 font-medium text-slate-800 dark:text-slate-200";
+                  badgeColor = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
                 } else if (row.type === "komponen") {
-                  rowBg = "bg-emerald-50/40 dark:bg-emerald-950/20 font-bold text-emerald-950 dark:text-emerald-200";
-                  badgeColor = "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300";
+                  rowBg = "bg-white dark:bg-slate-900 font-semibold text-slate-900 dark:text-slate-100";
+                  badgeColor = "bg-slate-200/80 text-slate-800 dark:bg-slate-700 dark:text-slate-200";
                 } else if (row.type === "subkomponen") {
-                  rowBg = "bg-slate-50/60 dark:bg-slate-800/30 font-semibold text-slate-800 dark:text-slate-200";
-                  badgeColor = "bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300";
+                  rowBg = "bg-white dark:bg-slate-900 font-medium text-slate-800 dark:text-slate-200";
+                  badgeColor = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
                 } else if (row.type === "akun") {
                   rowBg = "bg-white dark:bg-slate-900 font-medium text-slate-900 dark:text-slate-100";
-                  badgeColor = "bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300";
+                  badgeColor = "bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700";
                 } else if (row.type === "item") {
-                  rowBg = "bg-white/50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 text-[11.5px]";
-                  badgeColor = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
+                  rowBg = "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-[11.5px]";
+                  badgeColor = "bg-slate-50 text-slate-500 border border-slate-200/60 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
                 }
 
                 // Indentation in px
@@ -848,7 +804,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
                 return (
                   <tr key={row.id} className={`${rowBg} ${fontStyle}`}>
                     {/* Uraian with Accordion Caret */}
-                    <td className="py-2 px-3">
+                    <td className="py-2.5 px-3">
                       <div
                         className="flex items-center gap-1.5"
                         style={{ paddingLeft: `${Math.max(0, indentPx)}px` }}
@@ -862,7 +818,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
                             title={isExpanded ? "Tutup rincian" : "Buka rincian"}
                           >
                             {isExpanded ? (
-                              <ChevronDown className="w-3.5 h-3.5 text-blue-600" />
+                              <ChevronDown className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
                             ) : (
                               <ChevronRight className="w-3.5 h-3.5" />
                             )}
@@ -874,7 +830,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
                         {/* Code Badge */}
                         {row.kode && (
                           <span
-                            className={`px-1.5 py-0.5 rounded-md font-mono text-[10.5px] font-bold shrink-0 ${badgeColor}`}
+                            className={`px-1.5 py-0.5 rounded-md font-mono text-[10.5px] font-semibold shrink-0 ${badgeColor}`}
                           >
                             {row.kode}
                           </span>
@@ -890,36 +846,36 @@ export const MonitoringAnggaranTab: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => toggleExpand(row.id)}
-                            className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all ${
+                            className={`ml-1 px-2 py-0.5 rounded-md text-[10px] font-medium cursor-pointer transition-all border ${
                               isExpanded
-                                ? "bg-blue-600 text-white"
-                                : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-blue-100 hover:text-blue-700"
+                                ? "bg-slate-800 text-white border-slate-800"
+                                : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 hover:bg-slate-200"
                             }`}
                             title={isExpanded ? "Klik untuk tutup rincian item" : "Klik untuk buka rincian item"}
                           >
-                            {isExpanded ? `▼ ${childrenCount} Item` : `▶ ${childrenCount} Item`}
+                            {childrenCount} item
                           </button>
                         )}
                       </div>
                     </td>
 
                     {/* Pagu Revisi */}
-                    <td className="py-2 px-3 text-right font-mono">
+                    <td className="py-2.5 px-3 text-right font-mono">
                       {formatRupiah(row.pagu)}
                     </td>
 
                     {/* Lock Pagu */}
-                    <td className="py-2 px-2 text-right font-mono text-slate-400">
+                    <td className="py-2.5 px-2 text-right font-mono text-slate-400">
                       {row.lock > 0 ? formatRupiah(row.lock) : "-"}
                     </td>
 
                     {/* Periode Lalu */}
-                    <td className="py-2 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
+                    <td className="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
                       {formatRupiah(row.realLalu)}
                     </td>
 
                     {/* Periode Ini */}
-                    <td className="py-2 px-3 text-right font-mono text-amber-600 dark:text-amber-400 font-semibold">
+                    <td className="py-2.5 px-3 text-right font-mono text-slate-800 dark:text-slate-200 font-medium">
                       {row.realIni > 0 ? formatRupiah(row.realIni) : "-"}
                     </td>
 
@@ -929,14 +885,12 @@ export const MonitoringAnggaranTab: React.FC = () => {
                     </td>
 
                     {/* % */}
-                    <td className="py-2 px-2 text-right font-mono">
+                    <td className="py-2.5 px-2 text-right font-mono">
                       <span
-                        className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold ${
+                        className={`text-[11px] font-semibold ${
                           row.persen >= 90
-                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
-                            : row.persen >= 50
-                            ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200"
-                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                            ? "text-emerald-700 dark:text-emerald-400"
+                            : "text-slate-600 dark:text-slate-400"
                         }`}
                       >
                         {formatPercent(row.persen)}
@@ -945,9 +899,9 @@ export const MonitoringAnggaranTab: React.FC = () => {
 
                     {/* Sisa Anggaran */}
                     <td
-                      className={`py-2 px-3 text-right font-mono font-bold ${
+                      className={`py-2.5 px-3 text-right font-mono font-semibold ${
                         isDeficit
-                          ? "text-rose-600 dark:text-rose-400 bg-rose-50/50 dark:bg-rose-950/20"
+                          ? "text-rose-600 dark:text-rose-400 bg-rose-50/40 dark:bg-rose-950/20"
                           : "text-slate-900 dark:text-slate-100"
                       }`}
                     >

@@ -181,19 +181,14 @@ export const ModalCetakBundel: React.FC<ModalCetakBundelProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in no-print">
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-lg w-full overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#0071e3] dark:text-blue-400 border border-blue-100 dark:border-blue-800/60 flex items-center justify-center shrink-0">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
               <Layers className="w-4 h-4" />
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Cetak Bundel Dokumen ({spjMeta.shortLabel})
-              </h2>
-              <p className="text-[11.5px] text-slate-500 dark:text-slate-400">
-                Pilih dokumen yang ingin digabungkan menjadi satu cetakan / PDF
-              </p>
-            </div>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Cetak Bundel Dokumen ({spjMeta.shortLabel})
+            </h2>
           </div>
 
           <button
@@ -273,27 +268,26 @@ export const ModalCetakBundel: React.FC<ModalCetakBundelProps> = ({
                       }`}
                     />
 
-                    <div className="min-w-0">
-                      <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                    <div className="min-w-0 flex items-center gap-2">
+                      <span className="text-[13px] font-medium text-slate-900 dark:text-slate-100 truncate">
                         {opt.orderLabel}. {opt.title}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                        {opt.subtitle}
-                        {!isPengadaan &&
-                        (opt.id === "kwitansi" ||
-                          opt.id === "rincian" ||
-                          opt.id === "riil" ||
-                          opt.id === "spd")
-                          ? ` (${validParticipantsCount || rows.length} peserta)`
-                          : ""}
-                      </div>
+                      </span>
+                      {!isPengadaan &&
+                      (opt.id === "kwitansi" ||
+                        opt.id === "rincian" ||
+                        opt.id === "riil" ||
+                        opt.id === "spd") && (
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0">
+                          ({validParticipantsCount || rows.length} peserta)
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <span
-                    className={`text-[10.5px] font-mono shrink-0 ${
+                    className={`text-[11px] font-mono shrink-0 ${
                       opt.orientation === "Landscape"
-                        ? "text-violet-600 dark:text-violet-400 font-semibold"
+                        ? "text-slate-600 dark:text-slate-300 font-medium"
                         : "text-slate-400 dark:text-slate-500"
                     }`}
                   >
@@ -303,10 +297,6 @@ export const ModalCetakBundel: React.FC<ModalCetakBundelProps> = ({
               );
             })}
           </div>
-
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            Saat dialog cetak browser terbuka, pilih <strong>Simpan sebagai PDF (Save as PDF)</strong> untuk menggabungkan seluruh dokumen terpilih menjadi satu file PDF berurutan.
-          </p>
         </div>
 
         {/* Footer Actions */}
