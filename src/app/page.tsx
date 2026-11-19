@@ -86,6 +86,7 @@ import memoRaw from "@/data/nomor_memo.json";
 const cloudSyncRuntime = {
   lastSyncAt: 0,
   isEditingExisting: false,
+  currentTab: "beranda" as ActiveTab,
 };
 
 export default function Home() {
@@ -312,14 +313,35 @@ export default function Home() {
             const isBlankTitle = !prev.keteranganKegiatan || prev.keteranganKegiatan.trim() === "";
             const tgl = prev.tanggalSpd || new Date().toISOString().split("T")[0];
             const kat = prev.kategoriSpj || "A";
-            const idExistsInCloud = latestKegiatanList.some(
-              (k) => k.idKegiatan && prev.idKegiatan && k.idKegiatan.toLowerCase() === prev.idKegiatan.toLowerCase()
-            );
+            const idExistsInCloud =
+              latestKegiatanList.some(
+                (k) => k.idKegiatan && prev.idKegiatan && k.idKegiatan.toLowerCase() === prev.idKegiatan.toLowerCase()
+              ) ||
+              latestMemoPool.some(
+                (m) => m.id_kegiatan_ref && prev.idKegiatan && m.id_kegiatan_ref.toLowerCase() === prev.idKegiatan.toLowerCase()
+              );
 
             let nextId = prev.idKegiatan;
             let nextNo = prev.noKegiatanUrut;
             if (isBlankTitle || idExistsInCloud) {
-              nextNo = getNextNoKegiatan(tgl, kat);
+              const combinedForIdSeq: SavedKegiatan[] = [
+                ...latestKegiatanList,
+                ...latestMemoPool
+                  .filter((m) => Boolean(m.id_kegiatan_ref))
+                  .map((m) => ({
+                    idKegiatan: String(m.id_kegiatan_ref || "").trim(),
+                    kategori: "A" as const,
+                    namaKegiatan: m.perihal || "",
+                    tanggalSpd: tgl,
+                    kotaTujuan: "",
+                    provinsiTujuan: "",
+                    jumlahPeserta: 0,
+                    grandTotal: 0,
+                    header: prev,
+                    rows: [],
+                  })),
+              ];
+              nextNo = getNextNoKegiatan(tgl, kat, combinedForIdSeq);
               nextId = generateIdKegiatan(tgl, nextNo, kat);
             }
 
@@ -726,12 +748,16 @@ export default function Home() {
   const isSaved = Boolean(savedSnapshot);
   const hasChanges = isSaved && currentSnapshot !== savedSnapshot;
 
-  // Helper navigasi tab sekaligus refresh ringan data Cloud saat membuka Beranda / Daftar Kegiatan / Daftar Memo
+  // Helper navigasi tab sekaligus refresh ringan data Cloud saat membuka Beranda / Input / Daftar Kegiatan / Daftar Memo
   const handleNavigateTab = useCallback(
     (tab: ActiveTab) => {
+      const comingFromBeranda = cloudSyncRuntime.currentTab === "beranda";
+      cloudSyncRuntime.currentTab = tab;
       setActiveTab(tab);
       if (tab === "beranda" || tab === "kegiatan" || tab === "daftar-memo") {
         void syncCloudState({ syncFreshDraftIds: tab === "beranda" });
+      } else if (tab === "input" && comingFromBeranda && !cloudSyncRuntime.isEditingExisting) {
+        void syncCloudState({ syncFreshDraftIds: true, force: true });
       }
     },
     [syncCloudState]
@@ -745,6 +771,7 @@ export default function Home() {
       reservedMemo: kegiatan.header.nomorMemo || kegiatan.header.reservedMemo,
     };
     cloudSyncRuntime.isEditingExisting = true;
+    cloudSyncRuntime.currentTab = "input";
     setMemoReserveFeedback(null);
     setHeader(normalizedHeader);
     setRows(kegiatan.rows);
@@ -830,6 +857,7 @@ export default function Home() {
   // Start fresh kegiatan with clean state and next sequential ID (Sharing MASTER_MEMO pool & immediate Cloud refresh)
   const handleCreateNewKegiatan = (overrideType?: SpjDocType) => {
     cloudSyncRuntime.isEditingExisting = false;
+    cloudSyncRuntime.currentTab = "input";
     setEditingOriginalId(null);
     setEditingOriginalTitle(null);
     setEditingOriginalMemo(null);
