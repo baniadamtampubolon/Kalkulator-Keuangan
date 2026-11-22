@@ -22,6 +22,8 @@ const SHEET_NAMES = {
   REKAP_SEWA: 'REKAP_SPJ_SEWA_KENDARAAN',
   REKAP_NARSUM: 'REKAP_SPJ_NARSUM',
   REKAP_ATK: 'REKAP_SPJ_ATK_SEMKIT',
+  ANGGARAN: 'MONITORING_ANGGARAN',
+  ANGGARAN_TRX: 'MONITORING_ANGGARAN_TRX',
   LOGS: 'AUDIT_LOGS'
 };
 
@@ -92,6 +94,15 @@ const DEFAULT_HEADERS = {
     'Jumlah Bersih Diterima (Netto)', 'Nama Penerima / Vendor', 'NIP Penerima', 'Jabatan Penerima',
     'Rekening Transfer', 'Status NPWP', 'Nama Penanggung Jawab (Memo)', 'NIP Penanggung Jawab',
     'Jabatan Penanggung Jawab', 'PPK Nama', 'PPK NIP', 'Bendahara', 'Verifikator', 'Updated At'
+  ],
+  ANGGARAN: [
+    'id', 'level', 'type', 'kode', 'uraian', 'pagu', 'lock',
+    'real_lalu', 'real_ini', 'real_sd', 'persen', 'sisa',
+    'parent_id', 'periode', 'updated_at'
+  ],
+  ANGGARAN_TRX: [
+    'id_kegiatan', 'target_row_id', 'kode_akun_path', 'kode_item',
+    'nama_kegiatan', 'nomor_memo', 'nominal', 'baseline_included', 'updated_at'
   ]
 };
 
@@ -132,8 +143,10 @@ function SETUP_INITIAL_TABS() {
   getOrCreateSheet(ss, SHEET_NAMES.REKAP_SEWA, DEFAULT_HEADERS.REKAP_PENGADAAN);
   getOrCreateSheet(ss, SHEET_NAMES.REKAP_NARSUM, DEFAULT_HEADERS.REKAP_PENGADAAN);
   getOrCreateSheet(ss, SHEET_NAMES.REKAP_ATK, DEFAULT_HEADERS.REKAP_PENGADAAN);
+  getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN, DEFAULT_HEADERS.ANGGARAN);
+  getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN_TRX, DEFAULT_HEADERS.ANGGARAN_TRX);
   getOrCreateSheet(ss, SHEET_NAMES.LOGS, ['Timestamp', 'Action', 'Reference_ID', 'Details']);
-  Logger.log('✅ Inisialisasi 12 tab lembar kerja (termasuk 4 sheet Rekap SPJ Baru) berhasil!');
+  Logger.log('✅ Inisialisasi 14 tab lembar kerja (termasuk Monitoring Anggaran & 4 sheet Rekap SPJ Baru) berhasil!');
 }
 
 function getSpreadsheet() {
@@ -219,6 +232,17 @@ function doGet(e) {
           narsum: sheetToObjects(narsumSheet),
           atk: sheetToObjects(atkSheet)
         }
+      });
+    }
+
+    if (action === 'GET_ANGGARAN') {
+      const angState = readAnggaranFromSheet(ss);
+      return createJsonResponse({
+        status: 'success',
+        needsSeed: angState.rows.length === 0,
+        periode: angState.periode || 'November 2026',
+        rows: angState.rows,
+        transactions: angState.transactions
       });
     }
 
@@ -428,6 +452,38 @@ function doPost(e) {
         }
       }
 
+      // Cari data kegiatan sebelumnya di DB_KEGIATAN HANYA jika ini adalah update/edit (!isNewRecord) SEBELUM deleteRowsByColumnValue / upsert
+      let prevNamaFromDb = !isNewRecord ? (header.oldNamaKegiatan || '').trim() : '';
+      let prevMemoFromDb = !isNewRecord ? (header.oldNomorMemo || '').trim() : '';
+      let prevDbGrandTotal = 0;
+      const targetSearchId = !isNewRecord ? (header.oldIdKegiatan || header.idKegiatan || '').trim() : '';
+
+      if (!isNewRecord && kegiatanSheet.getLastRow() >= 2 && targetSearchId) {
+        const kegData = kegiatanSheet.getDataRange().getValues();
+        const kegHeaders = kegData[0] || [];
+        const colKegId = kegHeaders.indexOf('id_kegiatan');
+        const colKegNama = kegHeaders.indexOf('nama_kegiatan');
+        const colKegMemo = kegHeaders.indexOf('nomor_memo');
+        const colKegGrandTotal = kegHeaders.indexOf('grand_total');
+
+        if (colKegId !== -1) {
+          for (let k = 1; k < kegData.length; k++) {
+            if (String(kegData[k][colKegId] || '').trim().toLowerCase() === targetSearchId.toLowerCase()) {
+              if (!prevNamaFromDb && colKegNama !== -1) {
+                prevNamaFromDb = String(kegData[k][colKegNama] || '').trim();
+              }
+              if (!prevMemoFromDb && colKegMemo !== -1) {
+                prevMemoFromDb = String(kegData[k][colKegMemo] || '').trim();
+              }
+              if (colKegGrandTotal !== -1) {
+                prevDbGrandTotal = parseAnggaranNumberGas(kegData[k][colKegGrandTotal]);
+              }
+              break;
+            }
+          }
+        }
+      }
+
       if (!isNewRecord && header.oldIdKegiatan && header.oldIdKegiatan !== finalIdKegiatan) {
         deleteRowsByColumnValue(kegiatanSheet, 'id_kegiatan', header.oldIdKegiatan);
       }
@@ -480,33 +536,6 @@ function doPost(e) {
         created_at: header.createdAt || new Date(),
         updated_at: new Date()
       };
-
-      // Cari data kegiatan sebelumnya di DB_KEGIATAN HANYA jika ini adalah update/edit (!isNewRecord)
-      let prevNamaFromDb = !isNewRecord ? (header.oldNamaKegiatan || '').trim() : '';
-      let prevMemoFromDb = !isNewRecord ? (header.oldNomorMemo || '').trim() : '';
-      const targetSearchId = !isNewRecord ? (header.oldIdKegiatan || header.idKegiatan || '').trim() : '';
-
-      if (!isNewRecord && kegiatanSheet.getLastRow() >= 2 && targetSearchId) {
-        const kegData = kegiatanSheet.getDataRange().getValues();
-        const kegHeaders = kegData[0] || [];
-        const colKegId = kegHeaders.indexOf('id_kegiatan');
-        const colKegNama = kegHeaders.indexOf('nama_kegiatan');
-        const colKegMemo = kegHeaders.indexOf('nomor_memo');
-
-        if (colKegId !== -1) {
-          for (let k = 1; k < kegData.length; k++) {
-            if (String(kegData[k][colKegId] || '').trim().toLowerCase() === targetSearchId.toLowerCase()) {
-              if (!prevNamaFromDb && colKegNama !== -1) {
-                prevNamaFromDb = String(kegData[k][colKegNama] || '').trim();
-              }
-              if (!prevMemoFromDb && colKegMemo !== -1) {
-                prevMemoFromDb = String(kegData[k][colKegMemo] || '').trim();
-              }
-              break;
-            }
-          }
-        }
-      }
 
       upsertRowByHeaderObject(kegiatanSheet, 'id_kegiatan', finalIdKegiatan, kegiatanData, DEFAULT_HEADERS.KEGIATAN);
 
@@ -641,6 +670,22 @@ function doPost(e) {
             .setValues(adjustedPengadaanBatch);
         }
 
+        const anggaranRes = applySpjDeductionToAnggaranGas(ss, {
+          idKegiatan: finalIdKegiatan,
+          oldIdKegiatan: !isNewRecord ? (header.oldIdKegiatan || '') : '',
+          isNewRecord: isNewRecord,
+          kodeKomponen: header.kodeKomponen || header.nomorKomp || '',
+          kodeMak: header.kodeMak || '524111',
+          itemDetail: header.itemDetail || '',
+          keteranganItem: header.keteranganItemDetail || '',
+          namaKegiatan: header.namaKegiatan || '',
+          nomorMemo: finalNomorMemo || '',
+          grandTotal: parseAnggaranNumberGas(header.grandTotal),
+          prevDbGrandTotal: prevDbGrandTotal,
+          initialAnggaranRows: Array.isArray(payload.initialAnggaranRows) ? payload.initialAnggaranRows : null,
+          initialPeriode: String(payload.anggaranPeriode || 'November 2026')
+        });
+
         logAction(ss, 'SAVE_' + spjType, header.idKegiatan, 'Berhasil menyimpan ' + jenisSpjLabel + ' ke ' + targetPengadaanSheetName);
 
         return createJsonResponse({
@@ -652,7 +697,10 @@ function doPost(e) {
           assignedSpdNumbers: assignedSpdNumbers,
           wasAutoReassigned: wasAutoReassigned,
           sheetName: targetPengadaanSheetName,
-          latestSpdNumber: getLatestSpdNumberFromSheet(ss)
+          latestSpdNumber: getLatestSpdNumberFromSheet(ss),
+          updatedAnggaranRows: anggaranRes.rows,
+          anggaranPeriode: anggaranRes.periode,
+          anggaranApplied: anggaranRes.applied
         });
       }
 
@@ -828,6 +876,27 @@ function doPost(e) {
       pruneGhostRows(pesertaSheet);
       pruneGhostRows(rekapSheet);
 
+      const perdinFallbackTotal = validParticipants.reduce(function(acc, p) {
+        return acc + parseAnggaranNumberGas(p.totalJumlah || p.totalBiaya || p.total_biaya);
+      }, 0);
+      const effectivePerdinTotal = parseAnggaranNumberGas(header.grandTotal) || perdinFallbackTotal;
+
+      const anggaranRes = applySpjDeductionToAnggaranGas(ss, {
+        idKegiatan: finalIdKegiatan,
+        oldIdKegiatan: !isNewRecord ? (header.oldIdKegiatan || '') : '',
+        isNewRecord: isNewRecord,
+        kodeKomponen: header.kodeKomponen || header.nomorKomp || '',
+        kodeMak: header.kodeMak || '524111',
+        itemDetail: header.itemDetail || '',
+        keteranganItem: header.keteranganItemDetail || '',
+        namaKegiatan: header.namaKegiatan || '',
+        nomorMemo: finalNomorMemo || '',
+        grandTotal: effectivePerdinTotal,
+        prevDbGrandTotal: prevDbGrandTotal,
+        initialAnggaranRows: Array.isArray(payload.initialAnggaranRows) ? payload.initialAnggaranRows : null,
+        initialPeriode: String(payload.anggaranPeriode || 'November 2026')
+      });
+
       logAction(ss, 'SAVE_PERDIN', header.idKegiatan, 'Berhasil menyimpan transaksi ' + (header.namaKegiatan || ''));
 
       const latestSpd = getLatestSpdNumberFromSheet(ss);
@@ -839,7 +908,10 @@ function doPost(e) {
         assignedNomorMemo: finalNomorMemo,
         assignedSpdNumbers: assignedSpdNumbers,
         wasAutoReassigned: wasAutoReassigned,
-        latestSpdNumber: latestSpd
+        latestSpdNumber: latestSpd,
+        updatedAnggaranRows: anggaranRes.rows,
+        anggaranPeriode: anggaranRes.periode,
+        anggaranApplied: anggaranRes.applied
       });
     }
 
@@ -982,12 +1054,23 @@ function doPost(e) {
         }
       }
 
+      const refundRes = refundSpjFromMonitoringAnggaranGas(ss, {
+        idKegiatan: idKegiatan,
+        oldIdKegiatan: String(payload.oldIdKegiatan || '').trim(),
+        namaKegiatan: namaKegiatan,
+        nomorMemo: nomorMemo
+      });
+
       pruneGhostRows(rekapSheet);
       logAction(ss, 'DELETE_KEGIATAN', idKegiatan || namaKegiatan, 'Menghapus paket kegiatan ' + (namaKegiatan || idKegiatan));
 
       return createJsonResponse({
         status: 'success',
-        message: 'Paket kegiatan ' + (idKegiatan || namaKegiatan) + ' berhasil dihapus dari Google Spreadsheet.'
+        message: 'Paket kegiatan ' + (idKegiatan || namaKegiatan) + ' berhasil dihapus dari Google Spreadsheet.',
+        anggaranRefunded: refundRes.refunded,
+        refundedNominal: refundRes.nominal || 0,
+        updatedAnggaranRows: refundRes.rows || null,
+        anggaranPeriode: refundRes.periode || null
       });
     }
 
@@ -1142,6 +1225,48 @@ function doPost(e) {
       return createJsonResponse({
         status: 'success',
         message: 'Pembersihan baris hantu di tab DB_PESERTA, REKAP_PERDIN_48KOLOM, dan DB_KEGIATAN berhasil dilakukan.'
+      });
+    }
+
+    // 6. SIMPAN / INISIALISASI / RESET MONITORING ANGGARAN KE CLOUD
+    if (action === 'SAVE_ANGGARAN') {
+      const rows = Array.isArray(payload.rows) ? payload.rows : [];
+      const periode = String(payload.periode || (payload.meta && payload.meta.periode) || 'November 2026').trim();
+      const onlyIfEmpty = Boolean(payload.onlyIfEmpty);
+      const clearTransactions = Boolean(payload.clearTransactions);
+
+      const angSheet = getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN, DEFAULT_HEADERS.ANGGARAN);
+      if (onlyIfEmpty && angSheet.getLastRow() >= 2) {
+        const existing = readAnggaranFromSheet(ss);
+        return createJsonResponse({
+          status: 'success',
+          alreadySeeded: true,
+          periode: existing.periode || periode,
+          rows: existing.rows,
+          transactions: existing.transactions
+        });
+      }
+
+      if (rows.length === 0) {
+        return createJsonResponse({ status: 'error', message: 'Data rows Monitoring Anggaran kosong.' });
+      }
+
+      const recalculated = recalculateAnggaranTreeGas(rows);
+      writeAnggaranToSheet(ss, recalculated, periode);
+
+      if (clearTransactions) {
+        const trxSheet = getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN_TRX, DEFAULT_HEADERS.ANGGARAN_TRX);
+        if (trxSheet.getLastRow() >= 2) {
+          trxSheet.deleteRows(2, trxSheet.getLastRow() - 1);
+        }
+      }
+
+      logAction(ss, 'SAVE_ANGGARAN', clearTransactions ? 'RESET_BASELINE' : 'UPDATE', 'Menyimpan ' + recalculated.length + ' baris Monitoring Anggaran.');
+
+      return createJsonResponse({
+        status: 'success',
+        periode: periode,
+        rows: recalculated
       });
     }
 
@@ -1927,4 +2052,595 @@ function getLatestSpdNumberFromSheet(ss) {
   } catch (err) {
     return 0;
   }
+}
+
+/**
+ * ============================================================================
+ * MONITORING ANGGARAN CLOUD SYNC & DEDUCTION / REFUND HELPERS
+ * ============================================================================
+ */
+function parseAnggaranNumberGas(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  const str = String(val).trim();
+  if (!str) return 0;
+  if (/^-?\d+(\.\d+)?$/.test(str)) {
+    const n = parseFloat(str);
+    return isNaN(n) ? 0 : n;
+  }
+  const neg = str.charAt(0) === '-';
+  const digits = str.replace(/[^0-9]/g, '');
+  if (!digits) return 0;
+  const parsed = parseFloat(digits);
+  if (isNaN(parsed)) return 0;
+  return neg ? -parsed : parsed;
+}
+
+function readAnggaranFromSheet(ss) {
+  const angSheet = getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN, DEFAULT_HEADERS.ANGGARAN);
+  const trxSheet = getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN_TRX, DEFAULT_HEADERS.ANGGARAN_TRX);
+
+  let rows = [];
+  let periode = 'November 2026';
+
+  if (angSheet.getLastRow() >= 2) {
+    const data = angSheet.getDataRange().getValues();
+    const headers = data[0] || DEFAULT_HEADERS.ANGGARAN;
+    const idx = function(name) { return headers.indexOf(name); };
+
+    const cId = idx('id');
+    const cLevel = idx('level');
+    const cType = idx('type');
+    const cKode = idx('kode');
+    const cUraian = idx('uraian');
+    const cPagu = idx('pagu');
+    const cLock = idx('lock');
+    const cRealLalu = idx('real_lalu');
+    const cRealIni = idx('real_ini');
+    const cRealSd = idx('real_sd');
+    const cPersen = idx('persen');
+    const cSisa = idx('sisa');
+    const cParent = idx('parent_id');
+    const cPeriode = idx('periode');
+
+    for (let i = 1; i < data.length; i++) {
+      const r = data[i];
+      const id = cId !== -1 ? String(r[cId] || '').trim() : '';
+      if (!id) continue;
+      if (cPeriode !== -1 && r[cPeriode] && String(r[cPeriode]).trim() !== '') {
+        periode = String(r[cPeriode]).trim();
+      }
+      rows.push({
+        id: id,
+        level: cLevel !== -1 ? Number(r[cLevel]) || 0 : 0,
+        type: cType !== -1 ? String(r[cType] || 'item').trim() : 'item',
+        kode: cKode !== -1 ? String(r[cKode] !== null && r[cKode] !== undefined ? r[cKode] : '').trim() : '',
+        uraian: cUraian !== -1 ? String(r[cUraian] || '') : '',
+        pagu: cPagu !== -1 ? parseAnggaranNumberGas(r[cPagu]) : 0,
+        lock: cLock !== -1 ? parseAnggaranNumberGas(r[cLock]) : 0,
+        realLalu: cRealLalu !== -1 ? parseAnggaranNumberGas(r[cRealLalu]) : 0,
+        realIni: cRealIni !== -1 ? parseAnggaranNumberGas(r[cRealIni]) : 0,
+        realSd: cRealSd !== -1 ? parseAnggaranNumberGas(r[cRealSd]) : 0,
+        persen: cPersen !== -1 ? Number(r[cPersen]) || 0 : 0,
+        sisa: cSisa !== -1 ? parseAnggaranNumberGas(r[cSisa]) : 0,
+        parentId: cParent !== -1 ? (String(r[cParent] || '').trim() || null) : null
+      });
+    }
+  }
+
+  let transactions = [];
+  if (trxSheet.getLastRow() >= 2) {
+    transactions = sheetToObjects(trxSheet);
+  }
+
+  return {
+    periode: periode,
+    rows: rows,
+    transactions: transactions
+  };
+}
+
+function writeAnggaranToSheet(ss, rows, periode) {
+  const angSheet = getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN, DEFAULT_HEADERS.ANGGARAN);
+  const now = new Date();
+  const safePeriode = String(periode || 'November 2026').trim() || 'November 2026';
+
+  const batch = rows.map(function(r) {
+    return [
+      String(r.id || ''),
+      Number(r.level) || 0,
+      String(r.type || 'item'),
+      String(r.kode !== undefined && r.kode !== null ? r.kode : ''),
+      String(r.uraian || ''),
+      Number(r.pagu) || 0,
+      Number(r.lock) || 0,
+      Number(r.realLalu) || 0,
+      Number(r.realIni) || 0,
+      Number(r.realSd) || 0,
+      Number(r.persen) || 0,
+      Number(r.sisa) || 0,
+      r.parentId ? String(r.parentId) : '',
+      safePeriode,
+      now
+    ];
+  });
+
+  const colCount = DEFAULT_HEADERS.ANGGARAN.length;
+  const oldLastRow = angSheet.getLastRow();
+
+  if (batch.length > 0) {
+    // Set Plain Text format (@) on ID, Kode, Parent ID, Periode so '001' keeps leading zeros
+    angSheet.getRange(2, 1, batch.length, 1).setNumberFormat('@');
+    angSheet.getRange(2, 4, batch.length, 1).setNumberFormat('@');
+    angSheet.getRange(2, 13, batch.length, 2).setNumberFormat('@');
+    // Set numeric format for Rupiah & Percentage columns
+    angSheet.getRange(2, 6, batch.length, 5).setNumberFormat('#,##0');
+    angSheet.getRange(2, 11, batch.length, 1).setNumberFormat('0.00');
+    angSheet.getRange(2, 12, batch.length, 1).setNumberFormat('#,##0');
+
+    angSheet.getRange(2, 1, batch.length, colCount).setValues(batch);
+  }
+
+  if (oldLastRow > 1 + batch.length) {
+    angSheet.deleteRows(2 + batch.length, oldLastRow - 1 - batch.length);
+  }
+}
+
+function recalculateAnggaranTreeGas(allRows) {
+  const rowMap = {};
+  const orderedIds = [];
+  const childrenMap = {};
+
+  for (let i = 0; i < allRows.length; i++) {
+    const r = allRows[i];
+    const copy = {
+      id: String(r.id || ''),
+      level: Number(r.level) || 0,
+      type: String(r.type || 'item'),
+      kode: String(r.kode !== undefined && r.kode !== null ? r.kode : ''),
+      uraian: String(r.uraian || ''),
+      pagu: parseAnggaranNumberGas(r.pagu),
+      lock: parseAnggaranNumberGas(r.lock),
+      realLalu: parseAnggaranNumberGas(r.realLalu !== undefined ? r.realLalu : r.real_lalu),
+      realIni: parseAnggaranNumberGas(r.realIni !== undefined ? r.realIni : r.real_ini),
+      realSd: parseAnggaranNumberGas(r.realSd !== undefined ? r.realSd : r.real_sd),
+      persen: Number(r.persen) || 0,
+      sisa: parseAnggaranNumberGas(r.sisa),
+      parentId: r.parentId !== undefined ? (r.parentId || null) : (r.parent_id || null)
+    };
+    rowMap[copy.id] = copy;
+    orderedIds.push(copy.id);
+    if (copy.parentId) {
+      if (!childrenMap[copy.parentId]) childrenMap[copy.parentId] = [];
+      childrenMap[copy.parentId].push(copy.id);
+    }
+  }
+
+  const levels = [8, 7, 6, 5, 4, 3, 2, 1, 0];
+  for (let li = 0; li < levels.length; li++) {
+    const lvl = levels[li];
+    for (let i = 0; i < orderedIds.length; i++) {
+      const current = rowMap[orderedIds[i]];
+      if (current.level !== lvl) continue;
+      const childIds = childrenMap[current.id];
+      if (childIds && childIds.length > 0) {
+        let sumPagu = 0;
+        let sumLock = 0;
+        let sumRealLalu = 0;
+        let sumRealIni = 0;
+        for (let ci = 0; ci < childIds.length; ci++) {
+          const ch = rowMap[childIds[ci]];
+          if (ch) {
+            sumPagu += Number(ch.pagu) || 0;
+            sumLock += Number(ch.lock) || 0;
+            sumRealLalu += Number(ch.realLalu) || 0;
+            sumRealIni += Number(ch.realIni) || 0;
+          }
+        }
+        current.pagu = sumPagu;
+        current.lock = sumLock;
+        current.realLalu = sumRealLalu;
+        current.realIni = sumRealIni;
+      }
+      current.realSd = (Number(current.realLalu) || 0) + (Number(current.realIni) || 0);
+      current.persen = current.pagu > 0 ? (current.realSd / current.pagu) * 100 : 0;
+      current.sisa = (Number(current.pagu) || 0) - (Number(current.lock) || 0) - current.realSd;
+    }
+  }
+
+  return orderedIds.map(function(id) { return rowMap[id]; });
+}
+
+function buildCanonicalAkunCodeGas(akunRow, byId) {
+  const ancestors = [];
+  let curr = akunRow;
+  let guard = 0;
+  while (curr && guard < 20) {
+    ancestors.unshift(curr);
+    curr = curr.parentId ? byId[curr.parentId] : null;
+    guard++;
+  }
+  const findType = function(t) {
+    for (let i = 0; i < ancestors.length; i++) {
+      if (ancestors[i].type === t) return ancestors[i].kode || '';
+    }
+    return '';
+  };
+  const keg = findType('kegiatan');
+  const ro = findType('ro');
+  const sub = findType('subkomponen');
+  const komp = findType('komponen');
+  const midSub = sub || komp;
+  return [keg, ro, midSub, akunRow.kode]
+    .filter(Boolean)
+    .join('.')
+    .replace(/^(CL|WA)\./i, '')
+    .toUpperCase();
+}
+
+function resolveAnggaranTargetGas(rows, kodeKomp, kodeMak, itemDetail, keteranganItem) {
+  const byId = {};
+  for (let i = 0; i < rows.length; i++) {
+    byId[rows[i].id] = rows[i];
+  }
+
+  const cleanKomp = String(kodeKomp || '')
+    .replace(/^(CL|WA)\./i, '')
+    .replace(/^MAK\./i, '')
+    .trim()
+    .toUpperCase();
+  const cleanMak = String(kodeMak || '524111').trim().toUpperCase();
+  const targetAkunNoPrefix = cleanKomp
+    ? (cleanKomp.endsWith('.' + cleanMak) || cleanKomp === cleanMak ? cleanKomp : cleanKomp + '.' + cleanMak)
+    : '';
+
+  const rawItem = String(itemDetail || '').trim();
+  let cleanItemCode = '';
+  if (rawItem.indexOf('.') !== -1) {
+    cleanItemCode = rawItem.split('.')[0].trim().toUpperCase();
+  } else {
+    const m = rawItem.match(/^\d+/);
+    cleanItemCode = (m ? m[0] : rawItem).toUpperCase();
+  }
+
+  let matchedAkunRow = null;
+  let matchedAkunPath = targetAkunNoPrefix;
+
+  if (targetAkunNoPrefix) {
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].type === 'akun' && buildCanonicalAkunCodeGas(rows[i], byId) === targetAkunNoPrefix) {
+        matchedAkunRow = rows[i];
+        break;
+      }
+    }
+  }
+
+  let matchedItemRow = null;
+  if (matchedAkunRow && cleanItemCode) {
+    for (let i = 0; i < rows.length; i++) {
+      if (
+        rows[i].type === 'item' &&
+        rows[i].parentId === matchedAkunRow.id &&
+        String(rows[i].kode || '').trim().toUpperCase() === cleanItemCode
+      ) {
+        matchedItemRow = rows[i];
+        break;
+      }
+    }
+  }
+
+  // Fallback global hanya bila parent akun tidak ditemukan
+  if (!matchedAkunRow && cleanItemCode) {
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (r.type !== 'item' || String(r.kode || '').trim().toUpperCase() !== cleanItemCode) continue;
+      if (!cleanMak) {
+        matchedItemRow = r;
+        break;
+      }
+      const p = r.parentId ? byId[r.parentId] : null;
+      if (p && String(p.kode || '').trim().toUpperCase() === cleanMak) {
+        matchedItemRow = r;
+        matchedAkunRow = p;
+        matchedAkunPath = buildCanonicalAkunCodeGas(p, byId);
+        break;
+      }
+    }
+  }
+
+  let targetRow = matchedItemRow;
+  let syntheticRow = null;
+  let insertAfterIndex = -1;
+
+  if (!targetRow && matchedAkunRow) {
+    const children = [];
+    let lastDescendantIndex = -1;
+    let akunIndex = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].id === matchedAkunRow.id) akunIndex = i;
+      if (rows[i].parentId === matchedAkunRow.id) {
+        children.push(rows[i]);
+        lastDescendantIndex = i;
+      }
+    }
+
+    if (children.length === 0) {
+      targetRow = matchedAkunRow;
+    } else if (children.length === 1 && !cleanItemCode) {
+      targetRow = children[0];
+    } else {
+      const codeSlug = (cleanItemCode || 'umum').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      const synId = 'row-spj-' + matchedAkunRow.id + '-' + codeSlug;
+      for (let i = 0; i < children.length; i++) {
+        if (children[i].id === synId) {
+          targetRow = children[i];
+          break;
+        }
+      }
+      if (!targetRow) {
+        syntheticRow = {
+          id: synId,
+          level: 8,
+          type: 'item',
+          kode: cleanItemCode || 'SPJ',
+          uraian: String(keteranganItem || '').trim() || ('Realisasi SPJ (' + cleanMak + ')'),
+          pagu: 0,
+          lock: 0,
+          realLalu: 0,
+          realIni: 0,
+          realSd: 0,
+          persen: 0,
+          sisa: 0,
+          parentId: matchedAkunRow.id
+        };
+        targetRow = syntheticRow;
+        insertAfterIndex = lastDescendantIndex !== -1 ? lastDescendantIndex : akunIndex;
+      }
+    }
+  }
+
+  return {
+    matchedAkunRow: matchedAkunRow,
+    matchedItemRow: matchedItemRow,
+    targetRow: targetRow,
+    syntheticRow: syntheticRow,
+    insertAfterIndex: insertAfterIndex,
+    kodeAkunPath: matchedAkunPath || targetAkunNoPrefix || cleanMak,
+    kodeItem: cleanItemCode
+  };
+}
+
+function upsertAnggaranTrxGas(ss, trxObj) {
+  const trxSheet = getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN_TRX, DEFAULT_HEADERS.ANGGARAN_TRX);
+  const lastRow = trxSheet.getLastRow();
+  const headers = lastRow > 0 ? trxSheet.getRange(1, 1, 1, trxSheet.getLastColumn()).getValues()[0] : DEFAULT_HEADERS.ANGGARAN_TRX;
+  const rowData = headers.map(function(h) {
+    return trxObj[h] !== undefined && trxObj[h] !== null ? trxObj[h] : '';
+  });
+
+  const colId = headers.indexOf('id_kegiatan');
+  let targetRowNum = -1;
+  if (colId !== -1 && lastRow >= 2) {
+    const data = trxSheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][colId] || '').trim().toLowerCase() === String(trxObj.id_kegiatan || '').trim().toLowerCase()) {
+        targetRowNum = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (targetRowNum === -1) {
+    targetRowNum = lastRow + 1;
+  }
+
+  trxSheet.getRange(targetRowNum, 1, 1, 6).setNumberFormat('@');
+  trxSheet.getRange(targetRowNum, 7, 1, 2).setNumberFormat('#,##0');
+  trxSheet.getRange(targetRowNum, 1, 1, rowData.length).setValues([rowData]);
+}
+
+function pruneEmptySyntheticAnggaranRowsGas(rows, preserveId) {
+  return rows.filter(function(r) {
+    if (String(r.id || '').indexOf('row-spj-') !== 0) return true;
+    if (preserveId && r.id === preserveId) return true;
+    return (
+      parseAnggaranNumberGas(r.pagu) !== 0 ||
+      parseAnggaranNumberGas(r.lock) !== 0 ||
+      parseAnggaranNumberGas(r.realLalu) !== 0 ||
+      parseAnggaranNumberGas(r.realIni) !== 0
+    );
+  });
+}
+
+function applySpjDeductionToAnggaranGas(ss, opts) {
+  const angSheet = getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN, DEFAULT_HEADERS.ANGGARAN);
+  const trxSheet = getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN_TRX, DEFAULT_HEADERS.ANGGARAN_TRX);
+
+  if (angSheet.getLastRow() < 2) {
+    if (opts.initialAnggaranRows && opts.initialAnggaranRows.length > 0) {
+      const seeded = recalculateAnggaranTreeGas(opts.initialAnggaranRows);
+      writeAnggaranToSheet(ss, seeded, opts.initialPeriode || 'November 2026');
+    } else {
+      return {
+        rows: null,
+        periode: opts.initialPeriode || 'November 2026',
+        applied: { matched: false, reason: 'Tab MONITORING_ANGGARAN belum diinisialisasi.' }
+      };
+    }
+  }
+
+  const state = readAnggaranFromSheet(ss);
+  let rows = state.rows;
+  if (!rows || rows.length === 0) {
+    return { rows: null, periode: state.periode, applied: { matched: false, reason: 'Data anggaran kosong.' } };
+  }
+
+  // Cari transaksi existing untuk idKegiatan / oldIdKegiatan
+  let existingTrx = null;
+  const searchIds = [opts.idKegiatan];
+  if (!opts.isNewRecord && opts.oldIdKegiatan && opts.oldIdKegiatan !== opts.idKegiatan) {
+    searchIds.push(opts.oldIdKegiatan);
+  }
+  for (let t = 0; t < state.transactions.length; t++) {
+    const tr = state.transactions[t];
+    const trId = String(tr.id_kegiatan || '').trim().toLowerCase();
+    for (let s = 0; s < searchIds.length; s++) {
+      if (searchIds[s] && trId === String(searchIds[s]).trim().toLowerCase()) {
+        existingTrx = tr;
+        break;
+      }
+    }
+    if (existingTrx) break;
+  }
+
+  let didRefundOld = false;
+  if (existingTrx) {
+    const prevTargetId = String(existingTrx.target_row_id || '').trim();
+    const prevNominal = parseAnggaranNumberGas(existingTrx.nominal);
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].id === prevTargetId) {
+        rows[i].realIni = (Number(rows[i].realIni) || 0) - prevNominal;
+        didRefundOld = true;
+        break;
+      }
+    }
+    if (!opts.isNewRecord && opts.oldIdKegiatan && opts.oldIdKegiatan !== opts.idKegiatan) {
+      deleteRowsByColumnValue(trxSheet, 'id_kegiatan', opts.oldIdKegiatan);
+    }
+  }
+
+  let baselineIncluded = 0;
+  let newNominal = parseAnggaranNumberGas(opts.grandTotal);
+  if (existingTrx) {
+    baselineIncluded = parseAnggaranNumberGas(existingTrx.baseline_included);
+    newNominal = parseAnggaranNumberGas(opts.grandTotal) - baselineIncluded;
+  } else if (!opts.isNewRecord) {
+    // SPJ historis pre-fitur: hanya catat/terapkan selisih perubahan agar baseline Excel tidak terpotong ganda
+    const prevDbTotal = parseAnggaranNumberGas(opts.prevDbGrandTotal);
+    baselineIncluded = prevDbTotal;
+    newNominal = parseAnggaranNumberGas(opts.grandTotal) - prevDbTotal;
+    if (newNominal === 0) {
+      return {
+        rows: rows,
+        periode: state.periode,
+        applied: { matched: true, nominalApplied: 0, unchangedHistorical: true }
+      };
+    }
+  }
+
+  const targetRes = resolveAnggaranTargetGas(
+    rows,
+    opts.kodeKomponen,
+    opts.kodeMak,
+    opts.itemDetail,
+    opts.keteranganItem
+  );
+
+  if (!targetRes.targetRow && !didRefundOld) {
+    return {
+      rows: rows,
+      periode: state.periode,
+      applied: {
+        matched: false,
+        nominalApplied: 0,
+        reason: 'MAK ' + (targetRes.kodeAkunPath || opts.kodeMak) + ' tidak ditemukan di Monitoring Anggaran.'
+      }
+    };
+  }
+
+  if (targetRes.targetRow) {
+    if (targetRes.syntheticRow) {
+      const idx = targetRes.insertAfterIndex >= 0 ? targetRes.insertAfterIndex + 1 : rows.length;
+      rows.splice(idx, 0, targetRes.syntheticRow);
+    }
+    targetRes.targetRow.realIni = (Number(targetRes.targetRow.realIni) || 0) + newNominal;
+
+    upsertAnggaranTrxGas(ss, {
+      id_kegiatan: opts.idKegiatan,
+      target_row_id: targetRes.targetRow.id,
+      kode_akun_path: targetRes.kodeAkunPath,
+      kode_item: targetRes.kodeItem,
+      nama_kegiatan: opts.namaKegiatan || '',
+      nomor_memo: opts.nomorMemo || '',
+      nominal: newNominal,
+      baseline_included: baselineIncluded,
+      updated_at: new Date()
+    });
+  } else if (existingTrx) {
+    deleteRowsByColumnValue(trxSheet, 'id_kegiatan', opts.idKegiatan);
+  }
+
+  rows = pruneEmptySyntheticAnggaranRowsGas(rows, targetRes.targetRow ? targetRes.targetRow.id : '');
+  const recalculated = recalculateAnggaranTreeGas(rows);
+  writeAnggaranToSheet(ss, recalculated, state.periode || 'November 2026');
+
+  return {
+    rows: recalculated,
+    periode: state.periode,
+    applied: {
+      matched: Boolean(targetRes.targetRow),
+      targetRowId: targetRes.targetRow ? targetRes.targetRow.id : '',
+      kodeAkunPath: targetRes.kodeAkunPath,
+      nominalApplied: newNominal
+    }
+  };
+}
+
+function refundSpjFromMonitoringAnggaranGas(ss, opts) {
+  const trxSheet = getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN_TRX, DEFAULT_HEADERS.ANGGARAN_TRX);
+  const angSheet = getOrCreateSheet(ss, SHEET_NAMES.ANGGARAN, DEFAULT_HEADERS.ANGGARAN);
+  if (trxSheet.getLastRow() < 2 || angSheet.getLastRow() < 2) {
+    return { refunded: false, nominal: 0, rows: null, periode: '' };
+  }
+
+  const state = readAnggaranFromSheet(ss);
+  const idClean = String(opts.idKegiatan || '').trim().toLowerCase();
+  const oldIdClean = String(opts.oldIdKegiatan || '').trim().toLowerCase();
+  const memoClean = String(opts.nomorMemo || '').trim().toLowerCase();
+  const namaClean = String(opts.namaKegiatan || '').trim().toLowerCase();
+
+  const matchingTrxs = [];
+  for (let i = 0; i < state.transactions.length; i++) {
+    const tr = state.transactions[i];
+    const tId = String(tr.id_kegiatan || '').trim().toLowerCase();
+    const tMemo = String(tr.nomor_memo || '').trim().toLowerCase();
+    const tNama = String(tr.nama_kegiatan || '').trim().toLowerCase();
+
+    if ((idClean && tId === idClean) || (oldIdClean && tId === oldIdClean)) {
+      matchingTrxs.push(tr);
+    } else if (!idClean && ((memoClean && tMemo === memoClean) || (namaClean && tNama === namaClean))) {
+      matchingTrxs.push(tr);
+    }
+  }
+
+  if (matchingTrxs.length === 0) {
+    return { refunded: false, nominal: 0, rows: null, periode: state.periode };
+  }
+
+  let rows = state.rows;
+  let totalRefunded = 0;
+
+  matchingTrxs.forEach(function(tr) {
+    const targetId = String(tr.target_row_id || '').trim();
+    const nominal = parseAnggaranNumberGas(tr.nominal);
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].id === targetId) {
+        rows[i].realIni = (Number(rows[i].realIni) || 0) - nominal;
+        totalRefunded += nominal;
+        break;
+      }
+    }
+    deleteRowsByColumnValue(trxSheet, 'id_kegiatan', tr.id_kegiatan);
+  });
+
+  rows = pruneEmptySyntheticAnggaranRowsGas(rows, '');
+  const recalculated = recalculateAnggaranTreeGas(rows);
+  writeAnggaranToSheet(ss, recalculated, state.periode || 'November 2026');
+
+  return {
+    refunded: true,
+    nominal: totalRefunded,
+    rows: recalculated,
+    periode: state.periode
+  };
 }

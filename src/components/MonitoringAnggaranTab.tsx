@@ -5,14 +5,20 @@ import {
   AnggaranData,
   AnggaranRow,
   AnggaranRowType,
+  ANGGARAN_UPDATED_EVENT,
   loadAnggaranData,
   saveAnggaranData,
   resetAnggaranDataToDefault,
+  clearLocalAnggaranTrxMap,
   recalculateTree,
   formatRupiah,
   formatPercent,
   exportAnggaranToExcel,
 } from "@/lib/anggaranHelper";
+import {
+  fetchAnggaranFromSheet,
+  saveAnggaranToGoogleSheet,
+} from "@/lib/googleSheetsService";
 import { CurrencyInput } from "./CurrencyInput";
 import { MonitoringAnggaranCharts } from "./MonitoringAnggaranCharts";
 import {
@@ -29,6 +35,7 @@ import {
   Calendar,
   X,
   FileSpreadsheet,
+  RefreshCw,
 } from "lucide-react";
 
 export const MonitoringAnggaranTab: React.FC = () => {
@@ -49,6 +56,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showEditMeta, setShowEditMeta] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
 
   // Form states for Editing Row
   const [formUraian, setFormUraian] = useState("");
@@ -61,28 +69,93 @@ export const MonitoringAnggaranTab: React.FC = () => {
   // Form states for Meta Editing
   const [formPeriode, setFormPeriode] = useState("");
 
-  // Load data on mount
+  // Load data on mount + subscribe to live budget updates + sync with Cloud
   useEffect(() => {
-    Promise.resolve().then(() => {
-      const loaded = loadAnggaranData();
-      setData(loaded);
+    let cancelled = false;
+    const loaded = loadAnggaranData();
 
-      // Initialize expanded set: expand all levels < 7 (Program up to Subkomponen)
-      // Keep Level 7 (Akun items) collapsed by default
-      const defaultExpanded = new Set<string>();
-      loaded.rows.forEach((r) => {
-        if (r.level < 7) {
-          defaultExpanded.add(r.id);
+    const applyLoaded = (initial: boolean) => {
+      const latest = loadAnggaranData();
+      setData(latest);
+      setFormPeriode(latest.meta.periode);
+      if (initial) {
+        const defaultExpanded = new Set<string>();
+        latest.rows.forEach((r) => {
+          if (r.level < 7) defaultExpanded.add(r.id);
+        });
+        setExpandedIds(defaultExpanded);
+      }
+    };
+
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      applyLoaded(true);
+      void (async () => {
+        const res = await fetchAnggaranFromSheet();
+        if (cancelled) return;
+        if (res?.success && res.needsSeed) {
+          await saveAnggaranToGoogleSheet(loaded, { onlyIfEmpty: true });
         }
-      });
-      setExpandedIds(defaultExpanded);
-      setFormPeriode(loaded.meta.periode);
+      })();
     });
+
+    const handleUpdated = () => {
+      if (!cancelled) applyLoaded(false);
+    };
+
+    window.addEventListener(ANGGARAN_UPDATED_EVENT, handleUpdated);
+    window.addEventListener("storage", handleUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(ANGGARAN_UPDATED_EVENT, handleUpdated);
+      window.removeEventListener("storage", handleUpdated);
+    };
   }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const syncAnggaranToCloudBackground = async (
+    nextData: AnggaranData,
+    options?: { clearTransactions?: boolean }
+  ) => {
+    setIsCloudSyncing(true);
+    try {
+      const res = await saveAnggaranToGoogleSheet(nextData, options);
+      if (!res.success && res.message) {
+        showToast(`Tersimpan lokal (Cloud: ${res.message})`);
+      }
+    } finally {
+      setIsCloudSyncing(false);
+    }
+  };
+
+  const handleManualCloudSync = async () => {
+    if (isCloudSyncing) return;
+    setIsCloudSyncing(true);
+    try {
+      const res = await fetchAnggaranFromSheet();
+      if (res?.success && res.needsSeed) {
+        const current = data || loadAnggaranData();
+        const seedRes = await saveAnggaranToGoogleSheet(current, { onlyIfEmpty: true });
+        if (seedRes.success) {
+          showToast("Tab MONITORING_ANGGARAN di Cloud berhasil diinisialisasi.");
+          return;
+        }
+      }
+      if (res?.success) {
+        const latest = loadAnggaranData();
+        setData(latest);
+        setFormPeriode(latest.meta.periode);
+        showToast("Monitoring Anggaran tersinkron dari Cloud.");
+      } else {
+        showToast(res?.message || "Gagal mengambil data Monitoring Anggaran dari Cloud.");
+      }
+    } finally {
+      setIsCloudSyncing(false);
+    }
   };
 
   // Toggle expand/collapse for a specific row
@@ -298,8 +371,9 @@ export const MonitoringAnggaranTab: React.FC = () => {
 
     setData(newData);
     saveAnggaranData(newData);
+    void syncAnggaranToCloudBackground(newData);
     setEditingRow(null);
-    showToast(`Baris [${formKode || editingRow.type}] berhasil diperbarui dan direkalkulasi.`);
+    showToast(`Baris [${formKode || editingRow.type}] berhasil diperbarui dan disinkronkan ke Cloud.`);
   };
 
   // Open Add Child Modal
@@ -369,6 +443,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
 
     setData(newData);
     saveAnggaranData(newData);
+    void syncAnggaranToCloudBackground(newData);
     // Ensure parent is expanded
     setExpandedIds((prev) => new Set([...prev, addingChildOf.id]));
     setAddingChildOf(null);
@@ -401,12 +476,14 @@ export const MonitoringAnggaranTab: React.FC = () => {
 
     setData(newData);
     saveAnggaranData(newData);
+    void syncAnggaranToCloudBackground(newData);
     setDeletingRow(null);
     showToast(`Baris berhasil dihapus beserta sub-rinciannya.`);
   };
 
   // Reset to Baseline Excel
   const handleResetToBaseline = () => {
+    clearLocalAnggaranTrxMap();
     const baseline = resetAnggaranDataToDefault();
     setData(baseline);
     const defaultExpanded = new Set<string>();
@@ -415,7 +492,8 @@ export const MonitoringAnggaranTab: React.FC = () => {
     });
     setExpandedIds(defaultExpanded);
     setShowResetConfirm(false);
-    showToast("Data anggaran berhasil di-reset kembali ke data awal file Excel.");
+    void syncAnggaranToCloudBackground(baseline, { clearTransactions: true });
+    showToast("Data anggaran di-reset ke baseline awal & disinkronkan ke Cloud.");
   };
 
   // Save Meta Periode
@@ -430,6 +508,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
     };
     setData(newData);
     saveAnggaranData(newData);
+    void syncAnggaranToCloudBackground(newData);
     setShowEditMeta(false);
     showToast("Periode anggaran berhasil diperbarui.");
   };
@@ -461,6 +540,18 @@ export const MonitoringAnggaranTab: React.FC = () => {
           </h1>
 
           <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+            {/* Sync Cloud Button */}
+            <button
+              type="button"
+              onClick={handleManualCloudSync}
+              disabled={isCloudSyncing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all cursor-pointer border border-blue-200 dark:border-blue-900 disabled:opacity-60 no-print"
+              title="Tarik data Monitoring Anggaran terbaru dari Cloud Spreadsheet"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isCloudSyncing ? "animate-spin" : ""}`} />
+              <span>{isCloudSyncing ? "Menyinkron..." : "Sinkron Cloud"}</span>
+            </button>
+
             {/* Edit Periode Button */}
             <button
               type="button"

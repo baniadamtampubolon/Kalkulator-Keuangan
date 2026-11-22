@@ -6,6 +6,17 @@ import { parseSpdNumber, saveLatestRegisteredSpdNumber } from "./spdHelper";
 import { calculatePengadaanTotals } from "./pengadaanHelper";
 import { saveCustomMemo, deleteCustomMemo, extractMemoSeqNumber } from "./memoHelper";
 import { ItemDetailItem, LIST_ITEM_DETAIL, getItemDetailByKode, getKomponenName } from "@/data/mak_akun";
+import {
+  AnggaranData,
+  AnggaranRow,
+  ANGGARAN_CLOUD_SEEDED_KEY,
+  STORAGE_KEY as ANGGARAN_STORAGE_KEY,
+  TRX_LOCAL_STORAGE_KEY,
+  applyCloudAnggaranRows,
+  applyLocalSpjToAnggaran,
+  loadAnggaranData,
+  refundLocalSpjFromAnggaran,
+} from "./anggaranHelper";
 
 export interface GasApiResponse<T = unknown> {
   status: "success" | "error";
@@ -101,6 +112,9 @@ export function purgeLocalBrowserCache(): void {
     localStorage.removeItem("perdin_saved_kegiatan_list");
     localStorage.removeItem("perdin_cached_rekap_data");
     localStorage.removeItem("perdin_custom_item_details");
+    localStorage.removeItem(ANGGARAN_STORAGE_KEY);
+    localStorage.removeItem(TRX_LOCAL_STORAGE_KEY);
+    localStorage.removeItem(ANGGARAN_CLOUD_SEEDED_KEY);
     localStorage.setItem("perdin_app_version", APP_SCHEMA_VERSION);
   } catch (err) {
     console.error("Gagal membersihkan cache lokal:", err);
@@ -1497,6 +1511,7 @@ export async function savePerdinToGoogleSheet(
     oldNamaKegiatan?: string;
     oldNomorMemo?: string;
     isNewRecord?: boolean;
+    prevGrandTotal?: number;
   }
 ): Promise<{
   success: boolean;
@@ -1567,12 +1582,32 @@ export async function savePerdinToGoogleSheet(
   };
 
   const isNewRecord = options?.isNewRecord ?? !oldIdKegiatan;
+  const prevSavedGrandTotal =
+    !isNewRecord && options?.prevGrandTotal !== undefined
+      ? Number(options.prevGrandTotal) || 0
+      : !isNewRecord && typeof window !== "undefined"
+      ? Number(
+          getSavedKegiatanList().find(
+            (k) => k.idKegiatan === (oldIdKegiatan || idKegiatan)
+          )?.grandTotal
+        ) || 0
+      : 0;
+
+  const isAnggaranCloudSeeded =
+    typeof window !== "undefined" &&
+    localStorage.getItem(ANGGARAN_CLOUD_SEEDED_KEY) === "1";
+  const initialAnggaranSeed =
+    !isAnggaranCloudSeeded && typeof window !== "undefined"
+      ? loadAnggaranData()
+      : null;
 
   const payload = {
     action: "SAVE_PERDIN",
     isNewRecord,
     reservedMemo: header.reservedMemo || "",
     spjType,
+    initialAnggaranRows: initialAnggaranSeed ? initialAnggaranSeed.rows : undefined,
+    anggaranPeriode: initialAnggaranSeed ? initialAnggaranSeed.meta.periode : undefined,
     pengadaan: isPengadaan
       ? {
           items: header.pengadaanItems || [],
@@ -1814,6 +1849,17 @@ export async function savePerdinToGoogleSheet(
 
   if (!url) {
     persistLocalBackup(idKegiatan, header.nomorMemo || "");
+    applyLocalSpjToAnggaran({
+      idKegiatan,
+      oldIdKegiatan,
+      isNewRecord,
+      nomorKomp: header.nomorKomp,
+      nomorMak: header.nomorMak,
+      itemDetail: header.itemDetail,
+      keteranganItem: header.keteranganItemDetail,
+      grandTotal,
+      prevGrandTotal: prevSavedGrandTotal,
+    });
     return {
       success: true,
       message: "Data disimpan di memori lokal browser (URL Google Apps Script belum diset).",
@@ -1846,6 +1892,29 @@ export async function savePerdinToGoogleSheet(
       );
 
       persistLocalBackup(serverIdKegiatan, serverNomorMemo, serverSpdNumbers);
+
+      const cloudAnggaranRows = jsonObj.updatedAnggaranRows || jsonDataObj?.updatedAnggaranRows;
+      const cloudAnggaranPeriode =
+        typeof jsonObj.anggaranPeriode === "string"
+          ? jsonObj.anggaranPeriode
+          : typeof jsonDataObj?.anggaranPeriode === "string"
+          ? jsonDataObj.anggaranPeriode
+          : undefined;
+      if (Array.isArray(cloudAnggaranRows) && cloudAnggaranRows.length > 0) {
+        applyCloudAnggaranRows(cloudAnggaranRows as AnggaranRow[], cloudAnggaranPeriode);
+      } else {
+        applyLocalSpjToAnggaran({
+          idKegiatan: serverIdKegiatan || idKegiatan,
+          oldIdKegiatan,
+          isNewRecord,
+          nomorKomp: header.nomorKomp,
+          nomorMak: header.nomorMak,
+          itemDetail: header.itemDetail,
+          keteranganItem: header.keteranganItemDetail,
+          grandTotal,
+          prevGrandTotal: prevSavedGrandTotal,
+        });
+      }
 
       const cloudSpd = Number(jsonObj.latestSpdNumber || jsonDataObj?.latestSpdNumber);
       if (!isNaN(cloudSpd) && cloudSpd > 0) {
@@ -2183,6 +2252,7 @@ export async function deleteKegiatanFromGoogleSheet(
 
   const url = customUrl || getGasApiUrl();
   if (!url) {
+    refundLocalSpjFromAnggaran(idKegiatan);
     return { success: false, message: "URL Web App Google Apps Script belum diset." };
   }
 
@@ -2196,6 +2266,19 @@ export async function deleteKegiatanFromGoogleSheet(
     };
 
     const json = await executeGasRequest("POST", payload, url);
+    if (json.status === "success") {
+      const jsonObj = json as unknown as Record<string, unknown>;
+      const updatedRows = jsonObj.updatedAnggaranRows;
+      const periode =
+        typeof jsonObj.anggaranPeriode === "string"
+          ? jsonObj.anggaranPeriode
+          : undefined;
+      if (Array.isArray(updatedRows) && updatedRows.length > 0) {
+        applyCloudAnggaranRows(updatedRows as AnggaranRow[], periode);
+      } else {
+        refundLocalSpjFromAnggaran(idKegiatan);
+      }
+    }
     return {
       success: json.status === "success",
       message: json.message || `Kegiatan ${idKegiatan} berhasil dihapus dari cloud.`,
@@ -2286,6 +2369,143 @@ export async function syncMasterMakToGoogleSheet(
     return {
       success: false,
       message: `Gagal menyinkronkan Master MAK: ${errMsg}`,
+    };
+  }
+}
+
+export interface FetchAnggaranResult {
+  success: boolean;
+  needsSeed: boolean;
+  periode: string;
+  rows: AnggaranRow[];
+  transactions?: Record<string, unknown>[];
+  message?: string;
+}
+
+/**
+ * Tarik state Monitoring Anggaran & daftar transaksi ledger terbaru dari Google Spreadsheet.
+ */
+export async function fetchAnggaranFromSheet(
+  customUrl?: string
+): Promise<FetchAnggaranResult | null> {
+  const url = customUrl || getGasApiUrl();
+  if (!url) return null;
+  try {
+    const json = await executeGasRequest<AnggaranRow[]>(
+      "GET",
+      { action: "GET_ANGGARAN" },
+      url
+    );
+    const jsonObj = json as unknown as Record<string, unknown>;
+    if (json.status === "success") {
+      const needsSeed = Boolean(jsonObj.needsSeed);
+      const rows = Array.isArray(jsonObj.rows)
+        ? (jsonObj.rows as AnggaranRow[])
+        : Array.isArray(json.data)
+        ? (json.data as AnggaranRow[])
+        : [];
+      const periode =
+        typeof jsonObj.periode === "string" && jsonObj.periode.trim() !== ""
+          ? jsonObj.periode.trim()
+          : "November 2026";
+      const transactions = Array.isArray(jsonObj.transactions)
+        ? (jsonObj.transactions as Record<string, unknown>[])
+        : [];
+
+      if (!needsSeed && rows.length > 0) {
+        applyCloudAnggaranRows(rows, periode);
+      }
+
+      return {
+        success: true,
+        needsSeed,
+        periode,
+        rows,
+        transactions,
+      };
+    }
+
+    return {
+      success: false,
+      needsSeed: false,
+      periode: "November 2026",
+      rows: [],
+      message: json.message || "Gagal mengambil data Monitoring Anggaran.",
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      needsSeed: false,
+      periode: "November 2026",
+      rows: [],
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+/**
+ * Simpan / inisialisasi / reset Monitoring Anggaran ke Google Spreadsheet (MONITORING_ANGGARAN).
+ */
+export async function saveAnggaranToGoogleSheet(
+  data: AnggaranData,
+  options?: {
+    onlyIfEmpty?: boolean;
+    clearTransactions?: boolean;
+    customUrl?: string;
+  }
+): Promise<{
+  success: boolean;
+  rows?: AnggaranRow[];
+  periode?: string;
+  message?: string;
+}> {
+  const url = options?.customUrl || getGasApiUrl();
+  if (!url) {
+    return { success: false, message: "URL Web App Google Apps Script belum diset." };
+  }
+
+  try {
+    const json = await executeGasRequest<AnggaranRow[]>(
+      "POST",
+      {
+        action: "SAVE_ANGGARAN",
+        rows: data.rows,
+        periode: data.meta?.periode || "November 2026",
+        onlyIfEmpty: Boolean(options?.onlyIfEmpty),
+        clearTransactions: Boolean(options?.clearTransactions),
+      },
+      url
+    );
+    const jsonObj = json as unknown as Record<string, unknown>;
+    if (json.status === "success") {
+      const rows = Array.isArray(jsonObj.rows)
+        ? (jsonObj.rows as AnggaranRow[])
+        : undefined;
+      const periode =
+        typeof jsonObj.periode === "string"
+          ? jsonObj.periode
+          : data.meta?.periode;
+      if (rows && rows.length > 0) {
+        applyCloudAnggaranRows(rows, periode);
+      } else if (typeof window !== "undefined") {
+        localStorage.setItem(ANGGARAN_CLOUD_SEEDED_KEY, "1");
+      }
+      return {
+        success: true,
+        rows,
+        periode,
+        message: json.message || "Monitoring Anggaran berhasil disimpan ke Spreadsheet.",
+      };
+    }
+
+    return {
+      success: false,
+      message: json.message || "Gagal menyimpan Monitoring Anggaran ke Spreadsheet.",
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : String(err),
     };
   }
 }

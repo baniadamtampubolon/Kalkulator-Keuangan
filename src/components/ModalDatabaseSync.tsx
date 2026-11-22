@@ -28,10 +28,13 @@ import {
   fetchMasterDataFromSheet,
   fetchRekapFromSheet,
   fetchKegiatanFromSheet,
+  fetchAnggaranFromSheet,
+  saveAnggaranToGoogleSheet,
   purgeLocalBrowserCache,
   savePerdinToGoogleSheet,
   MasterSyncData,
 } from "@/lib/googleSheetsService";
+import { getDefaultAnggaranData } from "@/lib/anggaranHelper";
 import { HeaderData, ParticipantRow, Pegawai, SbmRate, NomorMemo } from "@/lib/types";
 
 interface ModalDatabaseSyncProps {
@@ -179,12 +182,20 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
     setIsSyncing(true);
     setStatusMessage({ type: "info", text: "Menarik data Master, Rekap 48 Kolom, & Nomor SPD dari Google Spreadsheet..." });
     
-    // Fetch master data, rekap data, & kegiatan in parallel
-    const [resMaster, resRekap, resKegiatan] = await Promise.all([
+    // Fetch master data, rekap data, kegiatan, & monitoring anggaran in parallel
+    const [resMaster, resRekap, resKegiatan, resAnggaran] = await Promise.all([
       fetchMasterDataFromSheet(url),
       fetchRekapFromSheet(url),
       fetchKegiatanFromSheet(url),
+      fetchAnggaranFromSheet(url),
     ]);
+
+    if (resAnggaran?.success && resAnggaran.needsSeed) {
+      await saveAnggaranToGoogleSheet(getDefaultAnggaranData(), {
+        onlyIfEmpty: true,
+        customUrl: url,
+      });
+    }
 
     setIsSyncing(false);
     if (resMaster.success && resMaster.data) {
@@ -195,9 +206,13 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
       const rekapCount = resRekap.data?.length ?? 0;
       const kegCount = resKegiatan.data?.length ?? 0;
       const makCountStr = resMaster.data.mak ? `${resMaster.data.mak.length} Item MAK, ` : "";
+      const angCountStr =
+        resAnggaran?.success && resAnggaran.rows.length > 0
+          ? `, ${resAnggaran.rows.length} Baris Anggaran`
+          : "";
       setStatusMessage({
         type: "success",
-        text: `Berhasil sinkronisasi seluruh data Cloud! (${resMaster.data.pegawai?.length || 0} Pegawai, ${resMaster.data.sbm?.length || 0} SBM Provinsi, ${makCountStr}${rekapCount} Baris Rekap, ${kegCount} Kegiatan tersinkron).`,
+        text: `Berhasil sinkronisasi seluruh data Cloud! (${resMaster.data.pegawai?.length || 0} Pegawai, ${resMaster.data.sbm?.length || 0} SBM Provinsi, ${makCountStr}${rekapCount} Baris Rekap, ${kegCount} Kegiatan${angCountStr} tersinkron).`,
       });
     } else {
       setStatusMessage({ type: "error", text: resMaster.message || resRekap.message || resKegiatan.message || "Gagal sinkronisasi data." });
@@ -215,6 +230,7 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
         fetchMasterDataFromSheet(defaultUrl),
         fetchRekapFromSheet(defaultUrl),
         fetchKegiatanFromSheet(defaultUrl),
+        fetchAnggaranFromSheet(defaultUrl),
       ]);
       setStatusMessage({
         type: "success",

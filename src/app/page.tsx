@@ -37,10 +37,13 @@ import {
   getCachedMasterData,
   fetchMasterDataFromSheet,
   fetchKegiatanFromSheet,
+  fetchAnggaranFromSheet,
+  saveAnggaranToGoogleSheet,
   savePerdinToGoogleSheet,
   reserveMemoInGoogleSheet,
   checkAndAutoMigrateCache,
 } from "@/lib/googleSheetsService";
+import { getDefaultAnggaranData } from "@/lib/anggaranHelper";
 import { saveOrUpdateRekapLocal } from "@/lib/rekapHelper";
 import { mergeAndSortMemoList } from "@/lib/memoHelper";
 import {
@@ -279,10 +282,15 @@ export default function Home() {
       cloudSyncRuntime.lastSyncAt = now;
 
       try {
-        const [masterRes, kegRes] = await Promise.all([
+        const [masterRes, kegRes, angRes] = await Promise.all([
           fetchMasterDataFromSheet(),
           fetchKegiatanFromSheet(),
+          fetchAnggaranFromSheet(),
         ]);
+
+        if (angRes?.success && angRes.needsSeed) {
+          void saveAnggaranToGoogleSheet(getDefaultAnggaranData(), { onlyIfEmpty: true });
+        }
 
         let latestMemoPool: NomorMemo[] = [];
         if (masterRes.success && masterRes.data) {
@@ -1116,6 +1124,12 @@ export default function Home() {
         const oldNama = editingOriginalTitle || undefined;
         const oldMemo = editingOriginalMemo || undefined;
         const isUpdate = Boolean(oldBatchId);
+        const prevGrandTotalForAnggaran = oldBatchId
+          ? Number(
+              getSavedKegiatanList().find((k) => k.idKegiatan === oldBatchId)
+                ?.grandTotal
+            ) || 0
+          : 0;
 
         const sheetNameBySpj: Record<string, string> = {
           KONSUMSI: "REKAP_SPJ_KONSUMSI",
@@ -1165,6 +1179,7 @@ export default function Home() {
             oldNamaKegiatan: oldNama,
             oldNomorMemo: oldMemo,
             isNewRecord,
+            prevGrandTotal: prevGrandTotalForAnggaran,
           }
         );
 
@@ -1309,6 +1324,12 @@ export default function Home() {
       const oldBatchId = editingOriginalId || savedBatchId || undefined;
       const oldNama = editingOriginalTitle || undefined;
       const oldMemo = editingOriginalMemo || undefined;
+      const prevGrandTotalForAnggaran = oldBatchId
+        ? Number(
+            getSavedKegiatanList().find((k) => k.idKegiatan === oldBatchId)
+              ?.grandTotal
+          ) || 0
+        : 0;
 
       // 1. Simpan ke database master kegiatan lokal (Daftar Kegiatan)
       saveKegiatanRecord(
@@ -1374,6 +1395,7 @@ export default function Home() {
           oldNamaKegiatan: oldNama,
           oldNomorMemo: oldMemo,
           isNewRecord,
+          prevGrandTotal: prevGrandTotalForAnggaran,
         }
       );
 

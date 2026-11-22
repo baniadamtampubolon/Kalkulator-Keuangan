@@ -7,7 +7,10 @@ import { parseMakHierarchy } from "@/data/mak_akun";
 import { terbilang } from "@/lib/terbilang";
 import { getDefaultMemoNumber } from "@/lib/calc";
 import { calculatePengadaanTotals, getSpjTypeMeta } from "@/lib/pengadaanHelper";
-import { findPaguForMemorandum } from "@/lib/anggaranHelper";
+import {
+  ANGGARAN_UPDATED_EVENT,
+  findPaguForMemorandum,
+} from "@/lib/anggaranHelper";
 import { PrintAutoFitSheet } from "./PrintAutoFitSheet";
 
 interface MemorandumDocProps {
@@ -46,8 +49,18 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
 
     Promise.resolve().then(refreshPagu);
     window.addEventListener("storage", refreshPagu);
-    return () => window.removeEventListener("storage", refreshPagu);
-  }, [header.nomorKomp, header.nomorMak, header.itemDetail]);
+    window.addEventListener(ANGGARAN_UPDATED_EVENT, refreshPagu);
+    return () => {
+      window.removeEventListener("storage", refreshPagu);
+      window.removeEventListener(ANGGARAN_UPDATED_EVENT, refreshPagu);
+    };
+  }, [header.nomorKomp, header.nomorMak, header.itemDetail, header.idKegiatan]);
+
+  const formatPaguMemo = (val: number | null) => {
+    if (val === null) return "";
+    const abs = Math.abs(val).toLocaleString("id-ID");
+    return val < 0 ? `-Rp${abs}` : `Rp${abs}`;
+  };
 
   // Format dates
   const formatDateIndo = (dStr: string) => {
@@ -642,11 +655,9 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                     contentEditable={true}
                     suppressContentEditableWarning={true}
                     className="border-r border-black p-2 text-right font-sans min-w-[120px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
-                    title="Otomatis dari Monitoring Anggaran (klik untuk edit manual)"
+                    title="Sisa Pagu dari Monitoring Anggaran (klik untuk edit manual)"
                   >
-                    {paguInfo.paguAkun !== null && paguInfo.paguAkun > 0
-                      ? `Rp${paguInfo.paguAkun.toLocaleString("id-ID")}`
-                      : ""}
+                    {formatPaguMemo(paguInfo.paguAkun)}
                   </td>
                   <td 
                     contentEditable={true}
@@ -692,11 +703,9 @@ export const MemorandumDoc: React.FC<MemorandumDocProps> = ({
                     contentEditable={true}
                     suppressContentEditableWarning={true}
                     className="border-r border-black p-2 text-right font-sans min-w-[120px] cursor-text hover:bg-blue-50/40 focus:bg-blue-50/70 transition-colors"
-                    title="Otomatis dari Monitoring Anggaran (klik untuk edit manual)"
+                    title="Sisa Pagu dari Monitoring Anggaran (klik untuk edit manual)"
                   >
-                    {paguInfo.paguItem !== null && paguInfo.paguItem > 0
-                      ? `Rp${paguInfo.paguItem.toLocaleString("id-ID")}`
-                      : ""}
+                    {formatPaguMemo(paguInfo.paguItem)}
                   </td>
                   <td 
                     contentEditable={true}

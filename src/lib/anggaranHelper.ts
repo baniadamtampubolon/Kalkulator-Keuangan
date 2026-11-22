@@ -45,7 +45,17 @@ export interface AnggaranData {
   rows: AnggaranRow[];
 }
 
-const STORAGE_KEY = "kalkulator_monitoring_anggaran_v3";
+export const STORAGE_KEY = "kalkulator_monitoring_anggaran_v3";
+export const TRX_LOCAL_STORAGE_KEY = "kalkulator_monitoring_anggaran_trx_v1";
+export const ANGGARAN_CLOUD_SEEDED_KEY = "anggaran_cloud_seeded";
+export const ANGGARAN_UPDATED_EVENT = "anggaran-updated";
+
+export interface LocalAnggaranTrxRecord {
+  idKegiatan: string;
+  targetRowId: string;
+  nominal: number;
+  baselineIncluded: number;
+}
 
 /**
  * Return deep clone of initial data extracted from anggaran-lengkap files (6), (7), (9), (10)
@@ -150,14 +160,45 @@ export function loadAnggaranData(): AnggaranData {
 }
 
 /**
- * Save AnggaranData to LocalStorage
+ * Save AnggaranData to LocalStorage and broadcast live update event in the same tab
  */
 export function saveAnggaranData(data: AnggaranData): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    window.dispatchEvent(new CustomEvent(ANGGARAN_UPDATED_EVENT));
   } catch (err) {
     console.error("Gagal menyimpan monitoring anggaran ke localStorage:", err);
+  }
+}
+
+export function loadLocalAnggaranTrxMap(): Record<string, LocalAnggaranTrxRecord> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(TRX_LOCAL_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveLocalAnggaranTrxMap(map: Record<string, LocalAnggaranTrxRecord>): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(TRX_LOCAL_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    // ignore storage quota errors
+  }
+}
+
+export function clearLocalAnggaranTrxMap(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(TRX_LOCAL_STORAGE_KEY);
+  } catch {
+    // ignore
   }
 }
 
@@ -273,15 +314,50 @@ export function exportAnggaranToExcel(data: AnggaranData, filename?: string): vo
 /**
  * Look up Pagu for an Akun MAK and Item Detail directly from Monitoring Anggaran (16 Segmen).
  */
-export function findPaguForMemorandum(
+export interface ResolvedAnggaranTarget {
+  matchedAkunRow?: AnggaranRow;
+  matchedItemRow?: AnggaranRow;
+  targetRow?: AnggaranRow;
+  syntheticRow?: AnggaranRow;
+  insertAfterIndex: number;
+  kodeAkunPath: string;
+  kodeItem: string;
+}
+
+function buildCanonicalAkunCode(
+  akunRow: AnggaranRow,
+  byId: Map<string, AnggaranRow>
+): string {
+  const ancestors: AnggaranRow[] = [];
+  let curr: AnggaranRow | undefined = akunRow;
+  let guard = 0;
+  while (curr && guard < 20) {
+    ancestors.unshift(curr);
+    curr = curr.parentId ? byId.get(curr.parentId) : undefined;
+    guard++;
+  }
+  const keg = ancestors.find((a) => a.type === "kegiatan")?.kode || "";
+  const ro = ancestors.find((a) => a.type === "ro")?.kode || "";
+  const sub = ancestors.find((a) => a.type === "subkomponen")?.kode || "";
+  const komp = ancestors.find((a) => a.type === "komponen")?.kode || "";
+  const midSub = sub || komp;
+  return [keg, ro, midSub, akunRow.kode]
+    .filter(Boolean)
+    .join(".")
+    .replace(/^(CL|WA)\./i, "")
+    .toUpperCase();
+}
+
+/**
+ * Resolve matching Akun/Item rows and leaf target row for SPJ lookup or deduction.
+ */
+export function resolveAnggaranTargetsForSpj(
+  rows: AnggaranRow[],
   nomorKomp?: string,
   nomorMak?: string,
-  itemDetail?: string
-): { paguAkun: number | null; paguItem: number | null } {
-  const data = loadAnggaranData();
-  const rows = data.rows || [];
-  if (rows.length === 0) return { paguAkun: null, paguItem: null };
-
+  itemDetail?: string,
+  keteranganItem?: string
+): ResolvedAnggaranTarget {
   const byId = new Map<string, AnggaranRow>();
   rows.forEach((r) => byId.set(r.id, r));
 
@@ -304,72 +380,324 @@ export function findPaguForMemorandum(
       : rawItem.match(/^\d+/)?.[0] || rawItem
   ).toUpperCase();
 
-  const buildCanonicalAkunCode = (akunRow: AnggaranRow): string => {
-    const ancestors: AnggaranRow[] = [];
-    let curr: AnggaranRow | undefined = akunRow;
-    while (curr) {
-      ancestors.unshift(curr);
-      curr = curr.parentId ? byId.get(curr.parentId) : undefined;
-    }
-    const keg = ancestors.find((a) => a.type === "kegiatan")?.kode || "";
-    const ro = ancestors.find((a) => a.type === "ro")?.kode || "";
-    const sub = ancestors.find((a) => a.type === "subkomponen")?.kode || "";
-    const komp = ancestors.find((a) => a.type === "komponen")?.kode || "";
-    const midSub = sub || komp;
-    return [keg, ro, midSub, akunRow.kode]
-      .filter(Boolean)
-      .join(".")
-      .replace(/^(CL|WA)\./i, "")
-      .toUpperCase();
-  };
-
   let matchedAkunRow: AnggaranRow | undefined;
+  let matchedAkunPath = targetAkunNoPrefix;
 
   if (targetAkunNoPrefix) {
     matchedAkunRow = rows.find(
-      (r) => r.type === "akun" && buildCanonicalAkunCode(r) === targetAkunNoPrefix
+      (r) => r.type === "akun" && buildCanonicalAkunCode(r, byId) === targetAkunNoPrefix
     );
   }
 
   let matchedItemRow: AnggaranRow | undefined;
-  if (cleanItemCode) {
-    if (matchedAkunRow) {
-      matchedItemRow = rows.find(
-        (r) =>
-          r.type === "item" &&
-          r.parentId === matchedAkunRow!.id &&
-          r.kode.trim().toUpperCase() === cleanItemCode
-      );
-    }
+  if (matchedAkunRow && cleanItemCode) {
+    matchedItemRow = rows.find(
+      (r) =>
+        r.type === "item" &&
+        r.parentId === matchedAkunRow!.id &&
+        String(r.kode || "").trim().toUpperCase() === cleanItemCode
+    );
+  }
 
-    if (!matchedItemRow) {
-      matchedItemRow = rows.find((r) => {
-        if (r.type !== "item" || r.kode.trim().toUpperCase() !== cleanItemCode) {
-          return false;
-        }
-        if (!cleanMak) return true;
-        const parentAkun = r.parentId ? byId.get(r.parentId) : undefined;
-        return parentAkun?.kode.trim().toUpperCase() === cleanMak;
-      });
-    }
+  if (!matchedAkunRow && cleanItemCode) {
+    matchedItemRow = rows.find((r) => {
+      if (r.type !== "item" || String(r.kode || "").trim().toUpperCase() !== cleanItemCode) {
+        return false;
+      }
+      if (!cleanMak) return true;
+      const parentAkun = r.parentId ? byId.get(r.parentId) : undefined;
+      return String(parentAkun?.kode || "").trim().toUpperCase() === cleanMak;
+    });
 
-    if (!matchedItemRow) {
-      matchedItemRow = rows.find(
-        (r) => r.type === "item" && r.kode.trim().toUpperCase() === cleanItemCode
-      );
-    }
-
-    if (matchedItemRow && !matchedAkunRow && matchedItemRow.parentId) {
+    if (matchedItemRow && matchedItemRow.parentId) {
       const parent = byId.get(matchedItemRow.parentId);
       if (parent && parent.type === "akun") {
         matchedAkunRow = parent;
+        matchedAkunPath = buildCanonicalAkunCode(parent, byId);
+      }
+    }
+  }
+
+  let targetRow: AnggaranRow | undefined = matchedItemRow;
+  let syntheticRow: AnggaranRow | undefined;
+  let insertAfterIndex = -1;
+
+  if (!targetRow && matchedAkunRow) {
+    const children: AnggaranRow[] = [];
+    let lastDescendantIndex = -1;
+    let akunIndex = -1;
+    rows.forEach((r, idx) => {
+      if (r.id === matchedAkunRow!.id) akunIndex = idx;
+      if (r.parentId === matchedAkunRow!.id) {
+        children.push(r);
+        lastDescendantIndex = idx;
+      }
+    });
+
+    if (children.length === 0) {
+      targetRow = matchedAkunRow;
+    } else if (children.length === 1 && !cleanItemCode) {
+      targetRow = children[0];
+    } else {
+      const codeSlug = (cleanItemCode || "umum")
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, "");
+      const synId = `row-spj-${matchedAkunRow.id}-${codeSlug}`;
+      const existingSyn = children.find((c) => c.id === synId);
+      if (existingSyn) {
+        targetRow = existingSyn;
+      } else {
+        syntheticRow = {
+          id: synId,
+          level: 8,
+          type: "item",
+          kode: cleanItemCode || "SPJ",
+          uraian: (keteranganItem || "").trim() || `Realisasi SPJ (${cleanMak})`,
+          pagu: 0,
+          lock: 0,
+          realLalu: 0,
+          realIni: 0,
+          realSd: 0,
+          persen: 0,
+          sisa: 0,
+          parentId: matchedAkunRow.id,
+        };
+        targetRow = syntheticRow;
+        insertAfterIndex = lastDescendantIndex !== -1 ? lastDescendantIndex : akunIndex;
       }
     }
   }
 
   return {
-    paguAkun: matchedAkunRow ? Number(matchedAkunRow.pagu) || 0 : null,
-    paguItem: matchedItemRow ? Number(matchedItemRow.pagu) || 0 : null,
+    matchedAkunRow,
+    matchedItemRow,
+    targetRow,
+    syntheticRow,
+    insertAfterIndex,
+    kodeAkunPath: matchedAkunPath || targetAkunNoPrefix || cleanMak,
+    kodeItem: cleanItemCode,
   };
 }
+
+/**
+ * Find Sisa Anggaran (remaining Pagu after realization) for Memorandum Page 3
+ * based on Komponen, MAK, and Item Detail.
+ */
+export function findPaguForMemorandum(
+  nomorKomp?: string,
+  nomorMak?: string,
+  itemDetail?: string
+): {
+  paguAkun: number | null;
+  paguItem: number | null;
+  paguAwalAkun?: number | null;
+  paguAwalItem?: number | null;
+} {
+  const data = loadAnggaranData();
+  const rows = data.rows || [];
+  if (rows.length === 0) return { paguAkun: null, paguItem: null };
+
+  const { matchedAkunRow, matchedItemRow } = resolveAnggaranTargetsForSpj(
+    rows,
+    nomorKomp,
+    nomorMak,
+    itemDetail
+  );
+
+  const hideUnbudgetedSyntheticItem =
+    matchedItemRow &&
+    matchedItemRow.id.startsWith("row-spj-") &&
+    (Number(matchedItemRow.pagu) || 0) === 0;
+
+  return {
+    paguAkun: matchedAkunRow ? Number(matchedAkunRow.sisa) || 0 : null,
+    paguItem:
+      matchedItemRow && !hideUnbudgetedSyntheticItem
+        ? Number(matchedItemRow.sisa) || 0
+        : null,
+    paguAwalAkun: matchedAkunRow ? Number(matchedAkunRow.pagu) || 0 : null,
+    paguAwalItem:
+      matchedItemRow && !hideUnbudgetedSyntheticItem
+        ? Number(matchedItemRow.pagu) || 0
+        : null,
+  };
+}
+
+function pruneEmptySyntheticRows(rows: AnggaranRow[]): AnggaranRow[] {
+  return rows.filter((r) => {
+    if (!String(r.id || "").startsWith("row-spj-")) return true;
+    return (
+      (Number(r.pagu) || 0) !== 0 ||
+      (Number(r.lock) || 0) !== 0 ||
+      (Number(r.realLalu) || 0) !== 0 ||
+      (Number(r.realIni) || 0) !== 0
+    );
+  });
+}
+
+/**
+ * Replace local Monitoring Anggaran cache with authoritative Cloud rows and broadcast update.
+ */
+export function applyCloudAnggaranRows(
+  cloudRows: AnggaranRow[],
+  periode?: string
+): AnggaranData {
+  const current = loadAnggaranData();
+  const normalizedRows: AnggaranRow[] = cloudRows.map((r) => ({
+    id: String(r.id || ""),
+    level: Number(r.level) || 0,
+    type: r.type || "item",
+    kode: String(r.kode ?? ""),
+    uraian: String(r.uraian || ""),
+    pagu: Number(r.pagu) || 0,
+    lock: Number(r.lock) || 0,
+    realLalu: Number(r.realLalu) || 0,
+    realIni: Number(r.realIni) || 0,
+    realSd: Number(r.realSd) || 0,
+    persen: Number(r.persen) || 0,
+    sisa: Number(r.sisa) || 0,
+    parentId: r.parentId || null,
+  }));
+
+  const recalculated = recalculateTree(normalizedRows);
+  const nextData: AnggaranData = {
+    meta: {
+      ...current.meta,
+      periode: periode ? String(periode).trim() : current.meta.periode,
+    },
+    rows: recalculated,
+  };
+
+  saveAnggaranData(nextData);
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(ANGGARAN_CLOUD_SEEDED_KEY, "1");
+    } catch {
+      // ignore
+    }
+  }
+  return nextData;
+}
+
+/**
+ * Local fallback deduction/delta when offline or before Code.gs is redeployed.
+ */
+export function applyLocalSpjToAnggaran(params: {
+  idKegiatan: string;
+  oldIdKegiatan?: string;
+  isNewRecord?: boolean;
+  nomorKomp?: string;
+  nomorMak?: string;
+  itemDetail?: string;
+  keteranganItem?: string;
+  grandTotal: number;
+  prevGrandTotal?: number;
+}): AnggaranData | null {
+  if (typeof window === "undefined") return null;
+  const data = loadAnggaranData();
+  let rows = data.rows.map((r) => ({ ...r }));
+  if (rows.length === 0) return null;
+
+  const trxMap = loadLocalAnggaranTrxMap();
+  const existingTrx =
+    trxMap[params.idKegiatan] ||
+    (!params.isNewRecord && params.oldIdKegiatan ? trxMap[params.oldIdKegiatan] : undefined);
+
+  if (existingTrx) {
+    const prevRow = rows.find((r) => r.id === existingTrx.targetRowId);
+    if (prevRow) {
+      prevRow.realIni = (Number(prevRow.realIni) || 0) - (Number(existingTrx.nominal) || 0);
+    }
+    if (!params.isNewRecord && params.oldIdKegiatan && params.oldIdKegiatan !== params.idKegiatan) {
+      delete trxMap[params.oldIdKegiatan];
+    }
+  }
+
+  let baselineIncluded = 0;
+  let newNominal = Number(params.grandTotal) || 0;
+  if (existingTrx) {
+    baselineIncluded = Number(existingTrx.baselineIncluded) || 0;
+    newNominal = (Number(params.grandTotal) || 0) - baselineIncluded;
+  } else if (!params.isNewRecord) {
+    const prevTotal = Number(params.prevGrandTotal) || 0;
+    baselineIncluded = prevTotal;
+    newNominal = (Number(params.grandTotal) || 0) - prevTotal;
+    if (newNominal === 0) return data;
+  }
+
+  const targetRes = resolveAnggaranTargetsForSpj(
+    rows,
+    params.nomorKomp,
+    params.nomorMak,
+    params.itemDetail,
+    params.keteranganItem
+  );
+
+  if (!targetRes.targetRow && !existingTrx) {
+    return data;
+  }
+
+  if (targetRes.targetRow) {
+    let actualTarget = rows.find((r) => r.id === targetRes.targetRow!.id);
+    if (!actualTarget && targetRes.syntheticRow) {
+      actualTarget = { ...targetRes.syntheticRow };
+      const idx =
+        targetRes.insertAfterIndex >= 0 ? targetRes.insertAfterIndex + 1 : rows.length;
+      rows.splice(idx, 0, actualTarget);
+    }
+    if (actualTarget) {
+      actualTarget.realIni = (Number(actualTarget.realIni) || 0) + newNominal;
+      trxMap[params.idKegiatan] = {
+        idKegiatan: params.idKegiatan,
+        targetRowId: actualTarget.id,
+        nominal: newNominal,
+        baselineIncluded,
+      };
+    }
+  } else {
+    delete trxMap[params.idKegiatan];
+  }
+
+  rows = pruneEmptySyntheticRows(rows);
+  const nextData: AnggaranData = {
+    ...data,
+    rows: recalculateTree(rows),
+  };
+  saveLocalAnggaranTrxMap(trxMap);
+  saveAnggaranData(nextData);
+  return nextData;
+}
+
+/**
+ * Local fallback refund when deleting an SPJ without Cloud response.
+ */
+export function refundLocalSpjFromAnggaran(
+  idKegiatan?: string,
+  oldIdKegiatan?: string
+): AnggaranData | null {
+  if (typeof window === "undefined") return null;
+  const trxMap = loadLocalAnggaranTrxMap();
+  const key =
+    (idKegiatan && trxMap[idKegiatan] ? idKegiatan : undefined) ||
+    (oldIdKegiatan && trxMap[oldIdKegiatan] ? oldIdKegiatan : undefined);
+  if (!key) return null;
+
+  const trx = trxMap[key];
+  const data = loadAnggaranData();
+  let rows = data.rows.map((r) => ({ ...r }));
+  const target = rows.find((r) => r.id === trx.targetRowId);
+  if (target) {
+    target.realIni = (Number(target.realIni) || 0) - (Number(trx.nominal) || 0);
+  }
+  delete trxMap[key];
+  rows = pruneEmptySyntheticRows(rows);
+  const nextData: AnggaranData = {
+    ...data,
+    rows: recalculateTree(rows),
+  };
+  saveLocalAnggaranTrxMap(trxMap);
+  saveAnggaranData(nextData);
+  return nextData;
+}
+
 
