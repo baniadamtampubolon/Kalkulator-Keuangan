@@ -33,7 +33,7 @@ export const ModalConfirmNewSpj: React.FC<ModalConfirmNewSpjProps> = ({
         </button>
 
         <div className="flex items-start gap-3.5">
-          <div className="p-3 rounded-2xl bg-amber-100 text-amber-700 dark:text-amber-300 shrink-0">
+          <div className="p-3 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 shrink-0">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div className="space-y-1">

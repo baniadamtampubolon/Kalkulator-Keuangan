@@ -81,7 +81,7 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari panduan, topik, atau fitur..."
-              className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-800 text-xs font-medium placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all"
+              className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 transition-all"
             />
           </div>
         </div>
@@ -117,7 +117,7 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                       <span
                         className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${isSelected
                             ? "bg-white/20 text-white"
-                            : "bg-amber-100 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70"
+                            : "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70"
                           }`}
                       >
                         {sec.badge}
@@ -165,7 +165,7 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                   </p>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 dark:text-blue-300 text-[11px] font-bold border border-blue-200 dark:border-blue-800/70">
+              <span className="px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 text-[11px] font-bold border border-blue-200 dark:border-blue-800/70">
                 Langkah Awal
               </span>
             </div>
@@ -308,7 +308,7 @@ export const ManualBookView: React.FC<ManualBookViewProps> = ({
                   </p>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800/70">
+              <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800/70">
                 Siklus SPJ
               </span>
             </div>

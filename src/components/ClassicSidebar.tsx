@@ -139,7 +139,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
             <button
               type="button"
               onClick={onToggle}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all cursor-pointer"
               title="Tutup Sidebar"
             >
               <PanelLeftClose className="w-4 h-4" />
@@ -170,7 +170,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
               <select
                 value={spjType}
                 onChange={(e) => onSelectSpjType(e.target.value as SpjDocType)}
-                className="input-clean w-full h-8 px-2.5 text-xs font-bold bg-white cursor-pointer"
+                className="input-clean w-full h-8 px-2.5 text-xs font-bold cursor-pointer"
               >
                 {SPJ_TYPE_LIST.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -194,7 +194,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                 <span
                   className={`text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-md border ${
                     hasChanges
-                      ? "bg-amber-50/70 text-amber-800 border-amber-200/80"
+                      ? "bg-amber-50/70 text-amber-800 border-amber-200/80 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/70"
                       : "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                   }`}
                   title={hasChanges ? "Perubahan belum disimpan" : "ID Kegiatan aktif"}
@@ -202,7 +202,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                   {currentLoadedId}
                 </span>
               ) : (
-                <span className="text-[9.5px] font-medium px-1.5 py-0.5 rounded bg-slate-200/70 text-slate-600">
+                <span className="text-[9.5px] font-medium px-1.5 py-0.5 rounded bg-slate-200/70 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                   Draft
                 </span>
               )}
@@ -220,7 +220,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                     className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
                       isActive
                         ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800"
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -251,7 +251,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                 className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
                   activeTab === "kegiatan"
                     ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800"
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -291,7 +291,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                   className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
                     activeTab === "rekap"
                       ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
-                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800"
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -337,7 +337,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                           className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all text-left cursor-pointer ${
                             isSubActive
                               ? "bg-blue-50 dark:bg-blue-950/60 text-[#0071e3] dark:text-blue-400 font-bold border border-blue-200/80 dark:border-blue-800"
-                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800 font-medium"
+                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 font-medium"
                           }`}
                           title={cat.sheetName}
                         >
@@ -358,7 +358,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                 className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
                   activeTab === "monitoring"
                     ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800"
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -378,7 +378,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                 className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
                   activeTab === "daftar-memo"
                     ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800"
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -417,7 +417,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                 <button
                   type="button"
                   onClick={onOpenDatabaseSync}
-                  className="btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all text-left cursor-pointer"
+                  className="btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all text-left cursor-pointer"
                   title="Buka Pengaturan Integrasi Database Cloud"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -443,7 +443,7 @@ export const ClassicSidebar: React.FC<ClassicSidebarProps> = ({
                 className={`btn-tactile w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
                   activeTab === "panduan"
                     ? "bg-[#0071e3] text-white shadow-2xs font-semibold"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800"
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">

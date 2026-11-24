@@ -555,7 +555,7 @@ export const ModalDatabaseSync: React.FC<ModalDatabaseSyncProps> = ({
                     setPinError("");
                   }}
                   placeholder="******"
-                  className="w-full text-center tracking-[0.4em] font-mono text-xl py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] bg-slate-50 dark:bg-slate-800/70 focus:bg-white transition-all text-slate-900 dark:text-slate-100"
+                  className="w-full text-center tracking-[0.4em] font-mono text-xl py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] bg-slate-50 dark:bg-slate-800/70 focus:bg-white dark:focus:bg-slate-900 transition-all text-slate-900 dark:text-slate-100"
                 />
                 {pinError && (
                   <p className="text-[11px] text-rose-600 font-medium text-center mt-1.5 flex items-center justify-center gap-1">

@@ -1096,7 +1096,7 @@ export const DaftarMemorandumTab: React.FC<DaftarMemorandumTabProps> = ({
             {/* Modal Header */}
             <div className="p-4 md:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#0071e3] flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-[#0071e3] dark:text-blue-400 flex items-center justify-center font-bold">
                   <BookmarkCheck className="w-4 h-4" />
                 </div>
                 <div>

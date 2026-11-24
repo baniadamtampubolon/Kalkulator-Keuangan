@@ -710,7 +710,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 border ${
             selectedProgram === "all"
               ? "bg-[#0071e3] text-white border-[#0071e3] shadow-2xs"
-              : "bg-slate-50/80 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
+              : "bg-slate-50/80 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
           }`}
         >
           <span>Semua Program</span>
@@ -725,7 +725,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 border ${
             selectedProgram === "WA"
               ? "bg-[#0071e3] text-white border-[#0071e3] shadow-2xs"
-              : "bg-slate-50/80 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
+              : "bg-slate-50/80 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
           }`}
         >
           <span>Program WA — Inspektorat</span>
@@ -740,7 +740,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 border ${
             selectedProgram === "CL"
               ? "bg-[#0071e3] text-white border-[#0071e3] shadow-2xs"
-              : "bg-slate-50/80 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
+              : "bg-slate-50/80 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700"
           }`}
         >
           <span>Program CL — Tata Niaga &amp; Pangan</span>
@@ -781,7 +781,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               selectedFilter === "all"
                 ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200/70 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200/70 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
             }`}
           >
             Semua Akun
@@ -792,7 +792,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               selectedFilter === "524"
                 ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200/70 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200/70 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
             }`}
           >
             Perjalanan Dinas (524xxx)
@@ -803,7 +803,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               selectedFilter === "521"
                 ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200/70 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200/70 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
             }`}
           >
             Bahan &amp; Honor (521xxx)
@@ -814,7 +814,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               selectedFilter === "522"
                 ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200/70 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200/70 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
             }`}
           >
             Sewa &amp; Jasa (522xxx)
@@ -826,7 +826,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
           <button
             type="button"
             onClick={handleExpandAll}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
             title="Buka semua tingkatan hingga ke item belanja terdalam"
           >
             Buka Semua Item
@@ -834,7 +834,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
           <button
             type="button"
             onClick={handleCollapseItems}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
             title="Tutup rincian item belanja (tampilkan hanya sampai akun MAK)"
           >
             Tutup Rincian Item
@@ -964,7 +964,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
                             className={`ml-1 px-2 py-0.5 rounded-md text-[10px] font-bold cursor-pointer transition-all ${
                               isExpanded
                                 ? "bg-blue-600 text-white"
-                                : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-blue-100 hover:text-blue-700"
+                                : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/60 dark:hover:text-blue-200"
                             }`}
                             title={isExpanded ? "Klik untuk tutup rincian item" : "Klik untuk buka rincian item"}
                           >
@@ -1303,7 +1303,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setAddingChildOf(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 Batal
               </button>
@@ -1338,7 +1338,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setDeletingRow(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 Batal
               </button>
@@ -1371,7 +1371,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowResetConfirm(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 Batal
               </button>
@@ -1413,7 +1413,7 @@ export const MonitoringAnggaranTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowEditMeta(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 Batal
               </button>

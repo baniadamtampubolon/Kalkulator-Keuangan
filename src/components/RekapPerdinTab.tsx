@@ -692,7 +692,7 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({
                         <td className="p-2 border-r border-slate-200 dark:border-slate-800 text-right font-mono text-amber-700 dark:text-amber-300">
                           {nilaiPph > 0 ? `Rp ${nilaiPph.toLocaleString("id-ID")}` : "—"}
                         </td>
-                        <td className="p-2 border-r border-slate-200 dark:border-slate-800 text-right font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50/40">
+                        <td className="p-2 border-r border-slate-200 dark:border-slate-800 text-right font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/30">
                           Rp {netto.toLocaleString("id-ID")}
                         </td>
                         <td className="p-2 border-r border-slate-200 dark:border-slate-800 font-semibold text-slate-900 dark:text-slate-100">
@@ -1037,8 +1037,8 @@ export const RekapPerdinTab: React.FC<RekapPerdinTabProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3 text-red-600">
-              <div className="p-2.5 bg-red-50 rounded-xl border border-red-100">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
+              <div className="p-2.5 bg-red-50 dark:bg-red-950/50 rounded-xl border border-red-100 dark:border-red-900/60">
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Hapus Baris Rekap?</h3>

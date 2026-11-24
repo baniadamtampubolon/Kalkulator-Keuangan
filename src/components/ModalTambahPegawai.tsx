@@ -237,7 +237,7 @@ export const ModalTambahPegawai: React.FC<ModalTambahPegawaiProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-white/60 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-slate-800/80 cursor-pointer disabled:opacity-50"
             >
               Batal
             </button>

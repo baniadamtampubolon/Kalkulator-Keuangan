@@ -54,6 +54,9 @@ interface ParticipantGridProps {
   onClearFeedback?: () => void;
 }
 
+const CURRENCY_BOX_CLASS =
+  "relative flex items-center bg-[#f1f3f5] dark:bg-slate-800 focus-within:bg-white dark:focus-within:bg-slate-900 border border-slate-200 dark:border-slate-700 focus-within:border-slate-800 dark:focus-within:border-blue-500 rounded px-1.5 py-0.5 shadow-2xs transition-all";
+
 export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
   rows,
   setRows,
@@ -445,7 +448,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 <button
                   type="button"
                   onClick={onSaveOrUpdate}
-                  className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold cursor-pointer transition-all"
+                  className="btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold cursor-pointer transition-all"
                   title="Data telah tersimpan di Rekap Perdin"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -471,10 +474,10 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
         <table className="w-full text-left text-xs border-collapse min-w-max">
           <thead>
             <tr className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200/70 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap text-[11px]">
-              <th className="p-2.5 w-12 min-w-[48px] text-center sticky left-0 bg-slate-50 dark:bg-slate-800/70 z-20 shadow-[1px_0_3px_rgba(0,0,0,0.03)]">
+              <th className="p-2.5 w-12 min-w-[48px] text-center sticky left-0 bg-slate-50 dark:bg-slate-800 z-20 shadow-[1px_0_3px_rgba(0,0,0,0.03)]">
                 No
               </th>
-              <th className="p-2.5 w-64 min-w-[240px] sticky left-12 bg-slate-50 dark:bg-slate-800/70 z-20 shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+              <th className="p-2.5 w-64 min-w-[240px] sticky left-12 bg-slate-50 dark:bg-slate-800 z-20 shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
                 Nama Pegawai
               </th>
               <th className="p-2.5 w-44 min-w-[170px]">Gol / Jabatan</th>
@@ -571,15 +574,15 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
             {rows.map((row, idx) => (
               <tr
                 key={row.id}
-                className="hover:bg-white/80 transition-colors duration-150 group"
+                className="hover:bg-white/80 dark:hover:bg-slate-800/70 transition-colors duration-150 group"
               >
                 {/* No (Sticky) */}
-                <td className="p-2.5 text-center font-medium text-slate-400 dark:text-slate-500 sticky left-0 bg-white/95 dark:bg-slate-900/95 group-hover:bg-slate-50/95 z-10 shadow-[1px_0_3px_rgba(0,0,0,0.03)] text-xs">
+                <td className="p-2.5 text-center font-medium text-slate-400 dark:text-slate-500 sticky left-0 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 z-10 shadow-[1px_0_3px_rgba(0,0,0,0.03)] text-xs">
                   {idx + 1}
                 </td>
 
                 {/* Nama Pegawai Searchable Combobox (Sticky) */}
-                <td className="p-2 w-64 min-w-[240px] sticky left-12 bg-white/95 dark:bg-slate-900/95 group-hover:bg-slate-50/95 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+                <td className="p-2 w-64 min-w-[240px] sticky left-12 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
                   <EmployeeSearchSelect
                     value={row.nama}
                     nip={row.nip}
@@ -774,7 +777,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                         />
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">hr</span>
                       </div>
-                      <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 dark:border-slate-800 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                      <div className={CURRENCY_BOX_CLASS}>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1 select-none">Rp</span>
                         <CurrencyInput
                           value={row.biayaUhBiasa}
@@ -809,7 +812,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                         />
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">hr</span>
                       </div>
-                      <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 dark:border-slate-800 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                      <div className={CURRENCY_BOX_CLASS}>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1 select-none">Rp</span>
                         <CurrencyInput
                           value={row.biayaUhBiasa60}
@@ -844,7 +847,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                         />
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">hr</span>
                       </div>
-                      <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 dark:border-slate-800 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                      <div className={CURRENCY_BOX_CLASS}>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1 select-none">Rp</span>
                         <CurrencyInput
                           value={row.biayaUhBiasa40 || 0}
@@ -879,7 +882,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                         />
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">hr</span>
                       </div>
-                      <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 dark:border-slate-800 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                      <div className={CURRENCY_BOX_CLASS}>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1 select-none">Rp</span>
                         <CurrencyInput
                           value={row.biayaUhHalfday}
@@ -914,7 +917,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                         />
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">hr</span>
                       </div>
-                      <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 dark:border-slate-800 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                      <div className={CURRENCY_BOX_CLASS}>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1 select-none">Rp</span>
                         <CurrencyInput
                           value={row.biayaUhFullboard}
@@ -1125,7 +1128,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                               </span>
                             </div>
 
-                            <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 dark:border-slate-800 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                            <div className={CURRENCY_BOX_CLASS}>
                               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1 select-none">
                                 Rp
                               </span>
@@ -1248,7 +1251,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                       <button
                         type="button"
                         onClick={() => handleRemoveRow(row.id)}
-                        className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors"
+                        className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer transition-colors"
                         title="Hapus Pegawai Ini"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1344,7 +1347,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
               <button
                 type="button"
                 onClick={onSaveOrUpdate}
-                className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold cursor-pointer transition-all"
+                className="btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold cursor-pointer transition-all"
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 <span>Data Tersimpan</span>

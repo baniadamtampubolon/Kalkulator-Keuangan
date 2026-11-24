@@ -772,7 +772,7 @@ const ModalRekapRowEditorDialog: React.FC<ModalRekapRowEditorProps> = ({
                   <CurrencyInput
                     value={Number(formData["PENGEMBALIAN"]) || 0}
                     onChange={(val) => handleChange("PENGEMBALIAN", val)}
-                    className="input-glass w-full h-8 px-2 text-xs font-mono text-right text-rose-700 dark:text-rose-300 bg-rose-50/40"
+                    className="input-glass w-full h-8 px-2 text-xs font-mono text-right text-rose-700 dark:text-rose-300 bg-rose-50/40 dark:bg-rose-950/30"
                   />
                 </div>
               </div>

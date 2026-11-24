@@ -480,7 +480,7 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
             <button
               type="button"
               onClick={() => setNotification(null)}
-              className="p-1 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-slate-500 cursor-pointer"
+              className="p-1 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-slate-500 dark:text-slate-400 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -788,8 +788,8 @@ export const DaftarKegiatanTab: React.FC<DaftarKegiatanTabProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl">
             <div className="flex items-start gap-3.5 text-rose-600">
-              <div className="w-10 h-10 rounded-2xl bg-rose-100 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5 text-rose-600" />
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
               </div>
               <div className="space-y-0.5">
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">

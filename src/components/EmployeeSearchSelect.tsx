@@ -188,7 +188,7 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
                 e.stopPropagation();
                 onSelect("");
               }}
-              className="p-0.5 rounded-full hover:bg-slate-200/80 text-slate-400 dark:text-slate-500 hover:text-slate-600 transition-colors"
+              className="p-0.5 rounded-full hover:bg-slate-200/80 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
               title="Kosongkan pilihan"
             >
               <X className="w-3 h-3" />
@@ -243,7 +243,7 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 rounded-full hover:bg-slate-200/60"
+                  className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-200/60 dark:hover:bg-slate-700"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -263,7 +263,7 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
                         onSelect(searchQuery.trim());
                         handleClose();
                       }}
-                      className="px-2.5 py-1 text-xs font-medium rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100 border border-blue-200 dark:border-blue-800/70 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1 text-xs font-medium rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800/70 transition-colors inline-flex items-center gap-1 cursor-pointer"
                     >
                       <span>Gunakan nama: &ldquo;{searchQuery.trim()}&rdquo;</span>
                     </button>
@@ -283,8 +283,8 @@ export const EmployeeSearchSelect: React.FC<EmployeeSearchSelectProps> = ({
                       }}
                       onMouseEnter={() => setHighlightedIndex(index)}
                       className={`px-2.5 py-2 rounded-lg cursor-pointer transition-colors flex items-start justify-between gap-2 ${
-                        isHighlighted ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-950" : "hover:bg-slate-50 dark:hover:bg-slate-800/80"
-                      } ${isSelected ? "bg-blue-100/60 font-semibold" : ""}`}
+                        isHighlighted ? "bg-blue-50/80 dark:bg-blue-950/60 text-blue-950 dark:text-blue-100" : "hover:bg-slate-50 dark:hover:bg-slate-800/80"
+                      } ${isSelected ? "bg-blue-100/60 dark:bg-blue-900/40 font-semibold" : ""}`}
                     >
                       <div className="flex-1 min-w-0 space-y-0.5">
                         <div className="flex items-center gap-1.5 flex-wrap">

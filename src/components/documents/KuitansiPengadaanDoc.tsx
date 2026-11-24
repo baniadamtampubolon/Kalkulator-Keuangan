@@ -121,28 +121,28 @@ export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({
       <div className="no-print glass-floating rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
               Dokumen 1: Kuitansi {spjMeta.label}
             </h3>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${spjMeta.badgeColor}`}>
               {spjMeta.shortLabel}
             </span>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Sesuai format resmi Kuitansi Excel ({useNetAmount ? "Menampilkan Nilai Bersih Setelah Pajak" : "Menampilkan Nilai Sub Total Bruto Sesuai Rumus Excel"})
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Toggle Bruto vs Netto */}
-          <div className="inline-flex rounded-xl bg-slate-100 p-0.5 border border-slate-200 text-xs">
+          <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700 text-xs">
             <button
               type="button"
               onClick={() => setUseNetAmount(false)}
               className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
                 !useNetAmount
-                  ? "bg-white text-slate-900 shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
               title="Gunakan Sub Total Bruto sesuai rumus =Nominatif!G10 di Excel"
             >
@@ -153,8 +153,8 @@ export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({
               onClick={() => setUseNetAmount(true)}
               className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
                 useNetAmount
-                  ? "bg-white text-slate-900 shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
               title="Gunakan Jumlah Bersih Diterima setelah dipotong PPN & PPh"
             >
@@ -168,7 +168,7 @@ export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({
             className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
               isEditMode
                 ? "bg-[#0071e3] text-white border-[#0071e3] shadow-sm"
-                : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
+                : "bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700"
             }`}
           >
             <Edit3 className="w-3.5 h-3.5" />
@@ -179,7 +179,7 @@ export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({
             <button
               type="button"
               onClick={handleResetCanvas}
-              className="btn-tactile flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-300 cursor-pointer"
+              className="btn-tactile flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium border border-slate-300 dark:border-slate-700 cursor-pointer"
               title="Reset kembali ke teks awal dari data input"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -199,9 +199,9 @@ export const KuitansiPengadaanDoc: React.FC<KuitansiPengadaanDocProps> = ({
       </div>
 
       {isEditMode && (
-        <div className="no-print p-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 text-xs flex items-center justify-between gap-2">
+        <div className="no-print p-3 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Edit3 className="w-4 h-4 shrink-0 text-slate-700" />
+            <Edit3 className="w-4 h-4 shrink-0 text-slate-700 dark:text-slate-300" />
             <span>
               <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada kuitansi (nama, uraian, tanggal, angka, instansi, jabatan tanda tangan) dapat langsung Anda klik dan ubah secara bebas.
             </span>

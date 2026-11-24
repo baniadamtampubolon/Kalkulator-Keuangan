@@ -109,7 +109,7 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
       <div className="no-print glass-floating rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-700">Tampilan Kuitansi:</span>
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">Tampilan Kuitansi:</span>
             <select
               value={viewMode === "all" ? "all" : String(viewMode)}
               onChange={(e) => setViewMode(e.target.value === "all" ? "all" : parseInt(e.target.value))}
@@ -124,7 +124,7 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
             </select>
           </div>
 
-          <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
             {viewMode === "all" ? `Menampilkan ${rows.length} Kuitansi` : `Menampilkan Kuitansi 1 Pegawai`}
           </span>
         </div>
@@ -137,7 +137,7 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
             className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
               isEditMode
                 ? "bg-[#0071e3] text-white border-[#0071e3] shadow-sm"
-                : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
+                : "bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700"
             }`}
           >
             <Edit3 className="w-3.5 h-3.5" />
@@ -148,7 +148,7 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
             <button
               type="button"
               onClick={handleResetCanvas}
-              className="btn-tactile flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-300 cursor-pointer"
+              className="btn-tactile flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium border border-slate-300 dark:border-slate-700 cursor-pointer"
               title="Reset kembali ke teks awal dari data input"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -169,9 +169,9 @@ export const KwitansiDoc: React.FC<KwitansiDocProps> = ({
       </div>
 
       {isEditMode && (
-        <div className="no-print p-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 text-xs flex items-center justify-between gap-2">
+        <div className="no-print p-3 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Edit3 className="w-4 h-4 shrink-0 text-slate-700" />
+            <Edit3 className="w-4 h-4 shrink-0 text-slate-700 dark:text-slate-300" />
             <span>
               <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada kuitansi (nama, uraian, tanggal, angka, instansi, jabatan tanda tangan) dapat langsung Anda klik dan ubah secara bebas layaknya di Microsoft Word.
             </span>

@@ -212,14 +212,14 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
       <div className="no-print glass-floating rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
               Dokumen 3: Daftar Nominatif Rencana Kegiatan
             </h3>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               A4 Landscape Auto-Fit ({totalColumns} Kolom)
             </span>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Tabel otomatis menyesuaikan ukuran font dan padding secara dinamis agar 100% muat pas di 1 lembar kertas A4 Landscape
           </p>
         </div>
@@ -232,7 +232,7 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
             className={`btn-tactile flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
               isEditMode
                 ? "bg-[#0071e3] text-white border-[#0071e3] shadow-sm"
-                : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
+                : "bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700"
             }`}
           >
             <Edit3 className="w-3.5 h-3.5" />
@@ -243,7 +243,7 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
             <button
               type="button"
               onClick={handleResetCanvas}
-              className="btn-tactile flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-300 cursor-pointer"
+              className="btn-tactile flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium border border-slate-300 dark:border-slate-700 cursor-pointer"
               title="Reset kembali ke teks awal dari data input"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -262,9 +262,9 @@ export const NominatifDoc: React.FC<NominatifDocProps> = ({
       </div>
 
       {isEditMode && (
-        <div className="no-print p-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 text-xs flex items-center justify-between gap-2">
+        <div className="no-print p-3 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Edit3 className="w-4 h-4 shrink-0 text-slate-700" />
+            <Edit3 className="w-4 h-4 shrink-0 text-slate-700 dark:text-slate-300" />
             <span>
               <strong>Mode Edit Bebas Aktif:</strong> Seluruh teks pada Nominatif (judul, narasi kegiatan, seluruh kolom & baris tabel, angka rupiah, keterangan ST, hingga tanda tangan) dapat langsung Anda klik dan edit secara bebas.
             </span>

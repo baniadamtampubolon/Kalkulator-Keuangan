@@ -140,8 +140,8 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
         onClick={() => toggleCost(key)}
         className={`btn-tactile inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all ${
           isActive
-            ? "glass-control-active text-slate-900 dark:text-slate-100 font-semibold"
-            : "glass-control text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/80"
+            ? "glass-control-active font-semibold"
+            : "glass-control text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-700/80"
         }`}
       >
         <span
@@ -260,8 +260,8 @@ export const ChecklistFilter: React.FC<ChecklistFilterProps> = ({
                   onClick={() => toggleUh(key)}
                   className={`btn-tactile flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all ${
                     isActive
-                      ? "glass-control-active text-slate-900 dark:text-slate-100 font-semibold"
-                      : "glass-control text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/80"
+                      ? "glass-control-active font-semibold"
+                      : "glass-control text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-700/80"
                   }`}
                 >
                   <span className="text-left">{label}</span>
