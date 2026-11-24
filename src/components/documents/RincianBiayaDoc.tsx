@@ -337,10 +337,11 @@ export const RincianBiayaDoc: React.FC<RincianBiayaDocProps> = ({
           }
 
           if (activeCols.penginapan30 && activeRow.penginapan30 > 0) {
+            const mlm30 = activeRow.malamPenginapan30 || activeRow.malamHotel;
             lineItems.push({
               no: itemNum++,
               title: "Penginapan 30% SBM",
-              detail: "30% Tarif SBM",
+              detail: mlm30 && mlm30 > 0 ? `${mlm30} malam (30% Tarif SBM)` : "30% Tarif SBM",
               amount: activeRow.penginapan30,
             });
           }

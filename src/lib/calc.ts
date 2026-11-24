@@ -30,6 +30,7 @@ export function calculateRowTotal(
   options?: {
     forceRecalcUh?: boolean;
     forceRecalcTransport?: boolean;
+    forceRecalcPenginapan30?: boolean;
     skipAutoTransport?: boolean;
     sbmJakarta?: SbmRate;
     isCustomNominal?: boolean;
@@ -143,14 +144,55 @@ export function calculateRowTotal(
     updated.hotel = 0;
   }
 
-  if (activeCols.penginapan30 && sbm && updated.malamHotel && !isMultiProv) {
-    const hotelSbm =
-      row.golongan.startsWith("IV")
-        ? sbm.hotelEselon3Gol4
-        : sbm.hotelEselon4Kebawah;
-    updated.penginapan30 = Math.round(updated.malamHotel * (hotelSbm * 0.3));
-  } else if (!activeCols.penginapan30) {
+  // Penginapan 30% SBM bersifat per pegawai (tidak dipukul rata ke semua baris)
+  const isUsingPenginapan30 = Boolean(
+    updated.usePenginapan30 !== undefined
+      ? updated.usePenginapan30
+      : (Number(row.penginapan30) || 0) > 0
+  );
+  updated.usePenginapan30 = isUsingPenginapan30;
+
+  if (!activeCols.penginapan30 || !isUsingPenginapan30) {
     updated.penginapan30 = 0;
+    if (!isUsingPenginapan30) {
+      updated.malamPenginapan30 = 0;
+    }
+  } else {
+    const prevDefaultMalam = Math.max(1, (row.lamaHari || 1) - 1);
+    let mlm30 = updated.malamPenginapan30;
+    if (
+      mlm30 === undefined ||
+      (isDurationChanged && (row.malamPenginapan30 === prevDefaultMalam || !row.malamPenginapan30))
+    ) {
+      mlm30 =
+        updated.malamHotel && updated.malamHotel > 0
+          ? updated.malamHotel
+          : Math.max(1, (updated.lamaHari || 1) - 1);
+      updated.malamPenginapan30 = mlm30;
+    }
+
+    const hotelSbm =
+      !isMultiProv && sbm
+        ? (updated.golongan || "").startsWith("IV")
+          ? sbm.hotelEselon3Gol4
+          : sbm.hotelEselon4Kebawah
+        : 0;
+    const rate30 = Math.round(hotelSbm * 0.3);
+
+    if (
+      !options?.isCustomNominal &&
+      !isMultiProv &&
+      rate30 > 0 &&
+      mlm30 > 0 &&
+      (options?.forceRecalcPenginapan30 ||
+        options?.forceRecalcUh ||
+        isDurationChanged ||
+        !updated.penginapan30)
+    ) {
+      updated.penginapan30 = Math.round(mlm30 * rate30);
+    } else if (mlm30 === 0 && !options?.isCustomNominal) {
+      updated.penginapan30 = 0;
+    }
   }
 
   // 4. Pengeluaran Riil

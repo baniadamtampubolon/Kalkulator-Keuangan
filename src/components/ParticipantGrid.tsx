@@ -123,7 +123,11 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
   const handleUpdateRow = (
     id: string,
     updates: Partial<ParticipantRow>,
-    options?: { skipAutoTransport?: boolean; isCustomNominal?: boolean }
+    options?: {
+      skipAutoTransport?: boolean;
+      isCustomNominal?: boolean;
+      forceRecalcPenginapan30?: boolean;
+    }
   ) => {
     setRows((prev) =>
       prev.map((r) => {
@@ -133,6 +137,7 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
           sbmJakarta,
           skipAutoTransport: options?.skipAutoTransport,
           isCustomNominal: options?.isCustomNominal,
+          forceRecalcPenginapan30: options?.forceRecalcPenginapan30,
           isMultiProvinsi: isMultiProv,
         });
       })
@@ -140,6 +145,10 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
   };
 
   const handleSelectPegawai = (id: string, nama: string) => {
+    const existingRow = rows.find((r) => r.id === id);
+    const keepUsing30 = Boolean(
+      existingRow?.usePenginapan30 ?? (existingRow?.penginapan30 || 0) > 0
+    );
     const found = pegawaiList.find((p) => p.nama === nama);
     if (found) {
       const isOfficial =
@@ -152,25 +161,33 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
         defaultSt = header.nomorStPejabat;
       }
 
-      handleUpdateRow(id, {
-        kodeNama: found.kodeNama,
-        nama: found.nama,
-        nip: found.nip,
-        golongan: found.golongan,
-        jabatan: found.jabatan,
-        isPejabat: isOfficial,
-        nomorSt: defaultSt,
-      });
+      handleUpdateRow(
+        id,
+        {
+          kodeNama: found.kodeNama,
+          nama: found.nama,
+          nip: found.nip,
+          golongan: found.golongan,
+          jabatan: found.jabatan,
+          isPejabat: isOfficial,
+          nomorSt: defaultSt,
+        },
+        keepUsing30 ? { forceRecalcPenginapan30: true } : undefined
+      );
     } else {
-      handleUpdateRow(id, {
-        kodeNama: "",
-        nama: nama || "",
-        nip: "",
-        golongan: "",
-        jabatan: "",
-        isPejabat: false,
-        nomorSt: "",
-      });
+      handleUpdateRow(
+        id,
+        {
+          kodeNama: "",
+          nama: nama || "",
+          nip: "",
+          golongan: "",
+          jabatan: "",
+          isPejabat: false,
+          nomorSt: "",
+        },
+        keepUsing30 ? { forceRecalcPenginapan30: true } : undefined
+      );
     }
   };
 
@@ -221,6 +238,8 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       transportDaerahPp: 0,
       hotel: 0,
       penginapan30: 0,
+      usePenginapan30: false,
+      malamPenginapan30: 0,
       fulldayMeeting: 0,
       fullboardMeeting: 0,
       representatif: 0,
@@ -250,9 +269,53 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
       golongan: "",
       jabatan: "",
       isPejabat: false,
+      penginapan30: 0,
+      usePenginapan30: false,
+      malamPenginapan30: 0,
       hotelList: lastRow.hotelList ? JSON.parse(JSON.stringify(lastRow.hotelList)) : undefined,
     };
     setRows((prev) => [...prev, calculateRowTotal(newRow, currentSbm, activeUh, activeCols, { sbmJakarta, isMultiProvinsi: isMultiProv })]);
+  };
+
+  const isRowUsingPenginapan30 = (r: ParticipantRow): boolean =>
+    Boolean(r.usePenginapan30 ?? (r.penginapan30 || 0) > 0);
+
+  const getDefaultMalamPenginapan30 = (r: ParticipantRow): number =>
+    r.malamPenginapan30 && r.malamPenginapan30 > 0
+      ? r.malamPenginapan30
+      : r.malamHotel && r.malamHotel > 0
+      ? r.malamHotel
+      : Math.max(1, (r.lamaHari || 1) - 1);
+
+  const allUsingPenginapan30 =
+    rows.length > 0 && rows.every((r) => isRowUsingPenginapan30(r));
+
+  const handleToggleAllPenginapan30 = () => {
+    const nextEnable = !allUsingPenginapan30;
+    setRows((prev) =>
+      prev.map((r) => {
+        if (!nextEnable) {
+          return calculateRowTotal(
+            { ...r, usePenginapan30: false, malamPenginapan30: 0, penginapan30: 0 },
+            currentSbm,
+            activeUh,
+            activeCols,
+            { sbmJakarta, isMultiProvinsi: isMultiProv }
+          );
+        }
+        return calculateRowTotal(
+          {
+            ...r,
+            usePenginapan30: true,
+            malamPenginapan30: getDefaultMalamPenginapan30(r),
+          },
+          currentSbm,
+          activeUh,
+          activeCols,
+          { sbmJakarta, isMultiProvinsi: isMultiProv, forceRecalcPenginapan30: true }
+        );
+      })
+    );
   };
 
   const handleSequenceSpdNumbers = (customStart?: string | number) => {
@@ -472,7 +535,26 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                 </th>
               )}
               {activeCols.hotel && <th className="p-2.5 w-28 min-w-[110px] text-center">Hotel</th>}
-              {activeCols.penginapan30 && <th className="p-2.5 w-32 min-w-[125px] text-right">Penginapan 30%</th>}
+              {activeCols.penginapan30 && (
+                <th
+                  className="p-2.5 w-56 min-w-[225px] text-right"
+                  title="Diatur per pegawai (tidak otomatis untuk semua). Pegawai yang dinas ke kota asalnya dapat dibiarkan Tidak / Rp 0."
+                >
+                  <div className="flex items-center justify-end gap-2">
+                    <span>Penginapan 30%</span>
+                    {rows.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={handleToggleAllPenginapan30}
+                        className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[10px] font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
+                        title="Aktifkan / kosongkan Penginapan 30% untuk semua pegawai"
+                      >
+                        {allUsingPenginapan30 ? "Kosongkan" : "Pilih Semua"}
+                      </button>
+                    )}
+                  </div>
+                </th>
+              )}
               {activeCols.pengRill && <th className="p-2.5 w-28 min-w-[110px] text-center">Peng. Riil</th>}
               {activeCols.fulldayMeeting && <th className="p-2.5 w-32 min-w-[125px] text-right">Fullday (Rp)</th>}
               {activeCols.fullboardMeeting && <th className="p-2.5 w-32 min-w-[125px] text-right">Fullboard (Rp)</th>}
@@ -961,12 +1043,119 @@ export const ParticipantGrid: React.FC<ParticipantGridProps> = ({
                   </td>
                 )}
 
-                {/* Penginapan 30% */}
-                {activeCols.penginapan30 && (
-                  <td className="p-2 w-32 min-w-[125px] text-right font-mono font-medium text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                    Rp {(row.penginapan30 || 0).toLocaleString("id-ID")}
-                  </td>
-                )}
+                {/* Penginapan 30% (Per Pegawai — Tidak Pukul Rata) */}
+                {activeCols.penginapan30 && (() => {
+                  const isUsing30 = isRowUsingPenginapan30(row);
+                  const displayMalam =
+                    row.malamPenginapan30 !== undefined
+                      ? row.malamPenginapan30
+                      : getDefaultMalamPenginapan30(row);
+
+                  return (
+                    <td className="p-2 w-56 min-w-[225px] text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <label
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-[10px] font-semibold cursor-pointer select-none transition-colors shrink-0 ${
+                            isUsing30
+                              ? "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100"
+                              : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700"
+                          }`}
+                          title={
+                            isUsing30
+                              ? "Aktif untuk pegawai ini (klik untuk menonaktifkan bila tidak memakai penginapan)"
+                              : "Tidak memakai Penginapan 30% (klik untuk mengaktifkan bagi pegawai ini)"
+                          }
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isUsing30}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              if (!checked) {
+                                handleUpdateRow(row.id, {
+                                  usePenginapan30: false,
+                                  malamPenginapan30: 0,
+                                  penginapan30: 0,
+                                });
+                              } else {
+                                handleUpdateRow(
+                                  row.id,
+                                  {
+                                    usePenginapan30: true,
+                                    malamPenginapan30: getDefaultMalamPenginapan30(row),
+                                  },
+                                  { forceRecalcPenginapan30: true }
+                                );
+                              }
+                            }}
+                            className="sr-only"
+                          />
+                          <span>{isUsing30 ? "Pakai" : "Tidak"}</span>
+                        </label>
+
+                        {isUsing30 ? (
+                          <>
+                            <div
+                              className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/80 dark:border-slate-800 shadow-2xs"
+                              title="Jumlah malam Penginapan 30%"
+                            >
+                              <input
+                                type="number"
+                                min={0}
+                                value={displayMalam}
+                                onChange={(e) => {
+                                  const newMalam = Math.max(
+                                    0,
+                                    parseInt(e.target.value, 10) || 0
+                                  );
+                                  handleUpdateRow(
+                                    row.id,
+                                    {
+                                      usePenginapan30: true,
+                                      malamPenginapan30: newMalam,
+                                      ...(newMalam === 0 ? { penginapan30: 0 } : {}),
+                                    },
+                                    { forceRecalcPenginapan30: true }
+                                  );
+                                }}
+                                className="w-7 h-5 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
+                              />
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                                mlm
+                              </span>
+                            </div>
+
+                            <div className="relative flex items-center bg-[#f1f3f5] focus-within:bg-white border border-slate-200 dark:border-slate-800 focus-within:border-slate-800 rounded px-1.5 py-0.5 shadow-2xs transition-all">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1 select-none">
+                                Rp
+                              </span>
+                              <CurrencyInput
+                                value={row.penginapan30 || 0}
+                                onChange={(val) =>
+                                  handleUpdateRow(
+                                    row.id,
+                                    {
+                                      usePenginapan30: true,
+                                      penginapan30: val,
+                                    },
+                                    { isCustomNominal: true }
+                                  )
+                                }
+                                className="w-20 text-right font-mono font-medium text-xs bg-transparent focus:outline-none text-slate-900 dark:text-slate-100"
+                                placeholder="0"
+                                title="Nominal Penginapan 30% (otomatis mlm × 30% SBM, dapat diedit manual)"
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-xs font-mono text-slate-400 dark:text-slate-500 px-1.5 whitespace-nowrap">
+                            Rp 0
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  );
+                })()}
 
                 {/* Peng. Riil Modal Trigger */}
                 {activeCols.pengRill && (

@@ -126,6 +126,8 @@ export interface ParticipantRow {
   // Hotel & Penginapan Rincian SPJ (Mendukung Multi-Hotel)
   hotel: number;
   penginapan30: number;
+  usePenginapan30?: boolean;
+  malamPenginapan30?: number;
   namaHotel?: string;
   kotaHotel?: string;
   checkInHotel?: string;
